@@ -24,7 +24,7 @@ export async function runFullAnalysis(narrative: string) {
     }
     console.log("✅ Framework fetched. Total categories:", framework?.length);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
     const prompt = `
       Analyze this narrative for a student at Sekolah Impian. 

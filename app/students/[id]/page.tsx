@@ -45,7 +45,7 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
         
         {/* Back Button */}
         <Link 
-          href="/performance" 
+          href="/students" 
           className="inline-flex items-center gap-1 text-slate-400 hover:text-emerald-600 transition-colors mb-6 group"
         >
           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
