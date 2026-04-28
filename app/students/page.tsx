@@ -72,7 +72,7 @@ export default async function StudentsAnalyticsPage() {
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
         </Link>
 
-        <h1 className="text-3xl font-black text-white tracking-tight">Student Analytics</h1>
+        <h1 className="text-4xl font-bold text-white tracking-tight">Student Analytics</h1>
         {/* <p className="text-emerald-300 text-[10px] font-bold uppercase tracking-[0.2em] mt-1 opacity-70">Report & Global Pulse</p> */}
 
         {/* Global Stats Row */}
@@ -80,7 +80,7 @@ export default async function StudentsAnalyticsPage() {
           {stats.map((stat) => (
             <div key={stat.name} className="bg-white/10 backdrop-blur-md rounded-3xl p-4 border border-white/10 text-white">
               <p className="text-[8px] font-black uppercase tracking-widest text-emerald-300 mb-1">{stat.name}</p>
-              <div className="text-xl font-black">{stat.avg}</div>
+              <div className="text-2xl font-bold font-serif">{stat.avg}</div>
               <p className="text-[7px] font-bold opacity-40 uppercase">Global Avg</p>
             </div>
           ))}
@@ -109,7 +109,7 @@ export default async function StudentsAnalyticsPage() {
                       {student.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-black text-slate-900 text-base tracking-tight">{student.name}</p>
+                      <p className="font-bold text-slate-900 text-xl tracking-tight font-serif">{student.name}</p>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter italic">{student.batch || 'Reguler'}</p>
                     </div>
                   </div>

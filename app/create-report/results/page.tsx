@@ -35,22 +35,10 @@ export default function ResultsPage() {
     if (!studentId) return alert("Student ID missing");
     
     setIsSaving(true);
-    // Adapting new structure to old save action for compatibility
     const result = await saveAssessmentAction({
       student_id: studentId,
       narrative: narrative,
-      scores: analysisData.assessments.map((a: any) => ({
-        category: a.category,
-        code: a.pillar,
-        title: a.pillar,
-        score: 0, // No scores anymore
-        reason: `${a.fulfillment}: ${a.reasoning} (${a.trigger})`
-      })),
-      treatment: JSON.stringify({
-        summary: analysisData.status,
-        milestones: analysisData.milestones,
-        treatment: analysisData.treatment
-      })
+      analysis: analysisData
     });
 
     if (result.success) {
@@ -83,27 +71,54 @@ export default function ResultsPage() {
           </div>
           <div className="relative z-10">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300 mb-3">Overall Condition</h3>
-            <p className="text-lg font-bold leading-tight">
-              {analysisData.status}
+            <p className="text-2xl font-bold leading-tight font-serif mb-4">
+              {analysisData.status_summary}
             </p>
+            
+            {/* Fulfillment Overview */}
+            <div className="grid grid-cols-3 gap-3">
+              {Object.entries(analysisData.overall_stats || {}).map(([key, stats]: [string, any]) => (
+                <div key={key} className="bg-white/10 rounded-2xl p-3 border border-white/10">
+                  <p className="text-[8px] font-black uppercase text-emerald-300 mb-1">{key}</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-bold">{stats.percentage}%</span>
+                    <span className="text-[8px] opacity-60">{stats.fulfilled}/{stats.total}</span>
+                  </div>
+                  <div className="w-full h-1 bg-white/20 rounded-full mt-2 overflow-hidden">
+                    <div className="h-full bg-emerald-400" style={{ width: `${stats.percentage}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* 2. NEXT MILESTONES (Growth Path) */}
-        <section className="bg-white rounded-[2.5rem] p-6 border border-slate-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
+        {/* 2. Priority Treatment */}
+        <section className="bg-white rounded-[2.5rem] p-6 border border-slate-100 shadow-sm space-y-4">
+          <div className="flex items-center gap-2">
             <Target className="text-emerald-600" size={18} />
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Jalur Pertumbuhan (Next Focus)</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Treatment Prioritas</h3>
           </div>
-          <div className="space-y-3">
-            {analysisData.milestones.map((m: string, i: number) => (
-              <div key={i} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">
-                  {i + 1}
+          <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+            <div className="flex flex-col mb-3">
+              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">{analysisData.treatment.priority_theme}</span>
+              <h4 className="text-base font-bold text-slate-900 font-serif leading-tight">{analysisData.treatment.priority_indicator}</h4>
+            </div>
+            
+            <div className="space-y-2 mb-4">
+              {analysisData.treatment.target_sub_indicators.map((si: string, i: number) => (
+                <div key={i} className="flex items-center gap-2 text-[11px] text-slate-600 font-medium">
+                  <div className="w-1 h-1 rounded-full bg-emerald-400" />
+                  {si}
                 </div>
-                <span className="text-sm font-bold text-slate-800">{m}</span>
-              </div>
-            ))}
+              ))}
+            </div>
+            
+            <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm">
+              <p className="text-xs text-slate-700 leading-relaxed italic">
+                {analysisData.treatment.action_plan}
+              </p>
+            </div>
           </div>
         </section>
 
@@ -114,7 +129,7 @@ export default function ResultsPage() {
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fulfillment Details</h3>
           </div>
           {categories.map((cat) => {
-            const items = analysisData.assessments.filter((a: any) => a.category === cat);
+            const items = analysisData.detailed_assessments?.filter((a: any) => a.category === cat) || [];
             if (items.length === 0) return null;
 
             return (
@@ -139,16 +154,30 @@ export default function ResultsPage() {
                     {items.map((item: any, i: number) => (
                       <div key={i} className="space-y-2">
                         <div className="flex justify-between items-start">
-                          <span className="font-bold text-xs text-slate-800">{item.pillar}</span>
-                          <span className={`text-[9px] font-black px-2 py-1 rounded-lg ${getFulfillmentColor(item.fulfillment)}`}>
-                            {item.fulfillment}
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{item.theme}</span>
+                            <span className="font-bold text-xs text-slate-800 font-serif leading-tight">{item.indicator}</span>
+                          </div>
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            {item.fulfillment_fraction}
                           </span>
                         </div>
-                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2">
+                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-3">
                           <p className="text-[11px] text-slate-500 leading-relaxed italic">"{item.reasoning}"</p>
-                          <div className="flex items-center gap-1.5 text-emerald-700 opacity-60">
-                            <Quote size={10} />
-                            <span className="text-[9px] font-black uppercase tracking-tighter">{item.trigger}</span>
+                          
+                          <div className="space-y-1">
+                            {item.fulfilled_sub_indicators.map((si: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-2 text-[10px] text-emerald-700 font-bold">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                {si}
+                              </div>
+                            ))}
+                            {item.missing_sub_indicators.map((si: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-2 text-[10px] text-slate-400">
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                                {si}
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>

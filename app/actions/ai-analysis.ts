@@ -1,5 +1,6 @@
 "use server";
 
+import { supabase } from "@/lib/supabase";
 import { CIA_INTERVIEW_PROMPT, CIA_FINAL_ANALYSIS_PROMPT } from "@/lib/data/prompts";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -46,9 +47,36 @@ export async function processInterviewStep(transcript: string) {
   }
 }
 
-export async function finalizeAssessment(transcript: string) {
+export async function finalizeAssessment(transcript: string, studentId?: string) {
   try {
-    const responseText = await callOpenRouter(CIA_FINAL_ANALYSIS_PROMPT, `FINAL TRANSCRIPT:\n"${transcript}"`);
+    let currentProgressContext = "No previous assessment data found. Start from the beginning of the framework.";
+    
+    if (studentId) {
+      const { data: latestReport } = await supabase
+        .from('reports')
+        .select('treatment_plan')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (latestReport?.treatment_plan) {
+        const prevAnalysis = JSON.parse(latestReport.treatment_plan);
+        currentProgressContext = `
+PREVIOUS PROGRESS:
+- Karakter: ${prevAnalysis.overall_stats?.karakter?.percentage || 0}% (${prevAnalysis.overall_stats?.karakter?.fulfilled || 0}/${prevAnalysis.overall_stats?.karakter?.total || 0})
+- Mental: ${prevAnalysis.overall_stats?.mental?.percentage || 0}% (${prevAnalysis.overall_stats?.mental?.fulfilled || 0}/${prevAnalysis.overall_stats?.mental?.total || 0})
+- Soft Skill: ${prevAnalysis.overall_stats?.soft_skill?.percentage || 0}% (${prevAnalysis.overall_stats?.soft_skill?.fulfilled || 0}/${prevAnalysis.overall_stats?.soft_skill?.total || 0})
+
+IMPORTANT: Prioritize the first Theme/Indicator that is still incomplete based on the stats above.
+        `;
+      }
+    }
+
+    const responseText = await callOpenRouter(
+      CIA_FINAL_ANALYSIS_PROMPT, 
+      `${currentProgressContext}\n\nFINAL TRANSCRIPT:\n"${transcript}"`
+    );
     const cleanJson = responseText.replace(/```json|```/g, "").trim();
     return JSON.parse(cleanJson);
   } catch (error: any) {

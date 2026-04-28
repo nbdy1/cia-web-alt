@@ -7,76 +7,72 @@ import {
 import Link from 'next/link';
 
 async function getReportDetails(id: string) {
-  // Fetch both the report and the master pillar list simultaneously
-  const [reportRes, masterRes] = await Promise.all([
-    supabase
-      .from('reports')
-      .select(`*, students(name), report_scores(*)`)
-      .eq('id', id)
-      .single(),
-    supabase
-      .from('assessment_pillars')
-      .select('pillar_id, pillar_title, category')
-  ]);
+  const { data: report } = await supabase
+    .from('reports')
+    .select(`*, students(name)`)
+    .eq('id', id)
+    .single();
 
-  return {
-    report: reportRes.data,
-    masterPillars: masterRes.data || []
-  };
+  return { report };
 }
 
 export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const {report, masterPillars} = await getReportDetails(id);
+  const { report } = await getReportDetails(id);
 
-  if (!report) return <div className="p-10 text-center text-slate-500">Report not found.</div>;
+  if (!report) return <div className="p-10 text-center text-slate-500 font-serif">Report not found.</div>;
 
-const observedIds = new Set(report.report_scores.map((s: any) => s.pillar_id));
-  const unobservedPillars = masterPillars.filter(p => !observedIds.has(p.pillar_id));
+  const analysis = typeof report.treatment_plan === 'string' 
+    ? JSON.parse(report.treatment_plan) 
+    : report.treatment_plan;
 
   const categories = ["Karakter", "Mental", "Soft Skill"];
   
-  const summaries = categories.map(cat => {
-  const found = report.report_scores.filter((s: any) => s.category === cat);
-  
-  // Sum of all scores in this category (e.g., 4 + 3 + 5 = 12)
-  const totalPoints = found.reduce((a: number, b: any) => a + b.score, 0);
-  
-  // Total potential points (e.g., 3 pillars * 5 max score = 15)
-  const potentialPoints = found.length * 5;
-  
-  const avg = found.length > 0 ? (totalPoints / found.length).toFixed(1) : "0.0";
-  
-  return { 
-    name: cat, 
-    avg, 
-    points: totalPoints, 
-    max: potentialPoints, 
-    count: found.length 
-  };
-});
-
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 font-sans">
+    <div className="min-h-screen bg-slate-50 pb-24 font-sans max-w-md mx-auto border-x border-slate-100 shadow-2xl relative">
       {/* Sticky Header */}
-      <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-6 border-b border-slate-100 flex items-center justify-between sticky top-0 z-30">
+      <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-6 border-b border-slate-200 flex items-center justify-between sticky top-0 z-30">
         <Link href={`/students/${report.student_id}`} className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-all">
           <ChevronLeft className="w-6 h-6 text-slate-800" />
         </Link>
         <div className="text-center">
-          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Diagnostic Session</p>
+          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Growth Report</p>
           <h1 className="text-sm font-bold text-slate-900">{report.students.name}</h1>
         </div>
         <div className="w-10" />
       </header>
 
-      <main className="px-6 py-8 space-y-6 max-w-2xl mx-auto">
+      <main className="px-5 py-8 space-y-8">
         
-        {/* 1. NARRATIVE CONTEXT (Primary Focus) */}
-        <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 relative">
+        {/* 1. OVERALL PROGRESS */}
+        <section className="bg-emerald-900 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <BarChart3 size={80} />
+          </div>
+          <div className="relative z-10">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300 mb-3">Overall Progress</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {Object.entries(analysis.overall_stats || {}).map(([key, stats]: [string, any]) => (
+                <div key={key} className="bg-white/10 rounded-2xl p-3 border border-white/10">
+                  <p className="text-[8px] font-black uppercase text-emerald-300 mb-1">{key}</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-bold">{(stats.percentage || 0).toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full h-1 bg-white/20 rounded-full mt-2 overflow-hidden">
+                    <div className="h-full bg-emerald-400" style={{ width: `${stats.percentage}%` }} />
+                  </div>
+                  <p className="text-[7px] opacity-60 mt-1 font-bold">{stats.fulfilled}/{stats.total}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 2. NARRATIVE OBSERVATION */}
+        <section className="bg-white p-7 rounded-[2.5rem] shadow-sm border border-slate-100 relative">
           <Quote className="absolute top-6 left-6 w-8 h-8 text-slate-50" />
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">The Narrative</h3>
-          <p className="text-sm text-slate-700 leading-relaxed italic relative z-10">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Observation Narrative</h3>
+          <p className="text-sm text-slate-700 leading-relaxed italic relative z-10 font-medium">
             "{report.narrative}"
           </p>
           <div className="mt-6 flex items-center gap-2 text-slate-300">
@@ -87,120 +83,94 @@ const observedIds = new Set(report.report_scores.map((s: any) => s.pillar_id));
           </div>
         </section>
 
-        {/* 2. OVERALL SCORECARD */}
-        <section className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 grid grid-cols-3 gap-4">
-        {summaries.map((s) => (
-    <div key={s.name} className="text-center space-y-2">
-      <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{s.name}</p>
-      
-      {/* The Large Average */}
-      <p className="text-3xl font-black text-slate-900 leading-none">{s.avg}</p>
-      
-      {/* The Fraction: Points / Max Possible */}
-      <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100">
-        <span className="text-[10px] font-black text-emerald-600">{s.points}</span>
-        <span className="text-[8px] font-bold text-slate-300">/</span>
-        <span className="text-[10px] font-bold text-slate-400">{s.max}</span>
-      </div>
-      
-      <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">
-        {s.count} Pillars
-      </p>
-    </div>
-  ))}
-        </section>
+        {/* 3. PRIORITY TREATMENT */}
+        {analysis.treatment && (
+          <section className="bg-white rounded-[2.5rem] p-7 border border-slate-100 shadow-sm space-y-4">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="text-emerald-600" size={18} />
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Treatment Plan</h3>
+            </div>
+            <div className="bg-emerald-50 p-5 rounded-[2rem] border border-emerald-100">
+              <div className="flex flex-col mb-4">
+                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">{analysis.treatment.priority_theme}</span>
+                <h4 className="text-base font-bold text-slate-900 font-serif leading-tight">{analysis.treatment.priority_indicator}</h4>
+              </div>
+              
+              <div className="space-y-2 mb-5">
+                {analysis.treatment.target_sub_indicators?.map((si: string, i: number) => (
+                  <div key={i} className="flex items-start gap-2 text-[11px] text-slate-600 font-medium leading-tight">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1 flex-shrink-0" />
+                    {si}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm">
+                <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                  {analysis.treatment.action_plan}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
 
-        {/* 3. COLLAPSIBLE CATEGORY ANALYSIS */}
+        {/* 4. DETAILED ANALYSIS */}
         <section className="space-y-4">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 px-2">
-            <BarChart3 className="w-4 h-4" /> Detected Pillars
-          </h3>
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Detailed Fulfillment</h3>
           
           {categories.map((cat) => {
-            const scores = report.report_scores.filter((s: any) => s.category === cat);
-            if (scores.length === 0) return null;
+            const items = analysis.detailed_assessments?.filter((a: any) => a.category === cat) || [];
+            if (items.length === 0) return null;
 
             return (
-              <details key={cat} className="group bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden" open>
-                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl ${cat === "Karakter" ? "bg-rose-50 text-rose-500" : cat === "Mental" ? "bg-blue-50 text-blue-500" : "bg-amber-50 text-amber-500"}`}>
-                      {cat === "Karakter" && <Heart size={18} />}
-                      {cat === "Mental" && <Brain size={18} />}
-                      {cat === "Soft Skill" && <Zap size={18} />}
-                    </div>
-                    <h4 className="font-bold text-slate-800 text-sm">{cat} Analysis</h4>
+              <div key={cat} className="bg-white rounded-[2.2rem] border border-slate-100 shadow-sm overflow-hidden">
+                <div className="flex items-center gap-3 p-5 border-b border-slate-50">
+                  <div className={`p-2.5 rounded-xl ${cat === "Karakter" ? "bg-rose-50 text-rose-500" : cat === "Mental" ? "bg-blue-50 text-blue-500" : "bg-amber-50 text-amber-500"}`}>
+                    {cat === "Karakter" && <Heart size={18} />}
+                    {cat === "Mental" && <Brain size={18} />}
+                    {cat === "Soft Skill" && <Zap size={18} />}
                   </div>
-                  <ChevronDown size={18} className="text-slate-300 group-open:rotate-180 transition-transform" />
-                </summary>
+                  <h4 className="font-bold text-slate-800 text-sm font-serif">{cat} Analysis</h4>
+                </div>
                 
-                <div className="px-5 pb-5 grid gap-3 border-t border-slate-50 pt-4">
-                  {scores.map((s: any) => (
-                    <div key={s.id} className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-black text-slate-900 text-xs">{s.pillar_title || s.pillar_id}</p>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{s.pillar_id}</p>
+                <div className="p-5 space-y-6">
+                  {items.map((item: any, i: number) => (
+                    <div key={i} className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{item.theme}</span>
+                          <span className="font-bold text-xs text-slate-800 font-serif leading-tight">{item.indicator}</span>
                         </div>
-                        <span className="text-xs font-black text-emerald-600 bg-white px-2 py-1 rounded-lg border">{s.score}/5</span>
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          {item.fulfillment_fraction}
+                        </span>
                       </div>
-                      <p className="text-sm text-slate-500 leading-relaxed italic border-l-2 border-emerald-100 pl-3">
-                        "{s.reason}"
-                      </p>
+                      
+                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
+                        <p className="text-[11px] text-slate-500 leading-relaxed italic">"{item.reasoning}"</p>
+                        
+                        <div className="grid grid-cols-1 gap-2">
+                          {item.fulfilled_sub_indicators?.map((si: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-2 text-[10px] text-emerald-700 font-bold">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                              {si}
+                            </div>
+                          ))}
+                          {item.missing_sub_indicators?.map((si: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-2 text-[10px] text-slate-400 font-medium">
+                              <div className="w-1.5 h-1.5 rounded-full bg-slate-200 flex-shrink-0" />
+                              {si}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </details>
+              </div>
             );
           })}
         </section>
-
-        {/* 4. AI TREATMENT */}
-        <section className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 opacity-10">
-            <Lightbulb size={80} />
-          </div>
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-4">Recommended Treatment</h3>
-          <p className="text-base font-medium leading-relaxed italic text-emerald-50/90">
-            {report.treatment_plan || "No specific treatment recorded."}
-          </p>
-        </section>
-
-        {/* 5. INACTIVE PILLARS */}
-        <section className="pt-8 border-t border-slate-200">
-        <div className="flex items-center gap-2 mb-4 px-2 text-slate-400">
-          <Info size={14} />
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Unobserved in this Session</h3>
-        </div>
-        
-        <div className="flex flex-wrap gap-2 px-2">
-          {unobservedPillars.length > 0 ? (
-            unobservedPillars.map((p: any) => (
-              <div 
-                key={p.pillar_id} 
-                className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-slate-100 shadow-sm opacity-50 grayscale"
-              >
-                <div className={`w-1.5 h-1.5 rounded-full ${
-                  p.category === 'Karakter' ? 'bg-rose-300' : 
-                  p.category === 'Mental' ? 'bg-blue-300' : 'bg-amber-300'
-                }`} />
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
-                  {p.pillar_title || p.pillar_id}
-                </span>
-              </div>
-            ))
-          ) : (
-            <p className="text-[10px] text-slate-400 italic">All curriculum pillars were observed in this narrative.</p>
-          )}
-        </div>
-        
-        <div className="mt-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
-          <p className="text-[10px] text-blue-600/70 leading-relaxed italic">
-            <strong>Note for Ustadz:</strong> Unobserved pillars are not a sign of failure. They simply indicate that these specific traits were not identified within the provided narrative text.
-          </p>
-        </div>
-      </section>
-
       </main>
     </div>
   );

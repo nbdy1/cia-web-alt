@@ -17,8 +17,8 @@ export default function HomePage() {
       <main className="flex-1 px-6 pt-6">
         {/* Welcome Section */}
         <section className="mb-10">
-          <p className="text-slate-400 text-lg">Assalamualaikum,</p>
-          <h1 className="text-3xl font-bold text-slate-800 leading-tight">
+          <p className="text-slate-400 text-lg font-serif italic">Assalamualaikum,</p>
+          <h1 className="text-4xl font-bold text-slate-800 leading-tight">
             {userName}
           </h1>
         </section>
@@ -32,12 +32,9 @@ export default function HomePage() {
             <div className="bg-white/20 p-4 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
               <Mic className="w-8 h-8 text-white" />
             </div>
-            <span className="text-white text-xl font-bold ">
+            <span className="text-white text-2xl font-bold font-serif">
               Create Student Report
             </span>
-            {/* <span className="text-emerald-100 text-xs mt-2 opacity-80 uppercase st font-medium">
-              Phase 2: Observation
-            </span> */}
           </button>
           </Link>
          
@@ -46,7 +43,7 @@ export default function HomePage() {
             <div className="bg-white p-4 rounded-2xl mb-4 shadow-sm">
               <BarChart3 className="w-8 h-8 text-slate-600" />
             </div>
-            <span className="text-slate-800 text-xl font-bold ">
+            <span className="text-slate-800 text-2xl font-bold font-serif">
               Student Reports & Analytics
             </span>
             {/* <span className="text-slate-400 text-xs mt-2 uppercase st font-medium">

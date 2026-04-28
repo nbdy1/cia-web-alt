@@ -10,7 +10,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-instrument-serif);
 }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-instrument-serif), serif;
+}
+
 
 /* @media (prefers-color-scheme: dark) {
   :root {

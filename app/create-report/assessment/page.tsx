@@ -102,7 +102,7 @@ export default function AssessmentPage() {
     const fullTranscript = messages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
     
     try {
-      const analysis = await finalizeAssessment(fullTranscript);
+      const analysis = await finalizeAssessment(fullTranscript, studentId || undefined);
       const params = new URLSearchParams({
         id: studentId || "",
         name: studentName,
@@ -125,7 +125,7 @@ export default function AssessmentPage() {
             <ChevronLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-sm font-bold text-slate-900 leading-tight">Reflective Interview</h1>
+            <h1 className="text-xl font-bold text-slate-900 leading-tight font-serif">Reflective Interview</h1>
             <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">{studentName}</p>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function AssessmentPage() {
         <div className="bg-emerald-50 px-3 py-1.5 rounded-2xl border border-emerald-100 flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">
-            {discoveredCount} Pillars Identified
+            {discoveredCount} Themes Identified
           </span>
         </div>
       </header>
@@ -146,7 +146,7 @@ export default function AssessmentPage() {
             <div className="w-16 h-16 bg-slate-200 rounded-3xl flex items-center justify-center text-slate-400">
               <Quote size={32} />
             </div>
-            <p className="text-sm font-medium text-slate-500 max-w-[200px]">
+            <p className="text-lg font-bold text-slate-500 max-w-[240px] font-serif">
               Silakan mulai ceritakan observasi Ustadz tentang {studentName}...
             </p>
           </div>
