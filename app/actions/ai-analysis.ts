@@ -1,59 +1,58 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { supabase } from '@/lib/supabase';
+import { CIA_INTERVIEW_PROMPT, CIA_FINAL_ANALYSIS_PROMPT } from "@/lib/data/prompts";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const MODEL = "google/gemini-3-flash-preview";
 
-export async function runFullAnalysis(narrative: string) {
-  console.log("🚀 AI Analysis Started for narrative:", narrative.substring(0, 50) + "...");
+async function callOpenRouter(systemPrompt: string, userMessage: string) {
+  if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is missing");
 
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json",
+      // "HTTP-Referer": "https://cia-assessment.id", // Optional
+      // "X-Title": "CIA Assessment", // Optional
+    },
+    body: JSON.stringify({
+      "model": MODEL,
+      "messages": [
+        { "role": "system", "content": systemPrompt },
+        { "role": "user", "content": userMessage }
+      ],
+      "response_format": { "type": "json_object" }
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`OpenRouter Error: ${error}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+export async function processInterviewStep(transcript: string) {
   try {
-    // 1. Fetch Framework
-    const { data: framework, error: dbError } = await supabase
-      .from('assessment_categories')
-      .select(`
-        name,
-        definition,
-        assessment_pillars (code, title, indicators)
-      `);
-
-    if (dbError) {
-      console.error("❌ Supabase Error:", dbError);
-      return { error: "Failed to fetch framework from database" };
-    }
-    console.log("✅ Framework fetched. Total categories:", framework?.length);
-
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
-
-    const prompt = `
-      Analyze this narrative for a student at Sekolah Impian. 
-      Use this framework: ${JSON.stringify(framework)}
-      
-      NARRATIVE: "${narrative}"
-      
-      Output ONLY valid JSON in this format:
-      {
-        "scores": [{ "category": "Karakter", "code": "Pilar 1", "title": "...", "score": 4, "reason": "..." }],
-        "treatment": "..."
-      }
-    `;
-
-    console.log("🧠 Sending request to Gemini...");
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
-    // Clean potential markdown code blocks from AI response
+    const responseText = await callOpenRouter(CIA_INTERVIEW_PROMPT, `CURRENT TRANSCRIPT:\n"${transcript}"`);
     const cleanJson = responseText.replace(/```json|```/g, "").trim();
-    
-    console.log("📡 AI Raw Response received");
-    const parsed = JSON.parse(cleanJson);
-    
-    console.log("✨ Analysis Successful!");
-    return parsed;
-
+    return JSON.parse(cleanJson);
   } catch (error: any) {
-    console.error("💥 Server Action Crash:", error.message);
-    return { error: error.message || "Internal Server Error" };
+    console.error("Interview Step Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function finalizeAssessment(transcript: string) {
+  try {
+    const responseText = await callOpenRouter(CIA_FINAL_ANALYSIS_PROMPT, `FINAL TRANSCRIPT:\n"${transcript}"`);
+    const cleanJson = responseText.replace(/```json|```/g, "").trim();
+    return JSON.parse(cleanJson);
+  } catch (error: any) {
+    console.error("Finalize Assessment Error:", error);
+    return { error: error.message };
   }
 }

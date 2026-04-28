@@ -16,7 +16,7 @@ export async function saveAssessmentAction(data: {
       .insert([{
         student_id: data.student_id,
         narrative: data.narrative,
-        treatment_plan: data.treatment
+        treatment_plan: data.treatment // This can now be a JSON string
       }])
       .select()
       .single();

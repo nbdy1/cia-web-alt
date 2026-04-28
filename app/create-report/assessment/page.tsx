@@ -1,18 +1,39 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, Mic, MicOff, Save, Edit3, Trash2, CheckCircle, Sparkles } from 'lucide-react';
+import { ChevronLeft, Mic, MicOff, Send, Sparkles, User, Brain, Quote, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useCIAVoice } from '@/lib/hooks/use-cia-voice';
+import { processInterviewStep, finalizeAssessment } from '@/app/actions/ai-analysis';
+
+interface Message {
+  role: 'teacher' | 'ai';
+  text: string;
+}
 
 export default function AssessmentPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const studentId = searchParams.get('id');
   const studentName = searchParams.get('name') || 'Student';
+  
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentInput, setCurrentInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const recognitionRef = useRef<any>(null); 
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [discoveredCount, setDiscoveredCount] = useState(0);
+  
+  const { speak, stop: stopVoice } = useCIAVoice();
+  const recognitionRef = useRef<any>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom of chat
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, currentInput]);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -24,11 +45,11 @@ export default function AssessmentPage() {
       recognition.interimResults = true;
 
       recognition.onresult = (event: any) => {
-        let currentTranscript = '';
-        for (let i = 0; i < event.results.length; i++) {
-          currentTranscript += event.results[i][0].transcript + ' ';
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
         }
-        setTranscript(currentTranscript.trim());
+        setCurrentInput(transcript);
       };
 
       recognition.onend = () => setIsRecording(false);
@@ -40,112 +61,181 @@ export default function AssessmentPage() {
     if (isRecording) {
       recognitionRef.current?.stop();
     } else {
-      setIsEditing(false); // Close editor while recording
+      stopVoice();
       recognitionRef.current?.start();
       setIsRecording(true);
     }
   };
 
+  const handleSend = async () => {
+    if (!currentInput.trim()) return;
+    
+    const userText = currentInput.trim();
+    const newMessages = [...messages, { role: 'teacher', text: userText } as Message];
+    setMessages(newMessages);
+    setCurrentInput('');
+    setIsProcessing(true);
+
+    // Stop recording if active
+    if (isRecording) {
+      recognitionRef.current?.stop();
+    }
+
+    try {
+      const transcript = newMessages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
+      const result = await processInterviewStep(transcript);
+      
+      if (result.reply) {
+        setMessages(prev => [...prev, { role: 'ai', text: result.reply }]);
+        setDiscoveredCount(result.discoveredPillars?.length || 0);
+        speak(result.reply);
+      }
+    } catch (error) {
+      console.error("Analysis Error:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleFinalize = async () => {
+    setIsProcessing(true);
+    const fullTranscript = messages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
+    
+    try {
+      const analysis = await finalizeAssessment(fullTranscript);
+      const params = new URLSearchParams({
+        id: studentId || "",
+        name: studentName,
+        transcript: fullTranscript,
+        analysis: JSON.stringify(analysis)
+      });
+      router.push(`/create-report/results?${params.toString()}`);
+    } catch (error) {
+      console.error("Finalization Error:", error);
+      setIsProcessing(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full bg-slate-50 animate-in fade-in duration-500">
+    <div className="flex flex-col h-screen bg-slate-50 font-sans">
       {/* Header */}
-      <header className="px-6 pt-10 pb-4 flex items-center justify-between bg-white shadow-sm">
+      <header className="px-6 py-6 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <Link href="/create-report" className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <ChevronLeft className="w-6 h-6 text-slate-800" />
+          <Link href="/create-report" className="p-2 hover:bg-slate-50 rounded-full text-slate-400">
+            <ChevronLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-lg font-bold text-slate-900 leading-none">Assessment</h1>
-            <p className="text-xs text-emerald-600 font-semibold uppercase mt-1">{studentName}</p>
+            <h1 className="text-sm font-bold text-slate-900 leading-tight">Reflective Interview</h1>
+            <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">{studentName}</p>
           </div>
         </div>
-        <button onClick={() => setTranscript('')} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
-          <Trash2 className="w-5 h-5" />
-        </button>
+        
+        {/* Progress Badge */}
+        <div className="bg-emerald-50 px-3 py-1.5 rounded-2xl border border-emerald-100 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">
+            {discoveredCount} Pillars Identified
+          </span>
+        </div>
       </header>
 
-      <main className="flex-1 px-6 pt-8 flex flex-col gap-6 overflow-hidden">
-        
-        {/* Narrative Input Card */}
-        <div className={`flex-1 flex flex-col bg-white rounded-[2rem] shadow-xl shadow-slate-200 border-2 transition-all duration-300 relative ${isRecording ? 'border-emerald-400 ring-4 ring-emerald-50' : 'border-transparent'}`}>
-          
-          {/* Editor Header */}
-          <div className="px-6 py-4 border-b border-slate-50 flex justify-between items-center">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Santri Narrative</span>
-            <button 
-              onClick={() => setIsEditing(!isEditing)}
-              className={`p-2 rounded-lg transition-colors ${isEditing ? 'bg-emerald-100 text-emerald-600' : 'text-slate-400 hover:bg-slate-100'}`}
-            >
-              <Edit3 className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Text Area / Live Transcript */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            {isEditing ? (
-              <textarea
-                value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
-                placeholder="Type or speak to describe the student's behavior..."
-                className="w-full h-full text-lg text-slate-700 bg-transparent resize-none focus:outline-none leading-relaxed"
-              />
-            ) : (
-              <div className={`text-lg leading-relaxed ${transcript ? 'text-slate-700' : 'text-slate-300 italic'}`}>
-                {transcript || "The story will appear here as you speak..."}
-                {isRecording && <span className="inline-block w-1 h-6 bg-emerald-500 ml-1 animate-pulse" />}
-              </div>
-            )}
-          </div>
-
-          {/* Live Recording Indicator Bottom */}
-          {isRecording && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-emerald-600 text-white px-6 py-2 rounded-full shadow-lg animate-bounce">
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              <span className="text-sm font-bold uppercase tracking-tighter">AI Listening</span>
+      {/* Chat Area */}
+      <main ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-40">
+            <div className="w-16 h-16 bg-slate-200 rounded-3xl flex items-center justify-center text-slate-400">
+              <Quote size={32} />
             </div>
-          )}
-        </div>
+            <p className="text-sm font-medium text-slate-500 max-w-[200px]">
+              Silakan mulai ceritakan observasi Ustadz tentang {studentName}...
+            </p>
+          </div>
+        )}
 
-        {/* Control Center */}
-        <div className="pb-10 flex flex-col items-center gap-6">
-          
-          {/* Main Record Button */}
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`flex ${msg.role === 'teacher' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+            <div className={`max-w-[85%] p-4 rounded-[1.8rem] shadow-sm ${
+              msg.role === 'teacher' 
+              ? 'bg-emerald-900 text-white rounded-tr-none' 
+              : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'
+            }`}>
+              <div className="flex items-center gap-2 mb-1 opacity-40">
+                {msg.role === 'teacher' ? <User size={10} /> : <Brain size={10} />}
+                <span className="text-[8px] font-black uppercase tracking-widest">
+                  {msg.role === 'teacher' ? 'Ustadz' : 'CIA Engine'}
+                </span>
+              </div>
+              <p className="text-sm leading-relaxed font-medium">{msg.text}</p>
+            </div>
+          </div>
+        ))}
+
+        {currentInput && isRecording && (
+          <div className="flex justify-end opacity-50">
+            <div className="max-w-[85%] p-4 bg-emerald-50 border border-emerald-100 text-emerald-900 rounded-[1.8rem] rounded-tr-none italic text-sm">
+              {currentInput}...
+            </div>
+          </div>
+        )}
+
+        {isProcessing && (
+          <div className="flex justify-start">
+            <div className="bg-white border border-slate-100 p-4 rounded-[1.8rem] rounded-tl-none shadow-sm flex items-center gap-2">
+              <Loader2 size={16} className="animate-spin text-emerald-600" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI is thinking...</span>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Input Area */}
+      <footer className="p-6 bg-white border-t border-slate-100">
+        <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-[2.2rem] border border-slate-100 shadow-inner">
           <button 
             onClick={toggleRecording}
-            className={`w-24 h-24 rounded-full flex items-center justify-center transition-all transform active:scale-90 ${
-                isRecording 
-                ? 'bg-red-500 shadow-2xl shadow-red-200' 
-                : 'bg-emerald-600 shadow-2xl shadow-emerald-200'
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+              isRecording 
+              ? 'bg-red-500 text-white shadow-lg shadow-red-200' 
+              : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
             }`}
           >
-            {isRecording ? (
-                <MicOff className="w-10 h-10 text-white" />
-            ) : (
-                <Mic className="w-10 h-10 text-white" />
-            )}
+            {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
           </button>
-
-          <p className="text-slate-400 text-sm font-medium">
-            {isRecording ? "Tap to stop recording" : "Tap to start speaking"}
-          </p>
-
-          {/* Submit Action */}
-          <Link href={`/create-report/analysis?id=${studentId}&name=${encodeURIComponent(studentName)}&narrative=${encodeURIComponent(transcript)}`}>
-          <button
-            disabled={!transcript || isRecording}
-            className={`w-full py-5 px-5 rounded-[2rem] font-bold text-lg flex items-center justify-center gap-3 transition-all ${
-              transcript && !isRecording
-              ? 'bg-slate-900 text-white shadow-xl shadow-slate-300 hover:bg-black' 
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-            }`}
-          >
-            <Sparkles className="w-5 h-5 text-emerald-400" />
-            Analyze with CIA Engine
-          </button>
-          </Link>
           
+          <input 
+            type="text"
+            value={currentInput}
+            onChange={(e) => setCurrentInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Type or speak..."
+            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-700 py-3"
+          />
+
+          <button 
+            onClick={handleSend}
+            disabled={!currentInput.trim() || isProcessing}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+              currentInput.trim() && !isProcessing
+              ? 'bg-emerald-900 text-white shadow-lg shadow-emerald-100' 
+              : 'text-slate-300'
+            }`}
+          >
+            <Send size={20} />
+          </button>
         </div>
-      </main>
+
+        {/* Finalize Button */}
+        {messages.length >= 2 && (
+          <button
+            onClick={handleFinalize}
+            disabled={isProcessing}
+            className="w-full mt-4 py-4 rounded-[1.8rem] bg-slate-900 text-white font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl shadow-slate-200 hover:bg-black active:scale-[0.98] transition-all"
+          >
+            <Sparkles size={16} className="text-emerald-400" />
+            Finish & Generate Report
+          </button>
+        )}
+      </footer>
     </div>
   );
 }
