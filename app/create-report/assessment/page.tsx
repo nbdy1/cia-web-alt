@@ -103,10 +103,11 @@ export default function AssessmentPage() {
     
     try {
       const analysis = await finalizeAssessment(fullTranscript, studentId || undefined);
+      
       const params = new URLSearchParams({
         id: studentId || "",
         name: studentName,
-        transcript: fullTranscript,
+        narrative: fullTranscript,
         analysis: JSON.stringify(analysis)
       });
       router.push(`/create-report/results?${params.toString()}`);

@@ -1,17 +1,31 @@
-import { Settings, Mic, BarChart3 } from 'lucide-react'; // Using Lucide for clean icons
+"use client";
+
+import { Settings, Mic, BarChart3, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/lib/context/auth-context';
 
 export default function HomePage() {
-  const userName = "Ustaz Abdullah"; // This would come from your Auth/Context later
+  const { user, signOut } = useAuth();
+  const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || "Ustaz Abdullah";
 
   return (
     <>
       {/* Top Bar */}
       <header className="flex justify-between items-center px-6 pt-10 pb-4">
         <div className="text-emerald-700 font-extrabold text-2xl tracking-tighter">CIA.</div>
-        <button className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-          <Settings className="w-6 h-6 text-slate-500" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="p-2 hover:bg-slate-100 rounded-full transition-colors" title="Settings">
+            <Settings className="w-5 h-5 text-slate-500" />
+          </button>
+          <button 
+            onClick={signOut}
+            className="p-2 hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded-full transition-colors flex items-center gap-1.5 px-3 border border-slate-100 hover:border-rose-100 text-xs font-semibold shadow-sm"
+            title="Log Out"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Keluar</span>
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 px-6 pt-6">
@@ -33,31 +47,23 @@ export default function HomePage() {
               <Mic className="w-8 h-8 text-white" />
             </div>
             <span className="text-white text-2xl font-bold font-serif">
-              Create Student Report
+              Buat Laporan Santri
             </span>
           </button>
           </Link>
          
-<Link href="/students">  
+          <Link href="/students">  
           <button className="w-full bg-slate-50 border-2 border-slate-100 hover:border-emerald-200 active:scale-[0.98] transition-all p-8 rounded-[2.5rem] flex flex-col items-center text-center">
             <div className="bg-white p-4 rounded-2xl mb-4 shadow-sm">
               <BarChart3 className="w-8 h-8 text-slate-600" />
             </div>
             <span className="text-slate-800 text-2xl font-bold font-serif">
-              Student Reports & Analytics
+              Laporan Santri & Analitik
             </span>
-            {/* <span className="text-slate-400 text-xs mt-2 uppercase st font-medium">
-              Data & Analytics
-            </span> */}
           </button>
-</Link>
+          </Link>
         </div>
       </main>
-
-      {/* Subtle Home Indicator Decor */}
-      {/* <footer className="py-6 flex justify-center">
-        <div className="w-32 h-1.5 bg-slate-200 rounded-full" />
-      </footer> */}
     </>
   );
 }

@@ -84,3 +84,5 @@ IMPORTANT: Prioritize the first Theme/Indicator that is still incomplete based o
     return { error: error.message };
   }
 }
+
+export const runFullAnalysis = finalizeAssessment;

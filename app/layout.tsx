@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { AuthProvider } from "@/lib/context/auth-context";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,9 +35,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased bg-slate-100 flex justify-center min-h-screen`}
     >
-<body className="w-full max-w-112.5 bg-white min-h-screen shadow-2xl flex flex-col relative">
+      <body className="w-full max-w-112.5 bg-white min-h-screen shadow-2xl flex flex-col relative">
+        <AuthProvider>
           {children}
-        </body>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

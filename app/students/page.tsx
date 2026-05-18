@@ -69,10 +69,10 @@ export default async function StudentsAnalyticsPage() {
           className="inline-flex items-center gap-2 text-emerald-300 hover:text-white transition-colors mb-6 group bg-white/5 px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm"
         >
           <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Beranda</span>
         </Link>
 
-        <h1 className="text-4xl font-bold text-white tracking-tight">Student Analytics</h1>
+        <h1 className="text-4xl font-bold text-white tracking-tight">Analitik Santri</h1>
         {/* <p className="text-emerald-300 text-[10px] font-bold uppercase tracking-[0.2em] mt-1 opacity-70">Report & Global Pulse</p> */}
 
         {/* Global Stats Row */}
@@ -93,7 +93,7 @@ export default async function StudentsAnalyticsPage() {
         <section>
           <div className="flex items-center justify-between mb-4 px-3">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Users size={12} /> My Students ({students.length})
+              <Users size={12} /> Santriku ({students.length})
             </h3>
           </div>
           <div className="grid gap-3">
@@ -143,7 +143,7 @@ export default async function StudentsAnalyticsPage() {
         <section>
           <div className="flex items-center gap-2 mb-4 px-3">
             <AlertTriangle size={14} className="text-amber-500" />
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Priority Attention</h3>
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Perhatian Prioritas</h3>
           </div>
           <div className="space-y-3">
             {lowScores.length > 0 ? lowScores.map((item: any, idx: number) => (
@@ -175,7 +175,7 @@ export default async function StudentsAnalyticsPage() {
         {/* 3. RECENT ACTIVITY */}
         <section>
           <div className="flex items-center justify-between mb-4 px-3">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Recent Reviews</h3>
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Histori</h3>
           </div>
           <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm">
             {recentReports.map((report: any, idx: number) => {
