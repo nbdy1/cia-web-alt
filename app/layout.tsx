@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { AuthProvider } from "@/lib/context/auth-context";
+import { LayoutWrapper } from "@/components/LayoutWrapper";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,12 +34,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased bg-slate-100 flex justify-center min-h-screen`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased min-h-screen`}
     >
-      <body className="w-full max-w-112.5 bg-white min-h-screen shadow-2xl flex flex-col relative">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <body className="w-full bg-white min-h-screen flex flex-col relative m-0 p-0">
+        <LayoutWrapper>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </LayoutWrapper>
       </body>
     </html>
   );
