@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth-context';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -12,6 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   
   const navItems = [
     { href: '/admin', label: 'Overview', icon: LayoutDashboard },
+    { href: '/admin/santri', label: 'Kelola Santri', icon: GraduationCap },
     { href: '/admin/ustadz', label: 'Kelola Ustadz', icon: Users },
     { href: '/admin/assignments', label: 'Plotting Santri', icon: UserPlus },
     { href: '/admin/monitoring', label: 'Monitor Laporan', icon: BookOpen },

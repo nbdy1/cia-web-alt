@@ -61,12 +61,16 @@ export async function finalizeAssessment(transcript: string, studentId?: string)
         .single();
       
       if (latestReport?.treatment_plan) {
-        const prevAnalysis = JSON.parse(latestReport.treatment_plan);
+        let prevAnalysis = latestReport.treatment_plan;
+        if (typeof prevAnalysis === 'string') {
+          try { prevAnalysis = JSON.parse(prevAnalysis); } catch (e) {}
+        }
+
         currentProgressContext = `
 PREVIOUS PROGRESS:
-- Karakter: ${prevAnalysis.overall_stats?.karakter?.percentage || 0}% (${prevAnalysis.overall_stats?.karakter?.fulfilled || 0}/${prevAnalysis.overall_stats?.karakter?.total || 0})
-- Mental: ${prevAnalysis.overall_stats?.mental?.percentage || 0}% (${prevAnalysis.overall_stats?.mental?.fulfilled || 0}/${prevAnalysis.overall_stats?.mental?.total || 0})
-- Soft Skill: ${prevAnalysis.overall_stats?.soft_skill?.percentage || 0}% (${prevAnalysis.overall_stats?.soft_skill?.fulfilled || 0}/${prevAnalysis.overall_stats?.soft_skill?.total || 0})
+- Karakter: ${prevAnalysis?.overall_stats?.karakter?.percentage || 0}% (${prevAnalysis?.overall_stats?.karakter?.fulfilled || 0}/${prevAnalysis?.overall_stats?.karakter?.total || 0})
+- Mental: ${prevAnalysis?.overall_stats?.mental?.percentage || 0}% (${prevAnalysis?.overall_stats?.mental?.fulfilled || 0}/${prevAnalysis?.overall_stats?.mental?.total || 0})
+- Soft Skill: ${prevAnalysis?.overall_stats?.soft_skill?.percentage || 0}% (${prevAnalysis?.overall_stats?.soft_skill?.fulfilled || 0}/${prevAnalysis?.overall_stats?.soft_skill?.total || 0})
 
 IMPORTANT: Prioritize the first Theme/Indicator that is still incomplete based on the stats above.
         `;

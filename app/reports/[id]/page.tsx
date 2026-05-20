@@ -48,7 +48,7 @@ export default async function ReportDetailPage({
   const categories = ["Karakter", "Mental", "Soft Skill"];
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 font-sans max-w-md mx-auto border-x border-slate-100 shadow-2xl relative">
+    <div className="min-h-screen bg-slate-50 pb-24 font-sans relative">
       {/* Sticky Header */}
       <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-6 border-b border-slate-200 flex items-center justify-between sticky top-0 z-30">
         <Link

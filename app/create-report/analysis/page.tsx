@@ -33,11 +33,13 @@ export default function AnalysisPage() {
 
       if (result) {
         console.log("🔍 Client: Analysis received! Redirecting...");
+        
+        sessionStorage.setItem('current_analysis', JSON.stringify(result));
+        sessionStorage.setItem('current_narrative', narrative);
+        
         const params = new URLSearchParams({
           id: studentId || "",
-          name: searchParams.get('name') || "",
-          narrative: narrative,
-          analysis: JSON.stringify(result)
+          name: searchParams.get('name') || ""
         });
         
         router.push(`/create-report/results?${params.toString()}`);

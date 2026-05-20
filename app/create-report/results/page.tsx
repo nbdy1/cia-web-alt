@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -30,11 +30,25 @@ export default function ResultsPage() {
 
   const studentId = searchParams.get("id");
   const studentName = searchParams.get("name") || "Student";
-  const narrative = searchParams.get("narrative") || "";
-  const analysisData = JSON.parse(
-    searchParams.get("analysis") ||
-      '{"status": "", "assessments": [], "milestones": [], "treatment": {}}',
-  );
+  const [narrative, setNarrative] = useState("");
+  const [analysisData, setAnalysisData] = useState<any>(null);
+
+  useEffect(() => {
+    const storedAnalysis = sessionStorage.getItem('current_analysis');
+    const storedNarrative = sessionStorage.getItem('current_narrative');
+    
+    if (storedAnalysis) {
+      try {
+        setAnalysisData(JSON.parse(storedAnalysis));
+      } catch (e) {
+        console.error("Failed to parse stored analysis", e);
+      }
+    }
+    
+    if (storedNarrative) {
+      setNarrative(storedNarrative);
+    }
+  }, []);
 
   const categories = ["Karakter", "Mental", "Soft Skill"];
 
@@ -57,6 +71,8 @@ export default function ResultsPage() {
     });
 
     if (result.success) {
+      sessionStorage.removeItem('current_analysis');
+      sessionStorage.removeItem('current_narrative');
       router.push("/students");
     } else {
       alert("Failed to save: " + result.error);
@@ -64,8 +80,17 @@ export default function ResultsPage() {
     }
   };
 
+  if (!analysisData) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans">
+        <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mb-4" />
+        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Memuat Hasil...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans max-w-md mx-auto relative border-x border-slate-100 shadow-2xl">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans relative">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between">
         <button onClick={() => router.back()} className="p-2 text-slate-400">
@@ -127,44 +152,46 @@ export default function ResultsPage() {
         </section>
 
         {/* 2. Priority Treatment */}
-        <section className="bg-white rounded-[2.5rem] p-6 border border-slate-100 shadow-sm space-y-4">
-          <div className="flex items-center gap-2">
-            <Target className="text-emerald-600" size={18} />
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Treatment Prioritas
-            </h3>
-          </div>
-          <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-            <div className="flex flex-col mb-3">
-              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">
-                {analysisData.treatment.priority_theme}
-              </span>
-              <h4 className="text-base font-bold text-slate-900 font-serif leading-tight">
-                {analysisData.treatment.priority_indicator}
-              </h4>
+        {analysisData.treatment && (
+          <section className="bg-white rounded-[2.5rem] p-6 border border-slate-100 shadow-sm space-y-4">
+            <div className="flex items-center gap-2">
+              <Target className="text-emerald-600" size={18} />
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Treatment Prioritas
+              </h3>
             </div>
+            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+              <div className="flex flex-col mb-3">
+                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">
+                  {analysisData.treatment.priority_theme}
+                </span>
+                <h4 className="text-base font-bold text-slate-900 font-serif leading-tight">
+                  {analysisData.treatment.priority_indicator}
+                </h4>
+              </div>
 
-            <div className="space-y-2 mb-4">
-              {analysisData.treatment.target_sub_indicators.map(
-                (si: string, i: number) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 text-[11px] text-slate-600 font-medium"
-                  >
-                    <div className="w-1 h-1 rounded-full bg-emerald-400" />
-                    {si}
-                  </div>
-                ),
-              )}
-            </div>
+              <div className="space-y-2 mb-4">
+                {analysisData.treatment.target_sub_indicators?.map(
+                  (si: string, i: number) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 text-[11px] text-slate-600 font-medium"
+                    >
+                      <div className="w-1 h-1 rounded-full bg-emerald-400" />
+                      {si}
+                    </div>
+                  ),
+                )}
+              </div>
 
-            <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm">
-              <p className="text-xs text-slate-700 leading-relaxed italic">
-                {analysisData.treatment.action_plan}
-              </p>
+              <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm">
+                <p className="text-xs text-slate-700 leading-relaxed italic">
+                  {analysisData.treatment.action_plan}
+                </p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* 3. Detailed Fulfillment */}
         <section className="space-y-3">
@@ -232,7 +259,7 @@ export default function ResultsPage() {
                           </p>
 
                           <div className="space-y-1">
-                            {item.fulfilled_sub_indicators.map(
+                            {item.fulfilled_sub_indicators?.map(
                               (si: string, idx: number) => (
                                 <div
                                   key={idx}
@@ -243,7 +270,7 @@ export default function ResultsPage() {
                                 </div>
                               ),
                             )}
-                            {item.missing_sub_indicators.map(
+                            {item.missing_sub_indicators?.map(
                               (si: string, idx: number) => (
                                 <div
                                   key={idx}
@@ -263,33 +290,6 @@ export default function ResultsPage() {
               </div>
             );
           })}
-        </section>
-
-        {/* 4. Actionable Treatment */}
-        <section className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl space-y-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2 text-emerald-400">
-              <CheckCircle2 size={14} />
-              <h3 className="text-[10px] font-black uppercase tracking-widest">
-                Habit Building
-              </h3>
-            </div>
-            <p className="text-sm font-medium text-slate-100 leading-relaxed">
-              {analysisData.treatment.habit}
-            </p>
-          </div>
-          <div className="h-px bg-white/10" />
-          <div>
-            <div className="flex items-center gap-2 mb-2 text-emerald-400">
-              <Brain size={14} />
-              <h3 className="text-[10px] font-black uppercase tracking-widest">
-                Self Reflection
-              </h3>
-            </div>
-            <p className="text-sm font-medium text-slate-100 leading-relaxed">
-              {analysisData.treatment.reflection}
-            </p>
-          </div>
         </section>
       </main>
 

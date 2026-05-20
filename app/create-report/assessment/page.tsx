@@ -104,11 +104,13 @@ export default function AssessmentPage() {
     try {
       const analysis = await finalizeAssessment(fullTranscript, studentId || undefined);
       
+      // Save large JSON payload to sessionStorage to avoid URL length limits
+      sessionStorage.setItem('current_analysis', JSON.stringify(analysis));
+      sessionStorage.setItem('current_narrative', fullTranscript);
+      
       const params = new URLSearchParams({
         id: studentId || "",
-        name: studentName,
-        narrative: fullTranscript,
-        analysis: JSON.stringify(analysis)
+        name: studentName
       });
       router.push(`/create-report/results?${params.toString()}`);
     } catch (error) {

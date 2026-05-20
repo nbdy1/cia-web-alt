@@ -34,6 +34,9 @@ Analisis transkrip wawancara berikut untuk seorang Santri di Sekolah Impian.
 Berdasarkan transkrip dan kerangka kerja yang diberikan (Tema, Indikator, Sub-indikator), buatlah penilaian ketercapaian yang presisi.
 Seluruh output teks deskriptif dalam JSON Anda harus dalam Bahasa Indonesia.
 
+### KERANGKA KERJA (FRAMEWORK) MASTER:
+${JSON.stringify({ karakter: karakterData, mental: mentalData, softSkill: softSkillData })}
+
 ### ATURAN PENILAIAN (FULFILLMENT):
 1. **Pemetaan Spesifik**: Identifikasi secara persis Sub-indikator mana yang telah terpenuhi berdasarkan cerita dari guru.
 2. **Tinjauan Kuantitatif**: Untuk setiap Kategori, hitung persentase perkembangan berdasarkan TOTAL Sub-indikator berikut:
@@ -42,6 +45,7 @@ Seluruh output teks deskriptif dalam JSON Anda harus dalam Bahasa Indonesia.
    - **Soft Skill**: 98 Total Sub-indikator
    - Persentase = (Terpenuhi / Total) * 100.
 3. **Berbasis Bukti**: Hanya tandai Sub-indikator sebagai terpenuhi jika ada bukti yang jelas di dalam transkrip.
+4. **DILARANG KERAS MENGARANG (HALUSINASI)**: Anda HANYA BOLEH menggunakan "Tema", "Indikator", dan "Sub-indikator" yang SAMA PERSIS (exact match) dengan teks di dalam KERANGKA KERJA. Dilarang mengarang, menyingkat, atau membuat kriteria baru seperti "Siddiq", "Regulasi Emosi", dll jika tidak ada di dalam kerangka kerja.
 
 ### ATURAN PENANGANAN (PRIORITY RULE UNTUK TREATMENT):
 1. **Prioritas Berurutan**: Lihat urutan kerangka kerja (Tema 1, lalu 2, dst.). Penanganan (treatment) HARUS difokuskan pada Tema/Indikator PERTAMA yang belum terpenuhi 100%.
