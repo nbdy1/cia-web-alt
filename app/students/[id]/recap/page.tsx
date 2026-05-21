@@ -26,8 +26,47 @@ async function getStudentRecap(id: string) {
     .select("treatment_plan")
     .eq("student_id", id);
 
-  // Aggregate all fulfilled sub-indicators
-  const fulfilledSet = new Set<string>();
+  // Aggregate canonical fulfilled sub-indicators by category
+  const fulfilledByCategory: Record<string, Set<string>> = {
+    Karakter: new Set(),
+    Mental: new Set(),
+    "Soft Skill": new Set(),
+  };
+
+  const allDataByCategory: Record<
+    string,
+    { themes: { title: string; indicators: { title: string; sub_indicators: string[] }[] }[] }
+  > = {
+    Karakter: karakterData,
+    Mental: mentalData,
+    "Soft Skill": softSkillData,
+  };
+
+  const norm = (s: string) => s.trim().toLowerCase();
+
+  const lookupFullIndicator = (
+    category: string,
+    themeTitle: string,
+    indicatorTitle: string
+  ): string[] | null => {
+    const catData = allDataByCategory[category];
+    if (!catData) return null;
+    for (const theme of catData.themes) {
+      if (norm(theme.title) !== norm(themeTitle)) continue;
+      for (const ind of theme.indicators) {
+        if (norm(ind.title) === norm(indicatorTitle)) {
+          return ind.sub_indicators;
+        }
+      }
+    }
+    return null;
+  };
+
+  const isLikelySame = (candidate: string, target: string) => {
+    const c = norm(candidate);
+    const t = norm(target);
+    return c === t || c.includes(t) || t.includes(c);
+  };
 
   reports?.forEach((report) => {
     let plan = report.treatment_plan;
@@ -41,34 +80,35 @@ async function getStudentRecap(id: string) {
 
     if (plan && Array.isArray(plan.detailed_assessments)) {
       plan.detailed_assessments.forEach((assessment: any) => {
-        if (Array.isArray(assessment.fulfilled_sub_indicators)) {
-          assessment.fulfilled_sub_indicators.forEach((si: string) => {
-            // Normalize for safer matching
-            fulfilledSet.add(si.trim().toLowerCase());
-          });
-        }
+        const category = assessment.category as string;
+        const bucket =
+          fulfilledByCategory[category] ??
+          fulfilledByCategory[Object.keys(fulfilledByCategory).find((k) => norm(k) === norm(category)) ?? ""];
+        if (!bucket || !Array.isArray(assessment.fulfilled_sub_indicators)) return;
+
+        const fullSubs = lookupFullIndicator(
+          category,
+          assessment.theme as string,
+          assessment.indicator as string
+        );
+        if (!fullSubs) return;
+
+        fullSubs.forEach((frameworkSub) => {
+          if (assessment.fulfilled_sub_indicators.some((si: string) => isLikelySame(si, frameworkSub))) {
+            bucket.add(norm(frameworkSub));
+          }
+        });
       });
     }
   });
 
-  return { student, fulfilledSet, totalReports: reports?.length || 0 };
+  return { student, fulfilledByCategory, totalReports: reports?.length || 0 };
 }
 
 // Helper to check if a sub-indicator is fulfilled
 function isFulfilled(subIndicator: string, fulfilledSet: Set<string>) {
   const normalized = subIndicator.trim().toLowerCase();
-
-  // Exact match
-  if (fulfilledSet.has(normalized)) return true;
-
-  // Fuzzy match (if AI truncated or slightly modified it)
-  for (const fulfilled of fulfilledSet) {
-    if (fulfilled.includes(normalized) || normalized.includes(fulfilled)) {
-      return true;
-    }
-  }
-
-  return false;
+  return fulfilledSet.has(normalized);
 }
 
 export default async function RecapPage({
@@ -77,7 +117,7 @@ export default async function RecapPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { student, fulfilledSet, totalReports } = await getStudentRecap(id);
+  const { student, fulfilledByCategory, totalReports } = await getStudentRecap(id);
 
   if (!student)
     return <div className="p-10 text-center">Student not found.</div>;
@@ -164,7 +204,8 @@ export default async function RecapPage({
               theme.indicators.forEach((ind) => {
                 ind.sub_indicators.forEach((sub) => {
                   totalSub++;
-                  if (isFulfilled(sub, fulfilledSet)) fulfilledSub++;
+                  const categorySet = fulfilledByCategory[cat.label] ?? new Set<string>();
+                  if (isFulfilled(sub, categorySet)) fulfilledSub++;
                 });
               });
             });
@@ -215,7 +256,8 @@ export default async function RecapPage({
                       let hasFulfilled = false;
                       theme.indicators.forEach((ind) => {
                         ind.sub_indicators.forEach((sub) => {
-                          if (isFulfilled(sub, fulfilledSet)) {
+                          const categorySet = fulfilledByCategory[cat.label] ?? new Set<string>();
+                          if (isFulfilled(sub, categorySet)) {
                             hasFulfilled = true;
                           }
                         });
@@ -239,7 +281,8 @@ export default async function RecapPage({
                           {theme.indicators.map((ind: any, iIdx: number) => {
                             // If this is a fulfilled theme, we optionally could filter out completely empty indicators,
                             // but keeping them preserves context. We will just visually dim the empty ones.
-                            const hasAnyFulfilledSub = ind.sub_indicators.some((sub: string) => isFulfilled(sub, fulfilledSet));
+                            const categorySet = fulfilledByCategory[cat.label] ?? new Set<string>();
+                            const hasAnyFulfilledSub = ind.sub_indicators.some((sub: string) => isFulfilled(sub, categorySet));
                             
                             return (
                               <div key={iIdx} className={`space-y-3 ${!hasAnyFulfilledSub && !isUnfulfilled ? "opacity-50" : ""}`}>
@@ -248,7 +291,8 @@ export default async function RecapPage({
                                 </h4>
                                 <div className="space-y-1.5 pl-1">
                                   {ind.sub_indicators.map((sub: string, sIdx: number) => {
-                                    const fulfilled = isFulfilled(sub, fulfilledSet);
+                                    const categorySet = fulfilledByCategory[cat.label] ?? new Set<string>();
+                                    const fulfilled = isFulfilled(sub, categorySet);
                                     return (
                                       <div
                                         key={sIdx}

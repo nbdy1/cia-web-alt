@@ -23,6 +23,7 @@ export default function AssessmentPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [discoveredCount, setDiscoveredCount] = useState(0);
+  const [discoveredPillars, setDiscoveredPillars] = useState<string[]>([]);
   
   const { speak, stop: stopVoice } = useCIAVoice();
   const recognitionRef = useRef<any>(null);
@@ -82,12 +83,27 @@ export default function AssessmentPage() {
     }
 
     try {
+      console.log('[Interview][Client] Step start', {
+        previousAccumulatedThemes: discoveredPillars,
+        previousAccumulatedCount: discoveredPillars.length,
+      });
       const transcript = newMessages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
-      const result = await processInterviewStep(transcript);
+      const result = await processInterviewStep(transcript, discoveredPillars);
       
       if (result.reply) {
+        const newDiscovered = Array.isArray(result.discoveredPillars) ? result.discoveredPillars : [];
+        const mergedDiscovered = Array.from(new Set([...discoveredPillars, ...newDiscovered]));
+        const addedThisStep = mergedDiscovered.filter(theme => !discoveredPillars.includes(theme));
+        console.log('[Interview][Client] Step result', {
+          modelReturnedThemesThisStep: newDiscovered,
+          accumulatedBefore: discoveredPillars,
+          addedThisStep,
+          accumulatedAfter: mergedDiscovered,
+          accumulatedAfterCount: mergedDiscovered.length,
+        });
         setMessages(prev => [...prev, { role: 'ai', text: result.reply }]);
-        setDiscoveredCount(result.discoveredPillars?.length || 0);
+        setDiscoveredPillars(mergedDiscovered);
+        setDiscoveredCount(mergedDiscovered.length);
         speak(result.reply);
       }
     } catch (error) {
@@ -102,7 +118,24 @@ export default function AssessmentPage() {
     const fullTranscript = messages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
     
     try {
-      const analysis = await finalizeAssessment(fullTranscript, studentId || undefined);
+      console.log('[Finalize][Client] Sending finalization request', {
+        accumulatedThemesSent: discoveredPillars,
+        accumulatedThemesCount: discoveredPillars.length,
+        transcriptLines: fullTranscript.split('\n').filter(Boolean).length,
+      });
+      const analysis = await finalizeAssessment(
+        fullTranscript,
+        studentId || undefined,
+        discoveredPillars
+      );
+      console.log('[Finalize][Client] Final analysis received', {
+        statusSummary: analysis?.status_summary,
+        detailedAssessmentsCount: analysis?.detailed_assessments?.length ?? 0,
+        themesInFinalDetailedAssessments: Array.from(
+          new Set((analysis?.detailed_assessments ?? []).map((a: any) => a?.theme).filter(Boolean))
+        ),
+        priorityTheme: analysis?.treatment?.priority_theme,
+      });
       
       // Save large JSON payload to sessionStorage to avoid URL length limits
       sessionStorage.setItem('current_analysis', JSON.stringify(analysis));
@@ -137,7 +170,7 @@ export default function AssessmentPage() {
         <div className="bg-emerald-50 px-3 py-1.5 rounded-2xl border border-emerald-100 flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">
-            {discoveredCount} Themes Identified
+            {discoveredCount} Topics Explored
           </span>
         </div>
       </header>

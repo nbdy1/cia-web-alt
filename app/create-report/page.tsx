@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useUserRole } from '@/lib/useUserRole';
+import { useAuth } from '@/lib/context/auth-context';
 import { ChevronLeft, Mic, Search, X, Loader2, CheckCircle2, MicOff } from 'lucide-react';
 import Link from 'next/link';
 import Fuse from 'fuse.js';
@@ -13,11 +15,13 @@ const STUDENTS = [
   { id: '4', name: 'Umar Abdurrahman' },
   { id: '5', name: 'Hamzah Fansuri' },
 ];export default function CreateReport() {
-  const [students, setStudents] = useState<{id: string, name: string}[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState<{id: string, name: string} | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [isListening, setIsListening] = useState(false);
+  const { role } = useUserRole();
+  const { user } = useAuth();
   const recognitionRef = useRef<any>(null);
 
   // FETCH REAL STUDENTS FROM DB
@@ -25,7 +29,7 @@ const STUDENTS = [
     async function fetchStudents() {
       const { data, error } = await supabase
         .from('students')
-        .select('id, name')
+        .select('*, user:profiles(id)')
         .order('name', { ascending: true });
       
       if (!error && data) setStudents(data);
@@ -40,9 +44,12 @@ const STUDENTS = [
     distance: 100 
   }), [students]);
   
-  const results = searchQuery 
-    ? fuse.search(searchQuery).map(r => r.item) 
-    : students;
+  const filteredStudents = React.useMemo(() => {
+    const list = searchQuery ? fuse.search(searchQuery).map(r => r.item) : students;
+    if (role === 'admin') return list;
+    // For ustadz: only show students assigned to them
+    return list.filter(s => s.assigned_ustadz_id === user?.id);
+  }, [searchQuery, students, role, user?.id]);
 
   // Function to handle the matching logic
   const handleMatch = (text: string) => {
@@ -167,7 +174,7 @@ const STUDENTS = [
             <div className="flex justify-center py-10"><Loader2 className="animate-spin text-slate-300" /></div>
           ) : (
             <div className="space-y-2">
-              {results.map((student) => (
+              {filteredStudents.map((student) => (
                 <button
                   key={student.id}
                   onClick={() => setSelectedStudent(student)}

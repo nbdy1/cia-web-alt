@@ -9,11 +9,100 @@ import {
   Brain,
   Heart,
   Zap,
-  Info,
+  CheckCircle2,
   Circle,
   ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
+import { karakterData } from "@/lib/data/karakter";
+import { mentalData } from "@/lib/data/mental";
+import { softSkillData } from "@/lib/data/soft-skill";
+
+// ─── Framework lookup helpers ──────────────────────────────────────────────
+// Given a category + theme title + indicator title from the AI output,
+// return the FULL sub_indicators array from the local framework.
+// This ensures the report always shows all sub-indicators, not just those
+// the AI happened to see via RAG.
+
+const ALL_DATA: Record<string, { themes: { title: string; indicators: { title: string; sub_indicators: string[] }[] }[] }> = {
+  Karakter: karakterData,
+  Mental: mentalData,
+  "Soft Skill": softSkillData,
+};
+
+function normaliseStr(s: string) {
+  return s.trim().toLowerCase();
+}
+
+function lookupFullIndicator(
+  category: string,
+  themeTitle: string,
+  indicatorTitle: string
+): string[] | null {
+  const catData = ALL_DATA[category];
+  if (!catData) return null;
+
+  for (const theme of catData.themes) {
+    if (normaliseStr(theme.title) === normaliseStr(themeTitle)) {
+      for (const ind of theme.indicators) {
+        if (normaliseStr(ind.title) === normaliseStr(indicatorTitle)) {
+          return ind.sub_indicators;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function isSubFulfilled(sub: string, fulfilledList: string[]): boolean {
+  const n = normaliseStr(sub);
+  for (const f of fulfilledList) {
+    const fn = normaliseStr(f);
+    if (fn === n || fn.includes(n) || n.includes(fn)) return true;
+  }
+  return false;
+}
+
+function computeDisplayOverallStats(analysis: any) {
+  const categories = ["Karakter", "Mental", "Soft Skill"] as const;
+  const result: Record<string, { fulfilled: number; total: number; percentage: number }> = {};
+
+  categories.forEach((cat) => {
+    const data = ALL_DATA[cat];
+    const canonicalFulfilled = new Set<string>();
+    const assessments = Array.isArray(analysis?.detailed_assessments)
+      ? analysis.detailed_assessments.filter((a: any) => a.category === cat)
+      : [];
+
+    assessments.forEach((item: any) => {
+      const fullSubs = lookupFullIndicator(item.category, item.theme, item.indicator);
+      if (!fullSubs) return;
+      const aiFulfilled: string[] = item.fulfilled_sub_indicators ?? [];
+      fullSubs.forEach((sub) => {
+        if (isSubFulfilled(sub, aiFulfilled)) canonicalFulfilled.add(normaliseStr(sub));
+      });
+    });
+
+    let total = 0;
+    data.themes.forEach((theme) => {
+      theme.indicators.forEach((ind) => {
+        ind.sub_indicators.forEach((sub) => {
+          total++;
+        });
+      });
+    });
+
+    const fulfilled = canonicalFulfilled.size;
+    result[cat.toLowerCase().replace(" ", "_")] = {
+      fulfilled,
+      total,
+      percentage: total > 0 ? Math.round((fulfilled / total) * 10000) / 100 : 0,
+    };
+  });
+
+  return result;
+}
+
 
 async function getReportDetails(id: string) {
   const { data: report } = await supabase
@@ -44,6 +133,7 @@ export default async function ReportDetailPage({
     typeof report.treatment_plan === "string"
       ? JSON.parse(report.treatment_plan)
       : report.treatment_plan;
+  const displayOverallStats = computeDisplayOverallStats(analysis);
 
   const categories = ["Karakter", "Mental", "Soft Skill"];
 
@@ -79,7 +169,7 @@ export default async function ReportDetailPage({
               Perkembangan Keseluruhan
             </h3>
             <div className="grid grid-cols-3 gap-3">
-              {Object.entries(analysis.overall_stats || {}).map(
+              {Object.entries(displayOverallStats || {}).map(
                 ([key, stats]: [string, any]) => (
                   <div
                     key={key}
@@ -267,54 +357,83 @@ export default async function ReportDetailPage({
                 </div>
 
                 <div className="p-5 space-y-6">
-                  {items.map((item: any, i: number) => (
-                    <div key={i} className="space-y-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-                            {item.theme}
-                          </span>
-                          <span className="font-bold text-xs text-slate-800 font-serif leading-tight">
-                            {item.indicator}
+                  {items.map((item: any, i: number) => {
+                    // Look up the FULL sub-indicator list from the local framework.
+                    // Falls back to the AI's combined list if the theme/indicator
+                    // name doesn't match (e.g. legacy reports).
+                    const fullSubs = lookupFullIndicator(
+                      item.category,
+                      item.theme,
+                      item.indicator
+                    );
+
+                    const aiFullfilled: string[] = item.fulfilled_sub_indicators ?? [];
+                    const displaySubs = fullSubs ?? [
+                      ...aiFullfilled,
+                      ...(item.missing_sub_indicators ?? []),
+                    ];
+
+                    const fulfilledCount = displaySubs.filter((s) =>
+                      isSubFulfilled(s, aiFullfilled)
+                    ).length;
+                    const totalCount = displaySubs.length;
+                    const fraction = `${fulfilledCount}/${totalCount}`;
+
+                    return (
+                      <div key={i} className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                              {item.theme}
+                            </span>
+                            <span className="font-bold text-xs text-slate-800 font-serif leading-tight">
+                              {item.indicator}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0 ml-2">
+                            {fraction}
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                          {item.fulfillment_fraction}
-                        </span>
-                      </div>
 
-                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
-                        <p className="text-[11px] text-slate-500 leading-relaxed italic">
-                          "{item.reasoning}"
-                        </p>
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                          <p className="text-[11px] text-slate-500 leading-relaxed italic">
+                            &ldquo;{item.reasoning}&rdquo;
+                          </p>
 
-                        <div className="grid grid-cols-1 gap-2">
-                          {item.fulfilled_sub_indicators?.map(
-                            (si: string, idx: number) => (
-                              <div
-                                key={idx}
-                                className="flex items-center gap-2 text-[10px] text-emerald-700 font-bold"
-                              >
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                                {si}
-                              </div>
-                            ),
-                          )}
-                          {item.missing_sub_indicators?.map(
-                            (si: string, idx: number) => (
-                              <div
-                                key={idx}
-                                className="flex items-center gap-2 text-[10px] text-slate-400 font-medium"
-                              >
-                                <div className="w-1.5 h-1.5 rounded-full bg-slate-200 flex-shrink-0" />
-                                {si}
-                              </div>
-                            ),
-                          )}
+                          <div className="space-y-1.5">
+                            {displaySubs.map((si: string, idx: number) => {
+                              const fulfilled = isSubFulfilled(si, aiFullfilled);
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`flex items-start gap-2 p-2 rounded-xl ${
+                                    fulfilled
+                                      ? "bg-emerald-50/80 border border-emerald-100/50"
+                                      : ""
+                                  }`}
+                                >
+                                  <div className="mt-0.5 shrink-0">
+                                    {fulfilled ? (
+                                      <CheckCircle2 size={13} className="text-emerald-500" />
+                                    ) : (
+                                      <Circle size={13} className="text-slate-300" />
+                                    )}
+                                  </div>
+                                  <span
+                                    className={`text-[11px] leading-snug font-medium ${
+                                      fulfilled ? "text-emerald-900" : "text-slate-400"
+                                    }`}
+                                  >
+                                    {si}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );

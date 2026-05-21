@@ -2,13 +2,31 @@
 
 import { Mic, BarChart3, LogOut } from "lucide-react";
 import Link from "next/link";
+import React from "react";
 import { useAuth } from "@/lib/context/auth-context";
+import { supabase } from "@/lib/supabase";
 import { SettingsDropdown } from "@/components/SettingsDropdown";
 
 export default function HomePage() {
   const { user, signOut } = useAuth();
+  const [role, setRole] = React.useState<string | null>(null);
   const userName =
     user?.user_metadata?.name || user?.email?.split("@")[0] || "Ustaz Abdullah";
+
+  // Fetch role from profiles table
+  React.useEffect(() => {
+    if (user?.id) {
+      supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+        .then(({ data, error }) => {
+          if (!error && data) setRole(data.role);
+        })
+
+    }
+  }, [user]);
 
   return (
     <>
@@ -66,18 +84,20 @@ export default function HomePage() {
             </button>
           </Link>
 
-          <Link href="/admin">
-            <button className="group w-full bg-slate-900 border-2 border-slate-800 hover:border-slate-700 active:scale-[0.98] transition-all p-6 rounded-[2.5rem] flex flex-col items-center text-center mt-2">
-              <div className="bg-slate-800 p-3 rounded-2xl mb-3 shadow-sm group-hover:scale-110 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-slate-300">
-                  <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
-                </svg>
-              </div>
-              <span className="text-slate-300 text-lg font-bold font-serif">
-                Portal Admin
-              </span>
-            </button>
-          </Link>
+          {role === 'admin' && (
+            <Link href="/admin">
+              <button className="group w-full bg-slate-900 border-2 border-slate-800 hover:border-slate-700 active:scale-[0.98] transition-all p-6 rounded-[2.5rem] flex flex-col items-center text-center mt-2">
+                <div className="bg-slate-800 p-3 rounded-2xl mb-3 shadow-sm group-hover:scale-110 transition-transform">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-slate-300">
+                    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                  </svg>
+                </div>
+                <span className="text-slate-300 text-lg font-bold font-serif">
+                  Portal Admin
+                </span>
+              </button>
+            </Link>
+          )}
         </div>
       </main>
     </>

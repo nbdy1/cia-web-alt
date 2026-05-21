@@ -1,15 +1,37 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth-context';
+import { useUserRole } from '@/lib/useUserRole';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { role, loading: roleLoading } = useUserRole();
+  const router = useRouter();
+
+  // Redirect non-admin users away from /admin
+  useEffect(() => {
+    if (!roleLoading && role !== null && role !== 'admin') {
+      router.replace('/');
+    }
+  }, [role, roleLoading, router]);
   
+  // Show spinner while role is being fetched
+  if (roleLoading || (role === null && user)) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="animate-spin text-emerald-600 w-8 h-8" />
+      </div>
+    );
+  }
+
+  // Render nothing while redirect fires for non-admins
+  if (role !== 'admin') return null;
+
   const navItems = [
     { href: '/admin', label: 'Overview', icon: LayoutDashboard },
     { href: '/admin/santri', label: 'Kelola Santri', icon: GraduationCap },
