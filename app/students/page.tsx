@@ -6,15 +6,12 @@ import { useUserRole } from "@/lib/useUserRole";
 import { supabase } from "@/lib/supabase";
 import {
   TrendingUp,
-  AlertTriangle,
   Users,
-  Heart,
-  Brain,
-  Zap,
+  Bookmark,
+  CheckCircle2,
   ChevronRight,
   ChevronLeft,
   LayoutDashboard,
-  Sparkles,
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,20 +21,24 @@ type StudentWithStats = {
   name: string;
   batch: string | null;
   assigned_ustadz_id: string | null;
-  stats: { karakter: string; mental: string; softSkill: string };
+  reportsCount: number;
+  themesExplored: number;
+  fulfilledSubIndicators: number;
 };
 
-type Stat = { name: string; avg: string };
-type LowScore = { score: number; pillar_id: string; reports: { student_id: string; students: { name: string } } | null };
-type RecentReport = { id: string; created_at: string; students: { name: string } | null; report_scores: { score: number; category: string }[] };
+type RecentReport = {
+  id: string;
+  title: string | null;
+  created_at: string;
+  students: { name: string } | null;
+  treatment_plan: any;
+};
 
 export default function StudentsAnalyticsPage() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
 
   const [students, setStudents] = useState<StudentWithStats[]>([]);
-  const [stats, setStats] = useState<Stat[]>([]);
-  const [lowScores, setLowScores] = useState<LowScore[]>([]);
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -53,7 +54,8 @@ export default function StudentsAnalyticsPage() {
       let studentsQuery = supabase.from("students").select(`
         id, name, batch, assigned_ustadz_id,
         reports (
-          report_scores (category, score)
+          id,
+          treatment_plan
         )
       `);
       if (ustadzId) {
@@ -63,72 +65,62 @@ export default function StudentsAnalyticsPage() {
 
       const studentIds = studentsRaw?.map((s) => s.id) ?? [];
 
-      // Process students and compute per-student score averages
-      const calcAvg = (scores: { category: string; score: number }[], cat: string) => {
-        const filtered = scores.filter((s) => s.category === cat);
-        return filtered.length > 0
-          ? (filtered.reduce((a, b) => a + b.score, 0) / filtered.length).toFixed(1)
-          : "0.0";
+      const parsePlan = (planRaw: any) => {
+        if (!planRaw) return null;
+        if (typeof planRaw === "string") {
+          try {
+            return JSON.parse(planRaw);
+          } catch {
+            return null;
+          }
+        }
+        return planRaw;
       };
 
       const processed: StudentWithStats[] = (studentsRaw ?? []).map((student) => {
-        const allScores = student.reports?.flatMap((r: any) => r.report_scores) ?? [];
+        const themeSet = new Set<string>();
+        let fulfilledSubIndicators = 0;
+        const reports = student.reports ?? [];
+
+        reports.forEach((r: any) => {
+          const plan = parsePlan(r.treatment_plan);
+          const assessments = Array.isArray(plan?.detailed_assessments)
+            ? plan.detailed_assessments
+            : [];
+          assessments.forEach((a: any) => {
+            if (a?.theme) themeSet.add(String(a.theme).trim().toLowerCase());
+            fulfilledSubIndicators += Array.isArray(a?.fulfilled_sub_indicators)
+              ? a.fulfilled_sub_indicators.length
+              : 0;
+          });
+        });
+
         return {
           id: student.id,
           name: student.name,
           batch: student.batch,
           assigned_ustadz_id: student.assigned_ustadz_id,
-          stats: {
-            karakter: calcAvg(allScores, "Karakter"),
-            mental: calcAvg(allScores, "Mental"),
-            softSkill: calcAvg(allScores, "Soft Skill"),
-          },
+          reportsCount: reports.length,
+          themesExplored: themeSet.size,
+          fulfilledSubIndicators,
         };
       });
       setStudents(processed);
 
-      // ── 2. Compute aggregate category stats from filtered students ────────
-      const allScores = (studentsRaw ?? []).flatMap((s) =>
-        s.reports?.flatMap((r: any) => r.report_scores) ?? []
-      );
-      setStats([
-        { name: "Karakter", avg: calcAvg(allScores, "Karakter") },
-        { name: "Mental", avg: calcAvg(allScores, "Mental") },
-        { name: "Soft Skill", avg: calcAvg(allScores, "Soft Skill") },
-      ]);
-
-      // ── 3. Low scores (filtered by student IDs) ───────────────────────────
+      // ── 2. Recent reports (filtered by student IDs) ───────────────────────
       if (!isAdmin && studentIds.length === 0) {
-        // Ustadz with no assigned students — nothing to show
-        setLowScores([]);
         setRecentReports([]);
         setDataLoading(false);
         return;
       }
-
-      let lowScoresQuery = supabase
-        .from("report_scores")
-        .select("score, pillar_id, reports!inner(student_id, students!inner(name, id))")
-        .lte("score", 2)
-        .order("created_at", { ascending: false })
-        .limit(4);
-
-      if (!isAdmin && studentIds.length > 0) {
-        // Filter via the joined reports table
-        lowScoresQuery = lowScoresQuery.in("reports.student_id", studentIds);
-      }
-
-      const { data: lowScoresRaw } = await lowScoresQuery;
-      setLowScores((lowScoresRaw ?? []) as any);
-
-      // ── 4. Recent reports (filtered by student IDs) ───────────────────────
       let recentQuery = supabase
         .from("reports")
         .select(`
           id,
+          title,
           created_at,
           students (name),
-          report_scores (score, category)
+          treatment_plan
         `)
         .order("created_at", { ascending: false })
         .limit(8);
@@ -181,23 +173,7 @@ export default function StudentsAnalyticsPage() {
           Analitik Santri
         </h1>
 
-        {/* Global Stats Row */}
-        <div className="grid grid-cols-3 gap-3 mt-8">
-          {stats.map((stat) => (
-            <div
-              key={stat.name}
-              className="bg-white/10 backdrop-blur-md rounded-3xl p-4 border border-white/10 text-white"
-            >
-              <p className="text-[8px] font-black uppercase tracking-widest text-emerald-300 mb-1">
-                {stat.name}
-              </p>
-              <div className="text-2xl font-bold font-serif">{stat.avg}</div>
-              <p className="text-[7px] font-bold opacity-40 uppercase">
-                Avg Score
-              </p>
-            </div>
-          ))}
-        </div>
+        
       </header>
 
       <main className="px-6 -mt-6 space-y-8 relative z-10">
@@ -243,44 +219,23 @@ export default function StudentsAnalyticsPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    {[
-                      {
-                        label: "Karakter",
-                        val: student.stats.karakter,
-                        icon: <Heart size={10} />,
-                        bg: "bg-rose-50",
-                        text: "text-rose-700",
-                      },
-                      {
-                        label: "Mental",
-                        val: student.stats.mental,
-                        icon: <Brain size={10} />,
-                        bg: "bg-blue-50",
-                        text: "text-blue-700",
-                      },
-                      {
-                        label: "Soft Skill",
-                        val: student.stats.softSkill,
-                        icon: <Zap size={10} />,
-                        bg: "bg-amber-50",
-                        text: "text-amber-700",
-                      },
-                    ].map((chip) => (
-                      <div
-                        key={chip.label}
-                        className={`flex-1 ${chip.bg} rounded-2xl py-2 px-3 flex flex-col items-center justify-center gap-0.5`}
-                      >
-                        <div className="flex items-center gap-1">
-                          {chip.icon}
-                          <span className={`text-[10px] font-black ${chip.text}`}>
-                            {chip.val}
-                          </span>
-                        </div>
-                        <span className="text-[7px] font-bold uppercase opacity-50 text-slate-500">
-                          {chip.label}
-                        </span>
-                      </div>
-                    ))}
+                    <div className="flex-1 bg-emerald-50 rounded-2xl py-2 px-3 flex items-center justify-center gap-2">
+                      <Bookmark size={12} className="text-emerald-700" />
+                      <span className="text-[10px] font-black text-emerald-700">
+                        {student.themesExplored} Tema Dieksplorasi
+                      </span>
+                    </div>
+                    <div className="flex-1 bg-sky-50 rounded-2xl py-2 px-3 flex items-center justify-center gap-2">
+                      <CheckCircle2 size={12} className="text-sky-700" />
+                      <span className="text-[10px] font-black text-sky-700">
+                        {student.fulfilledSubIndicators} Sub-indikator Terpenuhi
+                      </span>
+                    </div>
+                    <div className="bg-slate-50 rounded-2xl py-2 px-3 flex items-center justify-center">
+                      <span className="text-[10px] font-black text-slate-600">
+                        {student.reportsCount} Laporan
+                      </span>
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -288,50 +243,7 @@ export default function StudentsAnalyticsPage() {
           )}
         </section>
 
-        {/* 2. PRIORITY FOCUS */}
-        <section>
-          <div className="flex items-center gap-2 mb-4 px-3">
-            <AlertTriangle size={14} className="text-amber-500" />
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              Perhatian Prioritas
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {lowScores.length > 0 ? (
-              lowScores.map((item: any, idx: number) => (
-                <Link
-                  href={`/students/${item.reports?.student_id}`}
-                  key={idx}
-                  className="flex items-center justify-between bg-white p-5 rounded-[2.2rem] border border-slate-100 shadow-sm active:scale-95 transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                    <div>
-                      <p className="font-bold text-slate-800 text-sm">
-                        {item.reports?.students?.name}
-                      </p>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-                        Lower score in {item.pillar_id}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-black text-rose-500 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100">
-                    {item.score}.0
-                  </span>
-                </Link>
-              ))
-            ) : (
-              <div className="p-6 text-center bg-emerald-50/30 rounded-4xl border border-dashed border-emerald-100">
-                <Sparkles className="w-5 h-5 text-emerald-300 mx-auto mb-2" />
-                <p className="text-[10px] font-bold text-emerald-600 uppercase">
-                  All students performing well
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* 3. RECENT ACTIVITY */}
+        {/* 2. RECENT ACTIVITY */}
         <section>
           <div className="flex items-center justify-between mb-4 px-3">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
@@ -346,14 +258,23 @@ export default function StudentsAnalyticsPage() {
               </div>
             ) : (
               recentReports.map((report: any, idx: number) => {
-                const scores = report.report_scores || [];
-                const avg =
-                  scores.length > 0
-                    ? (
-                        scores.reduce((a: number, b: any) => a + b.score, 0) /
-                        scores.length
-                      ).toFixed(1)
-                    : "0.0";
+                const plan = typeof report.treatment_plan === "string"
+                  ? (() => {
+                      try {
+                        return JSON.parse(report.treatment_plan);
+                      } catch {
+                        return null;
+                      }
+                    })()
+                  : report.treatment_plan;
+                const assessments = Array.isArray(plan?.detailed_assessments) ? plan.detailed_assessments : [];
+                const themesCount = new Set(
+                  assessments.map((a: any) => String(a?.theme ?? "").trim().toLowerCase()).filter(Boolean)
+                ).size;
+                const fulfilledCount = assessments.reduce(
+                  (acc: number, a: any) => acc + (Array.isArray(a?.fulfilled_sub_indicators) ? a.fulfilled_sub_indicators.length : 0),
+                  0
+                );
 
                 return (
                   <Link
@@ -371,6 +292,9 @@ export default function StudentsAnalyticsPage() {
                         <p className="font-bold text-slate-800 text-sm">
                           {report.students?.name}
                         </p>
+                        <p className="text-[11px] font-semibold text-slate-500 leading-tight">
+                          {report.title || "Laporan Perkembangan"}
+                        </p>
                         <p className="text-[9px] font-bold text-slate-400 uppercase">
                           {new Date(report.created_at).toLocaleDateString("id-ID", {
                             day: "2-digit",
@@ -379,14 +303,13 @@ export default function StudentsAnalyticsPage() {
                         </p>
                       </div>
                     </div>
-                    <div
-                      className={`text-xs font-black px-3 py-1 rounded-lg ${
-                        Number(avg) >= 4
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-slate-50 text-slate-600"
-                      }`}
-                    >
-                      {avg}
+                    <div className="text-right">
+                      <p className="text-[10px] font-black text-emerald-700">
+                        {themesCount} tema
+                      </p>
+                      <p className="text-[10px] font-black text-sky-700">
+                        {fulfilledCount} sub-indikator
+                      </p>
                     </div>
                   </Link>
                 );

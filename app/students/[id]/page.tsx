@@ -22,9 +22,9 @@ async function getStudentData(id: string) {
     .select(
       `
       id,
+      title,
       created_at,
-      narrative,
-      report_scores (category, pillar_id, score)
+      narrative
     `,
     )
     .eq("student_id", id)
@@ -115,7 +115,7 @@ export default async function StudentProfile({
                     <div className="space-y-1">
                       {/* Increased padding-bottom via space-y or mb to separate from date */}
                       <p className="font-black text-slate-900 text-sm mb-1">
-                        Assessment Review
+                        {report.title || "Laporan Perkembangan"}
                       </p>
 
                       <div className="flex items-center gap-3">

@@ -62,6 +62,13 @@ ${criteriaContext}
 2. **Berbasis Bukti**: Hanya tandai Sub-indikator sebagai terpenuhi jika ada bukti yang JELAS di dalam transkrip.
 3. **Hemat Token**: Jangan hitung total, persentase, atau pecahan numerik. Server akan menghitung semuanya secara deterministik.
 
+### ATURAN JUDUL LAPORAN:
+1. Buat field report_title yang singkat, natural, dan mudah diingat.
+2. Panjang maksimal 6 kata.
+3. Wajib Bahasa Indonesia.
+4. Jangan pakai nama santri di judul.
+5. Jangan pakai tanda kutip.
+
 ### ATURAN PENANGANAN (PRIORITY RULE UNTUK TREATMENT):
 1. **Prioritas Berurutan**: Fokus penanganan pada Tema/Indikator PERTAMA yang belum terpenuhi 100%.
 2. **Target Sub-indikator**: Identifikasi Sub-indikator yang belum terpenuhi pada Indikator prioritas.
@@ -70,6 +77,7 @@ ${criteriaContext}
 
 ### FORMAT RESPON (HANYA JSON, TANPA KOMENTAR APAPUN DI LUAR JSON):
 {
+  "report_title": "Judul ringkas laporan (maksimal 6 kata)",
   "status_summary": "Ringkasan kualitatif perkembangan dalam Bahasa Indonesia",
   "detailed_assessments": [
     {

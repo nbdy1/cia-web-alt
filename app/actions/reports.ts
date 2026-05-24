@@ -29,23 +29,6 @@ export async function saveStudentReport(data: {
 
     console.log("Report inserted, ID:", report.id);
 
-    // Step 2: Insert Scores
-    const scoresToInsert = data.scores.map(s => ({
-      report_id: report.id,
-      category: s.category,
-      pillar_id: s.pillar_id,
-      score: s.score
-    }));
-
-    const { error: scoresError } = await supabase
-      .from('report_scores')
-      .insert(scoresToInsert);
-
-    if (scoresError) {
-      console.error("Step 2 Failed (Scores Table):", scoresError);
-      return { success: false, error: scoresError.message };
-    }
-
     return { success: true, id: report.id };
   } catch (err: any) {
     console.error("Unexpected Error:", err);

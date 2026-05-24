@@ -154,6 +154,9 @@ export default async function ReportDetailPage({
           <h1 className="text-sm font-bold text-slate-900">
             {report.students.name}
           </h1>
+          <p className="text-[11px] font-semibold text-slate-500 mt-1">
+            {report.title || "Laporan Perkembangan"}
+          </p>
         </div>
         <div className="w-10" />
       </header>

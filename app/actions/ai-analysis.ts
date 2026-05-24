@@ -22,6 +22,27 @@ function normalise(s: string) {
   return s.trim().toLowerCase();
 }
 
+function buildFallbackTitle(parsed: any): string {
+  const t = String(parsed?.treatment?.priority_theme ?? "").trim();
+  if (t) return `Fokus ${t}`;
+  const s = String(parsed?.status_summary ?? "").trim();
+  if (!s) return "Laporan Perkembangan";
+  const clean = s.replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+  const words = clean.split(" ").slice(0, 6);
+  return words.length > 0 ? words.join(" ") : "Laporan Perkembangan";
+}
+
+function normalizeReportTitle(rawTitle: unknown, parsed: any): string {
+  const source = typeof rawTitle === "string" ? rawTitle : "";
+  const cleaned = source
+    .replace(/["'`]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const words = cleaned.split(" ").filter(Boolean).slice(0, 6);
+  if (words.length === 0) return buildFallbackTitle(parsed);
+  return words.join(" ");
+}
+
 interface OverallStats {
   fulfilled: number;
   total: number;
@@ -434,6 +455,7 @@ export async function finalizeAssessment(
     let currentProgressContext =
       "No previous assessment data found. Start from the beginning of the framework.";
 
+    let previousTitlesContext = "";
     if (studentId) {
       const { data: latestReport } = await supabase
         .from("reports")
@@ -442,6 +464,13 @@ export async function finalizeAssessment(
         .order("created_at", { ascending: false })
         .limit(1)
         .single();
+      const { data: recentTitles } = await supabase
+        .from("reports")
+        .select("title")
+        .eq("student_id", studentId)
+        .not("title", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(8);
 
       if (latestReport?.treatment_plan) {
         let prevAnalysis = latestReport.treatment_plan;
@@ -459,6 +488,15 @@ PREVIOUS PROGRESS (cumulative across all past reports):
 
 IMPORTANT: Prioritize the first Theme/Indicator that is still incomplete based on the stats above.
         `;
+      }
+
+      const titles = (recentTitles ?? [])
+        .map((r: any) => String(r?.title ?? "").trim())
+        .filter(Boolean);
+      if (titles.length > 0) {
+        previousTitlesContext = `\n\nJUDUL LAPORAN TERDAHULU (hindari pengulangan persis):\n${titles
+          .map((t) => `- ${t}`)
+          .join("\n")}`;
       }
     }
 
@@ -486,12 +524,13 @@ IMPORTANT: Prioritize the first Theme/Indicator that is still incomplete based o
     // 4. Call the LLM
     const responseText = await callOpenRouter(
       systemPrompt,
-      `${currentProgressContext}\n\nFINAL TRANSCRIPT:\n"${transcript}"`
+      `${currentProgressContext}${previousTitlesContext}\n\nFINAL TRANSCRIPT:\n"${transcript}"`
     );
     const cleanJson = responseText.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleanJson);
     const enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? []);
     parsed.analysis_version = 2;
+    parsed.report_title = normalizeReportTitle(parsed?.report_title, parsed);
     parsed.detailed_assessments = enrichedAssessments;
     parsed.treatment = enrichTreatment(parsed?.treatment, enrichedAssessments);
     const finalThemes = Array.isArray(parsed?.detailed_assessments)
