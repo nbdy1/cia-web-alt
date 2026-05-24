@@ -60,11 +60,7 @@ ${criteriaContext}
 ### ATURAN PENILAIAN (FULFILLMENT):
 1. **Pemetaan Spesifik**: Hanya gunakan Tema, Indikator, dan Sub-indikator yang PERSIS seperti yang tertulis di dalam KRITERIA RELEVAN di atas. DILARANG KERAS mengarang atau mengubah nama kriteria.
 2. **Berbasis Bukti**: Hanya tandai Sub-indikator sebagai terpenuhi jika ada bukti yang JELAS di dalam transkrip.
-3. **Tinjauan Kuantitatif**: Untuk setiap Kategori, hitung persentase berdasarkan total Sub-indikator berikut (total seluruh framework, bukan hanya yang relevan):
-   - **Karakter**: 162 Total Sub-indikator
-   - **Mental**: 172 Total Sub-indikator
-   - **Soft Skill**: 98 Total Sub-indikator
-   - Persentase = (Terpenuhi / Total) * 100.
+3. **Hemat Token**: Jangan hitung total, persentase, atau pecahan numerik. Server akan menghitung semuanya secara deterministik.
 
 ### ATURAN PENANGANAN (PRIORITY RULE UNTUK TREATMENT):
 1. **Prioritas Berurutan**: Fokus penanganan pada Tema/Indikator PERTAMA yang belum terpenuhi 100%.
@@ -75,19 +71,12 @@ ${criteriaContext}
 ### FORMAT RESPON (HANYA JSON, TANPA KOMENTAR APAPUN DI LUAR JSON):
 {
   "status_summary": "Ringkasan kualitatif perkembangan dalam Bahasa Indonesia",
-  "overall_stats": {
-    "karakter": { "fulfilled": 0, "total": 162, "percentage": 0 },
-    "mental": { "fulfilled": 0, "total": 172, "percentage": 0 },
-    "soft_skill": { "fulfilled": 0, "total": 98, "percentage": 0 }
-  },
   "detailed_assessments": [
     {
       "category": "Karakter | Mental | Soft Skill",
       "theme": "Judul Tema PERSIS seperti di KRITERIA RELEVAN",
       "indicator": "Judul Indikator PERSIS seperti di KRITERIA RELEVAN",
-      "fulfillment_fraction": "2/4",
       "fulfilled_sub_indicators": ["Sub-indikator PERSIS seperti di KRITERIA RELEVAN"],
-      "missing_sub_indicators": ["Sub-indikator PERSIS seperti di KRITERIA RELEVAN"],
       "reasoning": "Penjelasan singkat kaitan antara perilaku dan kriteria dalam Bahasa Indonesia"
     }
   ],

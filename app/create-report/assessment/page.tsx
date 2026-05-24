@@ -28,6 +28,7 @@ export default function AssessmentPage() {
   const { speak, stop: stopVoice } = useCIAVoice();
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -35,6 +36,13 @@ export default function AssessmentPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, currentInput]);
+
+  // Auto-grow textarea for long inputs while preserving scroll beyond max height
+  useEffect(() => {
+    if (!inputRef.current) return;
+    inputRef.current.style.height = 'auto';
+    inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 160)}px`;
+  }, [currentInput]);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -105,6 +113,7 @@ export default function AssessmentPage() {
         setDiscoveredPillars(mergedDiscovered);
         setDiscoveredCount(mergedDiscovered.length);
         speak(result.reply);
+        requestAnimationFrame(() => inputRef.current?.focus());
       }
     } catch (error) {
       console.error("Analysis Error:", error);
@@ -149,6 +158,13 @@ export default function AssessmentPage() {
     } catch (error) {
       console.error("Finalization Error:", error);
       setIsProcessing(false);
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
   };
 
@@ -238,13 +254,14 @@ export default function AssessmentPage() {
             {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
           </button>
           
-          <input 
-            type="text"
+          <textarea
+            ref={inputRef}
             value={currentInput}
             onChange={(e) => setCurrentInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Type or speak..."
-            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-700 py-3"
+            onKeyDown={handleInputKeyDown}
+            placeholder="Ketik atau bicara..."
+            rows={1}
+            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-700 placeholder:text-slate-400 py-3 leading-6 resize-none max-h-40 overflow-y-auto"
           />
 
           <button 
@@ -259,6 +276,9 @@ export default function AssessmentPage() {
             <Send size={20} />
           </button>
         </div>
+        <p className="mt-2 flex justify-center  px-2 text-[11px] text-slate-400 font-medium">
+          Tekan Enter untuk kirim, Shift+Enter untuk baris baru.
+        </p>
 
         {/* Finalize Button */}
         {messages.length >= 2 && (

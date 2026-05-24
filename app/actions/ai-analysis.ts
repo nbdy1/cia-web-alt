@@ -56,10 +56,127 @@ function lookupFullIndicatorSubIndicators(
   return null;
 }
 
+function canonicalCategory(category: string): string | null {
+  return Object.keys(ALL_DATA_BY_CATEGORY).find(
+    (k) => normalise(k) === normalise(category)
+  ) ?? null;
+}
+
+function lookupCanonicalIndicator(
+  category: string,
+  themeTitle: string,
+  indicatorTitle: string
+): { category: string; theme: string; indicator: string; subIndicators: string[] } | null {
+  const canonicalCat = canonicalCategory(category);
+  if (!canonicalCat) return null;
+  const catData = ALL_DATA_BY_CATEGORY[canonicalCat];
+  for (const theme of catData.themes) {
+    if (normalise(theme.title) !== normalise(themeTitle)) continue;
+    for (const ind of theme.indicators) {
+      if (normalise(ind.title) === normalise(indicatorTitle)) {
+        return {
+          category: canonicalCat,
+          theme: theme.title,
+          indicator: ind.title,
+          subIndicators: ind.sub_indicators,
+        };
+      }
+    }
+  }
+  return null;
+}
+
 function isLikelySameSubIndicator(candidate: string, target: string): boolean {
   const c = normalise(candidate);
   const t = normalise(target);
   return c === t || c.includes(t) || t.includes(c);
+}
+
+function enrichDetailedAssessments(rawAssessments: any[]): any[] {
+  const enriched: any[] = [];
+  const seen = new Set<string>();
+
+  for (const item of rawAssessments ?? []) {
+    const canonical = lookupCanonicalIndicator(
+      String(item?.category ?? ""),
+      String(item?.theme ?? ""),
+      String(item?.indicator ?? "")
+    );
+    if (!canonical) continue;
+
+    const key = `${canonical.category}::${canonical.theme}::${canonical.indicator}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const aiFulfilled = Array.isArray(item?.fulfilled_sub_indicators)
+      ? item.fulfilled_sub_indicators.map((s: any) => String(s))
+      : [];
+
+    const canonicalFulfilled = canonical.subIndicators.filter((frameworkSub) =>
+      aiFulfilled.some((aiSub) => isLikelySameSubIndicator(aiSub, frameworkSub))
+    );
+
+    const canonicalMissing = canonical.subIndicators.filter(
+      (frameworkSub) =>
+        !canonicalFulfilled.some((fulfilledSub) => normalise(fulfilledSub) === normalise(frameworkSub))
+    );
+
+    enriched.push({
+      category: canonical.category,
+      theme: canonical.theme,
+      indicator: canonical.indicator,
+      fulfilled_sub_indicators: canonicalFulfilled,
+      missing_sub_indicators: canonicalMissing,
+      fulfillment_fraction: `${canonicalFulfilled.length}/${canonical.subIndicators.length}`,
+      reasoning: String(item?.reasoning ?? "").trim(),
+    });
+  }
+
+  return enriched;
+}
+
+function enrichTreatment(
+  treatment: any,
+  enrichedAssessments: any[]
+): any {
+  if (!treatment || typeof treatment !== "object") return treatment;
+
+  const priorityTheme = String(treatment.priority_theme ?? "");
+  const priorityIndicator = String(treatment.priority_indicator ?? "");
+  const targetRaw = Array.isArray(treatment.target_sub_indicators)
+    ? treatment.target_sub_indicators.map((s: any) => String(s))
+    : [];
+
+  const matchedAssessment = enrichedAssessments.find(
+    (a) =>
+      normalise(a.theme) === normalise(priorityTheme) &&
+      normalise(a.indicator) === normalise(priorityIndicator)
+  );
+
+  if (!matchedAssessment) {
+    return {
+      ...treatment,
+      target_sub_indicators: targetRaw,
+    };
+  }
+
+  const deterministicTargets = matchedAssessment.missing_sub_indicators
+    .filter((sub: string) =>
+      targetRaw.length === 0
+        ? true
+        : targetRaw.some((t: string) => isLikelySameSubIndicator(t, sub))
+    )
+    .slice(0, 3);
+
+  return {
+    ...treatment,
+    priority_theme: matchedAssessment.theme,
+    priority_indicator: matchedAssessment.indicator,
+    target_sub_indicators:
+      deterministicTargets.length > 0
+        ? deterministicTargets
+        : matchedAssessment.missing_sub_indicators.slice(0, 3),
+  };
 }
 
 function computeOverallStats(aiJson: any): {
@@ -373,6 +490,10 @@ IMPORTANT: Prioritize the first Theme/Indicator that is still incomplete based o
     );
     const cleanJson = responseText.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleanJson);
+    const enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? []);
+    parsed.analysis_version = 2;
+    parsed.detailed_assessments = enrichedAssessments;
+    parsed.treatment = enrichTreatment(parsed?.treatment, enrichedAssessments);
     const finalThemes = Array.isArray(parsed?.detailed_assessments)
       ? Array.from(new Set(parsed.detailed_assessments.map((a: any) => a?.theme).filter(Boolean)))
       : [];
@@ -388,8 +509,7 @@ IMPORTANT: Prioritize the first Theme/Indicator that is still incomplete based o
       priorityTheme: parsed?.treatment?.priority_theme,
     });
 
-    // 5. Overwrite the AI's self-reported stats with our deterministic calculation.
-    //    The AI only saw ~30 criteria via RAG; our local framework has the full picture.
+    // 5. Deterministically compute numeric fields (never trust AI arithmetic).
     parsed.overall_stats = computeOverallStats(parsed);
     console.log("[Stats] Computed overall_stats:", parsed.overall_stats);
 
