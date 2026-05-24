@@ -40,7 +40,7 @@ export default function HomePage() {
           <button
             onClick={signOut}
             className="p-2 hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded-full transition-colors flex items-center gap-1.5 px-3 border border-slate-100 hover:border-rose-100 text-xs font-semibold shadow-sm"
-            title="Log Out"
+            title="Keluar"
           >
             <LogOut className="w-4 h-4" />
             <span>Keluar</span>

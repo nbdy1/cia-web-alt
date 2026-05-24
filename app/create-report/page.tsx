@@ -69,7 +69,7 @@ const STUDENTS = [
     }
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return alert("Browser not supported");
+    if (!SpeechRecognition) return alert("Browser tidak mendukung fitur suara");
 
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
@@ -109,7 +109,7 @@ const STUDENTS = [
         <Link href="/" className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors">
           <ChevronLeft className="w-6 h-6 text-slate-800" />
         </Link>
-        <h1 className="text-xl font-bold text-slate-800">Select Student</h1>
+        <h1 className="text-xl font-bold text-slate-800">Pilih Santri</h1>
       </header>
 
       <main className="px-6 flex-1 flex flex-col">
@@ -118,7 +118,7 @@ const STUDENTS = [
             <Search className="absolute left-4 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder={isListening ? "Listening..." : "Search student name..."}
+              placeholder={isListening ? "Mendengar..." : "Cari nama santri..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full border-2 rounded-2xl py-4 pl-12 pr-14 transition-all outline-none text-slate-800 ${
@@ -144,7 +144,7 @@ const STUDENTS = [
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
-              <span className="text-[10px] text-red-500 font-bold uppercase tracking-widest">Voice Active</span>
+              <span className="text-[10px] text-red-500 font-bold uppercase tracking-widest">Suara Aktif</span>
             </div>
           )}
         </div>
@@ -156,7 +156,7 @@ const STUDENTS = [
                 {selectedStudent.name[0]}
               </div>
               <div>
-                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tighter">Target Selected</p>
+                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tighter">Target Dipilih</p>
                 <p className="text-slate-900 font-bold text-lg leading-tight">{selectedStudent.name}</p>
               </div>
             </div>
@@ -168,7 +168,7 @@ const STUDENTS = [
 
         <div className="mt-8 flex-1 overflow-y-auto pb-10">
           <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">
-            {searchQuery ? 'Suggestions' : 'Student Directory'}
+            {searchQuery ? 'Saran' : 'Daftar Santri'}
           </p>
           {loading ? (
             <div className="flex justify-center py-10"><Loader2 className="animate-spin text-slate-300" /></div>
@@ -203,7 +203,7 @@ const STUDENTS = [
                 : 'bg-slate-100 text-slate-300 cursor-not-allowed'
               }`}
             >
-              Start Assessment
+              Mulai Asesmen
             </button>
           </Link>
         </div>

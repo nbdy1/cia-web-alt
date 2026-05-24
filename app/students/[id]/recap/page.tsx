@@ -120,7 +120,7 @@ export default async function RecapPage({
   const { student, fulfilledByCategory, totalReports } = await getStudentRecap(id);
 
   if (!student)
-    return <div className="p-10 text-center">Student not found.</div>;
+    return <div className="p-10 text-center">Santri tidak ditemukan.</div>;
 
   const categories = [
     {

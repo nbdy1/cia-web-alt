@@ -429,7 +429,7 @@ export async function processInterviewStep(transcript: string, discoveredThemes:
 
     const responseText = await callOpenRouter(
       interviewPrompt,
-      `CURRENT TRANSCRIPT:\n"${transcript}"`
+      `TRANSKRIP SAAT INI:\n"${transcript}"`
     );
     const cleanJson = responseText.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleanJson);
@@ -453,7 +453,7 @@ export async function finalizeAssessment(
   try {
     // 1. Fetch the student's previous progress for context
     let currentProgressContext =
-      "No previous assessment data found. Start from the beginning of the framework.";
+      "Belum ada data asesmen sebelumnya. Mulai dari awal kerangka kerja.";
 
     let previousTitlesContext = "";
     if (studentId) {
@@ -481,12 +481,12 @@ export async function finalizeAssessment(
         }
 
         currentProgressContext = `
-PREVIOUS PROGRESS (cumulative across all past reports):
+PROGRES SEBELUMNYA (kumulatif dari seluruh laporan terdahulu):
 - Karakter: ${prevAnalysis?.overall_stats?.karakter?.percentage ?? 0}% (${prevAnalysis?.overall_stats?.karakter?.fulfilled ?? 0}/${prevAnalysis?.overall_stats?.karakter?.total ?? 0})
 - Mental: ${prevAnalysis?.overall_stats?.mental?.percentage ?? 0}% (${prevAnalysis?.overall_stats?.mental?.fulfilled ?? 0}/${prevAnalysis?.overall_stats?.mental?.total ?? 0})
 - Soft Skill: ${prevAnalysis?.overall_stats?.soft_skill?.percentage ?? 0}% (${prevAnalysis?.overall_stats?.soft_skill?.fulfilled ?? 0}/${prevAnalysis?.overall_stats?.soft_skill?.total ?? 0})
 
-IMPORTANT: Prioritize the first Theme/Indicator that is still incomplete based on the stats above.
+PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarkan statistik di atas.
         `;
       }
 
@@ -524,7 +524,7 @@ IMPORTANT: Prioritize the first Theme/Indicator that is still incomplete based o
     // 4. Call the LLM
     const responseText = await callOpenRouter(
       systemPrompt,
-      `${currentProgressContext}${previousTitlesContext}\n\nFINAL TRANSCRIPT:\n"${transcript}"`
+      `${currentProgressContext}${previousTitlesContext}\n\nTRANSKRIP AKHIR:\n"${transcript}"`
     );
     const cleanJson = responseText.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleanJson);

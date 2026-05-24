@@ -16,7 +16,7 @@ export default function AssessmentPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const studentId = searchParams.get('id');
-  const studentName = searchParams.get('name') || 'Student';
+  const studentName = searchParams.get('name') || 'Santri';
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState('');
@@ -177,7 +177,7 @@ export default function AssessmentPage() {
             <ChevronLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 leading-tight font-serif">Reflective Interview</h1>
+            <h1 className="text-xl font-bold text-slate-900 leading-tight font-serif">Wawancara Reflektif</h1>
             <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">{studentName}</p>
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function AssessmentPage() {
         <div className="bg-emerald-50 px-3 py-1.5 rounded-2xl border border-emerald-100 flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">
-            {discoveredCount} Topics Explored
+            {discoveredCount} Topik Tergali
           </span>
         </div>
       </header>
@@ -214,7 +214,7 @@ export default function AssessmentPage() {
               <div className="flex items-center gap-2 mb-1 opacity-40">
                 {msg.role === 'teacher' ? <User size={10} /> : <Brain size={10} />}
                 <span className="text-[8px] font-black uppercase tracking-widest">
-                  {msg.role === 'teacher' ? 'Ustadz' : 'CIA Engine'}
+                  {msg.role === 'teacher' ? 'Ustadz' : 'Asisten CIA'}
                 </span>
               </div>
               <p className="text-sm leading-relaxed font-medium">{msg.text}</p>
@@ -234,7 +234,7 @@ export default function AssessmentPage() {
           <div className="flex justify-start">
             <div className="bg-white border border-slate-100 p-4 rounded-[1.8rem] rounded-tl-none shadow-sm flex items-center gap-2">
               <Loader2 size={16} className="animate-spin text-emerald-600" />
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI is thinking...</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI sedang berpikir...</span>
             </div>
           </div>
         )}
@@ -288,7 +288,7 @@ export default function AssessmentPage() {
             className="w-full mt-4 py-4 rounded-[1.8rem] bg-slate-900 text-white font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl shadow-slate-200 hover:bg-black active:scale-[0.98] transition-all"
           >
             <Sparkles size={16} className="text-emerald-400" />
-            Finish & Generate Report
+            Selesai & Buat Laporan
           </button>
         )}
       </footer>

@@ -125,7 +125,7 @@ export default async function ReportDetailPage({
   if (!report)
     return (
       <div className="p-10 text-center text-slate-500 font-serif">
-        Report not found.
+        Laporan tidak ditemukan.
       </div>
     );
 
@@ -254,7 +254,7 @@ export default async function ReportDetailPage({
                       >
                         <div className="flex items-center gap-2 mb-1 opacity-60">
                           <span className="text-[9px] font-black uppercase tracking-widest">
-                            {isGuru ? "Ustadz" : "CIA Engine"}
+                            {isGuru ? "Ustadz" : "Asisten CIA"}
                           </span>
                         </div>
                         <p className="text-sm leading-relaxed font-medium">

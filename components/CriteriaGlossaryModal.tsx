@@ -98,7 +98,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
             </div>
             <div>
               <h2 className="text-2xl font-bold tracking-tight font-serif">Panduan Kriteria Asesmen CIA</h2>
-              <p className="text-emerald-200/80 text-xs mt-0.5">Standar indikator penilaian santri berdasarkan kurikulum Character Integrated Assessment</p>
+              <p className="text-emerald-200/80 text-xs mt-0.5">Standar indikator penilaian santri berdasarkan kurikulum Asesmen Karakter Terintegrasi</p>
             </div>
           </div>
           <button 

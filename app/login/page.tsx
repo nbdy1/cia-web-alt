@@ -91,7 +91,7 @@ export default function LoginPage() {
             <span className="text-emerald-500">CIA.</span> Portal
           </h1>
           <p className="text-slate-400 text-sm mt-2 font-medium">
-            Character Integrated Assessment Platform
+           Character Integrated Assessment Platform
           </p>
         </div>
 
@@ -109,7 +109,7 @@ export default function LoginPage() {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Sign In
+              Masuk
             </button>
             <button
               type="button"

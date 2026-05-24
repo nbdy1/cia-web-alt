@@ -29,7 +29,7 @@ export default function ResultsPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const studentId = searchParams.get("id");
-  const studentName = searchParams.get("name") || "Student";
+  const studentName = searchParams.get("name") || "Santri";
   const [narrative, setNarrative] = useState("");
   const [analysisData, setAnalysisData] = useState<any>(null);
 
@@ -61,7 +61,7 @@ export default function ResultsPage() {
   };
 
   const handleSave = async () => {
-    if (!studentId) return alert("Student ID missing");
+    if (!studentId) return alert("ID santri tidak ditemukan");
 
     setIsSaving(true);
     const result = await saveAssessmentAction({
@@ -75,7 +75,7 @@ export default function ResultsPage() {
       sessionStorage.removeItem('current_narrative');
       router.push("/students");
     } else {
-      alert("Failed to save: " + result.error);
+      alert("Gagal menyimpan: " + result.error);
       setIsSaving(false);
     }
   };
@@ -99,7 +99,7 @@ export default function ResultsPage() {
         <div className="text-center">
           <h1 className="text-sm font-bold text-slate-900">{studentName}</h1>
           <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">
-            Growth Assessment
+            Asesmen Perkembangan
           </p>
         </div>
         <div className="w-10" />
@@ -113,7 +113,7 @@ export default function ResultsPage() {
           </div>
           <div className="relative z-10">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300 mb-3">
-              Overall Condition
+              Kondisi Umum
             </h3>
             <p className="text-2xl font-bold leading-tight font-serif mb-4">
               {analysisData.status_summary}
@@ -198,7 +198,7 @@ export default function ResultsPage() {
           <div className="flex items-center gap-2 mb-2 px-2">
             <Bookmark className="text-slate-400" size={14} />
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Fulfillment Details
+              Detail Ketercapaian
             </h3>
           </div>
           {categories.map((cat) => {
@@ -306,7 +306,7 @@ export default function ResultsPage() {
           ) : (
             <Save size={18} />
           )}
-          {isSaving ? "Saving..." : "Save Assessment"}
+          {isSaving ? "Menyimpan..." : "Simpan Asesmen"}
         </button>
       </footer>
     </div>

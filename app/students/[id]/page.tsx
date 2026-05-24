@@ -44,7 +44,7 @@ export default async function StudentProfile({
   if (!student)
     return (
       <div className="p-10 text-center text-slate-500 font-medium">
-        Student not found.
+        Santri tidak ditemukan.
       </div>
     );
 
@@ -59,7 +59,7 @@ export default async function StudentProfile({
         >
           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span className="text-xs font-bold uppercase tracking-widest">
-            Back to Dashboard
+            Kembali ke Dashboard
           </span>
         </Link>
 
@@ -93,10 +93,10 @@ export default async function StudentProfile({
         <section>
           <div className="flex items-center justify-between mb-5 px-3">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              Assessment History
+              Riwayat Asesmen
             </h3>
             <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-              {reports?.length || 0} Records
+              {reports?.length || 0} Laporan
             </span>
           </div>
 
@@ -145,7 +145,7 @@ export default async function StudentProfile({
               <div className="text-center py-16 bg-white rounded-[3rem] border border-dashed border-slate-200 text-slate-400">
                 <FileText className="w-8 h-8 mx-auto mb-3 opacity-20" />
                 <p className="text-xs font-bold uppercase tracking-widest">
-                  No reports found yet.
+                  Belum ada laporan.
                 </p>
               </div>
             )}
