@@ -1,12 +1,46 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Atkinson_Hyperlegible, Geist_Mono, Nunito, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { AuthProvider } from "@/lib/context/auth-context";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dinRounded = localFont({
+  src: [
+    {
+      path: "./fonts/DIN Next Rounded LT W01 Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/DIN Next Rounded LT W04 Medium.otf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-din-rounded",
+  display: "swap",
+});
+
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
+  weight: ["400", "600", "700", "800", "900"],
+  display: "swap",
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const atkinson = Atkinson_Hyperlegible({
+  variable: "--font-atkinson",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -14,17 +48,46 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  subsets: ["latin"],
-  weight: "400",
-});
-
-
 export const metadata: Metadata = {
   title: "CIA Portal",
   description: "Platform asesmen karakter santri",
 };
+
+const appearanceScript = `
+(() => {
+  try {
+    const root = document.documentElement;
+    const font = window.localStorage.getItem("cia:font-family");
+    const scale = window.localStorage.getItem("cia:font-scale");
+    const allowedFonts = ["din", "nunito", "jakarta", "atkinson"];
+    const fontMap = {
+      din: "var(--font-din-rounded), var(--font-nunito), sans-serif",
+      nunito: "var(--font-nunito), var(--font-din-rounded), sans-serif",
+      jakarta: "var(--font-plus-jakarta), var(--font-din-rounded), sans-serif",
+      atkinson: "var(--font-atkinson), var(--font-din-rounded), sans-serif"
+    };
+    const parsedScale = Number(scale);
+    const selectedFont = allowedFonts.includes(font || "") ? font : "din";
+    const selectedFamily = fontMap[selectedFont];
+
+    root.dataset.fontFamily = selectedFont;
+    root.style.setProperty("--app-font-family", selectedFamily);
+    root.style.setProperty("--font-sans", selectedFamily);
+    root.style.setProperty("--font-serif", selectedFamily);
+
+    if (Number.isFinite(parsedScale) && parsedScale >= 0.9 && parsedScale <= 1.18) {
+      root.style.setProperty("--app-font-scale", String(parsedScale));
+    }
+
+    if (document.body) {
+      document.body.style.fontFamily = "var(--app-font-family)";
+      if (Number.isFinite(parsedScale) && parsedScale >= 0.9 && parsedScale <= 1.18) {
+        document.body.style.zoom = String(parsedScale);
+      }
+    }
+  } catch {}
+})();
+`;
 
 export default function RootLayout({
   children,
@@ -34,9 +97,11 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased min-h-screen`}
+      suppressHydrationWarning
+      className={`${dinRounded.variable} ${nunito.variable} ${plusJakarta.variable} ${atkinson.variable} ${geistMono.variable} antialiased min-h-screen`}
     >
-      <body className="w-full bg-white min-h-screen flex flex-col relative m-0 p-0">
+      <body className={`${dinRounded.className} w-full bg-white min-h-screen flex flex-col relative m-0 p-0`}>
+        <script dangerouslySetInnerHTML={{ __html: appearanceScript }} />
         <LayoutWrapper>
           <AuthProvider>
             {children}

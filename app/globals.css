@@ -3,20 +3,37 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --app-font-family: var(--font-din-rounded), var(--font-nunito), sans-serif;
+  --app-font-scale: 1;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--app-font-family);
   --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-instrument-serif);
+  --font-serif: var(--app-font-family);
 }
 
-h1, h2, h3, h4 {
-  font-family: var(--font-instrument-serif), serif;
+html {
+  font-size: calc(16px * var(--app-font-scale));
 }
 
+html[data-font-family="din"] {
+  --app-font-family: var(--font-din-rounded), var(--font-nunito), sans-serif;
+}
+
+html[data-font-family="nunito"] {
+  --app-font-family: var(--font-nunito), var(--font-din-rounded), sans-serif;
+}
+
+html[data-font-family="jakarta"] {
+  --app-font-family: var(--font-plus-jakarta), var(--font-din-rounded), sans-serif;
+}
+
+html[data-font-family="atkinson"] {
+  --app-font-family: var(--font-atkinson), var(--font-din-rounded), sans-serif;
+}
 
 /* @media (prefers-color-scheme: dark) {
   :root {
@@ -28,7 +45,8 @@ h1, h2, h3, h4 {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--app-font-family);
+  zoom: var(--app-font-scale);
 }
 
 @keyframes fadeIn {

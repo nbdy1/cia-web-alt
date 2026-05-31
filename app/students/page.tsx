@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/lib/context/auth-context";
-import { useUserRole } from "@/lib/useUserRole";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 import { supabase } from "@/lib/supabase";
 import {
   TrendingUp,
@@ -196,7 +196,7 @@ export default function StudentsAnalyticsPage() {
               {students.map((student) => (
                 <Link
                   key={student.id}
-                  href={`/students/${student.id}`}
+                  href={`/students/${student.id}?from=${encodeURIComponent("/students")}`}
                   className="block bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm active:scale-[0.98] transition-all hover:border-emerald-200"
                 >
                   <div className="flex justify-between items-center mb-4">
@@ -278,7 +278,7 @@ export default function StudentsAnalyticsPage() {
 
                 return (
                   <Link
-                    href={`/reports/${report.id}`}
+                    href={`/reports/${report.id}?from=${encodeURIComponent("/students")}`}
                     key={report.id}
                     className={`flex items-center justify-between p-6 hover:bg-slate-50 transition-colors ${
                       idx !== recentReports.length - 1 ? "border-b border-slate-50" : ""

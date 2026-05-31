@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth-context';
-import { useUserRole } from '@/lib/useUserRole';
+import { useUserRole } from '@/lib/hooks/use-user-role';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

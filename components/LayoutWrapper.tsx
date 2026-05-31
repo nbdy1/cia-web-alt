@@ -1,11 +1,24 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !pathname) return;
+
+    const currentPath = pathname;
+    const lastPath = window.sessionStorage.getItem("cia:last-path");
+
+    if (lastPath && lastPath !== currentPath) {
+      window.sessionStorage.setItem("cia:prev-path", lastPath);
+    }
+
+    window.sessionStorage.setItem("cia:last-path", currentPath);
+  }, [pathname]);
 
   if (isAdmin) {
     return (

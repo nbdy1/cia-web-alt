@@ -5,10 +5,10 @@ import {
   User,
   FileText,
   ChevronRight,
-  ChevronLeft,
   Clock,
 } from "lucide-react";
 import Link from "next/link";
+import { SmartBackButton } from "@/components/SmartBackButton";
 
 async function getStudentData(id: string) {
   const { data: student } = await supabase
@@ -35,11 +35,21 @@ async function getStudentData(id: string) {
 
 export default async function StudentProfile({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ from?: string | string[] }>;
 }) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
   const { student, reports } = await getStudentData(id);
+  const rawFrom = resolvedSearchParams?.from;
+  const from = Array.isArray(rawFrom) ? rawFrom[0] : rawFrom;
+  const backHref = from === "/admin/monitoring" ? "/admin/monitoring" : "/students";
+  const reportBackHref =
+    from === "/admin/monitoring"
+      ? `/students/${id}?from=${encodeURIComponent("/admin/monitoring")}`
+      : `/students/${id}`;
 
   if (!student)
     return (
@@ -53,15 +63,15 @@ export default async function StudentProfile({
       {/* Header Section */}
       <div className="bg-white px-6 pt-12 pb-10 border-b border-slate-100 rounded-b-[3.5rem] shadow-sm relative">
         {/* Back Button */}
-        <Link
-          href="/students"
+        <SmartBackButton
+          fallbackHref={backHref}
+          preferHistory={false}
           className="inline-flex items-center gap-1 text-slate-400 hover:text-emerald-600 transition-colors mb-6 group"
         >
-          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span className="text-xs font-bold uppercase tracking-widest">
             Kembali ke Dashboard
           </span>
-        </Link>
+        </SmartBackButton>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-6">
           <div className="flex items-center gap-5">
@@ -105,7 +115,7 @@ export default async function StudentProfile({
               reports.map((report) => (
                 <Link
                   key={report.id}
-                  href={`/reports/${report.id}`}
+                  href={`/reports/${report.id}?from=${encodeURIComponent(reportBackHref)}`}
                   className="bg-white p-6 rounded-[2.5rem] flex items-center justify-between border border-slate-100 active:scale-95 transition-all shadow-sm hover:shadow-md group"
                 >
                   <div className="flex items-center gap-5">

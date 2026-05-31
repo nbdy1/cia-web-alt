@@ -160,13 +160,22 @@ export default function MonitoringPage() {
                                             day: 'numeric', month: 'long', year: 'numeric'
                                           })}
                                         </div>
-                                        <Link 
-                                          href={`/reports/${report.id}`}
+                                        <div className="flex items-center gap-2">
+                                        <Link
+                                          href={`/students/${student.id}?from=${encodeURIComponent("/admin/monitoring")}`}
+                                          className="text-[10px] font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 px-3 py-1 rounded-full transition-colors flex items-center gap-1 border border-slate-200"
+                                        >
+                                          <Users size={12} />
+                                          Profil Santri
+                                        </Link>
+                                        <Link
+                                          href={`/reports/${report.id}?from=${encodeURIComponent("/admin/monitoring")}`}
                                           className="text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-full transition-colors flex items-center gap-1"
                                         >
                                           <FileText size={12} />
                                           Buka Detail
                                         </Link>
+                                        </div>
                                       </div>
                                       <p className="text-sm text-slate-600 italic line-clamp-2 leading-relaxed">
                                         "{report.narrative}"

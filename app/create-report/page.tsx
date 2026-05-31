@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { useUserRole } from '@/lib/useUserRole';
+import { useUserRole } from '@/lib/hooks/use-user-role';
 import { useAuth } from '@/lib/context/auth-context';
 import { ChevronLeft, Mic, Search, X, Loader2, CheckCircle2, MicOff } from 'lucide-react';
 import Link from 'next/link';

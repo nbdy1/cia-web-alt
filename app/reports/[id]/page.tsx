@@ -1,7 +1,6 @@
 import React from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  ChevronLeft,
   Calendar,
   Quote,
   Lightbulb,
@@ -11,12 +10,11 @@ import {
   Zap,
   CheckCircle2,
   Circle,
-  ChevronDown,
 } from "lucide-react";
-import Link from "next/link";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
+import { SmartBackButton } from "@/components/SmartBackButton";
 
 // ─── Framework lookup helpers ──────────────────────────────────────────────
 // Given a category + theme title + indicator title from the AI output,
@@ -116,11 +114,16 @@ async function getReportDetails(id: string) {
 
 export default async function ReportDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ from?: string | string[] }>;
 }) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
   const { report } = await getReportDetails(id);
+  const rawFrom = resolvedSearchParams?.from;
+  const from = Array.isArray(rawFrom) ? rawFrom[0] : rawFrom;
 
   if (!report)
     return (
@@ -141,12 +144,11 @@ export default async function ReportDetailPage({
     <div className="min-h-screen bg-slate-50 pb-24 font-sans relative">
       {/* Sticky Header */}
       <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-6 border-b border-slate-200 flex items-center justify-between sticky top-0 z-30">
-        <Link
-          href={`/students/${report.student_id}`}
+        <SmartBackButton
+          fallbackHref={from || `/students/${report.student_id}`}
+          preferHistory={false}
           className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-all"
-        >
-          <ChevronLeft className="w-6 h-6 text-slate-800" />
-        </Link>
+        />
         <div className="text-center">
           <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">
             Laporan Perkembangan
