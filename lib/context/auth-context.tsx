@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen w-full bg-slate-900 flex flex-col items-center justify-center p-6 animate-in fade-in duration-300">
         <div className="text-center space-y-4">
           <div className="w-20 h-20 bg-emerald-600/20 rounded-3xl border border-emerald-500/30 flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/20 animate-pulse">
-            <span className="text-emerald-400 font-extrabold text-3xl tracking-tighter">CIA.</span>
+            <span className="text-emerald-400 font-extrabold text-3xl tracking-tighter">CIA</span>
           </div>
           <div className="flex items-center justify-center gap-2 text-emerald-400/80 text-sm font-medium">
             <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />

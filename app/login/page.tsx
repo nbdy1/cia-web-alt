@@ -88,7 +88,7 @@ export default function LoginPage() {
             <span>Portal Evaluasi Ustadz</span>
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2 font-serif">
-            <span className="text-emerald-500">CIA.</span> Portal
+            <span className="text-emerald-500">CIA</span> Portal
           </h1>
           <p className="text-slate-400 text-sm mt-2 font-medium">
            Character Integrated Assessment Platform

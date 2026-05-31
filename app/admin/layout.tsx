@@ -41,69 +41,79 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <header className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="p-2 -ml-2 hover:bg-slate-800 rounded-full transition-colors text-slate-300">
-            <ChevronLeft size={20} />
+    <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
+      {/* Header */}
+      <header className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between sticky top-0 z-40" style={{ boxShadow: "0 4px 0 0 #000" }}>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 transition-colors border border-white/10"
+          >
+            <ChevronLeft size={18} />
           </Link>
           <div>
-            <h1 className="text-lg font-bold">Admin Dashboard</h1>
-            <p className="text-xs text-emerald-400 font-medium">CIA Management Portal</p>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 bg-emerald-500 rounded-md flex items-center justify-center" style={{ boxShadow: "0 2px 0 0 #15803d" }}>
+                <span className="text-white font-black text-[10px]">C</span>
+              </div>
+              <h1 className="text-base font-black text-white">Admin Portal</h1>
+            </div>
+            <p className="text-[10px] text-emerald-400 font-black uppercase tracking-wider">CIA Management</p>
           </div>
         </div>
-        <div className="text-xs font-bold bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
-          Admin: {user?.user_metadata?.name || user?.email || 'Admin'}
+        <div className="text-[10px] font-black bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-slate-300">
+          {user?.user_metadata?.name || 'Admin'}
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Navigation Tabs (Mobile bottom, Desktop side but here we use a simple top tab row for mobile-friendly responsive) */}
-        <div className="hidden md:flex flex-col w-64 bg-white border-r border-slate-100 p-4 space-y-2">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-2">Menu Navigasi</p>
+        {/* Desktop sidebar */}
+        <div className="hidden md:flex flex-col w-56 bg-white border-r-2 border-slate-100 p-3 space-y-1 flex-shrink-0" style={{ boxShadow: "2px 0 0 0 #e2e8f0" }}>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 pb-1">Navigasi</p>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
-              <Link 
-                key={item.href} 
+              <Link
+                key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold text-sm ${
-                  isActive 
-                  ? 'bg-emerald-50 text-emerald-700 shadow-sm border border-emerald-100' 
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-black text-sm ${
+                  isActive
+                    ? 'bg-emerald-500 text-white'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                 }`}
+                style={isActive ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
               >
-                <Icon size={18} className={isActive ? "text-emerald-600" : "text-slate-400"} />
+                <Icon size={16} className={isActive ? "text-white" : "text-slate-400"} />
                 {item.label}
               </Link>
-            )
-          })}
-        </div>
-        
-        {/* Mobile Tab Nav */}
-        <div className="md:hidden flex bg-white border-b border-slate-100 w-full overflow-x-auto scrollbar-hide">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link 
-                key={item.href} 
-                href={item.href}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 min-w-[100px] transition-all border-b-2 ${
-                  isActive 
-                  ? 'border-emerald-500 text-emerald-700 bg-emerald-50/30' 
-                  : 'border-transparent text-slate-500'
-                }`}
-              >
-                <Icon size={18} className={isActive ? "text-emerald-600" : "text-slate-400"} />
-                <span className="text-[10px] font-bold">{item.label}</span>
-              </Link>
-            )
+            );
           })}
         </div>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 relative">
+        {/* Mobile tab nav */}
+        <div className="md:hidden flex bg-white border-b-2 border-slate-100 w-full overflow-x-auto" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 min-w-[90px] transition-all border-b-2 ${
+                  isActive
+                    ? 'border-emerald-500 text-emerald-700'
+                    : 'border-transparent text-slate-400'
+                }`}
+              >
+                <Icon size={16} className={isActive ? "text-emerald-600" : "text-slate-400"} />
+                <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
       </div>

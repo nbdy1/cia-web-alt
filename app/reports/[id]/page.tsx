@@ -141,36 +141,30 @@ export default async function ReportDetailPage({
   const categories = ["Karakter", "Mental", "Soft Skill"];
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 font-sans relative">
+    <div className="min-h-screen bg-paper pb-24 font-sans relative">
       {/* Sticky Header */}
-      <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-6 border-b border-slate-200 flex items-center justify-between sticky top-0 z-30">
+      <header className="bg-white border-b-2 border-slate-100 px-5 pt-10 pb-4 flex items-center justify-between sticky top-0 z-30" style={{ boxShadow: "0 3px 0 0 #f1f5f9" }}>
         <SmartBackButton
           fallbackHref={from || `/students/${report.student_id}`}
           preferHistory={false}
-          className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-all"
+          className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 flex-shrink-0"
+          style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
         <div className="text-center">
-          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">
-            Laporan Perkembangan
-          </p>
-          <h1 className="text-sm font-bold text-slate-900">
-            {report.students.name}
-          </h1>
-          <p className="text-[11px] font-semibold text-slate-500 mt-1">
-            {report.title || "Laporan Perkembangan"}
-          </p>
+          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Laporan</p>
+          <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
         </div>
-        <div className="w-10" />
+        <div className="w-9" />
       </header>
 
-      <main className="px-5 py-8 space-y-8">
+      <main className="px-5 py-6 space-y-6">
         {/* 1. OVERALL PROGRESS */}
-        <section className="bg-emerald-900 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
+        <section className="bg-slate-900 rounded-[2rem] p-7 text-white relative overflow-hidden" style={{ boxShadow: "0 6px 0 0 #000" }}>
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <BarChart3 size={80} />
           </div>
           <div className="relative z-10">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300 mb-3">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-3">
               Perkembangan Keseluruhan
             </h3>
             <div className="grid grid-cols-3 gap-3">
@@ -204,7 +198,7 @@ export default async function ReportDetailPage({
           </div>
         </section>
 
-        <section className="bg-white p-7 rounded-[2.5rem] shadow-sm border border-slate-100 relative">
+        <section className="bg-white p-6 rounded-[2rem] border-2 border-slate-100 relative" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <Quote className="absolute top-6 left-6 w-8 h-8 text-slate-50" />
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
             Narasi Observasi
@@ -248,18 +242,17 @@ export default async function ReportDetailPage({
                       className={`flex ${isGuru ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[90%] p-4 rounded-[1.8rem] shadow-sm ${
+                        className={`max-w-[90%] px-4 py-3 ${
                           isGuru
-                            ? "bg-emerald-900 text-white rounded-tr-none"
-                            : "bg-slate-50 border border-slate-100 text-slate-800 rounded-tl-none"
+                            ? "bg-emerald-500 text-white rounded-[1.4rem] rounded-br-md"
+                            : "bg-slate-100 text-slate-700 rounded-[1.4rem] rounded-bl-md"
                         }`}
+                        style={isGuru ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
                       >
-                        <div className="flex items-center gap-2 mb-1 opacity-60">
-                          <span className="text-[9px] font-black uppercase tracking-widest">
-                            {isGuru ? "Ustadz" : "Asisten CIA"}
-                          </span>
-                        </div>
-                        <p className="text-sm leading-relaxed font-medium">
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
+                          {isGuru ? "Ustadz" : "Asisten CIA"}
+                        </p>
+                        <p className="text-sm leading-relaxed font-bold">
                           {msg.text}
                         </p>
                       </div>
@@ -290,7 +283,7 @@ export default async function ReportDetailPage({
 
         {/* 3. PRIORITY TREATMENT */}
         {analysis.treatment && (
-          <section className="bg-white rounded-[2.5rem] p-7 border border-slate-100 shadow-sm space-y-4">
+          <section className="bg-white rounded-[2rem] p-6 border-2 border-slate-100 space-y-4" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
             <div className="flex items-center gap-2">
               <Lightbulb className="text-emerald-600" size={18} />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -346,11 +339,12 @@ export default async function ReportDetailPage({
             return (
               <div
                 key={cat}
-                className="bg-white rounded-[2.2rem] border border-slate-100 shadow-sm overflow-hidden"
+                className="bg-white rounded-[2rem] border-2 border-slate-100 overflow-hidden"
+                style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}
               >
                 <div className="flex items-center gap-3 p-5 border-b border-slate-50">
                   <div
-                    className={`p-2.5 rounded-xl ${cat === "Karakter" ? "bg-rose-50 text-rose-500" : cat === "Mental" ? "bg-blue-50 text-blue-500" : "bg-amber-50 text-amber-500"}`}
+                    className={`p-2.5 rounded-xl ${cat === "Karakter" ? "bg-rose-50 text-rose-500" : cat === "Mental" ? "bg-blue-50 text-blue-500" : "bg-purple-50 text-purple-500"}`}
                   >
                     {cat === "Karakter" && <Heart size={18} />}
                     {cat === "Mental" && <Brain size={18} />}

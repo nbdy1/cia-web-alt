@@ -145,49 +145,48 @@ export default async function RecapPage({
       key: "soft_skill",
       label: "Soft Skill",
       icon: Zap,
-      color: "text-amber-500",
-      bg: "bg-amber-50",
-      progressBg: "bg-amber-400",
+      color: "text-purple-500",
+      bg: "bg-purple-50",
+      progressBg: "bg-purple-400",
       data: softSkillData,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 font-sans max-w-4xl mx-auto border-x border-slate-100 shadow-2xl relative">
-      <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-6 border-b border-slate-200 flex items-center justify-between sticky top-0 z-40">
+    <div className="min-h-screen bg-paper pb-20 font-sans max-w-4xl mx-auto relative">
+      <header className="bg-white border-b-2 border-slate-100 px-5 pt-10 pb-4 flex items-center justify-between sticky top-0 z-40" style={{ boxShadow: "0 3px 0 0 #f1f5f9" }}>
         <Link
           href={`/students/${student.id}`}
-          className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-all"
+          className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 flex-shrink-0 active:translate-y-px transition-transform"
+          style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         >
-          <ChevronLeft className="w-6 h-6 text-slate-800" />
+          <ChevronLeft className="w-4 h-4" />
         </Link>
         <div className="text-center">
-          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">
-            Rekapitulasi Pencapaian
-          </p>
-          <h1 className="text-sm font-bold text-slate-900">{student.name}</h1>
+          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Rekapitulasi</p>
+          <h1 className="text-sm font-black text-slate-900">{student.name}</h1>
         </div>
-        <div className="w-10" />
+        <div className="w-9" />
       </header>
 
-      <main className="px-5 py-8 space-y-8">
-        <section className="bg-emerald-900 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
+      <main className="px-5 py-6 space-y-6">
+        <section className="bg-slate-900 rounded-[2rem] p-7 text-white relative overflow-hidden" style={{ boxShadow: "0 6px 0 0 #000" }}>
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <ShieldCheck size={120} />
           </div>
           <div className="relative z-10">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300 mb-2">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-2">
               Total Laporan Dianalisis
             </h3>
             <div className="flex items-baseline gap-2">
               <span className="text-5xl font-black">{totalReports}</span>
-              <span className="text-sm font-bold text-emerald-200">
+              <span className="text-sm font-bold text-slate-400">
                 Laporan
               </span>
             </div>
-            <p className="text-xs text-emerald-100 mt-4 max-w-sm leading-relaxed opacity-80">
-              Berikut adalah rekapitulasi permanen dari semua kriteria yang
-              telah terpenuhi berdasarkan riwayat laporan observasi ananda.
+            <p className="text-xs text-slate-400 mt-4 max-w-sm leading-relaxed">
+              Rekapitulasi permanen semua kriteria yang telah terpenuhi
+              berdasarkan riwayat laporan observasi ananda.
             </p>
           </div>
         </section>

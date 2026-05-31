@@ -113,24 +113,27 @@ export function SettingsDropdown() {
   }, [isOpen]);
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
+    <div className="relative inline-block z-[1000] text-left" ref={dropdownRef}>
       {/* Trigger Button */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`p-2.5 rounded-full transition-all flex items-center justify-center ${
-          isOpen ? 'bg-emerald-100 text-emerald-800 shadow-inner' : 'hover:bg-slate-100 text-slate-500'
+        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:translate-y-px border-2 ${
+          isOpen
+            ? "bg-emerald-500 text-white border-emerald-400"
+            : "bg-white text-slate-500 border-slate-200 hover:border-emerald-200"
         }`}
+        style={isOpen ? { boxShadow: "0 3px 0 0 #15803d" } : { boxShadow: "0 3px 0 0 #cbd5e1" }}
         title="Pengaturan & Panduan"
       >
-        <Settings className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
+        <Settings className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
       </button>
 
       {/* Popover Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 z-40 animate-fade-in origin-top-right">
-          <div className="px-5 py-3 border-b border-slate-100 mb-2">
-            <h4 className="font-serif font-bold text-slate-800 text-base">Pengaturan & Panduan</h4>
-            <p className="text-[11px] text-slate-400 font-medium mt-0.5">Menu preferensi dan standar kurikulum CIA</p>
+        <div className="fixed left-1/2 -translate-x-1/2 top-[4.5rem] w-[22rem] max-w-[calc(100vw-1.5rem)] bg-white rounded-[1.8rem] z-50 animate-fade-in border-2 border-slate-100" style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}>
+          <div className="px-5 py-4 border-b-2 border-slate-100 mb-2">
+            <h4 className="font-black text-slate-800 text-base">Pengaturan</h4>
+            <p className="text-[11px] text-slate-400 font-bold mt-0.5">Preferensi & panduan CIA</p>
           </div>
 
           <div className="px-2 space-y-1">
@@ -140,34 +143,26 @@ export function SettingsDropdown() {
                 setIsOpen(false);
                 setIsGlossaryOpen(true);
               }}
-              className="w-full flex items-start gap-3.5 p-3 rounded-2xl hover:bg-emerald-50 text-left transition-colors group cursor-pointer"
+              className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-emerald-50 text-left transition-colors group cursor-pointer"
             >
-              <div className="p-2.5 bg-emerald-100/70 text-emerald-700 rounded-xl group-hover:scale-105 transition-transform">
-                <BookOpen className="w-5 h-5" />
+              <div className="w-9 h-9 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0" style={{ boxShadow: "0 2px 0 0 #6ee7b7" }}>
+                <BookOpen className="w-4 h-4" />
               </div>
               <div>
-                <span className="block font-bold text-slate-800 text-sm group-hover:text-emerald-800 transition-colors">
-                  Panduan Kriteria Asesmen
-                </span>
-                <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
-                  Daftar lengkap kriteria Karakter, Mental, dan Soft Skill
-                </span>
+                <span className="block font-black text-slate-800 text-sm">Panduan Kriteria</span>
+                <span className="block text-[10px] text-slate-400 font-bold mt-0.5">Karakter, Mental, Soft Skill</span>
               </div>
             </button>
 
             {/* App Preferences */}
-            <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-100">
-              <div className="flex items-start gap-3.5">
-                <div className="p-2.5 bg-white text-slate-600 rounded-xl border border-slate-100">
-                  <Sliders className="w-5 h-5" />
+            <div className="p-3 rounded-2xl bg-slate-50 border-2 border-slate-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 bg-white text-slate-600 rounded-xl border-2 border-slate-200 flex items-center justify-center flex-shrink-0" style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}>
+                  <Sliders className="w-4 h-4" />
                 </div>
-                <div className="flex-1">
-                  <span className="block font-bold text-slate-800 text-sm">
-                    Preferensi Tampilan
-                  </span>
-                  <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
-                    Pilih huruf dan ukuran teks yang paling nyaman
-                  </span>
+                <div>
+                  <span className="block font-black text-slate-800 text-sm">Tampilan</span>
+                  <span className="block text-[10px] text-slate-400 font-bold">Huruf & ukuran teks</span>
                 </div>
               </div>
 
@@ -260,28 +255,26 @@ export function SettingsDropdown() {
                 alert("Pusat Bantuan Ustadz CIA siap melayani. Panduan teknis dapat diunduh di portal santri.");
                 setIsOpen(false);
               }}
-              className="w-full flex items-start gap-3.5 p-3 rounded-2xl hover:bg-slate-50 text-left transition-colors group cursor-pointer"
+              className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 text-left transition-colors group cursor-pointer"
             >
-              <div className="p-2.5 bg-slate-100 text-slate-600 rounded-xl group-hover:scale-105 transition-transform">
-                <HelpCircle className="w-5 h-5" />
+              <div className="w-9 h-9 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0" style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}>
+                <HelpCircle className="w-4 h-4" />
               </div>
               <div>
-                <span className="block font-bold text-slate-800 text-sm group-hover:text-slate-950">
-                  Pusat Bantuan & Bimbingan
-                </span>
-                <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
-                  Dokumentasi dan petunjuk teknis pengisian laporan
-                </span>
+                <span className="block font-black text-slate-800 text-sm">Pusat Bantuan</span>
+                <span className="block text-[10px] text-slate-400 font-bold mt-0.5">Panduan teknis pengisian laporan</span>
               </div>
             </button>
           </div>
 
-          <div className="mt-2 pt-3 border-t border-slate-100 px-5 flex items-center justify-between text-[10px] text-slate-400 font-bold">
-            <span className="flex items-center gap-1">
-              <Shield className="w-3 h-3 text-emerald-600" />
+          <div className="mt-2 pt-3 border-t-2 border-slate-100 px-5 pb-3 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-[10px] text-slate-400 font-black">
+              <div className="w-4 h-4 bg-emerald-500 rounded-md flex items-center justify-center" style={{ boxShadow: "0 1px 0 0 #15803d" }}>
+                <Shield className="w-2.5 h-2.5 text-white" />
+              </div>
               CIA V0.1
             </span>
-            <span>Edisi Bahasa Indonesia</span>
+            <span className="text-[10px] text-slate-400 font-black">Bahasa Indonesia</span>
           </div>
         </div>
       )}

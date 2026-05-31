@@ -169,123 +169,154 @@ export default function AssessmentPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans">
+    <div className="flex flex-col h-screen bg-paper font-sans">
       {/* Header */}
-      <header className="px-6 py-6 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-20">
+      <header className="px-5 py-4 bg-white border-b-2 border-slate-100 flex items-center justify-between sticky top-0 z-20" style={{ boxShadow: "0 3px 0 0 #f1f5f9" }}>
         <div className="flex items-center gap-3">
-          <Link href="/create-report" className="p-2 hover:bg-slate-50 rounded-full text-slate-400">
-            <ChevronLeft size={20} />
+          <Link
+            href="/create-report"
+            className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 active:translate-y-px transition-transform"
+            style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
+          >
+            <ChevronLeft size={18} />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 leading-tight font-serif">Wawancara Reflektif</h1>
-            <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">{studentName}</p>
+            <h1 className="text-base font-black text-slate-900 leading-tight">Wawancara</h1>
+            <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest leading-none">{studentName}</p>
           </div>
         </div>
-        
-        {/* Progress Badge */}
-        <div className="bg-emerald-50 px-3 py-1.5 rounded-2xl border border-emerald-100 flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">
-            {discoveredCount} Topik Tergali
-          </span>
+
+        {/* Topics badge */}
+        <div
+          className="flex items-center gap-2 px-3 py-2 bg-white rounded-2xl border-2 border-emerald-200"
+          style={{ boxShadow: "0 3px 0 0 #a7f3d0" }}
+        >
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs font-black text-emerald-700">{discoveredCount} Topik</span>
         </div>
       </header>
 
       {/* Chat Area */}
-      <main ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
+      <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-6 space-y-4">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-40">
-            <div className="w-16 h-16 bg-slate-200 rounded-3xl flex items-center justify-center text-slate-400">
-              <Quote size={32} />
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50 animate-bounce-in">
+            <div
+              className="w-20 h-20 bg-white rounded-[1.6rem] flex items-center justify-center"
+              style={{ boxShadow: "0 4px 0 0 #e2e8f0", border: "2px solid #e2e8f0" }}
+            >
+              <Quote size={34} className="text-slate-300" />
             </div>
-            <p className="text-lg font-bold text-slate-500 max-w-[240px] font-serif">
-              Silakan mulai ceritakan observasi Ustadz tentang {studentName}...
+            <p className="text-base font-black text-slate-400 max-w-[220px] leading-snug">
+              Ceritakan observasi tentang {studentName}…
             </p>
           </div>
         )}
 
         {messages.map((msg, idx) => (
-          <div key={idx} className={`flex ${msg.role === 'teacher' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[85%] p-4 rounded-[1.8rem] shadow-sm ${
-              msg.role === 'teacher' 
-              ? 'bg-emerald-900 text-white rounded-tr-none' 
-              : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'
-            }`}>
-              <div className="flex items-center gap-2 mb-1 opacity-40">
-                {msg.role === 'teacher' ? <User size={10} /> : <Brain size={10} />}
-                <span className="text-[8px] font-black uppercase tracking-widest">
-                  {msg.role === 'teacher' ? 'Ustadz' : 'Asisten CIA'}
-                </span>
+          <div key={idx} className={`flex ${msg.role === "teacher" ? "justify-end" : "justify-start"} animate-slide-up`}>
+            {msg.role === "ai" && (
+              <div
+                className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center mr-2 flex-shrink-0 self-end mb-1"
+                style={{ boxShadow: "0 2px 0 0 #15803d" }}
+              >
+                <Brain size={14} className="text-white" />
               </div>
-              <p className="text-sm leading-relaxed font-medium">{msg.text}</p>
+            )}
+            <div
+              className={`max-w-[82%] px-4 py-3 ${
+                msg.role === "teacher"
+                  ? "bg-emerald-500 text-white rounded-[1.4rem] rounded-br-md"
+                  : "bg-white border-2 border-slate-100 text-slate-800 rounded-[1.4rem] rounded-bl-md"
+              }`}
+              style={
+                msg.role === "teacher"
+                  ? { boxShadow: "0 3px 0 0 #15803d" }
+                  : { boxShadow: "0 3px 0 0 #e2e8f0" }
+              }
+            >
+              <p className="text-sm leading-relaxed font-bold">{msg.text}</p>
             </div>
+            {msg.role === "teacher" && (
+              <div className="w-8 h-8 bg-slate-200 rounded-xl flex items-center justify-center ml-2 flex-shrink-0 self-end mb-1">
+                <User size={14} className="text-slate-500" />
+              </div>
+            )}
           </div>
         ))}
 
         {currentInput && isRecording && (
           <div className="flex justify-end opacity-50">
-            <div className="max-w-[85%] p-4 bg-emerald-50 border border-emerald-100 text-emerald-900 rounded-[1.8rem] rounded-tr-none italic text-sm">
-              {currentInput}...
+            <div className="max-w-[82%] px-4 py-3 bg-emerald-50 border-2 border-emerald-200 text-emerald-800 rounded-[1.4rem] rounded-br-md italic text-sm font-bold">
+              {currentInput}…
             </div>
           </div>
         )}
 
         {isProcessing && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-slate-100 p-4 rounded-[1.8rem] rounded-tl-none shadow-sm flex items-center gap-2">
-              <Loader2 size={16} className="animate-spin text-emerald-600" />
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI sedang berpikir...</span>
+          <div className="flex justify-start animate-slide-up">
+            <div
+              className="bg-white border-2 border-slate-100 px-4 py-3 rounded-[1.4rem] rounded-bl-md flex items-center gap-2"
+              style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
+            >
+              <Loader2 size={14} className="animate-spin text-emerald-500" />
+              <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Berpikir…</span>
             </div>
           </div>
         )}
       </main>
 
       {/* Input Area */}
-      <footer className="p-6 bg-white border-t border-slate-100">
-        <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-[2.2rem] border border-slate-100 shadow-inner">
-          <button 
+      <footer className="p-5 bg-white border-t-2 border-slate-100">
+        <div
+          className="flex items-center gap-2 bg-slate-50 p-2 rounded-[1.8rem] border-2 border-slate-200"
+          style={{ boxShadow: "inset 0 2px 4px rgba(0,0,0,0.04)" }}
+        >
+          <button
             onClick={toggleRecording}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-              isRecording 
-              ? 'bg-red-500 text-white shadow-lg shadow-red-200' 
-              : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+            className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center border-2 active:translate-y-px transition-transform ${
+              isRecording
+                ? "bg-red-500 text-white border-red-400"
+                : "bg-white text-emerald-600 border-emerald-200"
             }`}
+            style={isRecording ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
           >
-            {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
+            {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
-          
+
           <textarea
             ref={inputRef}
             value={currentInput}
             onChange={(e) => setCurrentInput(e.target.value)}
             onKeyDown={handleInputKeyDown}
-            placeholder="Ketik atau bicara..."
+            placeholder="Ketik atau bicara…"
             rows={1}
-            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-700 placeholder:text-slate-400 py-3 leading-6 resize-none max-h-40 overflow-y-auto"
+            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 py-2.5 leading-5 resize-none max-h-36 overflow-y-auto"
           />
 
-          <button 
+          <button
             onClick={handleSend}
             disabled={!currentInput.trim() || isProcessing}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center active:translate-y-px transition-transform ${
               currentInput.trim() && !isProcessing
-              ? 'bg-emerald-900 text-white shadow-lg shadow-emerald-100' 
-              : 'text-slate-300'
+                ? "bg-emerald-500 text-white border-2 border-emerald-400"
+                : "bg-slate-100 text-slate-300 border-2 border-slate-100 cursor-not-allowed"
             }`}
+            style={currentInput.trim() && !isProcessing ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
           >
-            <Send size={20} />
+            <Send size={18} />
           </button>
         </div>
-        <p className="mt-2 flex justify-center  px-2 text-[11px] text-slate-400 font-medium">
-          Tekan Enter untuk kirim, Shift+Enter untuk baris baru.
+
+        <p className="mt-2 text-center text-[10px] text-slate-400 font-bold">
+          Enter untuk kirim · Shift+Enter baris baru
         </p>
 
-        {/* Finalize Button */}
         {messages.length >= 2 && (
           <button
             onClick={handleFinalize}
             disabled={isProcessing}
-            className="w-full mt-4 py-4 rounded-[1.8rem] bg-slate-900 text-white font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl shadow-slate-200 hover:bg-black active:scale-[0.98] transition-all"
+            className="w-full mt-4 py-4 rounded-[1.4rem] bg-slate-900 text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 active:translate-y-1 transition-transform"
+            style={{ boxShadow: "0 4px 0 0 #000" }}
           >
             <Sparkles size={16} className="text-emerald-400" />
             Selesai & Buat Laporan

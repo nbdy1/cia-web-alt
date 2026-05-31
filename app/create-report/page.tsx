@@ -104,106 +104,129 @@ const STUDENTS = [
   };
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in duration-500 bg-white">
-      <header className="px-6 pt-10 pb-4 flex items-center gap-4">
-        <Link href="/" className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors">
-          <ChevronLeft className="w-6 h-6 text-slate-800" />
+    <div className="flex flex-col h-full animate-fade-in bg-paper">
+      <header className="px-6 pt-10 pb-6">
+        <Link href="/" className="inline-flex items-center gap-2 mb-6 group">
+          <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500" style={{ boxShadow: "0 3px 0 0 #e2e8f0", minWidth: 32 }}>
+            <ChevronLeft className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-emerald-600 transition-colors">Beranda</span>
         </Link>
-        <h1 className="text-xl font-bold text-slate-800">Pilih Santri</h1>
+        <h1 className="text-3xl font-black text-slate-800">Pilih Santri</h1>
+        <p className="text-slate-400 text-sm font-bold mt-1">Siapa yang akan dinilai hari ini?</p>
       </header>
 
       <main className="px-6 flex-1 flex flex-col">
-        <div className="relative mt-4">
+        {/* Search bar */}
+        <div className="relative mb-2">
           <div className="relative flex items-center">
             <Search className="absolute left-4 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder={isListening ? "Mendengar..." : "Cari nama santri..."}
+              placeholder={isListening ? "Mendengar…" : "Cari nama santri…"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full border-2 rounded-2xl py-4 pl-12 pr-14 transition-all outline-none text-slate-800 ${
-                isListening ? 'border-red-200 bg-red-50' : 'border-slate-100 bg-slate-50 focus:border-emerald-500'
+              className={`w-full border-2 rounded-2xl py-4 pl-12 pr-14 font-bold text-slate-800 outline-none transition-all ${
+                isListening
+                  ? "border-red-300 bg-red-50 placeholder:text-red-300"
+                  : "border-slate-200 bg-white focus:border-emerald-400"
               }`}
+              style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
             />
-            <button 
+            <button
               onClick={toggleVoiceSearch}
-              className={`absolute right-2 p-2 rounded-xl transition-all ${
-                isListening 
-                ? 'bg-red-500 text-white shadow-lg shadow-red-200' 
-                : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+              className={`absolute right-2 p-2.5 rounded-xl flex items-center justify-center active:translate-y-px transition-transform border-2 ${
+                isListening
+                  ? "bg-red-500 text-white border-red-400"
+                  : "bg-white text-emerald-600 border-emerald-200"
               }`}
+              style={isListening ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
             >
               {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
           </div>
-          
-          {/* Live Recognition Indicator */}
           {isListening && (
-            <div className="absolute -bottom-6 left-4 flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-2 px-1">
               <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
               </span>
-              <span className="text-[10px] text-red-500 font-bold uppercase tracking-widest">Suara Aktif</span>
+              <span className="text-[10px] text-red-500 font-black uppercase tracking-widest">Suara Aktif</span>
             </div>
           )}
         </div>
 
+        {/* Selected student banner */}
         {selectedStudent && (
-          <div className="mt-10 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex justify-between items-center animate-in slide-in-from-top-2 duration-300">
+          <div
+            className="mt-4 p-4 bg-white border-2 border-emerald-300 rounded-2xl flex justify-between items-center animate-bounce-in"
+            style={{ boxShadow: "0 4px 0 0 #15803d" }}
+          >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-xl font-bold">
+              <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white text-xl font-black" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
                 {selectedStudent.name[0]}
               </div>
               <div>
-                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tighter">Target Dipilih</p>
-                <p className="text-slate-900 font-bold text-lg leading-tight">{selectedStudent.name}</p>
+                <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">Dipilih ✓</p>
+                <p className="text-slate-900 font-black text-lg leading-tight">{selectedStudent.name}</p>
               </div>
             </div>
-            <button onClick={() => setSelectedStudent(null)} className="p-2 hover:bg-emerald-100 rounded-full text-emerald-600 transition-colors">
-              <X className="w-6 h-6" />
+            <button onClick={() => setSelectedStudent(null)} className="w-8 h-8 bg-slate-100 hover:bg-rose-50 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
+              <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        <div className="mt-8 flex-1 overflow-y-auto pb-10">
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">
-            {searchQuery ? 'Saran' : 'Daftar Santri'}
+        {/* Student list */}
+        <div className="mt-6 flex-1 overflow-y-auto pb-6">
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-3">
+            {searchQuery ? "Hasil Pencarian" : "Semua Santri"}
           </p>
           {loading ? (
-            <div className="flex justify-center py-10"><Loader2 className="animate-spin text-slate-300" /></div>
+            <div className="flex justify-center py-10">
+              <Loader2 className="animate-spin text-emerald-400 w-7 h-7" />
+            </div>
           ) : (
-            <div className="space-y-2">
-              {filteredStudents.map((student) => (
-                <button
-                  key={student.id}
-                  onClick={() => setSelectedStudent(student)}
-                  className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${
-                    selectedStudent?.id === student.id 
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' 
-                    : 'bg-white border border-slate-100 text-slate-700 hover:border-emerald-200'
-                  }`}
-                >
-                  <span className="font-semibold">{student.name}</span>
-                  {selectedStudent?.id === student.id && <CheckCircle2 className="w-5 h-5 text-emerald-200" />}
-                </button>
-              ))}
+            <div className="space-y-3">
+              {filteredStudents.map((student) => {
+                const isSelected = selectedStudent?.id === student.id;
+                return (
+                  <button
+                    key={student.id}
+                    onClick={() => setSelectedStudent(student)}
+                    className={`w-full flex items-center justify-between p-4 rounded-2xl font-black text-left transition-all ${
+                      isSelected
+                        ? "card-3d-selected"
+                        : "card-3d"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black ${isSelected ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500"}`}>
+                        {student.name.charAt(0)}
+                      </div>
+                      <span className={isSelected ? "text-emerald-800" : "text-slate-700"}>{student.name}</span>
+                    </div>
+                    {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
 
-      <div className="py-6 border-t border-slate-50">
-          {/* PASSING DATA VIA URL PARAMS */}
-          <Link href={selectedStudent ? `/create-report/assessment?id=${selectedStudent.id}&name=${encodeURIComponent(selectedStudent.name)}` : '#'}>
+        {/* CTA */}
+        <div className="py-5 border-t-2 border-slate-100">
+          <Link href={selectedStudent ? `/create-report/assessment?id=${selectedStudent.id}&name=${encodeURIComponent(selectedStudent.name)}` : "#"}>
             <button
               disabled={!selectedStudent}
-              className={`w-full py-5 rounded-2xl font-bold text-lg transition-all transform active:scale-[0.98] ${
-                selectedStudent 
-                ? 'bg-emerald-950 text-white shadow-xl shadow-slate-200' 
-                : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+              className={`w-full py-5 rounded-2xl font-black text-lg active:translate-y-1 transition-transform ${
+                selectedStudent
+                  ? "bg-emerald-500 text-white"
+                  : "bg-slate-100 text-slate-300 cursor-not-allowed"
               }`}
+              style={selectedStudent ? { boxShadow: "0 4px 0 0 #15803d" } : {}}
             >
-              Mulai Asesmen
+              Mulai Asesmen →
             </button>
           </Link>
         </div>

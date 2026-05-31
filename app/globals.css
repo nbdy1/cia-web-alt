@@ -2,9 +2,14 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a2e;
   --app-font-family: var(--font-din-rounded), var(--font-nunito), sans-serif;
   --app-font-scale: 1;
+
+  /* Design system tokens */
+  --btn-depth: 4px;
+  --grid-color: rgba(16, 185, 129, 0.07);
+  --grid-size: 28px;
 }
 
 @theme inline {
@@ -35,13 +40,6 @@ html[data-font-family="atkinson"] {
   --app-font-family: var(--font-atkinson), var(--font-din-rounded), sans-serif;
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -49,11 +47,62 @@ body {
   zoom: var(--app-font-scale);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+@layer utilities {
+  /* ─── Paper grid background ────────────────────────────────────── */
+  .bg-paper {
+    background-color: #f0fdf7;
+    background-image:
+      linear-gradient(rgba(16, 185, 129, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16, 185, 129, 0.07) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* ─── 3D card ──────────────────────────────────────────────────── */
+  .card-3d {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 0 0 #cbd5e1;
+    transition: transform 80ms ease, box-shadow 80ms ease, border-color 80ms ease;
+  }
+
+  .card-3d-selected {
+    background: #f0fdf4;
+    border: 2px solid #22c55e;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 0 0 #15803d;
+  }
+
+  .card-3d-link:hover .card-3d,
+  a.card-3d-link:hover .card-3d {
+    border-color: #a7f3d0;
+    box-shadow: 0 4px 0 0 #6ee7b7;
+  }
+  .card-3d-link:active .card-3d,
+  a.card-3d-link:active .card-3d {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 0 #6ee7b7;
+  }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* ─── Animations (keyframes must be outside @layer) ─────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0px); }
+}
+@keyframes bounceIn {
+  0%   { transform: scale(0.8);  opacity: 0; }
+  60%  { transform: scale(1.05); opacity: 1; }
+  80%  { transform: scale(0.98); }
+  100% { transform: scale(1);    }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@layer utilities {
+  .animate-fade-in   { animation: fadeIn   0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .animate-bounce-in { animation: bounceIn 0.4s  cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  .animate-slide-up  { animation: slideUp  0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 }

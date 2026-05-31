@@ -29,8 +29,8 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="w-full flex justify-center min-h-screen bg-slate-100">
-      <div className="w-full max-w-[450px] bg-white min-h-screen shadow-2xl flex flex-col relative">
+    <div className="w-full flex justify-center min-h-screen bg-slate-200">
+      <div className="w-full max-w-[450px] min-h-screen shadow-2xl shadow-slate-300/60 flex flex-col relative">
         {children}
       </div>
     </div>

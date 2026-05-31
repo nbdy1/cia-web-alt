@@ -8,11 +8,12 @@ import { ChevronLeft } from "lucide-react";
 type SmartBackButtonProps = {
   fallbackHref?: string;
   className?: string;
+  style?: React.CSSProperties;
   children?: React.ReactNode;
   preferHistory?: boolean;
 };
 
-export function SmartBackButton({ fallbackHref, className, children, preferHistory = true }: SmartBackButtonProps) {
+export function SmartBackButton({ fallbackHref, className, style, children, preferHistory = true }: SmartBackButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { role } = useUserRole();
@@ -49,6 +50,7 @@ export function SmartBackButton({ fallbackHref, className, children, preferHisto
       type="button"
       onClick={handleBack}
       className={className}
+      style={style}
       aria-label="Kembali"
       title="Kembali"
     >
