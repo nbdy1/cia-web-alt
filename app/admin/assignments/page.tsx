@@ -97,110 +97,89 @@ export default function PlottingSantriPage() {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Plotting Santri</h2>
-          <p className="text-slate-500 text-sm">Tugaskan santri kepada Ustadz pembimbing masing-masing</p>
+          <h2 className="text-2xl font-black text-slate-800">Plotting Santri</h2>
+          <p className="text-slate-400 text-sm font-bold mt-0.5">Tugaskan santri ke Ustadz pembimbing</p>
         </div>
-        
-        <button 
+        <button
           onClick={saveAssignments}
           disabled={saving || loading}
-          className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-200"
+          className="inline-flex items-center gap-2 bg-emerald-500 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
+          style={{ boxShadow: saving || loading ? "none" : "0 3px 0 0 #15803d" }}
         >
-          {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save size={18} />}
-          <span>Simpan Perubahan</span>
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={15} />} Simpan Perubahan
         </button>
       </div>
 
       {message && (
-        <div className={`p-4 rounded-2xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-top-2 ${
-          message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+        <div className={`p-3.5 rounded-xl flex items-center gap-2.5 text-sm font-black border-2 ${
+          message.type === "success" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200"
         }`}>
-          {message.type === 'success' ? <UserCheck size={18} /> : <AlertCircle size={18} />}
+          {message.type === "success" ? <UserCheck size={16} /> : <AlertCircle size={16} />}
           {message.text}
         </div>
       )}
 
-      <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-slate-100">
-        <div className="relative mb-6">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Cari nama santri..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:border-emerald-500 transition-all"
-          />
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-          </div>
-        ) : ustadzList.length === 0 ? (
-          <div className="text-center py-16 bg-amber-50 rounded-3xl border border-dashed border-amber-200">
-            <AlertCircle className="w-10 h-10 mx-auto text-amber-500 mb-3" />
-            <p className="text-amber-800 font-bold mb-1">Belum ada Ustadz terdaftar</p>
-            <p className="text-amber-600 text-sm">Pastikan Anda telah menjalankan Setup SQL dan mendaftarkan Ustadz terlebih dahulu.</p>
-          </div>
-        ) : filteredStudents.length > 0 ? (
-          <div className="overflow-hidden rounded-2xl border border-slate-100">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Santri</th>
-                  <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Ustadz Pembimbing</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStudents.map((student) => {
-                  const currentUstadz = assignments[student.id] || '';
-                  const hasChanged = currentUstadz !== (student.assigned_ustadz_id || '');
-                  
-                  return (
-                    <tr key={student.id} className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${hasChanged ? 'bg-emerald-50/30' : ''}`}>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center font-bold text-xs shrink-0">
-                            {student.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-800 text-sm">{student.name}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student.batch || 'Reguler'}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <select
-                          value={currentUstadz}
-                          onChange={(e) => handleAssignmentChange(student.id, e.target.value)}
-                          className={`w-full max-w-xs p-2.5 rounded-xl text-sm font-medium border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all ${
-                            currentUstadz 
-                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                            : 'bg-slate-50 border-slate-200 text-slate-500'
-                          }`}
-                        >
-                          <option value="">-- Belum Ditugaskan --</option>
-                          {ustadzList.map(u => (
-                            <option key={u.id} value={u.id}>{u.name}</option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-16 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-            <Users className="w-10 h-10 mx-auto text-slate-300 mb-3" />
-            <p className="text-slate-500 font-medium">Tidak ada santri ditemukan</p>
-          </div>
-        )}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input type="text" placeholder="Cari nama santri…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-all"
+          style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
+        />
       </div>
+
+      {loading ? (
+        <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-emerald-500" /></div>
+      ) : ustadzList.length === 0 ? (
+        <div className="text-center py-14 bg-amber-50 rounded-[1.5rem] border-2 border-amber-200">
+          <AlertCircle className="w-8 h-8 mx-auto text-amber-400 mb-3" />
+          <p className="text-amber-800 font-black text-sm mb-1">Belum ada Ustadz terdaftar</p>
+          <p className="text-amber-600 text-xs font-bold">Daftarkan Ustadz terlebih dahulu di menu Kelola Ustadz.</p>
+        </div>
+      ) : filteredStudents.length > 0 ? (
+        <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
+          <div className="grid grid-cols-2 px-5 py-3 bg-slate-50 border-b-2 border-slate-100">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Santri</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ustadz Pembimbing</p>
+          </div>
+          <div className="divide-y-2 divide-slate-50">
+            {filteredStudents.map((student) => {
+              const currentUstadz = assignments[student.id] || "";
+              const hasChanged = currentUstadz !== (student.assigned_ustadz_id || "");
+              return (
+                <div key={student.id} className={`grid grid-cols-2 gap-4 px-5 py-3.5 items-center transition-colors ${hasChanged ? "bg-emerald-50/60" : "hover:bg-slate-50/50"}`}>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center font-black text-xs shrink-0">
+                      {student.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-black text-slate-800 text-sm leading-tight">{student.name}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.batch || "Reguler"}</p>
+                    </div>
+                  </div>
+                  <select
+                    value={currentUstadz}
+                    onChange={(e) => handleAssignmentChange(student.id, e.target.value)}
+                    className={`w-full p-2.5 rounded-xl text-sm font-bold border-2 focus:outline-none transition-all appearance-none ${
+                      currentUstadz ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-slate-50 border-slate-200 text-slate-400"
+                    }`}
+                  >
+                    <option value="">— Belum Ditugaskan —</option>
+                    {ustadzList.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                  </select>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-16 bg-white rounded-[1.5rem] border-2 border-dashed border-slate-200">
+          <Users className="w-8 h-8 mx-auto text-slate-200 mb-3" />
+          <p className="text-slate-400 font-black text-sm">Tidak ada santri ditemukan</p>
+        </div>
+      )}
     </div>
   );
 }
