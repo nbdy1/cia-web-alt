@@ -31,19 +31,19 @@ const STUDENTS = [
         .from('students')
         .select('*, user:profiles(id)')
         .order('name', { ascending: true });
-      
+
       if (!error && data) setStudents(data);
       setLoading(false);
     }
     fetchStudents();
   }, []);
 
-  const fuse = useMemo(() => new Fuse(students, { 
-    keys: ['name'], 
+  const fuse = useMemo(() => new Fuse(students, {
+    keys: ['name'],
     threshold: 0.4,
-    distance: 100 
+    distance: 100
   }), [students]);
-  
+
   const filteredStudents = React.useMemo(() => {
     const list = searchQuery ? fuse.search(searchQuery).map(r => r.item) : students;
     if (role === 'admin') return list;
@@ -79,7 +79,7 @@ const STUDENTS = [
     recognition.interimResults = true; // SHOW LIVE TEXT
 
     recognition.onstart = () => setIsListening(true);
-    
+
     recognition.onresult = (event: any) => {
       let interimTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {

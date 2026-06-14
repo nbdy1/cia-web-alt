@@ -17,14 +17,14 @@ export default function AssessmentPage() {
   const router = useRouter();
   const studentId = searchParams.get('id');
   const studentName = searchParams.get('name') || 'Santri';
-  
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [discoveredCount, setDiscoveredCount] = useState(0);
   const [discoveredPillars, setDiscoveredPillars] = useState<string[]>([]);
-  
+
   const { speak, stop: stopVoice } = useCIAVoice();
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -78,7 +78,7 @@ export default function AssessmentPage() {
 
   const handleSend = async () => {
     if (!currentInput.trim()) return;
-    
+
     const userText = currentInput.trim();
     const newMessages = [...messages, { role: 'teacher', text: userText } as Message];
     setMessages(newMessages);
@@ -97,7 +97,7 @@ export default function AssessmentPage() {
       });
       const transcript = newMessages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
       const result = await processInterviewStep(transcript, discoveredPillars);
-      
+
       if (result.reply) {
         const newDiscovered = Array.isArray(result.discoveredPillars) ? result.discoveredPillars : [];
         const mergedDiscovered = Array.from(new Set([...discoveredPillars, ...newDiscovered]));
@@ -125,7 +125,7 @@ export default function AssessmentPage() {
   const handleFinalize = async () => {
     setIsProcessing(true);
     const fullTranscript = messages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
-    
+
     try {
       console.log('[Finalize][Client] Sending finalization request', {
         accumulatedThemesSent: discoveredPillars,
@@ -145,11 +145,11 @@ export default function AssessmentPage() {
         ),
         priorityTheme: analysis?.treatment?.priority_theme,
       });
-      
+
       // Save large JSON payload to sessionStorage to avoid URL length limits
       sessionStorage.setItem('current_analysis', JSON.stringify(analysis));
       sessionStorage.setItem('current_narrative', fullTranscript);
-      
+
       const params = new URLSearchParams({
         id: studentId || "",
         name: studentName
