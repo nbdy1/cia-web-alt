@@ -1,3 +1,16 @@
+/**
+ * app/admin/assignments/page.tsx
+ *
+ * Student-to-ustadz assignment page. Allows the admin to assign each student
+ * to a specific ustadz so they appear in that ustadz's student list.
+ *
+ * The assignment is stored in `students.assigned_ustadz_id` (a FK to
+ * `profiles.id`). Changes are tracked in local state and saved in a single
+ * batch operation to minimise database round-trips.
+ *
+ * Students without an assignment are visible to admin only; once assigned they
+ * appear in the ustadz's "My Students" view (/students filtered by role).
+ */
 "use client";
 
 import React, { useEffect, useState } from 'react';

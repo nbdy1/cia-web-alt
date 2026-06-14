@@ -1,3 +1,21 @@
+/**
+ * app/students/page.tsx
+ *
+ * Student list page — the main portal for ustadz to browse and access their
+ * students' assessment history.
+ *
+ * Features:
+ *   - Paginated list (10 per page) with prev/next controls
+ *   - Text search (client-side filter on student name)
+ *   - Role-based filtering: admin sees all students; ustadz sees only students
+ *     where assigned_ustadz_id matches their own user ID
+ *   - Status badges: recap availability indicator, report count
+ *   - Click any student to navigate to /students/[id]
+ *
+ * Data is fetched once on mount from Supabase, with the full `reports` and
+ * `recap_data` joined in a single query. All filtering and pagination happen
+ * client-side for snappy UX.
+ */
 "use client";
 
 import React, { useEffect, useState } from "react";

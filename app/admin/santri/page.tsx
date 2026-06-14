@@ -1,3 +1,15 @@
+/**
+ * app/admin/santri/page.tsx
+ *
+ * Student (santri) management page for admins. Full CRUD:
+ *   - List all students with search filter
+ *   - Add a new student (name + optional metadata)
+ *   - Edit a student's name
+ *   - Delete a student (cascades to their reports via FK)
+ *
+ * Changes are made directly via Supabase JS and the local state is refreshed
+ * after each operation. A modal handles the add/edit form.
+ */
 "use client";
 
 import React, { useEffect, useState } from 'react';

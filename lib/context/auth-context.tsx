@@ -1,3 +1,18 @@
+/**
+ * lib/context/auth-context.tsx
+ *
+ * Global authentication state for the app.
+ *
+ * Wraps the entire app in <AuthProvider> (see app/layout.tsx). It subscribes
+ * to Supabase's onAuthStateChange so the auth state stays in sync across tabs
+ * and after token refresh. Unauthenticated users are redirected to /login
+ * automatically; a full-screen loading screen is shown while auth resolves
+ * on first mount so child pages never render stale state.
+ *
+ * Exports:
+ *   AuthProvider  – wrap the app in this once at the root
+ *   useAuth()     – returns { user, loading, signOut } from any client component
+ */
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';

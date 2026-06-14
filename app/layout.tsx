@@ -1,3 +1,23 @@
+/**
+ * app/layout.tsx
+ *
+ * Root layout — wraps every page in the app.
+ *
+ * Responsibilities:
+ *   1. Font loading — five font families are loaded via next/font and injected
+ *      as CSS custom properties (--font-din-rounded, --font-nunito, etc.) so
+ *      SettingsDropdown can switch between them at runtime without a page reload.
+ *
+ *   2. Flash-of-unstyled-font prevention — `appearanceScript` is inlined into
+ *      <head> as a blocking script. It reads localStorage before React hydrates
+ *      and applies the user's saved font family and scale to <html> immediately,
+ *      eliminating visible layout shifts on load.
+ *
+ *   3. Global providers — <AuthProvider> (Supabase auth state) wraps children
+ *      inside <LayoutWrapper> (session history tracker + layout mode selector).
+ *
+ *   4. Metadata — sets the browser tab title and page description.
+ */
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible, Geist_Mono, Nunito, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";

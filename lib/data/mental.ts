@@ -1,3 +1,18 @@
+/**
+ * lib/data/mental.ts
+ *
+ * The "Mental" pillar of the CIA assessment framework.
+ * Definition: the ability to manage one's own internal state and circumstances.
+ *
+ * Structure mirrors karakter.ts — 34 themes grouped into four Islamic virtues:
+ *   Niat (Intention), Sabar (Patience), Optimisme (Optimism),
+ *   and Pengendalian Diri (Self-Control). Each theme has a `.group` field
+ *   indicating which virtue it belongs to (shown as a badge in the UI).
+ *
+ * Same atomic structure as karakter.ts: themes → indicators → sub_indicators.
+ * See karakter.ts for a full description of how sub-indicators are used across
+ * the app (RAG, recap page, glossary modal).
+ */
 export const mentalData = {
   category: "Mental",
   definition: "Kemampuan menangani kondisi diri sendiri dan situasi keadaan.",

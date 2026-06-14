@@ -1,3 +1,30 @@
+/**
+ * app/create-report/assessment/page.tsx
+ *
+ * Step 2 of the assessment workflow: the AI-guided interview chat.
+ *
+ * The ustadz describes their observations about the student in a chat interface.
+ * After each message, processInterviewStep() (server action) is called to:
+ *   1. Embed the last few messages and retrieve relevant CIA criteria via RAG
+ *   2. Ask Gemini to generate a contextual follow-up question in Indonesian
+ *   3. Return which CIA themes have been "discovered" so far
+ *
+ * State:
+ *   messages         – chat history (teacher + AI turns)
+ *   discoveredPillars – cumulative list of CIA themes surfaced during interview
+ *   discoveredCount  – shown in the header badge
+ *
+ * Voice input: SpeechRecognition (Chrome-only). The mic button toggles
+ * continuous recognition; interim results update the textarea live so the
+ * ustadz can see what's being transcribed before sending.
+ *
+ * Voice output: useCIAVoice hook reads AI responses aloud (native
+ * SpeechSynthesis by default, ElevenLabs when USE_ELEVENLABS is enabled).
+ *
+ * When the ustadz clicks "Selesai & Buat Laporan" (requires ≥2 messages),
+ * finalizeAssessment() is called and results are stored in sessionStorage to
+ * avoid URL length limits. The page then redirects to /create-report/results.
+ */
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';

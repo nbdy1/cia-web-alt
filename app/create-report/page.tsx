@@ -1,3 +1,21 @@
+/**
+ * app/create-report/page.tsx
+ *
+ * Step 1 of the 3-step assessment workflow: student selection.
+ *
+ * The ustadz searches for the student they want to assess. Students are fetched
+ * from Supabase and filtered client-side using Fuse.js fuzzy search. Role-based
+ * filtering applies: admin sees all students; ustadz sees only students with
+ * assigned_ustadz_id matching their own user ID.
+ *
+ * Voice search: the microphone button uses the Web Speech API
+ * (SpeechRecognition / webkitSpeechRecognition) for hands-free student lookup.
+ * This is Chrome-only by design — Firefox users see a browser alert and should
+ * use the text search field instead.
+ *
+ * On student selection, the "Mulai Asesmen" button navigates to:
+ *   /create-report/assessment?id=<studentId>&name=<studentName>
+ */
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -8,13 +26,7 @@ import Link from 'next/link';
 import Fuse from 'fuse.js';
 import { supabase } from '@/lib/supabase';
 
-const STUDENTS = [
-  { id: '1', name: 'Ahmad Fauzi' },
-  { id: '2', name: 'Zaid Ramadhan' },
-  { id: '3', name: 'Muhammad Ali' },
-  { id: '4', name: 'Umar Abdurrahman' },
-  { id: '5', name: 'Hamzah Fansuri' },
-];export default function CreateReport() {
+export default function CreateReport() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

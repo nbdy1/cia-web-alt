@@ -1,3 +1,18 @@
+/**
+ * lib/data/soft-skill.ts
+ *
+ * The "Soft Skill" pillar of the CIA assessment framework.
+ * Definition: the ability to handle the attitudes and actions of others.
+ *
+ * Structure mirrors karakter.ts — 14 themes covering three interpersonal
+ * competency areas: Charisma / Self-Development, Communication, and
+ * Leadership. Each theme has a `.quality` field indicating its competency
+ * area (shown as a badge in the glossary modal).
+ *
+ * Same atomic structure as karakter.ts: themes → indicators → sub_indicators.
+ * See karakter.ts for a full description of how sub-indicators are used across
+ * the app (RAG, recap page, glossary modal).
+ */
 export const softSkillData = {
   category: "Soft Skill",
   definition: "Kemampuan menangani sikap dan perbuatan orang lain.",

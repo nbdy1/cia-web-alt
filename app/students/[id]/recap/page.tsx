@@ -1,3 +1,31 @@
+/**
+ * app/students/[id]/recap/page.tsx
+ *
+ * Rekapitulasi (summary) page — aggregates ALL of a student's reports into a
+ * single view showing cumulative sub-indicator fulfillment across the full
+ * CIA framework.
+ *
+ * Key concepts:
+ *
+ *   Sub-indicator counting
+ *     For every report, every fulfilled sub-indicator is extracted from the
+ *     `treatment_plan.detailed_assessments` JSONB. A Map<string, number> tracks
+ *     how many reports fulfilled each sub-indicator (normalised to lowercase).
+ *
+ *   Kuat / Lemah classification
+ *     - Kuat  (strong)  ≥ 3 reports fulfilled the sub-indicator → emerald badge
+ *     - Lemah (weak)    1–2 reports fulfilled it               → amber badge
+ *     - Unfulfilled     0 reports fulfilled it                 → grey/unfilled
+ *
+ *   RadarChart component (defined in this file)
+ *     Pure SVG, rendered server-side. One chart per category (Karakter, Mental,
+ *     Soft Skill). Each spoke = one theme; spoke length = % of sub-indicators
+ *     fulfilled across all reports (any count ≥ 1 qualifies). Grid rings at
+ *     25 / 50 / 75 / 100%. Labels show theme numbers (1, 2, … N).
+ *
+ * This is a React Server Component — all data fetching and chart generation
+ * happen server-side. No client JS required for the charts.
+ */
 import React from "react";
 import { supabase } from "@/lib/supabase";
 import {

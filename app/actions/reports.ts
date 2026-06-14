@@ -1,3 +1,16 @@
+/**
+ * app/actions/reports.ts
+ *
+ * LEGACY — no longer called by any UI component.
+ *
+ * This was the original report-save action used before the `treatment_plan`
+ * JSONB column was introduced. It inserted scores into a separate
+ * `report_scores` table (since removed by phaseout_report_scores.sql).
+ *
+ * Kept here for historical reference. If you need to reintroduce per-indicator
+ * score rows in the future, this is the pattern to follow. Otherwise, use
+ * save-assessment.ts which stores the full analysis object as JSONB.
+ */
 "use server";
 
 import { supabase } from "@/lib/supabase";

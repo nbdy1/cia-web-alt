@@ -1,3 +1,23 @@
+/**
+ * components/CriteriaGlossaryModal.tsx
+ *
+ * Full-screen modal that lets ustadz look up the complete CIA assessment
+ * framework while filling out a report. Opened from SettingsDropdown.
+ *
+ * Features:
+ *   - Three tabs: Karakter (40 themes), Mental (34 themes), Soft Skill (14 themes)
+ *   - Live search across theme titles, explanations, indicator names, and
+ *     sub-indicator strings (case-insensitive substring match)
+ *   - Expandable rows showing per-indicator sub-indicator lists
+ *   - Badge display for Mental (.group) and Soft Skill (.quality) groupings
+ *
+ * Data comes entirely from local TypeScript files in lib/data/ — no network
+ * requests, so the glossary works offline during assessments.
+ *
+ * The `expandedRows` state is keyed as "<tab>-<themeId>" so expansion state
+ * is preserved independently per tab when switching between Karakter/Mental/
+ * Soft Skill.
+ */
 "use client";
 
 import React, { useState, useMemo } from 'react';

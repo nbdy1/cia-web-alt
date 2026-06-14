@@ -1,3 +1,17 @@
+/**
+ * app/page.tsx
+ *
+ * Home / landing page shown after login. Role-aware navigation hub:
+ *   - All users see: "Buat Laporan Santri" (→ /create-report) and
+ *                    "Laporan & Analitik" (→ /students)
+ *   - Admin only sees: "Portal Admin" (→ /admin)
+ *
+ * The user's display name is read from Supabase auth metadata (set during
+ * signup). The role is fetched from the `profiles` table on mount.
+ *
+ * SettingsDropdown (font/size picker + glossary) lives in the top-right corner
+ * and is available from this page on every session.
+ */
 "use client";
 
 import { Mic, BarChart3, LogOut, ShieldCheck } from "lucide-react";

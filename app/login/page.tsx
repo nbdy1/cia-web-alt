@@ -1,3 +1,21 @@
+/**
+ * app/login/page.tsx
+ *
+ * Authentication page — handles both login and new-account registration for
+ * ustadz (teachers). Accessed directly at /login and redirected to by
+ * AuthProvider whenever a user attempts to access a protected route without
+ * an active session.
+ *
+ * Auth flow:
+ *   Login  → supabase.auth.signInWithPassword() → redirect to /
+ *   Signup → supabase.auth.signUp() with { data: { name } } stored in user
+ *            metadata. If Supabase email confirmation is enabled, the user sees
+ *            a success message without being redirected; otherwise they are
+ *            logged in immediately.
+ *
+ * Note: New accounts default to "ustadz" role. Admin accounts must be
+ * created manually via scripts/create_admin_profile.sql.
+ */
 "use client";
 
 import React, { useState } from 'react';

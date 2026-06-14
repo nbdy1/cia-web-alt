@@ -1,3 +1,16 @@
+/**
+ * app/admin/monitoring/page.tsx
+ *
+ * Ustadz workload monitoring view. Shows a hierarchical list:
+ *   Ustadz → Students assigned to them → Reports per student
+ *
+ * Each report is a clickable link to /reports/[id]. This gives the admin a
+ * quick way to audit which ustadz are actively submitting reports and which
+ * students may be falling behind.
+ *
+ * Also serves as the fallback destination for ReportBackButton / SmartBackButton
+ * when the admin navigates from a report detail page.
+ */
 "use client";
 
 import React, { useEffect, useState } from 'react';

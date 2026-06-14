@@ -1,3 +1,23 @@
+/**
+ * lib/hooks/use-cia-voice.ts
+ *
+ * Text-to-speech hook used during the AI interview (assessment/page.tsx) to
+ * read AI responses aloud. Supports two backends:
+ *
+ *   1. ElevenLabs (high-quality, paid) — toggled on by setting USE_ELEVENLABS
+ *      to true and providing ELEVENLABS_API_KEY in .env.local. Calls the
+ *      generateSpeech server action which returns base64 MP3 audio.
+ *
+ *   2. Browser SpeechSynthesis (native, free, default) — uses the built-in
+ *      Web Speech API with lang="id-ID". No API key required.
+ *
+ * Usage:
+ *   const { speak, stop, isSpeaking } = useCIAVoice();
+ *   speak("Terima kasih, bisa ceritakan lebih lanjut?");
+ *
+ * Note: Voice input (microphone / speech recognition) is handled separately
+ * in each page via the SpeechRecognition Web API (Chrome only).
+ */
 "use client";
 
 import { useCallback, useState, useRef } from "react";

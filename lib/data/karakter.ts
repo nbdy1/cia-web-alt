@@ -1,3 +1,31 @@
+/**
+ * lib/data/karakter.ts
+ *
+ * The "Karakter" (Character) pillar of the CIA assessment framework.
+ * Definition: permanent character traits, manners, and Islamic ethics (akhlak).
+ *
+ * Structure:
+ *   karakterData
+ *     .category    → "Karakter"
+ *     .definition  → one-line description of the pillar
+ *     .themes[]    → 40 themes, each containing:
+ *         .id              → sequential number (1–40), used in radar chart labels
+ *         .title           → theme name (e.g. "Memiliki tujuan hidup")
+ *         .explanation     → pedagogical rationale for the theme
+ *         .indicators[]    → 2–4 observable behavioural indicators, each with:
+ *             .title           → indicator name
+ *             .sub_indicators  → 2–3 specific, observable evidence points
+ *
+ * Sub-indicators are the atomic unit of assessment — each is either fulfilled
+ * or not in a given report. The recap page counts how many reports fulfil each
+ * sub-indicator to classify them as Kuat (≥3 reports) or Lemah (<3 reports).
+ *
+ * This file is used in:
+ *   - ai-analysis.ts    (deterministic stats + RAG embedding source)
+ *   - recap/page.tsx    (radar chart + kuat/lemah breakdown)
+ *   - CriteriaGlossaryModal.tsx  (searchable framework reference)
+ *   - scripts/ingest-framework.ts (initial DB seeding for vector search)
+ */
 export const karakterData = {
   category: "Karakter",
   definition: "Sifat, adab, akhlak yang permanen.",

@@ -1,3 +1,16 @@
+/**
+ * app/admin/layout.tsx
+ *
+ * Shared layout for all /admin/* routes. Provides:
+ *   1. Role guard — redirects non-admin users to / on mount. Shows a loading
+ *      spinner while the role is being fetched to avoid flash-of-content.
+ *   2. Responsive sidebar — collapsible nav with links to all admin sections:
+ *      Dashboard, Santri, Ustadz, Assignments, Monitoring.
+ *   3. Full-width layout (vs. the mobile-card layout used in teacher routes).
+ *
+ * Access: only users with role = "admin" in the `profiles` table can reach
+ * these routes. All other users are silently redirected to the home page.
+ */
 "use client";
 
 import React, { useEffect } from 'react';

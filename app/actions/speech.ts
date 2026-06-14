@@ -1,3 +1,20 @@
+/**
+ * app/actions/speech.ts
+ *
+ * Server action that proxies text to the ElevenLabs TTS API and returns the
+ * resulting audio as a base64-encoded MP3 string. The API key is kept
+ * server-side to avoid exposing it to the browser.
+ *
+ * Voice: "Liam" (ID: TX3LPaxmHKxFdv7VOQHJ), model: eleven_multilingual_v2.
+ *
+ * This action is called by the `useCIAVoice` hook in lib/hooks/use-cia-voice.ts
+ * when USE_ELEVENLABS is set to true. By default the app uses browser-native
+ * SpeechSynthesis instead (no API key required, lower quality).
+ *
+ * To enable ElevenLabs:
+ *   1. Add ELEVENLABS_API_KEY to .env.local
+ *   2. Set USE_ELEVENLABS = true in lib/hooks/use-cia-voice.ts
+ */
 "use server";
 
 export async function generateSpeech(text: string) {

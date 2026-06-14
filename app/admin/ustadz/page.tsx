@@ -1,3 +1,17 @@
+/**
+ * app/admin/ustadz/page.tsx
+ *
+ * Teacher (ustadz) management page for admins. Reads from the `profiles` table
+ * (which mirrors Supabase Auth users). Provides:
+ *   - List all ustadz with search and email/date display
+ *   - Add a new ustadz account (creates Supabase Auth user + profile row)
+ *   - View/toggle password visibility for accounts
+ *   - Delete an ustadz account
+ *
+ * Note: Creating an ustadz here uses the Admin Auth API (service role key
+ * is required on the server side). Confirm this is handled securely before
+ * exposing the create/delete features in production.
+ */
 "use client";
 
 import React, { useEffect, useState } from 'react';

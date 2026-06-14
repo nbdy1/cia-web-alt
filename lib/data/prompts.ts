@@ -1,3 +1,22 @@
+/**
+ * lib/data/prompts.ts
+ *
+ * Prompt templates for the two LLM calls made during an assessment:
+ *
+ * 1. buildInterviewPrompt() — system prompt for the conversational interview
+ *    stage. Instructs the AI (Gemini via OpenRouter) to ask follow-up questions
+ *    in natural Indonesian without revealing framework theme/indicator names.
+ *    The AI returns JSON: { reply, discoveredPillars, isFinished }.
+ *
+ * 2. buildFinalAnalysisPrompt() — system prompt for the final structured
+ *    analysis. Uses RAG: only the ~30 most relevant criteria (retrieved via
+ *    vector similarity in ai-analysis.ts) are injected into this prompt,
+ *    keeping token usage low (~500-800 tokens vs ~8,000 for the full framework).
+ *    The AI returns JSON matching the report schema (see save-assessment.ts).
+ *
+ * Both functions accept dynamic context strings so the same template can be
+ * reused across different interview states and student transcripts.
+ */
 export function buildInterviewPrompt(
   frontierCriteriaContext: string,
   unexploredThemesContext: string,

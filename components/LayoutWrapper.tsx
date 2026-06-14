@@ -1,3 +1,19 @@
+/**
+ * components/LayoutWrapper.tsx
+ *
+ * Root layout shell that serves two purposes:
+ *
+ * 1. Navigation history tracking — on every route change it writes the current
+ *    path to sessionStorage ("cia:last-path") and promotes the previous
+ *    "last-path" to "cia:prev-path". This lets SmartBackButton navigate to the
+ *    genuinely previous page even across hard navigations where
+ *    window.history.state might be absent.
+ *
+ * 2. Layout mode — admin routes (/admin/*) render full-width; all other routes
+ *    are centred inside a max-w-[450px] card to simulate a mobile-app viewport.
+ *    This keeps the UI readable on large desktop screens without a separate
+ *    responsive design for the teacher-facing portal.
+ */
 "use client";
 
 import React, { useEffect } from 'react';

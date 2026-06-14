@@ -1,3 +1,17 @@
+/**
+ * app/create-report/analysis/page.tsx
+ *
+ * Intermediate loading page between the interview and results. It was originally
+ * used as the entry point for analysis when the transcript was passed via URL
+ * params. The current flow uses assessment/page.tsx to call finalizeAssessment()
+ * directly and skips this page.
+ *
+ * This page remains as a fallback entry point: if somehow a user lands here
+ * with a `narrative` URL param (legacy flow), it will call runFullAnalysis()
+ * and redirect to results. Otherwise it shows an error.
+ *
+ * In normal operation: assessment → (calls finalizeAssessment inline) → results
+ */
 "use client";
 
 import { useEffect, useState } from 'react';

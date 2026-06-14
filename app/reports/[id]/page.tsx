@@ -1,3 +1,21 @@
+/**
+ * app/reports/[id]/page.tsx
+ *
+ * Individual report detail page — read-only view of a single saved assessment.
+ *
+ * The report's `treatment_plan` JSONB column contains the full structured
+ * analysis produced by finalizeAssessment(). This page parses that JSON and
+ * renders:
+ *   1. Report title + creation date
+ *   2. Status summary (qualitative overview)
+ *   3. Overall stats per category (Karakter / Mental / Soft Skill %)
+ *   4. Priority treatment plan (focus indicator + action plan)
+ *   5. Detailed per-category breakdowns with fulfilled/missing sub-indicators
+ *      and per-indicator fulfillment fractions
+ *
+ * This is a React Server Component — data is fetched at request time.
+ * ReportBackButton provides context-aware back navigation (admin vs. ustadz).
+ */
 import React from "react";
 import { supabase } from "@/lib/supabase";
 import {

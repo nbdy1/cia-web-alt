@@ -1,3 +1,24 @@
+/**
+ * app/create-report/results/page.tsx
+ *
+ * Step 3 of the assessment workflow: review and save the AI-generated report.
+ *
+ * The structured analysis object is read from sessionStorage (stored there by
+ * assessment/page.tsx after finalizeAssessment() returns). sessionStorage is
+ * used instead of URL params because the analysis JSON can be very large.
+ *
+ * Displays:
+ *   1. Status summary  – AI-generated qualitative overview (emerald banner)
+ *   2. Treatment plan  – priority theme, indicator, target sub-indicators,
+ *                        and action plan for the ustadz
+ *   3. Detailed breakdown – per-category accordion (Karakter / Mental / Soft Skill)
+ *      showing each assessed theme, indicator, fulfillment fraction, reasoning,
+ *      and lists of fulfilled vs. missing sub-indicators
+ *
+ * The "Simpan Asesmen" button calls saveAssessmentAction() which persists the
+ * full analysis to the `reports` table. On success it clears sessionStorage and
+ * redirects to /students.
+ */
 "use client";
 
 import { useState, useEffect } from "react";

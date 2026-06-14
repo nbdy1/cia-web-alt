@@ -1,3 +1,21 @@
+/**
+ * app/admin/page.tsx
+ *
+ * Main admin dashboard — a bird's-eye view of the pesantren's assessment
+ * activity. Fetches data from Supabase on mount and renders 7 widgets:
+ *
+ *   1. Quick stats     – total students, recent reports, low-scoring students
+ *   2. Activity heatmap – daily report counts for the last 30 days
+ *   3. Ustadz performance – table ranking ustadz by report count
+ *   4. Recent reports  – last 10 reports with student name + date
+ *   5. Category fulfilment – average Karakter / Mental / Soft Skill % across
+ *                            all reports (parsed from treatment_plan JSONB)
+ *   6. Low-performing students – students with the lowest average fulfillment
+ *   7. Assessment progress – per-student report count progress bars
+ *
+ * All data fetching is done inline via Supabase JS in useEffect hooks.
+ * Types DayBucket and UstadzRow are defined at the top of the file.
+ */
 "use client";
 
 import React, { useEffect, useState } from "react";

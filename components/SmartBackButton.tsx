@@ -1,3 +1,22 @@
+/**
+ * components/SmartBackButton.tsx
+ *
+ * A back button that figures out the right destination without relying solely
+ * on browser history (which breaks after a hard refresh or direct URL entry).
+ *
+ * Priority order:
+ *   1. If sessionStorage "cia:prev-path" exists and differs from the current
+ *      path → navigate there (set by LayoutWrapper on each route change).
+ *   2. If window.history.state.idx > 0 → router.back() (in-session navigation).
+ *   3. Fall back to the `fallbackHref` prop, or the role-based default:
+ *      admin → /admin/monitoring, ustadz → /students.
+ *
+ * Props:
+ *   fallbackHref    – explicit fallback URL (overrides role default)
+ *   preferHistory   – set to false to always use the fallback (skip checks 1 & 2)
+ *   className/style – passed to the <button> element
+ *   children        – rendered next to the chevron icon
+ */
 "use client";
 
 import React from "react";

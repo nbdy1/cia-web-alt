@@ -1,3 +1,19 @@
+/**
+ * components/SettingsDropdown.tsx
+ *
+ * The gear icon in the top-right of the home page. Opens a popover with:
+ *
+ *   1. Panduan Kriteria — opens CriteriaGlossaryModal (the full framework ref)
+ *   2. Tampilan (Appearance) — font family picker (4 options) + font scale
+ *      slider (90–118%). Both are persisted to localStorage and applied
+ *      immediately by mutating CSS custom properties on <html>. The
+ *      `appearanceScript` in app/layout.tsx re-applies these settings before
+ *      first paint to prevent a flash of default styles.
+ *   3. Pusat Bantuan — placeholder alert (no external link yet).
+ *
+ * Font storage keys:  "cia:font-family"  and  "cia:font-scale"
+ * Available fonts:    DIN Rounded (default), Nunito, Plus Jakarta Sans, Atkinson
+ */
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';

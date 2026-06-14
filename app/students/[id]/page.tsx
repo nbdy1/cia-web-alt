@@ -1,3 +1,17 @@
+/**
+ * app/students/[id]/page.tsx
+ *
+ * Student detail page — shows the student's profile and their full report
+ * history (most recent first).
+ *
+ * This is a React Server Component: it fetches directly from Supabase at
+ * request time with no client-side state. Each report card links to
+ * /reports/[reportId] for the full assessment view.
+ *
+ * Navigation: SmartBackButton returns to /students (or /admin/monitoring for
+ * admin users). A "Lihat Rekapitulasi" button links to /students/[id]/recap
+ * for the aggregated sub-indicator summary with radar charts.
+ */
 import React from "react";
 import { supabase } from "@/lib/supabase";
 import {

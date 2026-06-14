@@ -1,3 +1,52 @@
+/**
+ * app/actions/ai-analysis.ts
+ *
+ * The core AI engine for CIA assessments. All functions here are Next.js
+ * Server Actions ("use server") — they run only on the server and are called
+ * directly from client components via React's server action mechanism.
+ *
+ * ── Assessment Workflow ───────────────────────────────────────────────────────
+ *
+ *  1. Interview  → processInterviewStep()
+ *     Called after every teacher message in the chat (assessment/page.tsx).
+ *     Uses RAG (Retrieval-Augmented Generation) to find which CIA framework
+ *     criteria are most relevant to the last few messages, then asks Gemini
+ *     to formulate a follow-up question in natural Indonesian. Returns JSON:
+ *     { reply, discoveredPillars, isFinished }
+ *
+ *  2. Finalization → finalizeAssessment() (also exported as runFullAnalysis)
+ *     Called once after the interview ends (analysis/page.tsx). Uses RAG again
+ *     with the full transcript to retrieve the ~30 most relevant criteria, then
+ *     asks Gemini to map the transcript to specific fulfilled sub-indicators.
+ *     The raw AI JSON is then post-processed (see below) before being saved.
+ *
+ * ── RAG Strategy ─────────────────────────────────────────────────────────────
+ *
+ *  The full CIA framework has 400+ sub-indicators across 88 themes. Sending
+ *  all of them to the LLM every time would cost ~8,000 tokens per call.
+ *  Instead, we embed the transcript and retrieve only the top-K most similar
+ *  criteria rows from Supabase (using pgvector + the match_cia_criteria RPC).
+ *  This reduces prompt size to ~500–800 tokens while covering the relevant themes.
+ *
+ * ── Deterministic Post-Processing ────────────────────────────────────────────
+ *
+ *  LLMs make arithmetic mistakes and may hallucinate indicator names. We never
+ *  trust the AI's self-reported counts or exact strings. After the AI responds:
+ *    - enrichDetailedAssessments() → re-maps AI indicator names to canonical
+ *      framework names (fuzzy match), de-duplicates, and computes
+ *      fulfilled/missing sub-indicator lists from the local framework source.
+ *    - enrichTreatment()          → pins treatment to canonical indicator names.
+ *    - computeOverallStats()      → counts fulfilled sub-indicators per category
+ *      by cross-referencing the AI output against the FULL local framework —
+ *      not just the RAG-retrieved subset. Always 100% accurate.
+ *
+ * ── External Services ────────────────────────────────────────────────────────
+ *
+ *  LLM chat:     OpenRouter API → google/gemini-3-flash-preview
+ *  Embeddings:   OpenRouter API → openai/text-embedding-3-small
+ *  Vector store: Supabase pgvector (match_cia_criteria RPC)
+ *                Seeded by scripts/ingest-framework.ts
+ */
 "use server";
 
 import { supabase } from "@/lib/supabase";
@@ -10,9 +59,7 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const EMBEDDING_MODEL = "openai/text-embedding-3-small";
 
-// ─── Shared fetch wrapper ─────────────────────────────────────────────────────
-
-// ─── Deterministic Stats Computation ─────────────────────────────────────────
+// ─── Deterministic Stats & Enrichment Helpers ────────────────────────────────
 // The AI only sees ~30 retrieved criteria via RAG, so we cannot trust its
 // self-reported overall_stats counts. Instead, we extract all fulfilled
 // sub-indicator strings from the AI's JSON and count them ourselves by
@@ -134,7 +181,7 @@ function enrichDetailedAssessments(rawAssessments: any[]): any[] {
       : [];
 
     const canonicalFulfilled = canonical.subIndicators.filter((frameworkSub) =>
-      aiFulfilled.some((aiSub) => isLikelySameSubIndicator(aiSub, frameworkSub))
+      aiFulfilled.some((aiSub: string) => isLikelySameSubIndicator(aiSub, frameworkSub))
     );
 
     const canonicalMissing = canonical.subIndicators.filter(
@@ -533,8 +580,8 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     parsed.report_title = normalizeReportTitle(parsed?.report_title, parsed);
     parsed.detailed_assessments = enrichedAssessments;
     parsed.treatment = enrichTreatment(parsed?.treatment, enrichedAssessments);
-    const finalThemes = Array.isArray(parsed?.detailed_assessments)
-      ? Array.from(new Set(parsed.detailed_assessments.map((a: any) => a?.theme).filter(Boolean)))
+    const finalThemes: string[] = Array.isArray(parsed?.detailed_assessments)
+      ? Array.from(new Set(parsed.detailed_assessments.map((a: any) => a?.theme).filter(Boolean))) as string[]
       : [];
     const missingFromFinal = discoveredThemes.filter(
       (theme) => !finalThemes.some((finalTheme) => normalise(finalTheme) === normalise(theme))
