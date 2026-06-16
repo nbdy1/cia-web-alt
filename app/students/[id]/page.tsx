@@ -153,7 +153,15 @@ export default async function StudentProfile({
             </div>
             <div className="px-5 py-4">
               <p className="text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-line">
-                {student.profile_summary}
+                {(() => {
+                  const raw = student.profile_summary;
+                  try {
+                    const parsed = JSON.parse(raw);
+                    return parsed.profil_santri ?? parsed.profile ?? raw;
+                  } catch {
+                    return raw;
+                  }
+                })()}
               </p>
             </div>
           </section>

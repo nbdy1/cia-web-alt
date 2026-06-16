@@ -522,8 +522,12 @@ Tulis seperti catatan profesional yang disiapkan untuk seseorang yang belum pern
 
     const profileText = await callOpenRouter(systemPrompt, reportContext);
 
-    // Strip any accidental markdown fences the model might add
-    const cleanProfile = profileText.replace(/```[\s\S]*?```/g, "").trim();
+    // Strip any accidental markdown fences or JSON wrapping the model might add
+    let cleanProfile = profileText.replace(/```[\s\S]*?```/g, "").trim();
+    try {
+      const parsed = JSON.parse(cleanProfile);
+      cleanProfile = parsed.profil_santri ?? parsed.profile ?? cleanProfile;
+    } catch { /* not JSON, use as-is */ }
 
     await supabase
       .from("students")
