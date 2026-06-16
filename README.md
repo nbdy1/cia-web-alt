@@ -44,6 +44,7 @@ ELEVENLABS_API_KEY=your-elevenlabs-key
    ```
    scripts/setup_vector.sql          -- enables pgvector + creates match_cia_criteria RPC
    scripts/add_report_title.sql      -- adds title column to reports table
+   scripts/add_profile_summary.sql   -- adds profile_summary column to students table
    scripts/create_admin_profile.sql  -- creates the first admin user
    ```
 

@@ -12,8 +12,8 @@
  *   2. Treatment plan  – priority theme, indicator, target sub-indicators,
  *                        and action plan for the ustadz
  *   3. Detailed breakdown – per-category accordion (Karakter / Mental / Soft Skill)
- *      showing each assessed theme, indicator, fulfillment fraction, reasoning,
- *      and lists of fulfilled vs. missing sub-indicators
+ *      showing each fulfilled theme, indicator, fulfillment fraction, reasoning,
+ *      and fulfilled sub-indicators only
  *
  * The "Simpan Asesmen" button calls saveAssessmentAction() which persists the
  * full analysis to the `reports` table. On success it clears sessionStorage and
@@ -191,7 +191,9 @@ export default function ResultsPage() {
             <Bookmark size={9} /> Detail Ketercapaian
           </div>
           {categories.map((cat) => {
-            const items = analysisData.detailed_assessments?.filter((a: any) => a.category === cat) || [];
+            const items = (
+              analysisData.detailed_assessments?.filter((a: any) => a.category === cat) || []
+            ).filter((item: any) => (item.fulfilled_sub_indicators?.length ?? 0) > 0);
             if (items.length === 0) return null;
             const isOpen = expandedCategory === cat;
             const catColors: Record<string, { bg: string; icon: string; shadow: string }> = {
@@ -238,11 +240,6 @@ export default function ResultsPage() {
                                 <CheckCircle2 size={10} className="mt-0.5 flex-shrink-0" /> {si}
                               </div>
                             ))}
-                            {item.missing_sub_indicators?.map((si: string, idx: number) => (
-                              <div key={idx} className="flex items-start gap-2 text-[10px] text-slate-400 font-bold">
-                                <div className="w-2.5 h-2.5 rounded-full border-2 border-slate-200 mt-0.5 flex-shrink-0" /> {si}
-                              </div>
-                            ))}
                           </div>
                         </div>
                       </div>
@@ -266,7 +263,7 @@ export default function ResultsPage() {
           style={isSaving ? {} : { boxShadow: "0 4px 0 0 #15803d" }}
         >
           {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save size={18} />}
-          {isSaving ? "Menyimpan…" : "Simpan Asesmen"}
+          {isSaving ? "Menyimpan…" : "Simpan Input"}
         </button>
       </footer>
     </div>

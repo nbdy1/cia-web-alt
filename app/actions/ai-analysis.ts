@@ -453,15 +453,128 @@ function buildUnexploredThemesContext(frontierRows: CriteriaRow[], discoveredThe
   return unexplored.map((theme) => `- ${theme.category}: ${theme.title}`).join("\n");
 }
 
+// ─── Student Profile Generation ───────────────────────────────────────────────
+
+/**
+ * Reads the student's last 5 reports and asks the LLM to write a compact
+ * 150-200 word character profile (in Indonesian). The profile is stored in
+ * students.profile_summary and injected into future assessment prompts so the
+ * AI is informed by the student's history, personality, and known patterns.
+ *
+ * Called by saveAssessmentAction() after each report is successfully saved.
+ * Errors are caught and logged — profile generation failure never blocks the
+ * user from seeing their saved report.
+ */
+export async function generateStudentProfile(studentId: string): Promise<void> {
+  try {
+    // Fetch last 5 reports — enough history without blowing token budget
+    const { data: reports } = await supabase
+      .from("reports")
+      .select("title, created_at, treatment_plan")
+      .eq("student_id", studentId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (!reports || reports.length === 0) return;
+
+    // Build a compact, structured summary of each report (~80-100 tokens each)
+    const reportContext = reports
+      .map((r, i) => {
+        let plan = r.treatment_plan;
+        if (typeof plan === "string") {
+          try { plan = JSON.parse(plan); } catch { /* leave as-is */ }
+        }
+
+        const date = new Date(r.created_at).toLocaleDateString("id-ID", {
+          year: "numeric", month: "long", day: "numeric",
+        });
+        const summary = String(plan?.status_summary ?? "").trim();
+        const priorityTheme = String(plan?.treatment?.priority_theme ?? "").trim();
+        const priorityIndicator = String(plan?.treatment?.priority_indicator ?? "").trim();
+
+        // Extract up to 4 distinct assessed themes for context
+        const themes: string[] = Array.isArray(plan?.detailed_assessments)
+          ? Array.from(new Set(
+              (plan.detailed_assessments as any[]).map((a) => String(a?.theme ?? "")).filter(Boolean)
+            )).slice(0, 4)
+          : [];
+
+        return [
+          `[Laporan ${i + 1} — ${date}]`,
+          summary ? `Ringkasan: ${summary}` : null,
+          themes.length > 0 ? `Tema yang dinilai: ${themes.join(", ")}` : null,
+          priorityTheme ? `Prioritas penanganan: ${priorityTheme}${priorityIndicator ? ` → ${priorityIndicator}` : ""}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n");
+      })
+      .join("\n\n");
+
+    const systemPrompt = `Anda menganalisis riwayat asesmen karakter seorang santri di pesantren (Sekolah Impian). Berdasarkan laporan-laporan di bawah, buatlah PROFIL SANTRI yang ringkas (tidak lebih dari 200 kata) dalam Bahasa Indonesia.
+
+Profil harus mencakup:
+- Kesan umum kepribadian dan karakter santri secara alami
+- Pola kekuatan yang konsisten muncul dari laporan ke laporan
+- Area kelemahan atau perkembangan yang masih perlu perhatian
+- Konteks singkat yang berguna bagi ustadz dan AI dalam asesmen berikutnya
+
+Tulis seperti catatan profesional yang disiapkan untuk seseorang yang belum pernah bertemu santri ini. Gunakan gaya narasi yang alami, bukan daftar poin. HANYA kembalikan teks profil, tanpa JSON, tanpa judul.`;
+
+    const profileText = await callOpenRouter(systemPrompt, reportContext);
+
+    // Strip any accidental markdown fences the model might add
+    const cleanProfile = profileText.replace(/```[\s\S]*?```/g, "").trim();
+
+    await supabase
+      .from("students")
+      .update({ profile_summary: cleanProfile })
+      .eq("id", studentId);
+
+    console.log(`[Profile] Updated profile for student ${studentId} (${cleanProfile.length} chars)`);
+  } catch (err) {
+    // Non-fatal — a missing profile just means the next interview runs without it
+    console.error("[Profile] Failed to generate student profile:", err);
+  }
+}
+
 // ─── Public Actions ───────────────────────────────────────────────────────────
 
-export async function processInterviewStep(transcript: string, discoveredThemes: string[] = []) {
+/**
+ * Called after every teacher message in the interview chat.
+ * Fetches the student's historical profile (if any) from the DB and injects it
+ * into the interview prompt alongside the RAG-retrieved criteria context.
+ *
+ * studentId is optional — if absent (e.g. test scenarios), the interview runs
+ * without profile context, which matches the behaviour before this feature.
+ */
+export async function processInterviewStep(
+  transcript: string,
+  discoveredThemes: string[] = [],
+  studentId?: string
+) {
   try {
+    // Fetch the student's historical profile if a studentId was provided.
+    // This is a single indexed read and adds ~250 tokens to the prompt.
+    let studentProfile: string | undefined;
+    if (studentId) {
+      const { data: studentData } = await supabase
+        .from("students")
+        .select("profile_summary")
+        .eq("id", studentId)
+        .single();
+      studentProfile = studentData?.profile_summary ?? undefined;
+    }
+
     const recentWindow = getRecentTranscriptWindow(transcript, 4);
     const frontierRows = await retrieveRelevantCriteria(recentWindow || transcript, 15);
     const frontierCriteriaContext = formatCriteriaContext(frontierRows);
     const unexploredThemesContext = buildUnexploredThemesContext(frontierRows, discoveredThemes, 4);
-    const interviewPrompt = buildInterviewPrompt(frontierCriteriaContext, unexploredThemesContext, discoveredThemes);
+    const interviewPrompt = buildInterviewPrompt(
+      frontierCriteriaContext,
+      unexploredThemesContext,
+      discoveredThemes,
+      studentProfile
+    );
     const frontierThemeSet = Array.from(new Set(frontierRows.map((r) => r.theme)));
 
     console.log("[Interview][Server] Retrieval context", {
@@ -498,19 +611,36 @@ export async function finalizeAssessment(
   discoveredThemes: string[] = []
 ) {
   try {
-    // 1. Fetch the student's previous progress for context
+    // 1. Fetch the student's previous progress + historical profile for context
     let currentProgressContext =
       "Belum ada data asesmen sebelumnya. Mulai dari awal kerangka kerja.";
-
+    let studentProfile: string | undefined;
     let previousTitlesContext = "";
+
     if (studentId) {
-      const { data: latestReport } = await supabase
-        .from("reports")
-        .select("treatment_plan")
-        .eq("student_id", studentId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+      // Fetch profile and latest report in parallel to keep latency down
+      const [profileResult, latestReportResult] = await Promise.all([
+        supabase
+          .from("students")
+          .select("profile_summary")
+          .eq("id", studentId)
+          .single(),
+        supabase
+          .from("reports")
+          .select("treatment_plan")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single(),
+      ]);
+
+      studentProfile = profileResult.data?.profile_summary ?? undefined;
+      const latestReport = latestReportResult.data;
+
+      if (studentProfile) {
+        console.log(`[Finalize] Injecting student profile (${studentProfile.length} chars) into analysis prompt`);
+      }
+
       const { data: recentTitles } = await supabase
         .from("reports")
         .select("title")
@@ -565,8 +695,8 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
       transcriptLines: transcript.split("\n").filter(Boolean).length,
     });
 
-    // 3. Build a lean prompt injecting only the retrieved criteria
-    const systemPrompt = buildFinalAnalysisPrompt(criteriaContext);
+    // 3. Build a lean prompt injecting only the retrieved criteria + student profile
+    const systemPrompt = buildFinalAnalysisPrompt(criteriaContext, studentProfile);
 
     // 4. Call the LLM
     const responseText = await callOpenRouter(

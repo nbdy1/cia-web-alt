@@ -75,7 +75,7 @@ export default function StudentsAnalyticsPage() {
           id,
           treatment_plan
         )
-      `);
+      `).or('is_removed.is.null,is_removed.eq.false');
       if (ustadzId) {
         studentsQuery = studentsQuery.eq("assigned_ustadz_id", ustadzId);
       }

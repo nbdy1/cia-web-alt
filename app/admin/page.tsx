@@ -26,9 +26,6 @@ import {
   FileText,
   TrendingUp,
   GraduationCap,
-  Heart,
-  Brain,
-  Zap,
   Loader2,
   Calendar,
   Award,
@@ -39,7 +36,7 @@ import Link from "next/link";
 type DayBucket = { label: string; count: number };
 type UstadzRow = { id: string; name: string; reportCount: number; studentCount: number };
 type RecentReport = { id: string; studentName: string; date: string; themesCount: number; siCount: number };
-type CategoryStat = { label: string; fulfilled: number; total: number; color: string; shadow: string };
+type SantriLeaderRow = { id: string; name: string; fulfilled: number };
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 function parsePlan(raw: any) {
@@ -115,9 +112,9 @@ export default function AdminOverviewPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ ustadz: 0, santri: 0, reports: 0, activeSantri: 0 });
   const [weekData, setWeekData] = useState<DayBucket[]>([]);
-  const [catStats, setCatStats] = useState<CategoryStat[]>([]);
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
   const [ustadzBoard, setUstadzBoard] = useState<UstadzRow[]>([]);
+  const [santriLeader, setSantriLeader] = useState<SantriLeaderRow[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -129,12 +126,15 @@ export default function AdminOverviewPage() {
           { data: reportsRaw },
           { data: studentsRaw },
           { data: ustadzRaw },
+          { data: allReportsForLeader },
         ] = await Promise.all([
-          supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "ustadz"),
-          supabase.from("students").select("*", { count: "exact", head: true }),
+          supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "ustadz").or("is_removed.is.null,is_removed.eq.false"),
+          supabase.from("students").select("*", { count: "exact", head: true }).or("is_removed.is.null,is_removed.eq.false"),
           supabase.from("reports").select("id, created_at, student_id, treatment_plan, students(name)").order("created_at", { ascending: false }).limit(50),
-          supabase.from("students").select("id, assigned_ustadz_id, reports(id)"),
-          supabase.from("profiles").select("id, name").eq("role", "ustadz"),
+          supabase.from("students").select("id, assigned_ustadz_id, reports(id)").or("is_removed.is.null,is_removed.eq.false"),
+          supabase.from("profiles").select("id, name").eq("role", "ustadz").or("is_removed.is.null,is_removed.eq.false"),
+          // Fetch all reports (no limit) for the santri leaderboard — only the fields we need
+          supabase.from("reports").select("student_id, treatment_plan, students(id, name)"),
         ]);
 
         const allReports = reportsRaw ?? [];
@@ -151,31 +151,7 @@ export default function AdminOverviewPage() {
         // ── 3. Week chart ───────────────────────────────────────────────────
         setWeekData(buildWeekBuckets(allReports));
 
-        // ── 4. Category stats (aggregate fulfilled sub-indicators) ─────────
-        const catMap: Record<string, { fulfilled: number; total: number }> = {
-          Karakter: { fulfilled: 0, total: 0 },
-          Mental: { fulfilled: 0, total: 0 },
-          "Soft Skill": { fulfilled: 0, total: 0 },
-        };
-        allReports.forEach((r: any) => {
-          const plan = parsePlan(r.treatment_plan);
-          const assessments: any[] = plan?.detailed_assessments ?? [];
-          assessments.forEach((a: any) => {
-            const cat = a?.category as string;
-            if (!catMap[cat]) return;
-            const fulfilled = Array.isArray(a.fulfilled_sub_indicators) ? a.fulfilled_sub_indicators.length : 0;
-            const missing = Array.isArray(a.missing_sub_indicators) ? a.missing_sub_indicators.length : 0;
-            catMap[cat].fulfilled += fulfilled;
-            catMap[cat].total += fulfilled + missing;
-          });
-        });
-        setCatStats([
-          { label: "Karakter",   ...catMap["Karakter"],   color: "#f43f5e", shadow: "#9f1239" },
-          { label: "Mental",     ...catMap["Mental"],     color: "#3b82f6", shadow: "#1d4ed8" },
-          { label: "Soft Skill", ...catMap["Soft Skill"], color: "#a855f7", shadow: "#7e22ce" },
-        ]);
-
-        // ── 5. Recent reports ───────────────────────────────────────────────
+        // ── 4. Recent reports ───────────────────────────────────────────────
         setRecentReports(
           allReports.slice(0, 6).map((r: any) => {
             const plan = parsePlan(r.treatment_plan);
@@ -192,7 +168,7 @@ export default function AdminOverviewPage() {
           })
         );
 
-        // ── 6. Ustadz leaderboard ───────────────────────────────────────────
+        // ── 5. Ustadz leaderboard ───────────────────────────────────────────
         const studentsByUstadz: Record<string, { students: Set<string>; reports: number }> = {};
         (studentsRaw ?? []).forEach((s: any) => {
           const uid = s.assigned_ustadz_id;
@@ -210,6 +186,30 @@ export default function AdminOverviewPage() {
               studentCount: studentsByUstadz[u.id]?.students.size ?? 0,
             }))
             .sort((a, b) => b.reportCount - a.reportCount)
+        );
+
+        // ── 6. Santri leaderboard — unique fulfilled sub-indicators ─────────
+        // For each student, collect all fulfilled sub-indicators across every
+        // report and deduplicate by normalised text. The student with the most
+        // unique fulfilled sub-indicators ranks highest.
+        const santriMap: Record<string, { id: string; name: string; fulfilled: Set<string> }> = {};
+        (allReportsForLeader ?? []).forEach((r: any) => {
+          const sid = r.student_id as string;
+          const sname = (r.students as any)?.name ?? "—";
+          if (!santriMap[sid]) santriMap[sid] = { id: sid, name: sname, fulfilled: new Set() };
+          const plan = parsePlan(r.treatment_plan);
+          const assessments: any[] = plan?.detailed_assessments ?? [];
+          assessments.forEach((a: any) => {
+            (a.fulfilled_sub_indicators ?? []).forEach((si: string) => {
+              santriMap[sid].fulfilled.add(si.trim().toLowerCase());
+            });
+          });
+        });
+        setSantriLeader(
+          Object.values(santriMap)
+            .map((s) => ({ id: s.id, name: s.name, fulfilled: s.fulfilled.size }))
+            .sort((a, b) => b.fulfilled - a.fulfilled)
+            .slice(0, 8)
         );
       } catch (err) {
         console.error("Admin overview error:", err);
@@ -288,40 +288,51 @@ export default function AdminOverviewPage() {
           <BarChart data={weekData} />
         </div>
 
-        {/* Category coverage */}
-        <div className="bg-white rounded-[1.5rem] p-5 border-2 border-slate-100" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
-          <div className="mb-4">
-            <p className="font-black text-slate-800">Cakupan Ketercapaian</p>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Sub-indikator terpenuhi dari semua laporan</p>
+        {/* Santri leaderboard */}
+        <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
+          <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+            <div>
+              <p className="font-black text-slate-800">Cakupan Ketercapaian</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Santri dengan sub-indikator unik terbanyak</p>
+            </div>
+            <Award size={16} className="text-emerald-400" />
           </div>
-          <div className="space-y-4">
-            {catStats.map((c) => {
-              const pct = c.total > 0 ? Math.round((c.fulfilled / c.total) * 100) : 0;
-              const CatIcon = c.label === "Karakter" ? Heart : c.label === "Mental" ? Brain : Zap;
-              return (
-                <div key={c.label}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <CatIcon size={13} style={{ color: c.color }} />
-                      <span className="text-xs font-black text-slate-700">{c.label}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black text-slate-400">{c.fulfilled}/{c.total}</span>
-                      <span className="text-xs font-black" style={{ color: c.color }}>{pct}%</span>
+          <div className="divide-y-2 divide-slate-50">
+            {santriLeader.length === 0 ? (
+              <div className="px-5 py-8 text-center text-slate-300">
+                <GraduationCap className="w-7 h-7 mx-auto mb-2" />
+                <p className="text-xs font-black">Belum ada data</p>
+              </div>
+            ) : (() => {
+              const maxFulfilled = santriLeader[0]?.fulfilled || 1;
+              const medalColors = ["#f59e0b", "#94a3b8", "#b45309"];
+              return santriLeader.map((s, i) => (
+                <Link
+                  key={s.id}
+                  href={`/students/${s.id}`}
+                  className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors"
+                >
+                  <div
+                    className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0"
+                    style={i < 3
+                      ? { background: medalColors[i] + "22", color: medalColors[i], boxShadow: `0 2px 0 0 ${medalColors[i]}55` }
+                      : { background: "#f1f5f9", color: "#94a3b8" }}
+                  >
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-slate-800 text-sm truncate leading-tight">{s.name}</p>
+                    <div className="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-emerald-400 transition-all"
+                        style={{ width: `${Math.round((s.fulfilled / maxFulfilled) * 100)}%` }}
+                      />
                     </div>
                   </div>
-                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${pct}%`, background: c.color }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-            {catStats.every((c) => c.total === 0) && (
-              <p className="text-xs text-slate-400 font-bold text-center py-4">Belum ada data laporan</p>
-            )}
+                  <span className="text-sm font-black text-emerald-600 flex-shrink-0">{s.fulfilled}</span>
+                </Link>
+              ));
+            })()}
           </div>
         </div>
       </div>

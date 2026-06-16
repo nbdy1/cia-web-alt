@@ -9,8 +9,13 @@
  * overall_stats, etc.) is stored as JSONB in the `treatment_plan` column,
  * keeping the schema flexible without requiring separate score tables.
  *
- * After a successful save, revalidates the /students path so the student
- * list and profile pages reflect the new report without a full page reload.
+ * After a successful save:
+ * - Revalidates the /students path so the student list and profile pages
+ *   reflect the new report without a full page reload.
+ * - Triggers generateStudentProfile() (non-blocking, fire-and-forget) to
+ *   regenerate the student's historical profile summary for the next assessment.
+ *   The profile is stored in students.profile_summary and injected into both
+ *   the interview and final analysis prompts on the next session.
  *
  * This is the CURRENT save path. The legacy `saveStudentReport` in reports.ts
  * is no longer used by the UI and exists only as a historical reference.
@@ -19,6 +24,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
+import { generateStudentProfile } from '@/app/actions/ai-analysis';
 
 export async function saveAssessmentAction(data: {
   student_id: string;
@@ -40,7 +46,13 @@ export async function saveAssessmentAction(data: {
 
     if (reportError) throw reportError;
 
-    revalidatePath('/students'); 
+    revalidatePath('/students');
+
+    // Step 2: Regenerate the student's rolling profile summary in the background.
+    // This is non-fatal — if it fails, the report is already saved and the next
+    // assessment will just run without an updated profile.
+    await generateStudentProfile(data.student_id);
+
     return { success: true };
 
   } catch (error: any) {

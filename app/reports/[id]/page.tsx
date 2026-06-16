@@ -10,7 +10,7 @@
  *   2. Status summary (qualitative overview)
  *   3. Overall stats per category (Karakter / Mental / Soft Skill %)
  *   4. Priority treatment plan (focus indicator + action plan)
- *   5. Detailed per-category breakdowns with fulfilled/missing sub-indicators
+ *   5. Detailed per-category breakdowns with fulfilled sub-indicators only
  *      and per-indicator fulfillment fractions
  *
  * This is a React Server Component — data is fetched at request time.
@@ -27,7 +27,6 @@ import {
   Heart,
   Zap,
   CheckCircle2,
-  Circle,
 } from "lucide-react";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
@@ -79,6 +78,15 @@ function isSubFulfilled(sub: string, fulfilledList: string[]): boolean {
   return false;
 }
 
+function getFulfilledDisplaySubs(item: any): string[] {
+  const fulfilledSubs: string[] = item.fulfilled_sub_indicators ?? [];
+  const fullSubs = lookupFullIndicator(item.category, item.theme, item.indicator);
+
+  if (!fullSubs) return fulfilledSubs;
+
+  return fullSubs.filter((sub) => isSubFulfilled(sub, fulfilledSubs));
+}
+
 function computeDisplayOverallStats(analysis: any) {
   const categories = ["Karakter", "Mental", "Soft Skill"] as const;
   const result: Record<string, { fulfilled: number; total: number; percentage: number }> = {};
@@ -102,7 +110,7 @@ function computeDisplayOverallStats(analysis: any) {
     let total = 0;
     data.themes.forEach((theme) => {
       theme.indicators.forEach((ind) => {
-        ind.sub_indicators.forEach((sub) => {
+        ind.sub_indicators.forEach(() => {
           total++;
         });
       });
@@ -348,10 +356,11 @@ export default async function ReportDetailPage({
           </h3>
 
           {categories.map((cat) => {
-            const items =
+            const items = (
               analysis.detailed_assessments?.filter(
                 (a: any) => a.category === cat,
-              ) || [];
+              ) || []
+            ).filter((item: any) => getFulfilledDisplaySubs(item).length > 0);
             if (items.length === 0) return null;
 
             return (
@@ -384,16 +393,9 @@ export default async function ReportDetailPage({
                       item.indicator
                     );
 
-                    const aiFullfilled: string[] = item.fulfilled_sub_indicators ?? [];
-                    const displaySubs = fullSubs ?? [
-                      ...aiFullfilled,
-                      ...(item.missing_sub_indicators ?? []),
-                    ];
-
-                    const fulfilledCount = displaySubs.filter((s) =>
-                      isSubFulfilled(s, aiFullfilled)
-                    ).length;
-                    const totalCount = displaySubs.length;
+                    const displaySubs = getFulfilledDisplaySubs(item);
+                    const totalCount = fullSubs?.length ?? displaySubs.length;
+                    const fulfilledCount = displaySubs.length;
                     const fraction = `${fulfilledCount}/${totalCount}`;
 
                     return (
@@ -418,34 +420,20 @@ export default async function ReportDetailPage({
                           </p>
 
                           <div className="space-y-1.5">
-                            {displaySubs.map((si: string, idx: number) => {
-                              const fulfilled = isSubFulfilled(si, aiFullfilled);
-                              return (
+                            {displaySubs
+                              .map((si: string, idx: number) => (
                                 <div
                                   key={idx}
-                                  className={`flex items-start gap-2 p-2 rounded-xl ${
-                                    fulfilled
-                                      ? "bg-emerald-50/80 border border-emerald-100/50"
-                                      : ""
-                                  }`}
+                                  className="flex items-start gap-2 p-2 rounded-xl bg-emerald-50/80 border border-emerald-100/50"
                                 >
                                   <div className="mt-0.5 shrink-0">
-                                    {fulfilled ? (
-                                      <CheckCircle2 size={13} className="text-emerald-500" />
-                                    ) : (
-                                      <Circle size={13} className="text-slate-300" />
-                                    )}
+                                    <CheckCircle2 size={13} className="text-emerald-500" />
                                   </div>
-                                  <span
-                                    className={`text-[11px] leading-snug font-medium ${
-                                      fulfilled ? "text-emerald-900" : "text-slate-400"
-                                    }`}
-                                  >
+                                  <span className="text-[11px] leading-snug font-medium text-emerald-900">
                                     {si}
                                   </span>
                                 </div>
-                              );
-                            })}
+                              ))}
                           </div>
                         </div>
                       </div>

@@ -1,16 +1,15 @@
 /**
  * app/students/[id]/page.tsx
  *
- * Student detail page — shows the student's profile and their full report
- * history (most recent first).
- *
- * This is a React Server Component: it fetches directly from Supabase at
- * request time with no client-side state. Each report card links to
- * /reports/[reportId] for the full assessment view.
+ * Student detail page — shows the student's profile, AI-generated profile
+ * summary, and full report history (most recent first).
  *
  * Navigation: SmartBackButton returns to /students (or /admin/monitoring for
- * admin users). A "Lihat Rekapitulasi" button links to /students/[id]/recap
- * for the aggregated sub-indicator summary with radar charts.
+ * admin users). Action buttons:
+ *   - "Profil Santri" → expands the AI profile summary inline
+ *   - "Input Nilai"   → /students/[id]/scores (manual score entry)
+ *   - "Rapor"         → /students/[id]/rapor  (printable report card)
+ *   - "Rekapitulasi"  → /students/[id]/recap  (CIA sub-indicator breakdown)
  */
 import React from "react";
 import { supabase } from "@/lib/supabase";
@@ -19,6 +18,10 @@ import {
   User,
   FileText,
   ChevronRight,
+  BookOpen,
+  ClipboardList,
+  Printer,
+  UserCircle2,
 } from "lucide-react";
 import Link from "next/link";
 import { SmartBackButton } from "@/components/SmartBackButton";
@@ -99,6 +102,26 @@ export default async function StudentProfile({
           </div>
         </div>
 
+        {/* Action buttons */}
+        <div className="grid grid-cols-2 gap-3 mb-2">
+          <Link
+            href={`/students/${student.id}/scores`}
+            className="flex items-center gap-2 px-4 py-3 justify-center font-black text-sm text-sky-700 bg-white rounded-2xl border-2 border-sky-200 active:translate-y-px transition-transform"
+            style={{ boxShadow: "0 4px 0 0 #bae6fd" }}
+          >
+            <ClipboardList size={16} />
+            Input Nilai
+          </Link>
+          <Link
+            href={`/students/${student.id}/rapor`}
+            className="flex items-center gap-2 px-4 py-3 justify-center font-black text-sm text-violet-700 bg-white rounded-2xl border-2 border-violet-200 active:translate-y-px transition-transform"
+            style={{ boxShadow: "0 4px 0 0 #ddd6fe" }}
+          >
+            <Printer size={16} />
+            Cetak Rapor
+          </Link>
+        </div>
+
         <Link
           href={`/students/${student.id}/recap`}
           className="flex items-center gap-2 px-5 py-3 w-full justify-center font-black text-sm text-emerald-700 bg-white rounded-2xl border-2 border-emerald-200 active:translate-y-px transition-transform"
@@ -110,6 +133,33 @@ export default async function StudentProfile({
       </div>
 
       <main className="px-6 space-y-6">
+
+        {/* Profile Summary Card */}
+        {student.profile_summary && (
+          <section className="bg-white rounded-[2rem] border-2 border-amber-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #fde68a" }}>
+            <div className="flex items-center gap-3 px-5 py-4 border-b-2 border-amber-50 bg-amber-50">
+              <div className="w-9 h-9 bg-amber-400 rounded-xl flex items-center justify-center" style={{ boxShadow: "0 3px 0 0 #d97706" }}>
+                <UserCircle2 size={18} className="text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Profil Santri</p>
+                <p className="text-[9px] text-amber-500 font-bold">Dihasilkan oleh AI dari riwayat laporan</p>
+              </div>
+              <div className="ml-auto">
+                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-amber-200 text-amber-800">
+                  <BookOpen size={8} /> AI
+                </span>
+              </div>
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-line">
+                {student.profile_summary}
+              </p>
+            </div>
+          </section>
+        )}
+
+        {/* Report count badge */}
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
             <FileText size={9} /> {reports?.length || 0} Laporan

@@ -32,6 +32,7 @@ export default function MonitoringPage() {
           .from('profiles')
           .select('id, name')
           .eq('role', 'ustadz')
+          .or('is_removed.is.null,is_removed.eq.false')
           .order('name');
 
         if (ustadzError) throw ustadzError;
@@ -40,15 +41,16 @@ export default function MonitoringPage() {
         const { data: studentsList, error: studentsError } = await supabase
           .from('students')
           .select(`
-            id, 
-            name, 
+            id,
+            name,
             assigned_ustadz_id,
             reports (
-              id, 
-              created_at, 
+              id,
+              created_at,
               narrative
             )
           `)
+          .or('is_removed.is.null,is_removed.eq.false')
           .order('name');
 
         if (studentsError) throw studentsError;

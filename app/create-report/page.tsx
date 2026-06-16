@@ -42,6 +42,7 @@ export default function CreateReport() {
       const { data, error } = await supabase
         .from('students')
         .select('*, user:profiles(id)')
+        .or('is_removed.is.null,is_removed.eq.false')
         .order('name', { ascending: true });
 
       if (!error && data) setStudents(data);
@@ -238,7 +239,7 @@ export default function CreateReport() {
               }`}
               style={selectedStudent ? { boxShadow: "0 4px 0 0 #15803d" } : {}}
             >
-              Mulai Asesmen →
+              Mulai Input →
             </button>
           </Link>
         </div>

@@ -32,8 +32,8 @@ export default function PlottingSantriPage() {
     async function fetchData() {
       try {
         const [studentsRes, profilesRes] = await Promise.all([
-          supabase.from('students').select('*').order('name'),
-          supabase.from('profiles').select('*').eq('role', 'ustadz').order('name')
+          supabase.from('students').select('*').or('is_removed.is.null,is_removed.eq.false').order('name'),
+          supabase.from('profiles').select('*').eq('role', 'ustadz').or('is_removed.is.null,is_removed.eq.false').order('name')
         ]);
         
         if (studentsRes.data) {

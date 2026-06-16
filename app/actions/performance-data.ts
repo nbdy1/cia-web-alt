@@ -20,7 +20,8 @@ export async function getPerformanceData() {
   // 1. Total Student Count
   const { count: studentCount } = await supabase
     .from('students')
-    .select('*', { count: 'exact', head: true });
+    .select('*', { count: 'exact', head: true })
+    .or('is_removed.is.null,is_removed.eq.false');
 
   // 2. Recent Activity Feed
   const { data: recentReports } = await supabase

@@ -31,7 +31,6 @@ import { supabase } from "@/lib/supabase";
 import {
   ChevronLeft,
   CheckCircle2,
-  Circle,
   Heart,
   Brain,
   Zap,
@@ -425,10 +424,6 @@ export default async function RecapPage({
             <TrendingUp size={10} className="text-amber-600" />
             Lemah 1–2×
           </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-400 text-[10px] font-black uppercase tracking-wider">
-            <Circle size={10} />
-            Belum
-          </span>
         </div>
 
         <div className="space-y-6">
@@ -456,7 +451,7 @@ export default async function RecapPage({
               totalSub > 0 ? Math.round((fulfilledSub / totalSub) * 100) : 0;
 
             return (
-              <details
+              <details suppressHydrationWarning
                 key={cat.key}
                 className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden group [&_summary::-webkit-details-marker]:hidden"
               >
@@ -524,87 +519,92 @@ export default async function RecapPage({
                       else unfulfilledThemes.push(theme);
                     });
 
-                    const ThemeCard = ({ theme, isUnfulfilled = false }: { theme: any; isUnfulfilled?: boolean }) => (
-                      <div className={`bg-white p-5 rounded-[2rem] border shadow-sm ${isUnfulfilled ? "opacity-75 border-slate-200/60" : "border-slate-100"}`}>
-                        <div className="mb-5 flex flex-col gap-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                            Tema {theme.id}
-                          </span>
-                          <h3 className="text-[15px] font-bold text-slate-900 font-serif leading-tight">
-                            {theme.title}
-                          </h3>
-                        </div>
+                    const ThemeCard = ({ theme, isUnfulfilled = false }: { theme: any; isUnfulfilled?: boolean }) => {
+                      // Only show indicators that have at least one fulfilled sub-indicator.
+                      // Unfulfilled sub-indicators are hidden in both fulfilled and unfulfilled
+                      // theme cards — the unfulfilled themes section shows theme/indicator titles
+                      // as a reference but no sub-indicator rows.
+                      const visibleIndicators = theme.indicators
+                        .map((ind: any) => ({
+                          ...ind,
+                          sub_indicators: ind.sub_indicators.filter(
+                            (sub: string) => getSubCount(sub, countMap) >= 1
+                          ),
+                        }))
+                        .filter((ind: any) => ind.sub_indicators.length > 0);
 
-                        <div className="space-y-5">
-                          {theme.indicators.map((ind: any, iIdx: number) => {
-                            const hasAnyFulfilledSub = ind.sub_indicators.some(
-                              (sub: string) => getSubCount(sub, countMap) >= 1
-                            );
+                      return (
+                        <div className={`bg-white p-5 rounded-[2rem] border shadow-sm ${isUnfulfilled ? "opacity-75 border-slate-200/60" : "border-slate-100"}`}>
+                          <div className="mb-5 flex flex-col gap-1">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                              Tema {theme.id}
+                            </span>
+                            <h3 className="text-[15px] font-bold text-slate-900 font-serif leading-tight">
+                              {theme.title}
+                            </h3>
+                          </div>
 
-                            return (
-                              <div key={iIdx} className={`space-y-3 ${!hasAnyFulfilledSub && !isUnfulfilled ? "opacity-50" : ""}`}>
-                                <h4 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider bg-slate-50 px-3 py-1.5 rounded-lg inline-block border border-slate-100">
-                                  {ind.title}
-                                </h4>
-                                <div className="space-y-1.5 pl-1">
-                                  {ind.sub_indicators.map((sub: string, sIdx: number) => {
-                                    const count = getSubCount(sub, countMap);
-                                    const strength = getStrength(count);
-
-                                    const rowStyle =
-                                      strength === "kuat"
-                                        ? "bg-emerald-50/80 border border-emerald-100/50 shadow-sm"
-                                        : strength === "lemah"
-                                        ? "bg-amber-50/70 border border-amber-100/50"
-                                        : "hover:bg-slate-50";
-
-                                    return (
-                                      <div
-                                        key={sIdx}
-                                        className={`flex items-start gap-3 p-2.5 rounded-xl transition-all ${rowStyle}`}
-                                      >
-                                        <div className="mt-0.5 shrink-0">
-                                          {strength === "kuat" ? (
-                                            <CheckCircle2 size={16} className="text-emerald-500 drop-shadow-sm" />
-                                          ) : strength === "lemah" ? (
-                                            <CheckCircle2 size={16} className="text-amber-400" />
-                                          ) : (
-                                            <Circle size={16} className="text-slate-200" />
+                          {visibleIndicators.length === 0 ? (
+                            <p className="text-[11px] text-slate-400 font-bold italic">
+                              Belum ada sub-indikator yang terpenuhi pada tema ini.
+                            </p>
+                          ) : (
+                            <div className="space-y-5">
+                              {visibleIndicators.map((ind: any, iIdx: number) => (
+                                <div key={iIdx} className="space-y-3">
+                                  <h4 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider bg-slate-50 px-3 py-1.5 rounded-lg inline-block border border-slate-100">
+                                    {ind.title}
+                                  </h4>
+                                  <div className="space-y-1.5 pl-1">
+                                    {ind.sub_indicators.map((sub: string, sIdx: number) => {
+                                      const count = getSubCount(sub, countMap);
+                                      const strength = getStrength(count);
+                                      const rowStyle =
+                                        strength === "kuat"
+                                          ? "bg-emerald-50/80 border border-emerald-100/50 shadow-sm"
+                                          : "bg-amber-50/70 border border-amber-100/50";
+                                      return (
+                                        <div
+                                          key={sIdx}
+                                          className={`flex items-start gap-3 p-2.5 rounded-xl transition-all ${rowStyle}`}
+                                        >
+                                          <div className="mt-0.5 shrink-0">
+                                            {strength === "kuat" ? (
+                                              <CheckCircle2 size={16} className="text-emerald-500 drop-shadow-sm" />
+                                            ) : (
+                                              <CheckCircle2 size={16} className="text-amber-400" />
+                                            )}
+                                          </div>
+                                          <span
+                                            className={`flex-1 text-[13px] leading-snug font-medium ${
+                                              strength === "kuat" ? "text-emerald-900" : "text-amber-900"
+                                            }`}
+                                          >
+                                            {sub}
+                                          </span>
+                                          {strength === "kuat" && (
+                                            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider">
+                                              <Flame size={8} />
+                                              Kuat
+                                            </span>
+                                          )}
+                                          {strength === "lemah" && (
+                                            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400 text-white text-[9px] font-black uppercase tracking-wider">
+                                              <TrendingUp size={8} />
+                                              Lemah
+                                            </span>
                                           )}
                                         </div>
-                                        <span
-                                          className={`flex-1 text-[13px] leading-snug font-medium ${
-                                            strength === "kuat"
-                                              ? "text-emerald-900"
-                                              : strength === "lemah"
-                                              ? "text-amber-900"
-                                              : "text-slate-500"
-                                          }`}
-                                        >
-                                          {sub}
-                                        </span>
-                                        {strength === "kuat" && (
-                                          <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider">
-                                            <Flame size={8} />
-                                            Kuat
-                                          </span>
-                                        )}
-                                        {strength === "lemah" && (
-                                          <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400 text-white text-[9px] font-black uppercase tracking-wider">
-                                            <TrendingUp size={8} />
-                                            Lemah
-                                          </span>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    );
+                      );
+                    };
 
                     return (
                       <>
@@ -621,7 +621,7 @@ export default async function RecapPage({
 
                         {/* Unfulfilled Themes Toggle */}
                         {unfulfilledThemes.length > 0 && (
-                          <details className="group/unfulfilled mt-6">
+                          <details suppressHydrationWarning className="group/unfulfilled mt-6">
                             <summary className="cursor-pointer flex items-center justify-center gap-2 bg-slate-200/50 hover:bg-slate-200 transition-colors py-4 px-6 rounded-2xl text-xs font-black text-slate-500 uppercase tracking-widest select-none">
                               <span className="group-open/unfulfilled:hidden">Tampilkan {unfulfilledThemes.length} Tema Belum Terpenuhi</span>
                               <span className="hidden group-open/unfulfilled:inline">Sembunyikan Tema Belum Terpenuhi</span>

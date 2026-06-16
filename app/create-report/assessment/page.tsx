@@ -123,7 +123,7 @@ export default function AssessmentPage() {
         previousAccumulatedCount: discoveredPillars.length,
       });
       const transcript = newMessages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
-      const result = await processInterviewStep(transcript, discoveredPillars);
+      const result = await processInterviewStep(transcript, discoveredPillars, studentId || undefined);
 
       if (result.reply) {
         const newDiscovered = Array.isArray(result.discoveredPillars) ? result.discoveredPillars : [];

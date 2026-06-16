@@ -162,7 +162,7 @@ Sub-indicators are the atomic unit. Each assessment maps observed behaviour to s
 |---|---|---|
 | `auth.users` | `id`, `email` | Managed by Supabase Auth |
 | `profiles` | `id` (FK users), `role`, `name` | "admin" or "ustadz" |
-| `students` | `id`, `name`, `assigned_ustadz_id` (FK profiles) | santri records |
+| `students` | `id`, `name`, `assigned_ustadz_id` (FK profiles), `profile_summary` (TEXT) | santri records; `profile_summary` is an AI-generated 150–200 word character profile regenerated after each saved report (see [Rolling Profile](#rolling-student-profile)) |
 | `reports` | `id`, `student_id`, `title`, `narrative`, `treatment_plan` (JSONB), `created_at` | Full analysis stored as JSONB |
 | `themes` | `id`, `category`, `title`, `embedding` (vector) | Seeded by ingest-framework.ts |
 | `indicators` | `id`, `theme_id`, `title` | |
@@ -218,6 +218,26 @@ OPENROUTER_API_KEY=                # OpenRouter API key (LLM + embeddings)
 ELEVENLABS_API_KEY=                # Only needed if USE_ELEVENLABS = true
                                    # in lib/hooks/use-cia-voice.ts
 ```
+
+---
+
+## Rolling Student Profile
+
+To give the AI historical awareness of each student without injecting full report JSON (which would cost thousands of tokens), a compact rolling profile is stored in `students.profile_summary`.
+
+**How it works:**
+1. After each report is saved (`saveAssessmentAction`), `generateStudentProfile(studentId)` is called.
+2. It fetches the student's last 5 reports and extracts: status summary, assessed themes, and priority treatment from each.
+3. A single cheap LLM call condenses this into a 150–200 word Indonesian character profile.
+4. The profile is written back to `students.profile_summary`.
+
+**How it's used:**
+- `processInterviewStep()` — reads `profile_summary` at the start of each interview message and injects it into the system prompt so the AI can ask informed follow-up questions (probe known weak areas, validate past strengths).
+- `finalizeAssessment()` — injects the profile into the final analysis prompt so the treatment plan is personalised to the student's known personality.
+
+**Token cost:** ~250 extra tokens per call (interview step + final analysis). The profile generation itself is one cheap call (no vector search) and runs after the user has already left the results page.
+
+**Migration:** Run `scripts/add_profile_summary.sql` once in Supabase to add the column. Existing students start with a `NULL` profile; the first save after the migration generates their profile.
 
 ---
 
