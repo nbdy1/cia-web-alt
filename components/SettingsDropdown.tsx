@@ -96,7 +96,9 @@ function getInitialFontScale() {
   if (typeof window === "undefined") return 1;
 
   try {
-    const storedScale = Number(window.localStorage?.getItem(FONT_SCALE_STORAGE_KEY));
+    const raw = window.localStorage?.getItem(FONT_SCALE_STORAGE_KEY);
+    if (raw === null || raw === undefined) return 1; // no saved preference → default 1
+    const storedScale = Number(raw);
     return Number.isFinite(storedScale) ? Math.min(Math.max(storedScale, 0.9), 1.18) : 1;
   } catch {
     return 1;

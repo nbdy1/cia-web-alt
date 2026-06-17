@@ -86,7 +86,7 @@ const appearanceScript = `
       jakarta: "var(--font-plus-jakarta), var(--font-din-rounded), sans-serif",
       atkinson: "var(--font-atkinson), var(--font-din-rounded), sans-serif"
     };
-    const parsedScale = Number(scale);
+    const parsedScale = scale !== null ? Number(scale) : NaN;
     const selectedFont = allowedFonts.includes(font || "") ? font : "din";
     const selectedFamily = fontMap[selectedFont];
 

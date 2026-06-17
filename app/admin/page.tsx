@@ -67,7 +67,7 @@ function BarChart({ data }: { data: DayBucket[] }) {
   const W = data.length * (BAR_W + GAP) - GAP;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H + 20}`} className="w-full" style={{ maxHeight: 110 }}>
+    <svg viewBox={`0 0 ${W} ${H + 20}`} className="w-full">
       {data.map((d, i) => {
         const barH = Math.max((d.count / max) * H, d.count > 0 ? 6 : 2);
         const x = i * (BAR_W + GAP);
@@ -82,7 +82,7 @@ function BarChart({ data }: { data: DayBucket[] }) {
             />
             {d.count > 0 && (
               <text
-                x={x + BAR_W / 2} y={y - 4}
+                x={x + BAR_W / 2} y={Math.max(y - 4, 10)}
                 textAnchor="middle"
                 fontSize={9}
                 fontWeight="900"
@@ -272,8 +272,8 @@ export default function AdminOverviewPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* Bar chart */}
-        <div className="bg-white rounded-[1.5rem] p-5 border-2 border-slate-100" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-[1.5rem] p-5 border-2 border-slate-100 flex flex-col" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
+          <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <div>
               <p className="font-black text-slate-800">Aktivitas Minggu Ini</p>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Laporan dibuat per hari</p>
@@ -285,7 +285,9 @@ export default function AdminOverviewPage() {
               {totalWeek} total
             </div>
           </div>
-          <BarChart data={weekData} />
+          <div className="flex-1 flex items-center min-h-0">
+            <BarChart data={weekData} />
+          </div>
         </div>
 
         {/* Santri leaderboard */}
