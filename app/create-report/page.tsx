@@ -21,7 +21,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUserRole } from '@/lib/hooks/use-user-role';
 import { useAuth } from '@/lib/context/auth-context';
-import { ChevronLeft, Mic, Search, X, Loader2, CheckCircle2, MicOff } from 'lucide-react';
+import { ChevronLeft, Mic, Search, Loader2, CheckCircle2, MicOff } from 'lucide-react';
 import Link from 'next/link';
 import Fuse from 'fuse.js';
 import { supabase } from '@/lib/supabase';
@@ -196,26 +196,6 @@ export default function CreateReport() {
           )}
         </div>
 
-        {/* Selected student banner */}
-        {selectedStudent && (
-          <div
-            className="mt-4 p-4 bg-white border-2 border-emerald-300 rounded-2xl flex justify-between items-center animate-bounce-in"
-            style={{ boxShadow: "0 4px 0 0 #15803d" }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white text-xl font-black" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
-                {selectedStudent.name[0]}
-              </div>
-              <div>
-                <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">Dipilih ✓</p>
-                <p className="text-slate-900 font-black text-lg leading-tight">{selectedStudent.name}</p>
-              </div>
-            </div>
-            <button onClick={() => setSelectedStudent(null)} className="w-8 h-8 bg-slate-100 hover:bg-rose-50 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
 
         {/* Student list */}
         <div className="mt-6 flex-1 overflow-y-auto pb-6">

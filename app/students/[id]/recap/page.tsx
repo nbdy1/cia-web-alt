@@ -43,28 +43,20 @@ import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
 
-// ─── Radar Chart ──────────────────────────────────────────────────────────────
-function RadarChart({
+// ─── Theme Fulfillment Bar Chart ─────────────────────────────────────────────
+// Replaces the radar chart. Shows only themes with ≥ 1 fulfilled sub-indicator
+// as horizontal bars — readable at any density including very sparse data.
+function FulfillmentBars({
   themes,
   countMap,
   accentColor,
-  fillColor,
-  label,
 }: {
   themes: { id: number; title: string; indicators: { title: string; sub_indicators: string[] }[] }[];
   countMap: Map<string, number>;
   accentColor: string;
-  fillColor: string;
-  label: string;
 }) {
-  const n = themes.length;
-  const cx = 220;
-  const cy = 220;
-  const r = 160;        // max spoke radius (= 100%)
-  const labelR = 185;   // number label distance from centre
-
-  // Per-theme fulfilled percentage (any count ≥ 1 counts)
-  const pcts = themes.map((theme) => {
+  // Per-theme: fulfilled sub-indicator count and total
+  const themeStats = themes.map((theme) => {
     let total = 0;
     let fulfilled = 0;
     theme.indicators.forEach((ind) => {
@@ -73,149 +65,52 @@ function RadarChart({
         if ((countMap.get(sub.trim().toLowerCase()) ?? 0) >= 1) fulfilled++;
       });
     });
-    return total > 0 ? fulfilled / total : 0;
+    return { pct: total > 0 ? Math.round((fulfilled / total) * 100) : 0, fulfilled, total };
   });
 
-  const angle = (i: number) => (2 * Math.PI * i) / n - Math.PI / 2;
+  const fulfilledCount = themeStats.filter((s) => s.pct > 0).length;
 
-  // Point at a given fraction along spoke i
-  const pt = (i: number, frac: number) => ({
-    x: cx + r * frac * Math.cos(angle(i)),
-    y: cy + r * frac * Math.sin(angle(i)),
-  });
-
-  // Closed polygon string for a given fraction (grid rings)
-  const ring = (frac: number) =>
-    Array.from({ length: n }, (_, i) => {
-      const p = pt(i, frac);
-      return `${p.x},${p.y}`;
-    }).join(" ");
-
-  const dataPolygon = pcts
-    .map((pct, i) => {
-      const p = pt(i, pct);
-      return `${p.x},${p.y}`;
-    })
-    .join(" ");
-
-  const fontSize = n > 25 ? 7.5 : n > 15 ? 9 : 11;
+  if (fulfilledCount === 0) {
+    return (
+      <div className="py-6 text-center">
+        <p className="text-xs text-slate-400 font-bold">Belum ada tema yang terpenuhi</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full">
-      {/* Chart */}
-      <svg viewBox="0 0 440 440" className="w-full max-w-xs mx-auto block">
-        {/* Grid rings at 25 / 50 / 75 / 100 % */}
-        {[0.25, 0.5, 0.75, 1].map((frac) => (
-          <polygon
-            key={frac}
-            points={ring(frac)}
-            fill="none"
-            stroke={frac === 1 ? "#cbd5e1" : "#e2e8f0"}
-            strokeWidth={frac === 1 ? 1.5 : 1}
-            strokeDasharray={frac < 1 ? "3 3" : undefined}
-          />
-        ))}
-
-        {/* Percentage labels on top spoke */}
-        {[
-          { frac: 0.25, label: "25%" },
-          { frac: 0.5, label: "50%" },
-          { frac: 0.75, label: "75%" },
-          { frac: 1, label: "100%" },
-        ].map(({ frac, label: l }) => {
-          const p = pt(0, frac);
-          return (
-            <text
-              key={frac}
-              x={p.x + 4}
-              y={p.y}
-              fontSize={7}
-              fill="#94a3b8"
-              fontWeight="600"
-              dominantBaseline="middle"
-            >
-              {l}
-            </text>
-          );
-        })}
-
-        {/* Spokes */}
-        {Array.from({ length: n }, (_, i) => {
-          const end = pt(i, 1);
-          return (
-            <line
-              key={i}
-              x1={cx}
-              y1={cy}
-              x2={end.x}
-              y2={end.y}
-              stroke="#e2e8f0"
-              strokeWidth={1}
-            />
-          );
-        })}
-
-        {/* Filled data polygon */}
-        <polygon
-          points={dataPolygon}
-          fill={fillColor}
-          stroke={accentColor}
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-
-        {/* Dots at each data point (only if > 0) */}
-        {pcts.map((pct, i) => {
-          if (pct === 0) return null;
-          const p = pt(i, pct);
-          return (
-            <circle key={i} cx={p.x} cy={p.y} r={3} fill={accentColor} />
-          );
-        })}
-
-        {/* Spoke number labels */}
-        {Array.from({ length: n }, (_, i) => {
-          const a = angle(i);
-          const lx = cx + labelR * Math.cos(a);
-          const ly = cy + labelR * Math.sin(a);
-          return (
-            <text
-              key={i}
-              x={lx}
-              y={ly}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize={fontSize}
-              fontWeight="800"
-              fill="#475569"
+    <div className="w-full overflow-hidden space-y-1">
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-3">
+        {fulfilledCount} dari {themes.length} Tema Terpenuhi
+      </p>
+      {themes.map((theme, i) => {
+        const { pct, fulfilled, total } = themeStats[i];
+        if (pct === 0) return null;
+        return (
+          <div key={i} className="flex items-center gap-3 py-1 min-w-0">
+            <span
+              className="text-[10px] font-black w-5 text-right flex-shrink-0"
+              style={{ color: accentColor }}
             >
               {i + 1}
-            </text>
-          );
-        })}
-      </svg>
-
-      {/* Legend */}
-      <div className="mt-4 px-1">
-        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2">
-          Keterangan Tema
-        </p>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-          {themes.map((theme, i) => (
-            <div key={i} className="flex items-start gap-1.5">
-              <span
-                className="text-[10px] font-black shrink-0 min-w-[20px]"
-                style={{ color: accentColor }}
-              >
-                {i + 1}.
-              </span>
-              <span className="text-[10px] text-slate-600 leading-tight">
+            </span>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <p className="text-[11px] font-bold text-slate-600 leading-snug mb-1 break-words">
                 {theme.title}
-              </span>
+              </p>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${pct}%`, backgroundColor: accentColor, opacity: 0.8 }}
+                />
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
+            <span className="text-[11px] font-black flex-shrink-0 tabular-nums" style={{ color: accentColor }}>
+              {fulfilled}/{total}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -347,7 +242,6 @@ export default async function RecapPage({
       progressBg: "bg-rose-400",
       data: karakterData,
       accentColor: "#f43f5e",
-      fillColor: "rgba(244,63,94,0.15)",
     },
     {
       key: "mental",
@@ -358,7 +252,6 @@ export default async function RecapPage({
       progressBg: "bg-blue-400",
       data: mentalData,
       accentColor: "#3b82f6",
-      fillColor: "rgba(59,130,246,0.15)",
     },
     {
       key: "soft_skill",
@@ -369,7 +262,6 @@ export default async function RecapPage({
       progressBg: "bg-purple-400",
       data: softSkillData,
       accentColor: "#a855f7",
-      fillColor: "rgba(168,85,247,0.15)",
     },
   ];
 
@@ -390,7 +282,7 @@ export default async function RecapPage({
         <div className="w-9" />
       </header>
 
-      <main className="px-5 py-6 space-y-6">
+      <main className="px-5 py-6 space-y-6 overflow-x-hidden">
         {/* Summary card */}
         <section className="bg-slate-900 rounded-[2rem] p-7 text-white relative overflow-hidden" style={{ boxShadow: "0 6px 0 0 #000" }}>
           <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -492,18 +384,16 @@ export default async function RecapPage({
                   </div>
                 </summary>
 
-                <div className="p-6 border-t border-slate-100 bg-slate-50/50 space-y-6">
-                  {/* Radar chart */}
+                <div className="p-6 border-t border-slate-100 bg-slate-50/50 space-y-6 overflow-x-hidden">
+                  {/* Theme fulfillment bars */}
                   <div className="bg-white rounded-[2rem] border border-slate-100 p-6">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
-                      Diagram Radian — {cat.label}
+                      Pemenuhan Tema — {cat.label}
                     </p>
-                    <RadarChart
+                    <FulfillmentBars
                       themes={cat.data.themes}
                       countMap={countMap}
                       accentColor={cat.accentColor}
-                      fillColor={cat.fillColor}
-                      label={cat.label}
                     />
                   </div>
 

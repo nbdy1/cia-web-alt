@@ -33,6 +33,11 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCIAVoice } from '@/lib/hooks/use-cia-voice';
 import { processInterviewStep, finalizeAssessment } from '@/app/actions/ai-analysis';
+import { transcribeAudio } from '@/app/actions/whisper';
+
+// Set to true to use OpenRouter Whisper instead of the browser Web Speech API.
+// Flip this during testing; the UI toggle is intentionally removed.
+const USE_WHISPER = false;
 
 interface Message {
   role: 'teacher' | 'ai';
@@ -49,6 +54,8 @@ export default function AssessmentPage() {
   const [currentInput, setCurrentInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const [discoveredCount, setDiscoveredCount] = useState(0);
   const [discoveredPillars, setDiscoveredPillars] = useState<string[]>([]);
 
@@ -58,10 +65,12 @@ export default function AssessmentPage() {
   const shouldRecordRef = useRef(false);
   // Accumulates final transcript text across iOS recognition restarts
   const transcriptAccumulatorRef = useRef('');
+  // Whisper MediaRecorder refs
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [micError, setMicError] = useState<string | null>(null);
-  const [micSupported, setMicSupported] = useState(true);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -77,13 +86,11 @@ export default function AssessmentPage() {
     inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 160)}px`;
   }, [currentInput]);
 
-  // Initialize Speech Recognition
+  // Initialize Speech Recognition (skipped when USE_WHISPER is true)
   useEffect(() => {
+    if (USE_WHISPER) return;
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setMicSupported(false);
-      return;
-    }
+    if (!SpeechRecognition) return;
 
     // iOS Safari doesn't support continuous mode — we simulate it by restarting
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -138,7 +145,65 @@ export default function AssessmentPage() {
     recognitionRef.current = recognition;
   }, []);
 
+  // Converts a Blob to a base64 string (strips the data-URL prefix)
+  const blobToBase64 = (blob: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+  const startWhisperRecording = async () => {
+    setMicError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        // Release mic immediately
+        stream.getTracks().forEach((t) => t.stop());
+
+        const mimeType = recorder.mimeType || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        setIsTranscribing(true);
+        try {
+          const base64 = await blobToBase64(audioBlob);
+          const text = await transcribeAudio(base64, mimeType);
+          if (text) setCurrentInput((prev) => (prev ? prev + ' ' + text : text).trim());
+        } catch {
+          setMicError('Transkripsi gagal. Coba lagi.');
+        } finally {
+          setIsTranscribing(false);
+        }
+      };
+
+      recorder.start();
+      setIsRecording(true);
+    } catch {
+      setMicError('Akses mikrofon ditolak. Izinkan di pengaturan browser lalu coba lagi.');
+    }
+  };
+
   const toggleRecording = () => {
+    if (USE_WHISPER) {
+      if (isRecording) {
+        mediaRecorderRef.current?.stop();
+        setIsRecording(false);
+      } else {
+        stopVoice();
+        startWhisperRecording();
+      }
+      return;
+    }
+
+    // --- Web Speech API path ---
     if (isRecording) {
       shouldRecordRef.current = false;
       transcriptAccumulatorRef.current = '';
@@ -166,9 +231,13 @@ export default function AssessmentPage() {
     setCurrentInput('');
     setIsProcessing(true);
 
-    // Stop recording if active
+    // Stop recording if active — must clear shouldRecordRef so onend doesn't restart
     if (isRecording) {
+      shouldRecordRef.current = false;
+      transcriptAccumulatorRef.current = '';
       recognitionRef.current?.stop();
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
     }
 
     try {
@@ -204,6 +273,7 @@ export default function AssessmentPage() {
   };
 
   const handleFinalize = async () => {
+    setIsFinalizing(true);
     setIsProcessing(true);
     const fullTranscript = messages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
 
@@ -238,6 +308,7 @@ export default function AssessmentPage() {
       router.push(`/create-report/results?${params.toString()}`);
     } catch (error) {
       console.error("Finalization Error:", error);
+      setIsFinalizing(false);
       setIsProcessing(false);
     }
   };
@@ -276,6 +347,21 @@ export default function AssessmentPage() {
           <span className="text-xs font-black text-emerald-700">{discoveredCount} Topik</span>
         </div>
       </header>
+
+      {/* Recording reminder — shown at the top of the chat when mic is active */}
+      {isRecording && (
+        <div className="px-5 pt-3 pb-1">
+          <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-2xl">
+            <span className="relative flex h-2 w-2 flex-shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+            </span>
+            <p className="text-[11px] font-bold text-red-500">
+              Rekaman aktif — tekan <span className="font-black">stop</span> sebelum kirim pesan
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Chat Area */}
       <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-6 space-y-4">
@@ -333,6 +419,18 @@ export default function AssessmentPage() {
           </div>
         )}
 
+        {isTranscribing && (
+          <div className="flex justify-end animate-slide-up">
+            <div
+              className="bg-violet-50 border-2 border-violet-200 px-4 py-3 rounded-[1.4rem] rounded-br-md flex items-center gap-2"
+              style={{ boxShadow: "0 3px 0 0 #ddd6fe" }}
+            >
+              <Loader2 size={14} className="animate-spin text-violet-500" />
+              <span className="text-xs font-black text-violet-400 uppercase tracking-wider">Whisper…</span>
+            </div>
+          </div>
+        )}
+
         {isProcessing && (
           <div className="flex justify-start animate-slide-up">
             <div
@@ -355,19 +453,24 @@ export default function AssessmentPage() {
           className="flex items-center gap-2 bg-slate-50 p-2 rounded-[1.8rem] border-2 border-slate-200"
           style={{ boxShadow: "inset 0 2px 4px rgba(0,0,0,0.04)" }}
         >
-          {micSupported && (
-            <button
-              onClick={toggleRecording}
-              className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center border-2 active:translate-y-px transition-transform ${
-                isRecording
-                  ? "bg-red-500 text-white border-red-400"
-                  : "bg-white text-emerald-600 border-emerald-200"
-              }`}
-              style={isRecording ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
-            >
-              {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
-            </button>
-          )}
+          <button
+            onClick={toggleRecording}
+            disabled={isTranscribing}
+            className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center border-2 active:translate-y-px transition-transform disabled:opacity-50 disabled:cursor-not-allowed ${
+              isRecording
+                ? "bg-red-500 text-white border-red-400"
+                : "bg-white text-emerald-600 border-emerald-200"
+            }`}
+            style={isRecording ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
+          >
+            {isTranscribing ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : isRecording ? (
+              <MicOff size={18} />
+            ) : (
+              <Mic size={18} />
+            )}
+          </button>
 
           <textarea
             ref={inputRef}
@@ -400,12 +503,25 @@ export default function AssessmentPage() {
         {messages.length >= 2 && (
           <button
             onClick={handleFinalize}
-            disabled={isProcessing}
-            className="w-full mt-4 py-4 rounded-[1.4rem] bg-slate-900 text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 active:translate-y-1 transition-transform"
-            style={{ boxShadow: "0 4px 0 0 #000" }}
+            disabled={isProcessing || isFinalizing}
+            className={`w-full mt-4 py-4 rounded-[1.4rem] text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+              isFinalizing
+                ? "bg-slate-600 cursor-not-allowed"
+                : "bg-slate-900 active:translate-y-1"
+            }`}
+            style={{ boxShadow: isFinalizing ? "0 2px 0 0 #475569" : "0 4px 0 0 #000" }}
           >
-            <Sparkles size={16} className="text-emerald-400" />
-            Selesai & Buat Laporan
+            {isFinalizing ? (
+              <>
+                <Loader2 size={16} className="animate-spin text-emerald-400" />
+                Menyusun Laporan…
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} className="text-emerald-400" />
+                Selesai & Buat Laporan
+              </>
+            )}
           </button>
         )}
       </footer>
