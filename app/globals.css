@@ -21,6 +21,9 @@
 }
 
 html {
+  /* Scaling via font-size only — avoids all CSS zoom + vh incompatibilities.
+     All Tailwind utilities use rem, so this scales fonts, spacing, and sizing
+     uniformly without touching viewport units or causing scroll side-effects. */
   font-size: calc(16px * var(--app-font-scale));
 }
 
@@ -44,7 +47,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--app-font-family);
-  zoom: var(--app-font-scale);
 }
 
 @layer utilities {

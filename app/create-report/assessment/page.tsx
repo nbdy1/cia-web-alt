@@ -54,8 +54,14 @@ export default function AssessmentPage() {
 
   const { speak, stop: stopVoice } = useCIAVoice();
   const recognitionRef = useRef<any>(null);
+  // Tracks user *intent* to record — survives iOS onend auto-fires
+  const shouldRecordRef = useRef(false);
+  // Accumulates final transcript text across iOS recognition restarts
+  const transcriptAccumulatorRef = useRef('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [micError, setMicError] = useState<string | null>(null);
+  const [micSupported, setMicSupported] = useState(true);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -74,32 +80,80 @@ export default function AssessmentPage() {
   // Initialize Speech Recognition
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'id-ID';
-      recognition.continuous = true;
-      recognition.interimResults = true;
-
-      recognition.onresult = (event: any) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
-        }
-        setCurrentInput(transcript);
-      };
-
-      recognition.onend = () => setIsRecording(false);
-      recognitionRef.current = recognition;
+    if (!SpeechRecognition) {
+      setMicSupported(false);
+      return;
     }
+
+    // iOS Safari doesn't support continuous mode — we simulate it by restarting
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'id-ID';
+    recognition.continuous = !isIOS;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: any) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          transcriptAccumulatorRef.current += result[0].transcript + ' ';
+        } else {
+          interim += result[0].transcript;
+        }
+      }
+      setCurrentInput((transcriptAccumulatorRef.current + interim).trim());
+    };
+
+    recognition.onend = () => {
+      if (shouldRecordRef.current) {
+        // User still wants to record — restart (handles iOS auto-stop)
+        try {
+          recognition.start();
+        } catch {
+          shouldRecordRef.current = false;
+          setIsRecording(false);
+        }
+      } else {
+        setIsRecording(false);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      const { error } = event;
+      if (error === 'not-allowed' || error === 'service-not-allowed') {
+        shouldRecordRef.current = false;
+        setIsRecording(false);
+        setMicError('Akses mikrofon ditolak. Izinkan di pengaturan browser lalu coba lagi.');
+      } else if (error === 'network') {
+        shouldRecordRef.current = false;
+        setIsRecording(false);
+        setMicError('Koneksi bermasalah. Coba lagi.');
+      }
+      // 'no-speech' and 'aborted' are non-fatal — onend will handle the restart
+    };
+
+    recognitionRef.current = recognition;
   }, []);
 
   const toggleRecording = () => {
     if (isRecording) {
+      shouldRecordRef.current = false;
+      transcriptAccumulatorRef.current = '';
       recognitionRef.current?.stop();
     } else {
+      setMicError(null);
+      transcriptAccumulatorRef.current = '';
+      shouldRecordRef.current = true;
       stopVoice();
-      recognitionRef.current?.start();
-      setIsRecording(true);
+      try {
+        recognitionRef.current?.start();
+        setIsRecording(true);
+      } catch {
+        shouldRecordRef.current = false;
+      }
     }
   };
 
@@ -294,21 +348,26 @@ export default function AssessmentPage() {
 
       {/* Input Area */}
       <footer className="p-5 bg-white border-t-2 border-slate-100">
+        {micError && (
+          <p className="mb-2 text-center text-[11px] text-red-500 font-bold px-2">{micError}</p>
+        )}
         <div
           className="flex items-center gap-2 bg-slate-50 p-2 rounded-[1.8rem] border-2 border-slate-200"
           style={{ boxShadow: "inset 0 2px 4px rgba(0,0,0,0.04)" }}
         >
-          <button
-            onClick={toggleRecording}
-            className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center border-2 active:translate-y-px transition-transform ${
-              isRecording
-                ? "bg-red-500 text-white border-red-400"
-                : "bg-white text-emerald-600 border-emerald-200"
-            }`}
-            style={isRecording ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
-          >
-            {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
-          </button>
+          {micSupported && (
+            <button
+              onClick={toggleRecording}
+              className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center border-2 active:translate-y-px transition-transform ${
+                isRecording
+                  ? "bg-red-500 text-white border-red-400"
+                  : "bg-white text-emerald-600 border-emerald-200"
+              }`}
+              style={isRecording ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
+            >
+              {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
+            </button>
+          )}
 
           <textarea
             ref={inputRef}

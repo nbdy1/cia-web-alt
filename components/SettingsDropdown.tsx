@@ -73,7 +73,6 @@ function applyAppearance(fontFamily: FontOptionId, fontScale: number) {
   root.style.setProperty("--font-serif", selectedFamily);
   root.style.setProperty("--app-font-scale", String(fontScale));
   document.body.style.fontFamily = "var(--app-font-family)";
-  document.body.style.zoom = String(fontScale);
 
   try {
     window.localStorage?.setItem(FONT_STORAGE_KEY, fontFamily);

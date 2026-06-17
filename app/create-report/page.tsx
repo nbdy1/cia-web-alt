@@ -35,6 +35,8 @@ export default function CreateReport() {
   const { role } = useUserRole();
   const { user } = useAuth();
   const recognitionRef = useRef<any>(null);
+  // Tracks user *intent* to listen — survives iOS onend auto-fires
+  const shouldListenRef = useRef(false);
 
   // FETCH REAL STUDENTS FROM DB
   useEffect(() => {
@@ -75,8 +77,9 @@ export default function CreateReport() {
 
   const toggleVoiceSearch = () => {
     // If already listening, stop it
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
+    if (isListening) {
+      shouldListenRef.current = false;
+      recognitionRef.current?.stop();
       setIsListening(false);
       return;
     }
@@ -84,12 +87,16 @@ export default function CreateReport() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return alert("Browser tidak mendukung fitur suara");
 
+    // iOS Safari doesn't support continuous mode — simulate it by restarting on end
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
 
     recognition.lang = 'id-ID';
-    recognition.continuous = true; // Keep listening until manual stop
-    recognition.interimResults = true; // SHOW LIVE TEXT
+    recognition.continuous = !isIOS;
+    recognition.interimResults = true;
 
     recognition.onstart = () => setIsListening(true);
 
@@ -100,19 +107,39 @@ export default function CreateReport() {
           handleMatch(event.results[i][0].transcript);
         } else {
           interimTranscript += event.results[i][0].transcript;
-          // Update the search bar live as you speak
           setSearchQuery(interimTranscript);
         }
       }
     };
 
     recognition.onerror = (event: any) => {
-      console.error("Speech Error:", event.error);
-      if (event.error !== 'no-speech') setIsListening(false);
+      const { error } = event;
+      if (error === 'not-allowed' || error === 'service-not-allowed') {
+        shouldListenRef.current = false;
+        setIsListening(false);
+        alert("Akses mikrofon ditolak. Izinkan di pengaturan browser lalu coba lagi.");
+      } else if (error !== 'no-speech' && error !== 'aborted') {
+        // non-fatal errors let onend handle the restart; fatal ones stop here
+        shouldListenRef.current = false;
+        setIsListening(false);
+      }
     };
 
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => {
+      if (shouldListenRef.current) {
+        // Restart to keep listening on iOS
+        try {
+          recognition.start();
+        } catch {
+          shouldListenRef.current = false;
+          setIsListening(false);
+        }
+      } else {
+        setIsListening(false);
+      }
+    };
 
+    shouldListenRef.current = true;
     recognition.start();
   };
 

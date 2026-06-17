@@ -101,9 +101,6 @@ const appearanceScript = `
 
     if (document.body) {
       document.body.style.fontFamily = "var(--app-font-family)";
-      if (Number.isFinite(parsedScale) && parsedScale >= 0.9 && parsedScale <= 1.18) {
-        document.body.style.zoom = String(parsedScale);
-      }
     }
   } catch {}
 })();
