@@ -205,7 +205,7 @@ export default function ScoresPage() {
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div>
-          <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">Input Nilai</p>
+          <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">Input Nilai CMS</p>
           <h1 className="text-sm font-black text-slate-900">{studentName}</h1>
         </div>
         <div className="ml-auto">

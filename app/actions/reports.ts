@@ -1,19 +1,88 @@
 /**
  * app/actions/reports.ts
  *
- * LEGACY — no longer called by any UI component.
+ * Server actions for individual report mutation.
  *
- * This was the original report-save action used before the `treatment_plan`
- * JSONB column was introduced. It inserted scores into a separate
- * `report_scores` table (since removed by phaseout_report_scores.sql).
+ * removeSubIndicator — permanently removes one fulfilled sub-indicator from a
+ *   report's treatment_plan JSONB. The caller passes the canonical framework
+ *   sub-indicator string; this action removes any AI-generated string in
+ *   fulfilled_sub_indicators that fuzzy-matches it (same logic as the recap
+ *   page's isLikelySame). After updating Supabase it revalidates the report
+ *   page so the Server Component re-fetches with the corrected data.
  *
- * Kept here for historical reference. If you need to reintroduce per-indicator
- * score rows in the future, this is the pattern to follow. Otherwise, use
- * save-assessment.ts which stores the full analysis object as JSONB.
+ * saveStudentReport — LEGACY, kept for historical reference only.
  */
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { supabase } from "@/lib/supabase";
+
+const norm = (s: string) => s.trim().toLowerCase();
+const isLikelySame = (a: string, b: string) => {
+  const na = norm(a), nb = norm(b);
+  return na === nb || na.includes(nb) || nb.includes(na);
+};
+
+/**
+ * Permanently removes a fulfilled sub-indicator from a single report.
+ *
+ * @param reportId          - UUID of the report row
+ * @param category          - "Karakter" | "Mental" | "Soft Skill"
+ * @param theme             - Theme title (as stored in the assessment)
+ * @param indicator         - Indicator title (as stored in the assessment)
+ * @param canonicalSub      - The canonical framework sub-indicator string shown in the UI
+ */
+export async function removeSubIndicator(
+  reportId: string,
+  category: string,
+  theme: string,
+  indicator: string,
+  canonicalSub: string,
+): Promise<{ success: boolean; error?: string }> {
+  const { data: report, error: fetchError } = await supabase
+    .from("reports")
+    .select("treatment_plan")
+    .eq("id", reportId)
+    .single();
+
+  if (fetchError || !report) {
+    return { success: false, error: fetchError?.message ?? "Report not found" };
+  }
+
+  let plan = report.treatment_plan;
+  if (typeof plan === "string") {
+    try { plan = JSON.parse(plan); } catch {
+      return { success: false, error: "Failed to parse treatment_plan" };
+    }
+  }
+
+  if (Array.isArray(plan?.detailed_assessments)) {
+    plan.detailed_assessments = plan.detailed_assessments.map((assessment: any) => {
+      const catMatch = norm(assessment.category ?? "") === norm(category);
+      const themeMatch = norm(assessment.theme ?? "") === norm(theme);
+      const indMatch = norm(assessment.indicator ?? "") === norm(indicator);
+      if (!catMatch || !themeMatch || !indMatch) return assessment;
+
+      return {
+        ...assessment,
+        fulfilled_sub_indicators: (assessment.fulfilled_sub_indicators ?? []).filter(
+          (aiSub: string) => !isLikelySame(aiSub, canonicalSub),
+        ),
+      };
+    });
+  }
+
+  const { error: updateError } = await supabase
+    .from("reports")
+    .update({ treatment_plan: plan })
+    .eq("id", reportId);
+
+  if (updateError) return { success: false, error: updateError.message };
+
+  revalidatePath(`/reports/${reportId}`);
+  return { success: true };
+}
 
 export async function saveStudentReport(data: {
   student_id: string;

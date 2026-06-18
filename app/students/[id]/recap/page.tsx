@@ -340,7 +340,7 @@ export default async function RecapPage({
             });
 
             const percentage =
-              totalSub > 0 ? Math.round((fulfilledSub / totalSub) * 100) : 0;
+              totalSub > 0 ? parseFloat(((fulfilledSub / totalSub) * 100).toFixed(1)) : 0;
 
             return (
               <details suppressHydrationWarning
@@ -379,7 +379,7 @@ export default async function RecapPage({
                       />
                     </div>
                     <span className={`font-black ${cat.color} text-lg`}>
-                      {percentage}%
+                      {String(percentage).replace('.', ',')}%
                     </span>
                   </div>
                 </summary>

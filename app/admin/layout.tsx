@@ -79,9 +79,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      {/* On mobile: column layout (tab bar on top, content below).
+          On desktop: row layout (sidebar on left, content on right). */}
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+
         {/* Desktop sidebar */}
-        <div className="hidden md:flex flex-col w-56 bg-white border-r-2 border-slate-100 p-3 space-y-1 flex-shrink-0" style={{ boxShadow: "2px 0 0 0 #e2e8f0" }}>
+        <aside className="hidden md:flex flex-col w-56 bg-white border-r-2 border-slate-100 p-3 space-y-1 flex-shrink-0" style={{ boxShadow: "2px 0 0 0 #e2e8f0" }}>
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 pb-1">Navigasi</p>
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -102,10 +105,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             );
           })}
-        </div>
+        </aside>
 
-        {/* Mobile tab nav */}
-        <div className="md:hidden flex bg-white border-b-2 border-slate-100 w-full overflow-x-auto" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
+        {/* Mobile tab bar — sits above content in the column, scrollable if needed */}
+        <nav
+          className="md:hidden flex shrink-0 bg-white border-b-2 border-slate-100 overflow-x-auto"
+          style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
+        >
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -113,20 +119,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 min-w-[90px] transition-all border-b-2 ${
+                className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-2 min-w-[60px] transition-all border-b-2 ${
                   isActive
-                    ? 'border-emerald-500 text-emerald-700'
+                    ? 'border-emerald-500 text-emerald-600'
                     : 'border-transparent text-slate-400'
                 }`}
               >
-                <Icon size={16} className={isActive ? "text-emerald-600" : "text-slate-400"} />
-                <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
+                <Icon size={15} className={isActive ? "text-emerald-600" : "text-slate-400"} />
+                <span className="text-[8px] font-black uppercase tracking-tight leading-tight text-center whitespace-nowrap">
+                  {item.label}
+                </span>
               </Link>
             );
           })}
-        </div>
+        </nav>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
           {children}
         </main>
       </div>

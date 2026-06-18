@@ -210,7 +210,10 @@ export default function AssessmentPage() {
       recognitionRef.current?.stop();
     } else {
       setMicError(null);
-      transcriptAccumulatorRef.current = '';
+      // Seed the accumulator with whatever the user has typed/edited so far,
+      // so new speech appends to existing text instead of overwriting it.
+      const existing = currentInput.trim();
+      transcriptAccumulatorRef.current = existing ? existing + ' ' : '';
       shouldRecordRef.current = true;
       stopVoice();
       try {

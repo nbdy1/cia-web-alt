@@ -4,26 +4,27 @@
  * Rapor (report card) page. Two modes:
  *
  *   SCREEN — Preview card (constrained width, looks nice in the app).
- *             Shows score tables.
+ *             Shows score tables + CIA sub-indicator recap.
  *
  *   PRINT  — When the user clicks "Cetak", we build a self-contained A4 HTML
  *             document and open it in a new window. This bypasses Chrome's
  *             screen-layout-to-print pipeline entirely, so the content always
  *             fills the full paper width regardless of screen viewport.
  *             The popup auto-triggers window.print() after load.
+ *             The print document includes both the CMS score tables and a full
+ *             CIA sub-indicator fulfillment section (theme bars + category %).
  */
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getStudentScores, getStudentPeriods } from "@/app/actions/scores";
-import {
-  ChevronLeft,
-  Printer,
-  Loader2,
-} from "lucide-react";
+import { ChevronLeft, Printer, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { karakterData } from "@/lib/data/karakter";
+import { mentalData } from "@/lib/data/mental";
+import { softSkillData } from "@/lib/data/soft-skill";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -41,10 +42,240 @@ type ScoreCell = { nilai_harian: number | null; nilai_bulanan: number | null; ni
 type ScoreGrid = Record<string, Record<string, ScoreCell>>;
 type Student = { name: string; batch: string | null };
 
+// ─── CIA helpers ──────────────────────────────────────────────────────────────
+
+const CIA_CATEGORIES = [
+  {
+    label: "Karakter",
+    data: karakterData,
+    color: "#f43f5e",
+    lightBg: "#fff1f2",
+    borderColor: "#fecdd3",
+    twColor: "text-rose-500",
+    twBg: "bg-rose-50",
+    twBorder: "border-rose-100",
+    twProg: "bg-rose-400",
+  },
+  {
+    label: "Mental",
+    data: mentalData,
+    color: "#3b82f6",
+    lightBg: "#eff6ff",
+    borderColor: "#bfdbfe",
+    twColor: "text-blue-500",
+    twBg: "bg-blue-50",
+    twBorder: "border-blue-100",
+    twProg: "bg-blue-400",
+  },
+  {
+    label: "Soft Skill",
+    data: softSkillData,
+    color: "#a855f7",
+    lightBg: "#faf5ff",
+    borderColor: "#e9d5ff",
+    twColor: "text-purple-500",
+    twBg: "bg-purple-50",
+    twBorder: "border-purple-100",
+    twProg: "bg-purple-400",
+  },
+];
+
+const norm = (s: string) => s.trim().toLowerCase();
+
+function buildCIACounts(
+  reports: Array<{ treatment_plan: unknown }>
+): Record<string, Map<string, number>> {
+  const countByCategory: Record<string, Map<string, number>> = {
+    Karakter: new Map(),
+    Mental: new Map(),
+    "Soft Skill": new Map(),
+  };
+  const dataByLabel: Record<string, typeof karakterData> = {
+    Karakter: karakterData,
+    Mental: mentalData,
+    "Soft Skill": softSkillData,
+  };
+  const isLikelySame = (a: string, b: string) => {
+    const na = norm(a), nb = norm(b);
+    return na === nb || na.includes(nb) || nb.includes(na);
+  };
+
+  reports.forEach((report) => {
+    let plan = report.treatment_plan;
+    if (typeof plan === "string") {
+      try { plan = JSON.parse(plan); } catch { return; }
+    }
+    if (!plan || !Array.isArray((plan as any).detailed_assessments)) return;
+
+    (plan as any).detailed_assessments.forEach((assessment: any) => {
+      const cat = assessment.category as string;
+      const bucket =
+        countByCategory[cat] ??
+        countByCategory[Object.keys(countByCategory).find((k) => norm(k) === norm(cat)) ?? ""];
+      if (!bucket || !Array.isArray(assessment.fulfilled_sub_indicators)) return;
+
+      const catData =
+        dataByLabel[cat] ??
+        dataByLabel[Object.keys(dataByLabel).find((k) => norm(k) === norm(cat)) ?? ""];
+      if (!catData) return;
+
+      let fullSubs: string[] | null = null;
+      for (const theme of catData.themes) {
+        if (norm(theme.title) !== norm(assessment.theme as string)) continue;
+        for (const ind of theme.indicators) {
+          if (norm(ind.title) === norm(assessment.indicator as string)) {
+            fullSubs = ind.sub_indicators;
+            break;
+          }
+        }
+        if (fullSubs) break;
+      }
+      if (!fullSubs) return;
+
+      fullSubs.forEach((frameworkSub) => {
+        if (
+          assessment.fulfilled_sub_indicators.some((si: string) =>
+            isLikelySame(si, frameworkSub)
+          )
+        ) {
+          const key = norm(frameworkSub);
+          bucket.set(key, (bucket.get(key) ?? 0) + 1);
+        }
+      });
+    });
+  });
+
+  return countByCategory;
+}
+
 // ─── Print HTML builder ───────────────────────────────────────────────────────
-// Returns a complete, self-contained HTML document.
-// No Tailwind, no external CSS — everything is inline or in a <style> block.
-// Opens in a new window so Chrome prints it at full A4 width.
+
+const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+function buildCIASectionHtml(
+  countByCategory: Record<string, Map<string, number>>
+): string {
+  const summaryCells = CIA_CATEGORIES.map((cat) => {
+    const countMap = countByCategory[cat.label] ?? new Map<string, number>();
+    let totalSub = 0, fulfilledSub = 0;
+    cat.data.themes.forEach((theme) => {
+      theme.indicators.forEach((ind) => {
+        ind.sub_indicators.forEach((sub) => {
+          totalSub++;
+          if ((countMap.get(norm(sub)) ?? 0) >= 1) fulfilledSub++;
+        });
+      });
+    });
+    const pct = totalSub > 0 ? parseFloat(((fulfilledSub / totalSub) * 100).toFixed(1)) : 0;
+    const pctStr = String(pct).replace(".", ",");
+    return `
+      <div style="background:${cat.lightBg};border:1px solid ${cat.borderColor};border-radius:8px;padding:12px 16px">
+        <p style="font-size:9px;font-weight:800;color:${cat.color};text-transform:uppercase;letter-spacing:0.1em;margin:0 0 4px">${esc(cat.label)}</p>
+        <p style="font-size:22px;font-weight:900;color:${cat.color};margin:0 0 2px">${pctStr}%</p>
+        <p style="font-size:10px;color:#64748b;font-weight:600;margin:0 0 8px">${fulfilledSub} dari ${totalSub} sub-indikator</p>
+        <div style="width:100%;height:4px;background:${cat.borderColor};border-radius:99px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${cat.color};border-radius:99px"></div>
+        </div>
+      </div>`;
+  }).join("");
+
+  const detailBlocks = CIA_CATEGORIES.map((cat) => {
+    const countMap = countByCategory[cat.label] ?? new Map<string, number>();
+
+    // ── Theme bars ──
+    const themeBars = cat.data.themes.map((theme, i) => {
+      let total = 0, fulfilled = 0;
+      theme.indicators.forEach((ind) => {
+        ind.sub_indicators.forEach((sub) => {
+          total++;
+          if ((countMap.get(norm(sub)) ?? 0) >= 1) fulfilled++;
+        });
+      });
+      const pct = total > 0 ? Math.round((fulfilled / total) * 100) : 0;
+      if (pct === 0) return "";
+      return `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <span style="color:${cat.color};font-size:10px;font-weight:900;width:16px;text-align:right;flex-shrink:0">${i + 1}</span>
+          <div style="flex:1;min-width:0">
+            <p style="font-size:10px;font-weight:700;color:#475569;margin:0 0 3px">${esc(theme.title)}</p>
+            <div style="width:100%;height:4px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:${cat.color};border-radius:99px;opacity:0.8"></div>
+            </div>
+          </div>
+          <span style="font-size:10px;font-weight:900;color:${cat.color};flex-shrink:0">${fulfilled}/${total}</span>
+        </div>`;
+    }).join("");
+
+    // ── Sub-indicator details per theme ──
+    const subDetails = cat.data.themes.map((theme) => {
+      const visibleInds = theme.indicators.map((ind) => {
+        const fulfilledSubs = ind.sub_indicators
+          .map((sub) => ({ text: sub, count: countMap.get(norm(sub)) ?? 0 }))
+          .filter((s) => s.count >= 1);
+        return { title: ind.title, subs: fulfilledSubs };
+      }).filter((ind) => ind.subs.length > 0);
+
+      if (visibleInds.length === 0) return "";
+
+      const indRows = visibleInds.map((ind) => {
+        const subRows = ind.subs.map((s) => {
+          const kuat = s.count >= 3;
+          return `
+            <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 8px;border-radius:4px;margin-bottom:2px;background:${kuat ? "#ecfdf5" : "#fffbeb"};border:1px solid ${kuat ? "#bbf7d0" : "#fde68a"}">
+              <span style="font-size:11px;font-weight:600;color:${kuat ? "#065f46" : "#92400e"};flex:1;line-height:1.4">${esc(s.text)}</span>
+              <span style="font-size:8px;font-weight:800;background:${kuat ? "#059669" : "#f59e0b"};color:white;padding:1px 6px;border-radius:20px;white-space:nowrap;margin-top:2px">${kuat ? "Kuat" : "Lemah"}</span>
+            </div>`;
+        }).join("");
+        return `
+          <div style="margin-bottom:8px">
+            <p style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px;padding:2px 8px;background:#f8fafc;border-radius:4px;display:inline-block">${esc(ind.title)}</p>
+            ${subRows}
+          </div>`;
+      }).join("");
+
+      return `
+        <div style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;page-break-inside:avoid">
+          <div style="background:#f1f5f9;padding:5px 10px;border-bottom:1px solid #e2e8f0">
+            <span style="font-size:10px;font-weight:800;color:#1e293b">${esc(theme.title)}</span>
+          </div>
+          <div style="padding:8px 10px">${indRows}</div>
+        </div>`;
+    }).join("");
+
+    const isEmpty = !themeBars.trim();
+    return `
+      <div style="margin-bottom:16px;page-break-inside:avoid">
+        <div style="background:#1e293b;padding:8px 14px;border-radius:8px 8px 0 0">
+          <span style="color:white;font-weight:800;font-size:13px">${esc(cat.label)}</span>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-top:none;padding:12px 14px;border-radius:0 0 8px 8px">
+          ${isEmpty
+            ? `<p style="font-size:11px;color:#94a3b8;font-style:italic;margin:0">Belum ada tema yang terpenuhi.</p>`
+            : `
+              <p style="font-size:8px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 10px">Pemenuhan Per Tema</p>
+              ${themeBars}
+              <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f1f5f9">
+                <p style="font-size:8px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 10px">Sub-Indikator Terpenuhi</p>
+                ${subDetails}
+              </div>
+            `
+          }
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <div style="margin-top:32px;padding-top:24px;border-top:2px solid #e2e8f0">
+      <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:16px">
+        Rekapitulasi CIA — Ketercapaian Sub-Indikator
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
+        ${summaryCells}
+      </div>
+      ${detailBlocks}
+    </div>`;
+}
 
 function buildPrintHTML(opts: {
   name: string;
@@ -52,10 +283,9 @@ function buildPrintHTML(opts: {
   period: string;
   printDate: string;
   scoreGrid: ScoreGrid;
+  countByCategory: Record<string, Map<string, number>>;
 }) {
-  const { name, batch, period, printDate, scoreGrid } = opts;
-
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const { name, batch, period, printDate, scoreGrid, countByCategory } = opts;
 
   const scoreTablesHtml = SUBJECTS.map((subj) => {
     const grid = scoreGrid[subj] ?? {};
@@ -67,9 +297,9 @@ function buildPrintHTML(opts: {
       return `
         <tr>
           <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#1e293b;border-bottom:1px solid #f1f5f9">${esc(label)}</td>
-          <td style="padding:10px 8px;text-align:center;font-size:13px;font-weight:700;color:${col==="harian"?"#0f172a":"#cbd5e1"};border-bottom:1px solid #f1f5f9">${col==="harian" && h!=null ? h : col==="harian" ? "—" : ""}</td>
-          <td style="padding:10px 8px;text-align:center;font-size:13px;font-weight:700;color:${col==="bulanan"?"#0f172a":"#cbd5e1"};border-bottom:1px solid #f1f5f9">${col==="bulanan" && b!=null ? b : col==="bulanan" ? "—" : ""}</td>
-          <td style="padding:10px 8px;text-align:center;font-size:13px;font-weight:700;color:${col==="akhir"?"#0f172a":"#cbd5e1"};border-bottom:1px solid #f1f5f9">${col==="akhir" && a!=null ? a : col==="akhir" ? "—" : ""}</td>
+          <td style="padding:10px 8px;text-align:center;font-size:13px;font-weight:700;color:${col === "harian" ? "#0f172a" : "#cbd5e1"};border-bottom:1px solid #f1f5f9">${col === "harian" && h != null ? h : col === "harian" ? "—" : ""}</td>
+          <td style="padding:10px 8px;text-align:center;font-size:13px;font-weight:700;color:${col === "bulanan" ? "#0f172a" : "#cbd5e1"};border-bottom:1px solid #f1f5f9">${col === "bulanan" && b != null ? b : col === "bulanan" ? "—" : ""}</td>
+          <td style="padding:10px 8px;text-align:center;font-size:13px;font-weight:700;color:${col === "akhir" ? "#0f172a" : "#cbd5e1"};border-bottom:1px solid #f1f5f9">${col === "akhir" && a != null ? a : col === "akhir" ? "—" : ""}</td>
         </tr>`;
     }).join("");
 
@@ -91,6 +321,8 @@ function buildPrintHTML(opts: {
         </table>
       </div>`;
   }).join("");
+
+  const ciaSectionHtml = buildCIASectionHtml(countByCategory);
 
   return `<!DOCTYPE html>
 <html lang="id">
@@ -135,25 +367,27 @@ function buildPrintHTML(opts: {
 </div>
 
 <div style="padding:28px 32px">
-    <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:16px">
-      Nilai Per Mata Pelajaran — ${esc(period)}
-    </p>
+  <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:16px">
+    Nilai Per Mata Pelajaran — ${esc(period)}
+  </p>
 
-    ${scoreTablesHtml}
+  ${scoreTablesHtml}
 
-    <!-- Signatures -->
-    <div style="margin-top:40px;border-top:1px solid #e2e8f0;padding-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:48px">
-      <div style="text-align:center">
-        <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:56px">Ustadz / Wali Kelas</p>
-        <div style="border-bottom:1.5px solid #94a3b8;margin-bottom:8px"></div>
-        <p style="font-size:9px;color:#94a3b8;font-weight:600">Tanda Tangan &amp; Nama</p>
-      </div>
-      <div style="text-align:center">
-        <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:56px">Orang Tua / Wali</p>
-        <div style="border-bottom:1.5px solid #94a3b8;margin-bottom:8px"></div>
-        <p style="font-size:9px;color:#94a3b8;font-weight:600">Tanda Tangan &amp; Nama</p>
-      </div>
+  ${ciaSectionHtml}
+
+  <!-- Signatures -->
+  <div style="margin-top:40px;border-top:1px solid #e2e8f0;padding-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:48px">
+    <div style="text-align:center">
+      <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:56px">Ustadz / Wali Kelas</p>
+      <div style="border-bottom:1.5px solid #94a3b8;margin-bottom:8px"></div>
+      <p style="font-size:9px;color:#94a3b8;font-weight:600">Tanda Tangan &amp; Nama</p>
     </div>
+    <div style="text-align:center">
+      <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:56px">Orang Tua / Wali</p>
+      <div style="border-bottom:1.5px solid #94a3b8;margin-bottom:8px"></div>
+      <p style="font-size:9px;color:#94a3b8;font-weight:600">Tanda Tangan &amp; Nama</p>
+    </div>
+  </div>
 </div>
 
 <script>window.onload = function() { window.print(); }</script>
@@ -172,6 +406,11 @@ export default function RaporPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [scoreGrid, setScoreGrid] = useState<ScoreGrid>({});
   const [loading, setLoading] = useState(true);
+  const [countByCategory, setCountByCategory] = useState<Record<string, Map<string, number>>>({
+    Karakter: new Map(),
+    Mental: new Map(),
+    "Soft Skill": new Map(),
+  });
 
   useEffect(() => {
     const init = async () => {
@@ -184,6 +423,18 @@ export default function RaporPage() {
       if (p.length > 0) setSelectedPeriod(p[0]);
     };
     init().catch(console.error);
+  }, [studentId]);
+
+  // CIA sub-indicator counts — aggregated across all reports (same as recap page)
+  useEffect(() => {
+    const loadCIA = async () => {
+      const { data: reports } = await supabase
+        .from("reports")
+        .select("treatment_plan")
+        .eq("student_id", studentId);
+      if (reports) setCountByCategory(buildCIACounts(reports));
+    };
+    loadCIA().catch(console.error);
   }, [studentId]);
 
   useEffect(() => {
@@ -206,16 +457,20 @@ export default function RaporPage() {
     load().catch(console.error);
   }, [studentId, selectedPeriod]);
 
-  // ── Open a clean print window — no Tailwind constraints ────────────────
   const handlePrint = () => {
     if (!student) return;
-    const printDate = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    const printDate = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
     const html = buildPrintHTML({
       name: student.name,
       batch: student.batch ?? "Reguler",
       period: selectedPeriod,
       printDate,
       scoreGrid,
+      countByCategory,
     });
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) { alert("Popup diblokir. Izinkan popup untuk halaman ini."); return; }
@@ -237,10 +492,15 @@ export default function RaporPage() {
     <div className="min-h-screen bg-paper pb-24 font-sans">
 
       {/* Header */}
-      <header className="bg-white border-b-2 border-slate-100 px-5 pt-10 pb-4 flex items-center gap-4 sticky top-0 z-40" style={{ boxShadow: "0 3px 0 0 #f1f5f9" }}>
-        <Link href={`/students/${studentId}`}
+      <header
+        className="bg-white border-b-2 border-slate-100 px-5 pt-10 pb-4 flex items-center gap-4 sticky top-0 z-40"
+        style={{ boxShadow: "0 3px 0 0 #f1f5f9" }}
+      >
+        <Link
+          href={`/students/${studentId}`}
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 flex-shrink-0"
-          style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
+          style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
+        >
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div className="flex-1">
@@ -264,9 +524,16 @@ export default function RaporPage() {
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">Periode:</span>
             <div className="flex flex-wrap gap-2">
               {periods.map((p) => (
-                <button key={p} onClick={() => setSelectedPeriod(p)}
-                  className={`px-3 py-1.5 rounded-xl font-black text-xs transition-colors ${selectedPeriod === p ? "bg-violet-600 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
-                  style={selectedPeriod === p ? { boxShadow: "0 2px 0 0 #5b21b6" } : {}}>
+                <button
+                  key={p}
+                  onClick={() => setSelectedPeriod(p)}
+                  className={`px-3 py-1.5 rounded-xl font-black text-xs transition-colors ${
+                    selectedPeriod === p
+                      ? "bg-violet-600 text-white"
+                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                  }`}
+                  style={selectedPeriod === p ? { boxShadow: "0 2px 0 0 #5b21b6" } : {}}
+                >
                   {p}
                 </button>
               ))}
@@ -277,8 +544,11 @@ export default function RaporPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
 
-        {/* Scores preview */}
-        <div className="bg-white rounded-[2rem] border-2 border-slate-200 overflow-hidden" style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}>
+        {/* Preview card */}
+        <div
+          className="bg-white rounded-[2rem] border-2 border-slate-200 overflow-hidden"
+          style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}
+        >
           <div className="bg-slate-800 px-8 py-5 flex justify-between items-center">
             <div>
               <p className="text-xs font-black text-emerald-400">Sekolah Impian — Laporan Nilai</p>
@@ -288,43 +558,212 @@ export default function RaporPage() {
           </div>
 
           <div className="px-8 py-6 space-y-6">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nilai Per Mata Pelajaran — {selectedPeriod || "—"}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              Nilai Per Mata Pelajaran — {selectedPeriod || "—"}
+            </p>
 
+            {/* Score tables */}
             {loading ? (
-              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
-            ) : SUBJECTS.map((subj) => {
-              const grid = scoreGrid[subj] ?? {};
-              return (
-                <div key={subj} className="overflow-hidden rounded-2xl border-2 border-slate-100">
-                  <div className="bg-slate-800 px-5 py-3">
-                    <span className="text-white font-black text-sm">{subj}</span>
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              </div>
+            ) : (
+              SUBJECTS.map((subj) => {
+                const grid = scoreGrid[subj] ?? {};
+                return (
+                  <div key={subj} className="overflow-hidden rounded-2xl border-2 border-slate-100">
+                    <div className="bg-slate-800 px-5 py-3">
+                      <span className="text-white font-black text-sm">{subj}</span>
+                    </div>
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr] border-b-2 border-slate-100 bg-slate-50">
+                      {["Jenis Nilai", "Nilai Harian", "Nilai Bulanan", "Nilai Akhir"].map((h, i) => (
+                        <div
+                          key={h}
+                          className={`px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-wider ${i > 0 ? "text-center" : ""}`}
+                        >
+                          {h}
+                        </div>
+                      ))}
+                    </div>
+                    {SCORE_TYPE_DEFS.map(({ key, label, col }) => {
+                      const cell = grid[key];
+                      const h = cell?.nilai_harian;
+                      const b = cell?.nilai_bulanan;
+                      const a = cell?.nilai_akhir;
+                      return (
+                        <div key={key} className="grid grid-cols-[2fr_1fr_1fr_1fr] border-b border-slate-50 last:border-0">
+                          <div className="px-4 py-3 text-sm font-bold text-slate-700">{label}</div>
+                          <div className={`px-2 py-3 text-center text-sm font-black ${col === "harian" ? "text-slate-900" : "text-slate-200"}`}>
+                            {col === "harian" ? (h != null ? h : "—") : ""}
+                          </div>
+                          <div className={`px-2 py-3 text-center text-sm font-black ${col === "bulanan" ? "text-slate-900" : "text-slate-200"}`}>
+                            {col === "bulanan" ? (b != null ? b : "—") : ""}
+                          </div>
+                          <div className={`px-2 py-3 text-center text-sm font-black ${col === "akhir" ? "text-slate-900" : "text-slate-200"}`}>
+                            {col === "akhir" ? (a != null ? a : "—") : ""}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="grid grid-cols-[2fr_1fr_1fr_1fr] border-b-2 border-slate-100 bg-slate-50">
-                    {["Jenis Nilai","Nilai Harian","Nilai Bulanan","Nilai Akhir"].map((h, i) => (
-                      <div key={h} className={`px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-wider ${i>0?"text-center":""}`}>{h}</div>
-                    ))}
-                  </div>
-                  {SCORE_TYPE_DEFS.map(({ key, label, col }) => {
-                    const cell = grid[key];
-                    const h = cell?.nilai_harian; const b = cell?.nilai_bulanan; const a = cell?.nilai_akhir;
+                );
+              })
+            )}
+
+            {/* ── CIA Recap Section ───────────────────────────────────────── */}
+            {!loading && (
+              <div className="border-t-2 border-slate-100 pt-6 space-y-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Rekapitulasi CIA — Ketercapaian Sub-Indikator
+                </p>
+
+                {/* Category summary cards */}
+                <div className="grid grid-cols-3 gap-3">
+                  {CIA_CATEGORIES.map((cat) => {
+                    const countMap = countByCategory[cat.label] ?? new Map<string, number>();
+                    let totalSub = 0, fulfilledSub = 0;
+                    cat.data.themes.forEach((theme) => {
+                      theme.indicators.forEach((ind) => {
+                        ind.sub_indicators.forEach((sub) => {
+                          totalSub++;
+                          if ((countMap.get(norm(sub)) ?? 0) >= 1) fulfilledSub++;
+                        });
+                      });
+                    });
+                    const pct = totalSub > 0 ? parseFloat(((fulfilledSub / totalSub) * 100).toFixed(1)) : 0;
                     return (
-                      <div key={key} className="grid grid-cols-[2fr_1fr_1fr_1fr] border-b border-slate-50 last:border-0">
-                        <div className="px-4 py-3 text-sm font-bold text-slate-700">{label}</div>
-                        <div className={`px-2 py-3 text-center text-sm font-black ${col==="harian"?"text-slate-900":"text-slate-200"}`}>{col==="harian" ? (h!=null?h:"—") : ""}</div>
-                        <div className={`px-2 py-3 text-center text-sm font-black ${col==="bulanan"?"text-slate-900":"text-slate-200"}`}>{col==="bulanan" ? (b!=null?b:"—") : ""}</div>
-                        <div className={`px-2 py-3 text-center text-sm font-black ${col==="akhir"?"text-slate-900":"text-slate-200"}`}>{col==="akhir" ? (a!=null?a:"—") : ""}</div>
+                      <div
+                        key={cat.label}
+                        className={`${cat.twBg} border-2 ${cat.twBorder} rounded-xl p-3`}
+                      >
+                        <p className={`text-[9px] font-black uppercase tracking-wide ${cat.twColor}`}>
+                          {cat.label}
+                        </p>
+                        <p className={`text-xl font-black ${cat.twColor} mt-1`}>
+                          {String(pct).replace(".", ",")}%
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+                          {fulfilledSub}/{totalSub}
+                        </p>
+                        <div className="w-full h-1.5 bg-white/60 rounded-full mt-2 overflow-hidden">
+                          <div
+                            className={`h-full ${cat.twProg} rounded-full`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-              );
-            })}
 
+                {/* Theme bars + sub-indicator details per category */}
+                {CIA_CATEGORIES.map((cat) => {
+                  const countMap = countByCategory[cat.label] ?? new Map<string, number>();
+                  const themeStats = cat.data.themes.map((theme) => {
+                    let total = 0, fulfilled = 0;
+                    theme.indicators.forEach((ind) => {
+                      ind.sub_indicators.forEach((sub) => {
+                        total++;
+                        if ((countMap.get(norm(sub)) ?? 0) >= 1) fulfilled++;
+                      });
+                    });
+                    return { total, fulfilled, pct: total > 0 ? Math.round((fulfilled / total) * 100) : 0 };
+                  });
+                  const hasFulfilled = themeStats.some((s) => s.pct > 0);
+                  if (!hasFulfilled) return null;
+
+                  return (
+                    <div key={cat.label} className="border-2 border-slate-100 rounded-2xl overflow-hidden">
+                      <div className="bg-slate-800 px-4 py-2.5">
+                        <span className="text-white font-black text-xs">{cat.label}</span>
+                      </div>
+                      <div className="p-4 space-y-1.5">
+                        {/* Theme bars */}
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                          Pemenuhan Per Tema
+                        </p>
+                        {cat.data.themes.map((theme, i) => {
+                          const { pct, fulfilled, total } = themeStats[i];
+                          if (pct === 0) return null;
+                          return (
+                            <div key={i} className="flex items-center gap-2 py-0.5">
+                              <span className="text-[10px] font-black w-4 text-right flex-shrink-0" style={{ color: cat.color }}>{i + 1}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] font-bold text-slate-600 mb-1 truncate">{theme.title}</p>
+                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: cat.color, opacity: 0.8 }} />
+                                </div>
+                              </div>
+                              <span className="text-[10px] font-black flex-shrink-0 tabular-nums" style={{ color: cat.color }}>{fulfilled}/{total}</span>
+                            </div>
+                          );
+                        })}
+
+                        {/* Sub-indicator details per theme */}
+                        <div className="border-t-2 border-slate-100 mt-4 pt-4 space-y-3">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            Sub-Indikator Terpenuhi
+                          </p>
+                          {cat.data.themes.map((theme, i) => {
+                            const visibleInds = theme.indicators.map((ind) => ({
+                              title: ind.title,
+                              subs: ind.sub_indicators
+                                .map((sub) => ({ text: sub, count: countMap.get(norm(sub)) ?? 0 }))
+                                .filter((s) => s.count >= 1),
+                            })).filter((ind) => ind.subs.length > 0);
+
+                            if (visibleInds.length === 0) return null;
+                            return (
+                              <div key={i} className="border border-slate-100 rounded-xl overflow-hidden">
+                                <div className="bg-slate-50 px-3 py-2 border-b border-slate-100">
+                                  <span className="text-[11px] font-black text-slate-700">{theme.title}</span>
+                                </div>
+                                <div className="p-3 space-y-3">
+                                  {visibleInds.map((ind, iIdx) => (
+                                    <div key={iIdx}>
+                                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">
+                                        {ind.title}
+                                      </p>
+                                      <div className="space-y-1">
+                                        {ind.subs.map((s, sIdx) => {
+                                          const kuat = s.count >= 3;
+                                          return (
+                                            <div
+                                              key={sIdx}
+                                              className={`flex items-start gap-2 px-2.5 py-2 rounded-lg ${kuat ? "bg-emerald-50 border border-emerald-100" : "bg-amber-50 border border-amber-100"}`}
+                                            >
+                                              <span className={`flex-1 text-xs font-medium leading-snug ${kuat ? "text-emerald-900" : "text-amber-900"}`}>
+                                                {s.text}
+                                              </span>
+                                              <span className={`shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-full text-white mt-0.5 ${kuat ? "bg-emerald-600" : "bg-amber-400"}`}>
+                                                {kuat ? "Kuat" : "Lemah"}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Signatures */}
             <div className="border-t-2 border-slate-100 pt-6">
               <div className="grid grid-cols-2 gap-8">
                 {["Ustadz / Wali Kelas", "Orang Tua / Wali"].map((label) => (
                   <div key={label} className="text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-12">{label}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-12">
+                      {label}
+                    </p>
                     <div className="border-b-2 border-slate-300 mb-2" />
                     <p className="text-[10px] text-slate-400 font-bold">Tanda Tangan & Nama</p>
                   </div>
@@ -334,11 +773,18 @@ export default function RaporPage() {
           </div>
         </div>
 
-        {/* Print hint */}
+        {/* Empty state hint */}
         {!selectedPeriod && periods.length === 0 && (
           <div className="text-center py-6">
             <p className="text-sm text-slate-400 font-bold">
-              Belum ada nilai — <Link href={`/students/${studentId}/scores`} className="text-violet-600 underline">Input Nilai dulu</Link> untuk melengkapi rapor.
+              Belum ada nilai —{" "}
+              <Link
+                href={`/students/${studentId}/scores`}
+                className="text-violet-600 underline"
+              >
+                Input Nilai CMS dulu
+              </Link>{" "}
+              untuk melengkapi rapor.
             </p>
           </div>
         )}

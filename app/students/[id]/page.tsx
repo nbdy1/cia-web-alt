@@ -110,7 +110,7 @@ export default async function StudentProfile({
             style={{ boxShadow: "0 4px 0 0 #bae6fd" }}
           >
             <ClipboardList size={16} />
-            Input Nilai
+            Input Nilai CMS
           </Link>
           <Link
             href={`/students/${student.id}/rapor`}
@@ -128,7 +128,7 @@ export default async function StudentProfile({
           style={{ boxShadow: "0 4px 0 0 #6ee7b7" }}
         >
           <FileText size={16} />
-          Rekapitulasi Pencapaian
+          Persentase CMS
         </Link>
       </div>
 

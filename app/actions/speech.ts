@@ -20,6 +20,7 @@
 export async function generateSpeech(text: string) {
   const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
   const VOICE_ID = "TX3LPaxmHKxFdv7VOQHJ"; // Liam
+  // const VOICE_ID = "q8qwd1jY2jS3AWOBeq25"; // Pratama (lebih ekspresif, cocok untuk Bahasa Indonesia)
 
   if (!ELEVENLABS_API_KEY) {
     throw new Error("ELEVENLABS_API_KEY is missing");
@@ -37,11 +38,13 @@ export async function generateSpeech(text: string) {
         },
         body: JSON.stringify({
           text: text,
-          model_id: "eleven_multilingual_v2",
+          model_id: "eleven_flash_v2_5",
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.75,
+            speed: 1.2,
           },
+          language_code: "id", // Indonesian
         }),
       }
     );

@@ -26,12 +26,12 @@ import {
   Brain,
   Heart,
   Zap,
-  CheckCircle2,
 } from "lucide-react";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
 import { SmartBackButton } from "@/components/SmartBackButton";
+import { FulfilledSubsList } from "@/components/FulfilledSubsList";
 
 // ─── Framework lookup helpers ──────────────────────────────────────────────
 // Given a category + theme title + indicator title from the AI output,
@@ -117,7 +117,7 @@ function computeDisplayOverallStats(analysis: any) {
     });
 
     const fulfilled = canonicalFulfilled.size;
-    result[cat.toLowerCase().replace(" ", "_")] = {
+    result[cat.toLowerCase().replace(" ", " ")] = {
       fulfilled,
       total,
       percentage: total > 0 ? Math.round((fulfilled / total) * 10000) / 100 : 0,
@@ -205,7 +205,7 @@ export default async function ReportDetailPage({
                     </p>
                     <div className="flex items-baseline gap-1">
                       <span className="text-lg font-bold">
-                        {(stats.percentage || 0).toFixed(1)}%
+                        {(stats.percentage || 0).toFixed(1).replace('.', ',')}%
                       </span>
                     </div>
                     <div className="w-full h-1 bg-white/20 rounded-full mt-2 overflow-hidden">
@@ -419,22 +419,13 @@ export default async function ReportDetailPage({
                             &ldquo;{item.reasoning}&rdquo;
                           </p>
 
-                          <div className="space-y-1.5">
-                            {displaySubs
-                              .map((si: string, idx: number) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-start gap-2 p-2 rounded-xl bg-emerald-50/80 border border-emerald-100/50"
-                                >
-                                  <div className="mt-0.5 shrink-0">
-                                    <CheckCircle2 size={13} className="text-emerald-500" />
-                                  </div>
-                                  <span className="text-[11px] leading-snug font-medium text-emerald-900">
-                                    {si}
-                                  </span>
-                                </div>
-                              ))}
-                          </div>
+                          <FulfilledSubsList
+                            reportId={report.id}
+                            category={item.category}
+                            theme={item.theme}
+                            indicator={item.indicator}
+                            subs={displaySubs}
+                          />
                         </div>
                       </div>
                     );
