@@ -25,11 +25,13 @@
  */
 
 export interface CIAPhase {
-  index: number;       // 1 – 5
-  label: string;       // full Indonesian label
-  shortLabel: string;  // compact label for badges
-  range: string;       // "1–20%"
-  description: string; // one-line pedagogical description
+  index: number;          // 1 – 5
+  label: string;          // full Indonesian label
+  shortLabel: string;     // compact label for badges
+  range: string;          // "1–20%"
+  description: string;    // one-line pedagogical description
+  narrativeLabel: string; // adjective/noun used in "Fase nya adalah '...'"
+  narrativeDescription: string; // full sentence after "Yaitu ..."
 
   // Tailwind classes — for React / screen rendering
   bg: string;
@@ -54,6 +56,8 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     shortLabel: "Instingtif",
     range: "1–20%",
     description: "KMS awal yang masih labil",
+    narrativeLabel: "instingtif",
+    narrativeDescription: "karakter yang masih bersifat naluriah dan labil — bereaksi berdasarkan insting, bukan nilai yang telah disadari atau dipelajari",
     bg: "bg-slate-50",
     border: "border-slate-200",
     text: "text-slate-700",
@@ -72,6 +76,8 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     shortLabel: "Imitasi",
     range: "21–40%",
     description: "KMS lahir karena meniru lingkungan",
+    narrativeLabel: "imitatif",
+    narrativeDescription: "karakter yang lahir dengan dorongan \"meniru\" atau \"mengadaptasi\" lingkungan sekitar",
     bg: "bg-amber-50",
     border: "border-amber-200",
     text: "text-amber-800",
@@ -90,6 +96,8 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     shortLabel: "Internalisasi",
     range: "41–60%",
     description: "Nilai-nilai KMS mulai terserap ke dalam diri",
+    narrativeLabel: "internalisasi",
+    narrativeDescription: "karakter yang mulai terserap ke dalam diri — nilai-nilai mulai dipahami, diyakini, dan dirasakan secara personal",
     bg: "bg-sky-50",
     border: "border-sky-200",
     text: "text-sky-800",
@@ -108,6 +116,8 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     shortLabel: "Aktualisasi",
     range: "61–80%",
     description: "KMS diimplementasikan secara sadar",
+    narrativeLabel: "aktualisasi",
+    narrativeDescription: "karakter yang diwujudkan secara sadar — nilai-nilai mulai tercermin dalam tindakan dan keputusan nyata sehari-hari",
     bg: "bg-violet-50",
     border: "border-violet-200",
     text: "text-violet-800",
@@ -126,6 +136,8 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     shortLabel: "Integrasi",
     range: "81–100%",
     description: "KMS menyatu sepenuhnya, keluar secara refleks",
+    narrativeLabel: "integratif",
+    narrativeDescription: "karakter yang telah menyatu sepenuhnya dengan diri — muncul secara refleks, natural, dan konsisten tanpa perlu usaha sadar",
     bg: "bg-emerald-50",
     border: "border-emerald-200",
     text: "text-emerald-800",

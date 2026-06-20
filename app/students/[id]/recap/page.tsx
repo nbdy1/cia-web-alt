@@ -40,7 +40,7 @@ import {
   Zap,
   ShieldCheck,
 } from "lucide-react";
-import { getCIAPhase, CIA_PHASES } from "@/lib/cia-phases";
+import { getCIAPhase } from "@/lib/cia-phases";
 import Link from "next/link";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
@@ -302,22 +302,6 @@ export default async function RecapPage({
           </div>
         </section>
 
-        {/* Legend — 5 phases */}
-        <div className="flex items-start gap-2 px-1 flex-wrap">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1 mt-1.5">Fase:</span>
-          {CIA_PHASES.map((phase) => (
-            <span
-              key={phase.index}
-              className={`inline-flex flex-col px-2.5 py-1 rounded-xl border ${phase.bg} ${phase.border}`}
-            >
-              <span className={`text-[9px] font-black uppercase tracking-wider ${phase.text}`}>
-                {phase.index}. {phase.shortLabel}
-              </span>
-              <span className="text-[8px] text-slate-400 font-bold">{phase.range}</span>
-            </span>
-          ))}
-        </div>
-
         <div className="space-y-6">
           {categories.map((cat) => {
             const Icon = cat.icon;
@@ -442,6 +426,19 @@ export default async function RecapPage({
                             <h3 className="text-[15px] font-bold text-slate-900 font-serif leading-tight">
                               {theme.title}
                             </h3>
+                            {themePhase && (
+                              <div className={`mt-3 px-3.5 py-2.5 rounded-xl border ${themePhase.bg} ${themePhase.border}`}>
+                                <p className={`text-[11px] font-bold ${themePhase.text}`}>
+                                  {themeFilledSub} dari {themeTotalSub} indikator terpenuhi / {Math.round((themeFilledSub / themeTotalSub) * 100)}%
+                                </p>
+                                <p className={`text-[11px] font-bold mt-1 ${themePhase.text}`}>
+                                  Fase pertumbuhan karakter nya adalah &ldquo;{themePhase.narrativeLabel}&rdquo;
+                                </p>
+                                <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                                  Yaitu {themePhase.narrativeDescription}.
+                                </p>
+                              </div>
+                            )}
                           </div>
 
                           {visibleIndicators.length === 0 ? (
