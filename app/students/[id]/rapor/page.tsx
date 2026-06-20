@@ -19,12 +19,13 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getStudentScores, getStudentPeriods } from "@/app/actions/scores";
-import { ChevronLeft, Printer, Loader2 } from "lucide-react";
+import { ChevronLeft, Printer, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
+import { getCIAPhase } from "@/lib/cia-phases";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -154,7 +155,7 @@ const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 function buildCIASectionHtml(
-  countByCategory: Record<string, Map<string, number>>
+  countByCategory: Record<string, Map<string, number>>,
 ): string {
   const summaryCells = CIA_CATEGORIES.map((cat) => {
     const countMap = countByCategory[cat.label] ?? new Map<string, number>();
@@ -209,24 +210,31 @@ function buildCIASectionHtml(
 
     // ── Sub-indicator details per theme ──
     const subDetails = cat.data.themes.map((theme) => {
+      // Theme-level phase: % of this theme's sub-indicators that are fulfilled
+      let themeTotalSub = 0, themeFilledSub = 0;
+      theme.indicators.forEach((ind) => {
+        ind.sub_indicators.forEach((sub) => {
+          themeTotalSub++;
+          if ((countMap.get(norm(sub)) ?? 0) >= 1) themeFilledSub++;
+        });
+      });
+      const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);
+
       const visibleInds = theme.indicators.map((ind) => {
-        const fulfilledSubs = ind.sub_indicators
-          .map((sub) => ({ text: sub, count: countMap.get(norm(sub)) ?? 0 }))
-          .filter((s) => s.count >= 1);
+        const fulfilledSubs = ind.sub_indicators.filter(
+          (sub) => (countMap.get(norm(sub)) ?? 0) >= 1
+        );
         return { title: ind.title, subs: fulfilledSubs };
       }).filter((ind) => ind.subs.length > 0);
 
       if (visibleInds.length === 0) return "";
 
       const indRows = visibleInds.map((ind) => {
-        const subRows = ind.subs.map((s) => {
-          const kuat = s.count >= 3;
-          return `
-            <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 8px;border-radius:4px;margin-bottom:2px;background:${kuat ? "#ecfdf5" : "#fffbeb"};border:1px solid ${kuat ? "#bbf7d0" : "#fde68a"}">
-              <span style="font-size:11px;font-weight:600;color:${kuat ? "#065f46" : "#92400e"};flex:1;line-height:1.4">${esc(s.text)}</span>
-              <span style="font-size:8px;font-weight:800;background:${kuat ? "#059669" : "#f59e0b"};color:white;padding:1px 6px;border-radius:20px;white-space:nowrap;margin-top:2px">${kuat ? "Kuat" : "Lemah"}</span>
-            </div>`;
-        }).join("");
+        const subRows = ind.subs.map((sub) => `
+            <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 8px;border-radius:4px;margin-bottom:2px;background:#ecfdf5;border:1px solid #bbf7d0">
+              <span style="color:#059669;font-size:10px;flex-shrink:0;margin-top:1px">✓</span>
+              <span style="font-size:11px;font-weight:600;color:#065f46;flex:1;line-height:1.4">${esc(sub)}</span>
+            </div>`).join("");
         return `
           <div style="margin-bottom:8px">
             <p style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px;padding:2px 8px;background:#f8fafc;border-radius:4px;display:inline-block">${esc(ind.title)}</p>
@@ -234,10 +242,16 @@ function buildCIASectionHtml(
           </div>`;
       }).join("");
 
+      const phaseBadge = themePhase
+        ? `<span style="font-size:8px;font-weight:800;background:${themePhase.printBadgeBg};color:${themePhase.printBadgeText};padding:1px 7px;border-radius:20px;margin-left:8px">${themePhase.index}. ${themePhase.shortLabel}</span>`
+        : "";
+
       return `
         <div style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;page-break-inside:avoid">
-          <div style="background:#f1f5f9;padding:5px 10px;border-bottom:1px solid #e2e8f0">
-            <span style="font-size:10px;font-weight:800;color:#1e293b">${esc(theme.title)}</span>
+          <div style="background:#f1f5f9;padding:5px 10px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center">
+            <span style="font-size:10px;font-weight:800;color:#1e293b;flex:1">${esc(theme.title)}</span>
+            ${phaseBadge}
+            <span style="font-size:9px;color:#94a3b8;font-weight:700;margin-left:8px">${themeFilledSub}/${themeTotalSub}</span>
           </div>
           <div style="padding:8px 10px">${indRows}</div>
         </div>`;
@@ -406,6 +420,7 @@ export default function RaporPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [scoreGrid, setScoreGrid] = useState<ScoreGrid>({});
   const [loading, setLoading] = useState(true);
+  const [totalReports, setTotalReports] = useState(0);
   const [countByCategory, setCountByCategory] = useState<Record<string, Map<string, number>>>({
     Karakter: new Map(),
     Mental: new Map(),
@@ -432,7 +447,10 @@ export default function RaporPage() {
         .from("reports")
         .select("treatment_plan")
         .eq("student_id", studentId);
-      if (reports) setCountByCategory(buildCIACounts(reports));
+      if (reports) {
+        setTotalReports(reports.length);
+        setCountByCategory(buildCIACounts(reports));
+      }
     };
     loadCIA().catch(console.error);
   }, [studentId]);
@@ -705,18 +723,34 @@ export default function RaporPage() {
                             Sub-Indikator Terpenuhi
                           </p>
                           {cat.data.themes.map((theme, i) => {
+                            // Theme-level phase: fulfilled / total sub-indicators for this theme
+                            let themeTotalSub = 0, themeFilledSub = 0;
+                            theme.indicators.forEach((ind) => {
+                              ind.sub_indicators.forEach((sub) => {
+                                themeTotalSub++;
+                                if ((countMap.get(norm(sub)) ?? 0) >= 1) themeFilledSub++;
+                              });
+                            });
+                            const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);
+
                             const visibleInds = theme.indicators.map((ind) => ({
                               title: ind.title,
-                              subs: ind.sub_indicators
-                                .map((sub) => ({ text: sub, count: countMap.get(norm(sub)) ?? 0 }))
-                                .filter((s) => s.count >= 1),
+                              subs: ind.sub_indicators.filter(
+                                (sub) => (countMap.get(norm(sub)) ?? 0) >= 1
+                              ),
                             })).filter((ind) => ind.subs.length > 0);
 
                             if (visibleInds.length === 0) return null;
                             return (
                               <div key={i} className="border border-slate-100 rounded-xl overflow-hidden">
-                                <div className="bg-slate-50 px-3 py-2 border-b border-slate-100">
-                                  <span className="text-[11px] font-black text-slate-700">{theme.title}</span>
+                                <div className="bg-slate-50 px-3 py-2 border-b border-slate-100 flex items-center gap-2">
+                                  <span className="text-[11px] font-black text-slate-700 flex-1">{theme.title}</span>
+                                  {themePhase && (
+                                    <span className={`shrink-0 text-[8px] font-black px-2 py-0.5 rounded-full border ${themePhase.bg} ${themePhase.border} ${themePhase.text}`}>
+                                      {themePhase.index}. {themePhase.shortLabel}
+                                    </span>
+                                  )}
+                                  <span className="text-[9px] text-slate-400 font-bold shrink-0">{themeFilledSub}/{themeTotalSub}</span>
                                 </div>
                                 <div className="p-3 space-y-3">
                                   {visibleInds.map((ind, iIdx) => (
@@ -725,22 +759,17 @@ export default function RaporPage() {
                                         {ind.title}
                                       </p>
                                       <div className="space-y-1">
-                                        {ind.subs.map((s, sIdx) => {
-                                          const kuat = s.count >= 3;
-                                          return (
-                                            <div
-                                              key={sIdx}
-                                              className={`flex items-start gap-2 px-2.5 py-2 rounded-lg ${kuat ? "bg-emerald-50 border border-emerald-100" : "bg-amber-50 border border-amber-100"}`}
-                                            >
-                                              <span className={`flex-1 text-xs font-medium leading-snug ${kuat ? "text-emerald-900" : "text-amber-900"}`}>
-                                                {s.text}
-                                              </span>
-                                              <span className={`shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-full text-white mt-0.5 ${kuat ? "bg-emerald-600" : "bg-amber-400"}`}>
-                                                {kuat ? "Kuat" : "Lemah"}
-                                              </span>
-                                            </div>
-                                          );
-                                        })}
+                                        {ind.subs.map((sub, sIdx) => (
+                                          <div
+                                            key={sIdx}
+                                            className="flex items-start gap-2 px-2.5 py-2 rounded-lg border border-emerald-100 bg-emerald-50"
+                                          >
+                                            <CheckCircle2 size={13} className="text-emerald-500 mt-0.5 shrink-0" />
+                                            <span className="flex-1 text-xs font-medium leading-snug text-emerald-900">
+                                              {sub}
+                                            </span>
+                                          </div>
+                                        ))}
                                       </div>
                                     </div>
                                   ))}

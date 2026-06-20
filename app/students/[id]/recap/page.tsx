@@ -12,10 +12,14 @@
  *     `treatment_plan.detailed_assessments` JSONB. A Map<string, number> tracks
  *     how many reports fulfilled each sub-indicator (normalised to lowercase).
  *
- *   Kuat / Lemah classification
- *     - Kuat  (strong)  ≥ 3 reports fulfilled the sub-indicator → emerald badge
- *     - Lemah (weak)    1–2 reports fulfilled it               → amber badge
- *     - Unfulfilled     0 reports fulfilled it                 → grey/unfilled
+ *   5-Phase KMS Classification (replaces the old Kuat / Lemah binary)
+ *     Phase is determined by (count / totalReports) × 100 per sub-indicator,
+ *     or (fulfilledSub / totalSub) × 100 at the category level.
+ *     1. Instingtif / Mentah   1–20%    (raw, still unstable)
+ *     2. Imitasi / Adaptasi   21–40%    (imitating the environment)
+ *     3. Internalisasi        41–60%    (values beginning to absorb)
+ *     4. Aktualisasi          61–80%    (consciously practised)
+ *     5. Integrasi / Sempurna 81–100%   (fully integrated, reflexive)
  *
  *   RadarChart component (defined in this file)
  *     Pure SVG, rendered server-side. One chart per category (Karakter, Mental,
@@ -35,9 +39,8 @@ import {
   Brain,
   Zap,
   ShieldCheck,
-  Flame,
-  TrendingUp,
 } from "lucide-react";
+import { getCIAPhase, CIA_PHASES } from "@/lib/cia-phases";
 import Link from "next/link";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
@@ -213,13 +216,7 @@ function getSubCount(subIndicator: string, countMap: Map<string, number>): numbe
   return countMap.get(subIndicator.trim().toLowerCase()) ?? 0;
 }
 
-// ≥ 3 = kuat, 1–2 = lemah, 0 = unfulfilled
-type SubStrength = "kuat" | "lemah" | "unfulfilled";
-function getStrength(count: number): SubStrength {
-  if (count >= 3) return "kuat";
-  if (count >= 1) return "lemah";
-  return "unfulfilled";
-}
+// (Kuat/Lemah replaced by 5-phase system — see getCIAPhase in lib/cia-phases.ts)
 
 export default async function RecapPage({
   params,
@@ -305,17 +302,20 @@ export default async function RecapPage({
           </div>
         </section>
 
-        {/* Legend */}
-        <div className="flex items-center gap-3 px-1 flex-wrap">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Keterangan:</span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
-            <Flame size={10} className="text-emerald-600" />
-            Kuat ≥ 3×
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 border border-amber-200 text-amber-800 text-[10px] font-black uppercase tracking-wider">
-            <TrendingUp size={10} className="text-amber-600" />
-            Lemah 1–2×
-          </span>
+        {/* Legend — 5 phases */}
+        <div className="flex items-start gap-2 px-1 flex-wrap">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1 mt-1.5">Fase:</span>
+          {CIA_PHASES.map((phase) => (
+            <span
+              key={phase.index}
+              className={`inline-flex flex-col px-2.5 py-1 rounded-xl border ${phase.bg} ${phase.border}`}
+            >
+              <span className={`text-[9px] font-black uppercase tracking-wider ${phase.text}`}>
+                {phase.index}. {phase.shortLabel}
+              </span>
+              <span className="text-[8px] text-slate-400 font-bold">{phase.range}</span>
+            </span>
+          ))}
         </div>
 
         <div className="space-y-6">
@@ -326,7 +326,6 @@ export default async function RecapPage({
             // Progress = sub-indicators fulfilled at least once
             let totalSub = 0;
             let fulfilledSub = 0;
-            let kuatSub = 0;
 
             cat.data.themes.forEach((theme) => {
               theme.indicators.forEach((ind) => {
@@ -334,10 +333,10 @@ export default async function RecapPage({
                   totalSub++;
                   const count = getSubCount(sub, countMap);
                   if (count >= 1) fulfilledSub++;
-                  if (count >= 3) kuatSub++;
                 });
               });
             });
+
 
             const percentage =
               totalSub > 0 ? parseFloat(((fulfilledSub / totalSub) * 100).toFixed(1)) : 0;
@@ -362,12 +361,6 @@ export default async function RecapPage({
                         <p className="text-xs font-bold text-slate-400">
                           {fulfilledSub} dari {totalSub} Terpenuhi
                         </p>
-                        {kuatSub > 0 && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase tracking-wider">
-                            <Flame size={8} />
-                            {kuatSub} Kuat
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -410,10 +403,17 @@ export default async function RecapPage({
                     });
 
                     const ThemeCard = ({ theme, isUnfulfilled = false }: { theme: any; isUnfulfilled?: boolean }) => {
+                      // Theme-level phase: how many of this theme's sub-indicators are fulfilled?
+                      let themeTotalSub = 0, themeFilledSub = 0;
+                      theme.indicators.forEach((ind: any) => {
+                        ind.sub_indicators.forEach((sub: string) => {
+                          themeTotalSub++;
+                          if (getSubCount(sub, countMap) >= 1) themeFilledSub++;
+                        });
+                      });
+                      const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);
+
                       // Only show indicators that have at least one fulfilled sub-indicator.
-                      // Unfulfilled sub-indicators are hidden in both fulfilled and unfulfilled
-                      // theme cards — the unfulfilled themes section shows theme/indicator titles
-                      // as a reference but no sub-indicator rows.
                       const visibleIndicators = theme.indicators
                         .map((ind: any) => ({
                           ...ind,
@@ -425,10 +425,20 @@ export default async function RecapPage({
 
                       return (
                         <div className={`bg-white p-5 rounded-[2rem] border shadow-sm ${isUnfulfilled ? "opacity-75 border-slate-200/60" : "border-slate-100"}`}>
-                          <div className="mb-5 flex flex-col gap-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                              Tema {theme.id}
-                            </span>
+                          <div className="mb-5 flex flex-col gap-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                Tema {theme.id}
+                              </span>
+                              {themePhase && (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-wider ${themePhase.bg} ${themePhase.border} ${themePhase.text}`}>
+                                  {themePhase.index}. {themePhase.shortLabel}
+                                </span>
+                              )}
+                              <span className="text-[9px] text-slate-400 font-bold ml-auto">
+                                {themeFilledSub}/{themeTotalSub} terpenuhi
+                              </span>
+                            </div>
                             <h3 className="text-[15px] font-bold text-slate-900 font-serif leading-tight">
                               {theme.title}
                             </h3>
@@ -446,47 +456,17 @@ export default async function RecapPage({
                                     {ind.title}
                                   </h4>
                                   <div className="space-y-1.5 pl-1">
-                                    {ind.sub_indicators.map((sub: string, sIdx: number) => {
-                                      const count = getSubCount(sub, countMap);
-                                      const strength = getStrength(count);
-                                      const rowStyle =
-                                        strength === "kuat"
-                                          ? "bg-emerald-50/80 border border-emerald-100/50 shadow-sm"
-                                          : "bg-amber-50/70 border border-amber-100/50";
-                                      return (
-                                        <div
-                                          key={sIdx}
-                                          className={`flex items-start gap-3 p-2.5 rounded-xl transition-all ${rowStyle}`}
-                                        >
-                                          <div className="mt-0.5 shrink-0">
-                                            {strength === "kuat" ? (
-                                              <CheckCircle2 size={16} className="text-emerald-500 drop-shadow-sm" />
-                                            ) : (
-                                              <CheckCircle2 size={16} className="text-amber-400" />
-                                            )}
-                                          </div>
-                                          <span
-                                            className={`flex-1 text-[13px] leading-snug font-medium ${
-                                              strength === "kuat" ? "text-emerald-900" : "text-amber-900"
-                                            }`}
-                                          >
-                                            {sub}
-                                          </span>
-                                          {strength === "kuat" && (
-                                            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider">
-                                              <Flame size={8} />
-                                              Kuat
-                                            </span>
-                                          )}
-                                          {strength === "lemah" && (
-                                            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400 text-white text-[9px] font-black uppercase tracking-wider">
-                                              <TrendingUp size={8} />
-                                              Lemah
-                                            </span>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
+                                    {ind.sub_indicators.map((sub: string, sIdx: number) => (
+                                      <div
+                                        key={sIdx}
+                                        className="flex items-start gap-3 p-2.5 rounded-xl border border-emerald-100/60 bg-emerald-50/70"
+                                      >
+                                        <CheckCircle2 size={15} className="text-emerald-500 mt-0.5 shrink-0" />
+                                        <span className="flex-1 text-[13px] leading-snug font-medium text-emerald-900">
+                                          {sub}
+                                        </span>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               ))}
