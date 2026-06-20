@@ -432,10 +432,10 @@ export default async function RecapPage({
                                   {themeFilledSub} dari {themeTotalSub} indikator terpenuhi / {Math.round((themeFilledSub / themeTotalSub) * 100)}%
                                 </p>
                                 <p className={`text-[11px] font-bold mt-1 ${themePhase.text}`}>
-                                  Fase pertumbuhan karakter nya adalah &ldquo;{themePhase.narrativeLabel}&rdquo;
+                                  Fase pertumbuhan {cat.label.toLowerCase()} nya adalah &ldquo;{themePhase.narrativeLabel}&rdquo;
                                 </p>
                                 <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                                  Yaitu {themePhase.narrativeDescription}.
+                                  Yaitu {themePhase.narrativeDescription.replace(/karakter/g, cat.label.toLowerCase())}.
                                 </p>
                               </div>
                             )}
