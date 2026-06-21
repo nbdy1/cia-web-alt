@@ -298,8 +298,9 @@ export default async function RecapPage({
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-4 max-w-sm leading-relaxed">
-              Rekapitulasi permanen semua kriteria yang telah terpenuhi
-              berdasarkan riwayat laporan observasi ananda.
+              Persentase pertumbuhan KMS ini di simpulkan dari{" "}
+              <span className="text-white font-black">{totalReports}</span>{" "}
+              laporan yang masuk.
             </p>
           </div>
         </section>
