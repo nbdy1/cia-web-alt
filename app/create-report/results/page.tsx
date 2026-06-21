@@ -37,6 +37,9 @@ import {
   CheckCircle2,
   Bookmark,
   Target,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { saveAssessmentAction } from "@/app/actions/save-assessment";
 
@@ -48,6 +51,8 @@ export default function ResultsPage() {
   );
   const [showNarrative, setShowNarrative] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditingSummary, setIsEditingSummary] = useState(false);
+  const [editedSummary, setEditedSummary] = useState("");
 
   const studentId = searchParams.get("id");
   const studentName = searchParams.get("name") || "Santri";
@@ -140,10 +145,48 @@ export default function ResultsPage() {
             <Sparkles size={80} />
           </div>
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white mb-3">
-              <Sparkles size={9} /> Kondisi Umum
+            <div className="flex items-center justify-between mb-3">
+              <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white">
+                <Sparkles size={9} /> Kondisi Umum
+              </div>
+              {!isEditingSummary ? (
+                <button
+                  onClick={() => { setEditedSummary(analysisData.status_summary); setIsEditingSummary(true); }}
+                  className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+                >
+                  <Pencil size={9} /> Edit
+                </button>
+              ) : (
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => {
+                      setAnalysisData((prev: any) => ({ ...prev, status_summary: editedSummary }));
+                      setIsEditingSummary(false);
+                    }}
+                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white text-emerald-700 hover:bg-emerald-50 transition-colors"
+                  >
+                    <Check size={9} /> Simpan
+                  </button>
+                  <button
+                    onClick={() => setIsEditingSummary(false)}
+                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+                  >
+                    <X size={9} />
+                  </button>
+                </div>
+              )}
             </div>
-            <p className="text-xl font-black leading-snug mb-5">{analysisData.status_summary}</p>
+            {isEditingSummary ? (
+              <textarea
+                value={editedSummary}
+                onChange={(e) => setEditedSummary(e.target.value)}
+                rows={6}
+                className="w-full bg-white/15 border-2 border-white/30 rounded-2xl px-4 py-3 text-base font-black text-white placeholder-white/50 focus:outline-none focus:border-white/60 resize-none leading-snug mb-5"
+                autoFocus
+              />
+            ) : (
+              <p className="text-xl font-black leading-snug mb-5">{analysisData.status_summary}</p>
+            )}
             <div className="grid grid-cols-3 gap-2">
               {Object.entries(analysisData.overall_stats || {}).map(([key, stats]: [string, any]) => (
                 <div key={key} className="bg-white/15 rounded-xl p-3 border border-white/20">
