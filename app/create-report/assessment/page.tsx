@@ -336,7 +336,7 @@ export default function AssessmentPage() {
             <ChevronLeft size={18} />
           </Link>
           <div>
-            <h1 className="text-base font-black text-slate-900 leading-tight">Wawancara</h1>
+            <h1 className="text-base font-black text-slate-900 leading-tight">Diskusi dengan AI</h1>
             <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest leading-none">{studentName}</p>
           </div>
         </div>
