@@ -41,7 +41,7 @@ const SCORE_TYPE_DEFS = [
 
 type ScoreCell = { nilai_harian: number | null; nilai_bulanan: number | null; nilai_akhir: number | null };
 type ScoreGrid = Record<string, Record<string, ScoreCell>>;
-type Student = { name: string; batch: string | null };
+type Student = { name: string; nis: string | null };
 
 // ─── CIA helpers ──────────────────────────────────────────────────────────────
 
@@ -293,13 +293,13 @@ function buildCIASectionHtml(
 
 function buildPrintHTML(opts: {
   name: string;
-  batch: string;
+  nis: string;
   period: string;
   printDate: string;
   scoreGrid: ScoreGrid;
   countByCategory: Record<string, Map<string, number>>;
 }) {
-  const { name, batch, period, printDate, scoreGrid, countByCategory } = opts;
+  const { name, nis, period, printDate, scoreGrid, countByCategory } = opts;
 
   const scoreTablesHtml = SUBJECTS.map((subj) => {
     const grid = scoreGrid[subj] ?? {};
@@ -375,7 +375,7 @@ function buildPrintHTML(opts: {
   <div>
     <h2 style="font-size:20px;font-weight:900;color:#0f172a">${esc(name)}</h2>
     <div style="display:flex;gap:10px;margin-top:6px">
-      <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:20px">${esc(batch)}</span>
+      ${nis ? `<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:20px">NIS: ${esc(nis)}</span>` : ""}
     </div>
   </div>
 </div>
@@ -430,7 +430,7 @@ export default function RaporPage() {
   useEffect(() => {
     const init = async () => {
       const [{ data: s }, p] = await Promise.all([
-        supabase.from("students").select("name, batch").eq("id", studentId).single(),
+        supabase.from("students").select("name, nis").eq("id", studentId).single(),
         getStudentPeriods(studentId),
       ]);
       setStudent(s);
@@ -484,7 +484,7 @@ export default function RaporPage() {
     });
     const html = buildPrintHTML({
       name: student.name,
-      batch: student.batch ?? "Reguler",
+      nis: student.nis ?? "",
       period: selectedPeriod,
       printDate,
       scoreGrid,

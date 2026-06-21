@@ -37,7 +37,7 @@ import Link from "next/link";
 type StudentWithStats = {
   id: string;
   name: string;
-  batch: string | null;
+  nis: string | null;
   assigned_ustadz_id: string | null;
   reportsCount: number;
   themesExplored: number;
@@ -70,7 +70,7 @@ export default function StudentsAnalyticsPage() {
 
       // ── 1. Fetch students (with optional ustadz filter) ──────────────────
       let studentsQuery = supabase.from("students").select(`
-        id, name, batch, assigned_ustadz_id,
+        *,
         reports (
           id,
           treatment_plan
@@ -116,7 +116,7 @@ export default function StudentsAnalyticsPage() {
         return {
           id: student.id,
           name: student.name,
-          batch: student.batch,
+          nis: student.nis,
           assigned_ustadz_id: student.assigned_ustadz_id,
           reportsCount: reports.length,
           themesExplored: themeSet.size,
@@ -239,7 +239,7 @@ export default function StudentsAnalyticsPage() {
                               {student.name}
                             </p>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                              {student.batch || "Reguler"}
+                              {student.nis ? `NIS: ${student.nis}` : "—"}
                             </p>
                           </div>
                         </div>

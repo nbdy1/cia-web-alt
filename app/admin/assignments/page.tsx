@@ -169,7 +169,7 @@ export default function PlottingSantriPage() {
                     </div>
                     <div>
                       <p className="font-black text-slate-800 text-sm leading-tight">{student.name}</p>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.batch || "Reguler"}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.nis ? `NIS: ${student.nis}` : "—"}</p>
                     </div>
                   </div>
                   <select

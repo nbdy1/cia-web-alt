@@ -96,7 +96,7 @@ export default async function StudentProfile({
             <h1 className="text-2xl font-black text-slate-900 leading-tight">{student.name}</h1>
             <div className="flex items-center gap-1 mt-1">
               <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                <User size={9} /> {student.batch || "Reguler"}
+                <User size={9} /> {student.nis ? `NIS: ${student.nis}` : "Santri"}
               </span>
             </div>
           </div>

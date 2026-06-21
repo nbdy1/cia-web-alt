@@ -3,7 +3,7 @@
  *
  * Student (santri) management page for admins. Provides:
  *   - List active students with search filter
- *   - Add a new student (name + optional batch/class)
+ *   - Add a new student (name + optional NIS)
  *   - Soft-remove a student with a required reason (sets is_removed = true,
  *     preserves all reports and history)
  *   - Toggle to view removed students, showing reason and removal date
@@ -33,7 +33,7 @@ export default function ManageSantriPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: '', batch: '' });
+  const [formData, setFormData] = useState({ name: '', nis: '' });
 
   // Remove Modal
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
@@ -76,10 +76,10 @@ export default function ManageSantriPage() {
     try {
       const { error } = await supabase
         .from('students')
-        .insert([{ name: formData.name, batch: formData.batch }]);
+        .insert([{ name: formData.name, nis: formData.nis }]);
       if (error) throw error;
       setModalSuccess("Santri berhasil ditambahkan!");
-      setFormData({ name: '', batch: '' });
+      setFormData({ name: '', nis: '' });
       fetchStudents();
       setTimeout(() => { setIsAddModalOpen(false); setModalSuccess(null); }, 2000);
     } catch (err: any) {
@@ -125,12 +125,12 @@ export default function ManageSantriPage() {
 
   const activeList = students.filter(s =>
     s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.batch?.toLowerCase().includes(searchQuery.toLowerCase())
+    s.nis?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const removedList = removedStudents.filter(s =>
     s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.batch?.toLowerCase().includes(searchQuery.toLowerCase())
+    s.nis?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const avatarColors = ["#22c55e","#3b82f6","#f59e0b","#a855f7","#ef4444","#06b6d4"];
@@ -181,7 +181,7 @@ export default function ManageSantriPage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
-          placeholder={showRemoved ? "Cari santri yang dinonaktifkan…" : "Cari nama atau angkatan…"}
+          placeholder={showRemoved ? "Cari santri yang dinonaktifkan…" : "Cari nama atau NIS…"}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-all"
@@ -209,7 +209,7 @@ export default function ManageSantriPage() {
               <div className="flex-1 overflow-hidden">
                 <p className="font-black text-slate-800 text-sm truncate">{student.name}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.batch || "Reguler"}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.nis ? `NIS: ${student.nis}` : "—"}</span>
                   {student.profiles?.name && (
                     <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">{student.profiles.name}</span>
                   )}
@@ -270,8 +270,8 @@ export default function ManageSantriPage() {
                 <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ahmad Zaid" className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Angkatan / Kelas</label>
-                <input type="text" value={formData.batch} onChange={e => setFormData({...formData, batch: e.target.value})} placeholder="2024 / Kelas 10" className={inputCls} />
+                <label className={labelCls}>NIS (Nomor Induk Santri)</label>
+                <input type="text" value={formData.nis} onChange={e => setFormData({...formData, nis: e.target.value})} placeholder="2024001" className={inputCls} />
               </div>
               <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-emerald-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan Santri

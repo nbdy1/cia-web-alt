@@ -58,7 +58,7 @@ export async function generateRaporNarrative(
     // 1. Fetch student + profile_summary
     const { data: student } = await supabase
       .from("students")
-      .select("name, batch, profile_summary")
+      .select("name, nis, profile_summary")
       .eq("id", studentId)
       .single();
 
@@ -145,7 +145,7 @@ INSTRUKSI PENTING:
 4. Nada: formal-hangat, seperti surat dari guru kepada orang tua yang saling mempercayai. Gunakan "kami" untuk sekolah, "Bapak/Ibu" untuk orang tua.
 5. Panjang: 400–500 kata. HANYA kembalikan teks narasi, tanpa judul, tanpa JSON, tanpa markdown.`;
 
-    const userMessage = `SANTRI: ${student.name} (${student.batch || "Reguler"})
+    const userMessage = `SANTRI: ${student.name}${student.nis ? ` (NIS: ${student.nis})` : ""}
 PERIODE RAPOR: ${period}
 JUMLAH LAPORAN: ${reports.length}${profileBlock}
 
