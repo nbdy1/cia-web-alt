@@ -53,10 +53,12 @@ function FulfillmentBars({
   themes,
   countMap,
   accentColor,
+  categoryLabel,
 }: {
   themes: { id: number; title: string; indicators: { title: string; sub_indicators: string[] }[] }[];
   countMap: Map<string, number>;
   accentColor: string;
+  categoryLabel: string;
 }) {
   // Per-theme: fulfilled sub-indicator count and total
   const themeStats = themes.map((theme) => {
@@ -83,8 +85,8 @@ function FulfillmentBars({
 
   return (
     <div className="w-full overflow-hidden space-y-1">
-      <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-3">
-        {fulfilledCount} dari {themes.length} Tema Terpenuhi
+      <p className="text-sm font-bold text-slate-600 mb-3">
+        Ada {fulfilledCount} {categoryLabel} yang sedang berproses dalam diri ananda:
       </p>
       {themes.map((theme, i) => {
         const { pct, fulfilled, total } = themeStats[i];
@@ -364,13 +366,11 @@ export default async function RecapPage({
                 <div className="p-6 border-t border-slate-100 bg-slate-50/50 space-y-6 overflow-x-hidden">
                   {/* Theme fulfillment bars */}
                   <div className="bg-white rounded-[2rem] border border-slate-100 p-6">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
-                      Pemenuhan Tema — {cat.label}
-                    </p>
                     <FulfillmentBars
                       themes={cat.data.themes}
                       countMap={countMap}
                       accentColor={cat.accentColor}
+                      categoryLabel={cat.label.toLowerCase()}
                     />
                   </div>
 
