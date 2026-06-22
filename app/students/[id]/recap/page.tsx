@@ -467,7 +467,7 @@ export default async function RecapPage({
                                             {sub}
                                           </span>
                                           <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${isKuat ? "bg-emerald-500 text-white" : "bg-amber-100 text-amber-700"}`}>
-                                            {isKuat ? "Kuat" : "Lemah"}
+                                            {isKuat ? "Kuat" : "Lemah"} ({subCount}×)
                                           </span>
                                         </div>
                                       );
