@@ -190,7 +190,7 @@ function buildCIASectionHtml(
       theme.indicators.forEach((ind) => {
         ind.sub_indicators.forEach((sub) => {
           total++;
-          if ((countMap.get(norm(sub)) ?? 0) >= 7) fulfilled++;
+          if ((countMap.get(norm(sub)) ?? 0) >= 4) fulfilled++;
         });
       });
       const pct = total > 0 ? Math.round((fulfilled / total) * 100) : 0;
@@ -215,7 +215,7 @@ function buildCIASectionHtml(
       theme.indicators.forEach((ind) => {
         ind.sub_indicators.forEach((sub) => {
           themeTotalSub++;
-          if ((countMap.get(norm(sub)) ?? 0) >= 7) themeFilledSub++;
+          if ((countMap.get(norm(sub)) ?? 0) >= 4) themeFilledSub++;
         });
       });
       const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);
@@ -232,12 +232,19 @@ function buildCIASectionHtml(
       const indRows = visibleInds.map((ind) => {
         const subRows = ind.subs.map((sub) => {
           const subCount = countMap.get(norm(sub)) ?? 0;
-          const isKuat = subCount >= 7;
+          const tier = subCount >= 7 ? "kuat" : subCount >= 4 ? "tumbuh" : "benih";
+          const bg    = tier === "kuat" ? "#ecfdf5" : tier === "tumbuh" ? "#fffbeb" : "#f8fafc";
+          const bdr   = tier === "kuat" ? "#bbf7d0" : tier === "tumbuh" ? "#fde68a" : "#e2e8f0";
+          const chkClr = tier === "kuat" ? "#059669" : tier === "tumbuh" ? "#d97706" : "#94a3b8";
+          const txtClr = tier === "kuat" ? "#065f46" : tier === "tumbuh" ? "#92400e" : "#475569";
+          const badgeBg = tier === "kuat" ? "#059669" : tier === "tumbuh" ? "#fef3c7" : "#f1f5f9";
+          const badgeTxt = tier === "kuat" ? "#fff" : tier === "tumbuh" ? "#92400e" : "#64748b";
+          const label   = tier === "kuat" ? "Kuat" : tier === "tumbuh" ? "Tumbuh" : "Benih";
           return `
-            <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 8px;border-radius:4px;margin-bottom:2px;background:${isKuat ? "#ecfdf5" : "#fffbeb"};border:1px solid ${isKuat ? "#bbf7d0" : "#fde68a"}">
-              <span style="color:${isKuat ? "#059669" : "#d97706"};font-size:10px;flex-shrink:0;margin-top:1px">✓</span>
-              <span style="font-size:11px;font-weight:600;color:${isKuat ? "#065f46" : "#92400e"};flex:1;line-height:1.4">${esc(sub)}</span>
-              <span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:1px 5px;border-radius:20px;flex-shrink:0;background:${isKuat ? "#059669" : "#fef3c7"};color:${isKuat ? "#fff" : "#92400e"}">${isKuat ? "Kuat" : "Lemah"} (${subCount}×)</span>
+            <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 8px;border-radius:4px;margin-bottom:2px;background:${bg};border:1px solid ${bdr}">
+              <span style="color:${chkClr};font-size:10px;flex-shrink:0;margin-top:1px">✓</span>
+              <span style="font-size:11px;font-weight:600;color:${txtClr};flex:1;line-height:1.4">${esc(sub)}</span>
+              <span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:1px 5px;border-radius:20px;flex-shrink:0;background:${badgeBg};color:${badgeTxt}">${label} (${subCount}×)</span>
             </div>`;
         }).join("");
         return `
@@ -766,18 +773,19 @@ export default function RaporPage() {
                                       <div className="space-y-1">
                                         {ind.subs.map((sub, sIdx) => {
                                           const subCount = countMap.get(norm(sub)) ?? 0;
-                                          const isKuat = subCount >= 7;
+                                          const tier = subCount >= 7 ? "kuat" : subCount >= 4 ? "tumbuh" : "benih";
+                                          const rowCls = tier === "kuat" ? "border-emerald-100 bg-emerald-50" : tier === "tumbuh" ? "border-amber-100 bg-amber-50/60" : "border-slate-100 bg-slate-50/50";
+                                          const iconCls = tier === "kuat" ? "text-emerald-500" : tier === "tumbuh" ? "text-amber-400" : "text-slate-300";
+                                          const badgeCls = tier === "kuat" ? "bg-emerald-500 text-white" : tier === "tumbuh" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500";
+                                          const label = tier === "kuat" ? "Kuat" : tier === "tumbuh" ? "Tumbuh" : "Benih";
                                           return (
-                                            <div
-                                              key={sIdx}
-                                              className={`flex items-start gap-2 px-2.5 py-2 rounded-lg border ${isKuat ? "border-emerald-100 bg-emerald-50" : "border-amber-100 bg-amber-50/60"}`}
-                                            >
-                                              <CheckCircle2 size={13} className={`${isKuat ? "text-emerald-500" : "text-amber-400"} mt-0.5 shrink-0`} />
+                                            <div key={sIdx} className={`flex items-start gap-2 px-2.5 py-2 rounded-lg border ${rowCls}`}>
+                                              <CheckCircle2 size={13} className={`${iconCls} mt-0.5 shrink-0`} />
                                               <span className="flex-1 text-xs font-medium leading-snug text-slate-800">
                                                 {sub}
                                               </span>
-                                              <span className={`text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0 ${isKuat ? "bg-emerald-500 text-white" : "bg-amber-100 text-amber-700"}`}>
-                                                {isKuat ? "Kuat" : "Lemah"} ({subCount}×)
+                                              <span className={`text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0 ${badgeCls}`}>
+                                                {label} ({subCount}×)
                                               </span>
                                             </div>
                                           );

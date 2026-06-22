@@ -67,7 +67,7 @@ function FulfillmentBars({
     theme.indicators.forEach((ind) => {
       ind.sub_indicators.forEach((sub) => {
         total++;
-        if ((countMap.get(sub.trim().toLowerCase()) ?? 0) >= 7) fulfilled++;
+        if ((countMap.get(sub.trim().toLowerCase()) ?? 0) >= 4) fulfilled++;
       });
     });
     return { pct: total > 0 ? Math.round((fulfilled / total) * 100) : 0, fulfilled, total };
@@ -319,7 +319,7 @@ export default async function RecapPage({
                 ind.sub_indicators.forEach((sub) => {
                   totalSub++;
                   const count = getSubCount(sub, countMap);
-                  if (count >= 7) fulfilledSub++;
+                  if (count >= 4) fulfilledSub++;
                 });
               });
             });
@@ -393,7 +393,7 @@ export default async function RecapPage({
                       theme.indicators.forEach((ind: any) => {
                         ind.sub_indicators.forEach((sub: string) => {
                           themeTotalSub++;
-                          if (getSubCount(sub, countMap) >= 7) themeFilledSub++;
+                          if (getSubCount(sub, countMap) >= 4) themeFilledSub++;
                         });
                       });
                       const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);
@@ -456,18 +456,19 @@ export default async function RecapPage({
                                   <div className="space-y-1.5 pl-1">
                                     {ind.sub_indicators.map((sub: string, sIdx: number) => {
                                       const subCount = getSubCount(sub, countMap);
-                                      const isKuat = subCount >= 7;
+                                      const tier = subCount >= 7 ? "kuat" : subCount >= 4 ? "tumbuh" : "benih";
+                                      const rowCls = tier === "kuat" ? "border-emerald-200 bg-emerald-50" : tier === "tumbuh" ? "border-amber-100/80 bg-amber-50/60" : "border-slate-100/80 bg-slate-50/50";
+                                      const iconCls = tier === "kuat" ? "text-emerald-500" : tier === "tumbuh" ? "text-amber-400" : "text-slate-300";
+                                      const badgeCls = tier === "kuat" ? "bg-emerald-500 text-white" : tier === "tumbuh" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500";
+                                      const label = tier === "kuat" ? "Kuat" : tier === "tumbuh" ? "Tumbuh" : "Benih";
                                       return (
-                                        <div
-                                          key={sIdx}
-                                          className={`flex items-start gap-3 p-2.5 rounded-xl border ${isKuat ? "border-emerald-200 bg-emerald-50" : "border-amber-100/80 bg-amber-50/60"}`}
-                                        >
-                                          <CheckCircle2 size={15} className={`${isKuat ? "text-emerald-500" : "text-amber-400"} mt-0.5 shrink-0`} />
+                                        <div key={sIdx} className={`flex items-start gap-3 p-2.5 rounded-xl border ${rowCls}`}>
+                                          <CheckCircle2 size={15} className={`${iconCls} mt-0.5 shrink-0`} />
                                           <span className="flex-1 text-[13px] leading-snug font-medium text-slate-800">
                                             {sub}
                                           </span>
-                                          <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${isKuat ? "bg-emerald-500 text-white" : "bg-amber-100 text-amber-700"}`}>
-                                            {isKuat ? "Kuat" : "Lemah"} ({subCount}×)
+                                          <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${badgeCls}`}>
+                                            {label} ({subCount}×)
                                           </span>
                                         </div>
                                       );
