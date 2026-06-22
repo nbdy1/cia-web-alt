@@ -67,7 +67,7 @@ function FulfillmentBars({
     theme.indicators.forEach((ind) => {
       ind.sub_indicators.forEach((sub) => {
         total++;
-        if ((countMap.get(sub.trim().toLowerCase()) ?? 0) >= 1) fulfilled++;
+        if ((countMap.get(sub.trim().toLowerCase()) ?? 0) >= 7) fulfilled++;
       });
     });
     return { pct: total > 0 ? Math.round((fulfilled / total) * 100) : 0, fulfilled, total };
@@ -319,7 +319,7 @@ export default async function RecapPage({
                 ind.sub_indicators.forEach((sub) => {
                   totalSub++;
                   const count = getSubCount(sub, countMap);
-                  if (count >= 1) fulfilledSub++;
+                  if (count >= 7) fulfilledSub++;
                 });
               });
             });
@@ -346,7 +346,7 @@ export default async function RecapPage({
                       </h2>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <p className="text-xs font-bold text-slate-400">
-                          {fulfilledSub} dari {totalSub} Terpenuhi
+                          {fulfilledSub} dari {totalSub} Indikator Kuat
                         </p>
                       </div>
                     </div>
@@ -393,7 +393,7 @@ export default async function RecapPage({
                       theme.indicators.forEach((ind: any) => {
                         ind.sub_indicators.forEach((sub: string) => {
                           themeTotalSub++;
-                          if (getSubCount(sub, countMap) >= 1) themeFilledSub++;
+                          if (getSubCount(sub, countMap) >= 7) themeFilledSub++;
                         });
                       });
                       const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);
@@ -421,7 +421,7 @@ export default async function RecapPage({
                                 </span>
                               )}
                               <span className="text-[9px] text-slate-400 font-bold ml-auto">
-                                {themeFilledSub}/{themeTotalSub} terpenuhi
+                                {themeFilledSub}/{themeTotalSub} kuat
                               </span>
                             </div>
                             <h3 className="text-[15px] font-bold text-slate-900 font-serif leading-tight">
@@ -430,7 +430,7 @@ export default async function RecapPage({
                             {themePhase && (
                               <div className={`mt-3 px-3.5 py-2.5 rounded-xl border ${themePhase.bg} ${themePhase.border}`}>
                                 <p className={`text-[11px] font-bold ${themePhase.text}`}>
-                                  {themeFilledSub} dari {themeTotalSub} indikator terpenuhi / {Math.round((themeFilledSub / themeTotalSub) * 100)}%
+                                  {themeFilledSub} dari {themeTotalSub} indikator kuat / {Math.round((themeFilledSub / themeTotalSub) * 100)}%
                                 </p>
                                 <p className={`text-[11px] font-bold mt-1 ${themePhase.text}`}>
                                   Fase pertumbuhan {cat.label.toLowerCase()} nya adalah &ldquo;{themePhase.narrativeLabel}&rdquo;
