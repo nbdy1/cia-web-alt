@@ -230,11 +230,16 @@ function buildCIASectionHtml(
       if (visibleInds.length === 0) return "";
 
       const indRows = visibleInds.map((ind) => {
-        const subRows = ind.subs.map((sub) => `
-            <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 8px;border-radius:4px;margin-bottom:2px;background:#ecfdf5;border:1px solid #bbf7d0">
-              <span style="color:#059669;font-size:10px;flex-shrink:0;margin-top:1px">✓</span>
-              <span style="font-size:11px;font-weight:600;color:#065f46;flex:1;line-height:1.4">${esc(sub)}</span>
-            </div>`).join("");
+        const subRows = ind.subs.map((sub) => {
+          const subCount = countMap.get(norm(sub)) ?? 0;
+          const isKuat = subCount >= 7;
+          return `
+            <div style="display:flex;align-items:flex-start;gap:6px;padding:3px 8px;border-radius:4px;margin-bottom:2px;background:${isKuat ? "#ecfdf5" : "#fffbeb"};border:1px solid ${isKuat ? "#bbf7d0" : "#fde68a"}">
+              <span style="color:${isKuat ? "#059669" : "#d97706"};font-size:10px;flex-shrink:0;margin-top:1px">✓</span>
+              <span style="font-size:11px;font-weight:600;color:${isKuat ? "#065f46" : "#92400e"};flex:1;line-height:1.4">${esc(sub)}</span>
+              <span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:1px 5px;border-radius:20px;flex-shrink:0;background:${isKuat ? "#059669" : "#fef3c7"};color:${isKuat ? "#fff" : "#92400e"}">${isKuat ? "Kuat" : "Lemah"}</span>
+            </div>`;
+        }).join("");
         return `
           <div style="margin-bottom:8px">
             <p style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px;padding:2px 8px;background:#f8fafc;border-radius:4px;display:inline-block">${esc(ind.title)}</p>
@@ -759,17 +764,24 @@ export default function RaporPage() {
                                         {ind.title}
                                       </p>
                                       <div className="space-y-1">
-                                        {ind.subs.map((sub, sIdx) => (
-                                          <div
-                                            key={sIdx}
-                                            className="flex items-start gap-2 px-2.5 py-2 rounded-lg border border-emerald-100 bg-emerald-50"
-                                          >
-                                            <CheckCircle2 size={13} className="text-emerald-500 mt-0.5 shrink-0" />
-                                            <span className="flex-1 text-xs font-medium leading-snug text-emerald-900">
-                                              {sub}
-                                            </span>
-                                          </div>
-                                        ))}
+                                        {ind.subs.map((sub, sIdx) => {
+                                          const subCount = countMap.get(norm(sub)) ?? 0;
+                                          const isKuat = subCount >= 7;
+                                          return (
+                                            <div
+                                              key={sIdx}
+                                              className={`flex items-start gap-2 px-2.5 py-2 rounded-lg border ${isKuat ? "border-emerald-100 bg-emerald-50" : "border-amber-100 bg-amber-50/60"}`}
+                                            >
+                                              <CheckCircle2 size={13} className={`${isKuat ? "text-emerald-500" : "text-amber-400"} mt-0.5 shrink-0`} />
+                                              <span className="flex-1 text-xs font-medium leading-snug text-slate-800">
+                                                {sub}
+                                              </span>
+                                              <span className={`text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0 ${isKuat ? "bg-emerald-500 text-white" : "bg-amber-100 text-amber-700"}`}>
+                                                {isKuat ? "Kuat" : "Lemah"}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     </div>
                                   ))}

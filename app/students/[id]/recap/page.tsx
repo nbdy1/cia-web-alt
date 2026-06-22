@@ -454,17 +454,24 @@ export default async function RecapPage({
                                     {ind.title}
                                   </h4>
                                   <div className="space-y-1.5 pl-1">
-                                    {ind.sub_indicators.map((sub: string, sIdx: number) => (
-                                      <div
-                                        key={sIdx}
-                                        className="flex items-start gap-3 p-2.5 rounded-xl border border-emerald-100/60 bg-emerald-50/70"
-                                      >
-                                        <CheckCircle2 size={15} className="text-emerald-500 mt-0.5 shrink-0" />
-                                        <span className="flex-1 text-[13px] leading-snug font-medium text-emerald-900">
-                                          {sub}
-                                        </span>
-                                      </div>
-                                    ))}
+                                    {ind.sub_indicators.map((sub: string, sIdx: number) => {
+                                      const subCount = getSubCount(sub, countMap);
+                                      const isKuat = subCount >= 7;
+                                      return (
+                                        <div
+                                          key={sIdx}
+                                          className={`flex items-start gap-3 p-2.5 rounded-xl border ${isKuat ? "border-emerald-200 bg-emerald-50" : "border-amber-100/80 bg-amber-50/60"}`}
+                                        >
+                                          <CheckCircle2 size={15} className={`${isKuat ? "text-emerald-500" : "text-amber-400"} mt-0.5 shrink-0`} />
+                                          <span className="flex-1 text-[13px] leading-snug font-medium text-slate-800">
+                                            {sub}
+                                          </span>
+                                          <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${isKuat ? "bg-emerald-500 text-white" : "bg-amber-100 text-amber-700"}`}>
+                                            {isKuat ? "Kuat" : "Lemah"}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               ))}

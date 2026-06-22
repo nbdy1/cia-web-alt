@@ -87,7 +87,7 @@ export default function HomePage() {
             <div>
               <p className="text-emerald-100 text-xs font-black uppercase tracking-widest mb-1">Mulai Sekarang</p>
               <span className="text-white text-2xl font-black leading-tight">
-                Buat Laporan Santri
+                Input Data Santri
               </span>
             </div>
           </div>
@@ -105,7 +105,7 @@ export default function HomePage() {
             <div>
               <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Pantau & Analisis</p>
               <span className="text-slate-800 text-xl font-black leading-tight">
-                Laporan & Analitik
+                Profil KMS Santri
               </span>
             </div>
           </div>
