@@ -75,8 +75,10 @@ function FulfillmentBars({
     return { pct: total > 0 ? Math.round((fulfilled / total) * 100) : 0, fulfilled, total };
   });
 
-  // Themes with at least 1 Benih sub (count 1–3) — shown regardless of Tumbuh/Kuat status
-  const benihThemes = themes.filter((theme) =>
+  // Themes with at least 1 Benih sub (count 1–3), but ONLY if the theme
+  // is NOT already shown in the tumbuh bars (i.e. has no Tumbuh/Kuat subs)
+  const benihThemes = themes.filter((theme, i) =>
+    themeStats[i].pct === 0 &&
     theme.indicators.some((ind) =>
       ind.sub_indicators.some((sub) => {
         const c = countMap.get(sub.trim().toLowerCase()) ?? 0;
