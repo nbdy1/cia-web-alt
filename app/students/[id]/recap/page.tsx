@@ -60,7 +60,9 @@ function FulfillmentBars({
   accentColor: string;
   categoryLabel: string;
 }) {
-  // Per-theme: fulfilled sub-indicator count and total
+  const catTitle = categoryLabel.charAt(0).toUpperCase() + categoryLabel.slice(1);
+
+  // Per-theme: count subs at Tumbuh/Kuat tier (>= 4) for bars
   const themeStats = themes.map((theme) => {
     let total = 0;
     let fulfilled = 0;
@@ -73,9 +75,19 @@ function FulfillmentBars({
     return { pct: total > 0 ? Math.round((fulfilled / total) * 100) : 0, fulfilled, total };
   });
 
+  // Themes with at least 1 Benih sub (count 1–3) — shown regardless of Tumbuh/Kuat status
+  const benihThemes = themes.filter((theme) =>
+    theme.indicators.some((ind) =>
+      ind.sub_indicators.some((sub) => {
+        const c = countMap.get(sub.trim().toLowerCase()) ?? 0;
+        return c >= 1 && c < 4;
+      })
+    )
+  );
+
   const fulfilledCount = themeStats.filter((s) => s.pct > 0).length;
 
-  if (fulfilledCount === 0) {
+  if (fulfilledCount === 0 && benihThemes.length === 0) {
     return (
       <div className="py-6 text-center">
         <p className="text-xs text-slate-400 font-bold">Belum ada tema yang terpenuhi</p>
@@ -85,37 +97,66 @@ function FulfillmentBars({
 
   return (
     <div className="w-full overflow-hidden space-y-1">
-      <p className="text-sm font-bold text-slate-600 mb-3">
-        Ada {fulfilledCount} {categoryLabel} yang sedang berproses dalam diri ananda:
-      </p>
-      {themes.map((theme, i) => {
-        const { pct, fulfilled, total } = themeStats[i];
-        if (pct === 0) return null;
-        return (
-          <div key={i} className="flex items-center gap-3 py-1 min-w-0">
-            <span
-              className="text-[10px] font-black w-5 text-right flex-shrink-0"
-              style={{ color: accentColor }}
-            >
-              {i + 1}
-            </span>
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <p className="text-[11px] font-bold text-slate-600 leading-snug mb-1 break-words">
-                {theme.title}
-              </p>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${pct}%`, backgroundColor: accentColor, opacity: 0.8 }}
-                />
+      {/* ── Tumbuh/Kuat bars ── */}
+      {fulfilledCount > 0 && (
+        <>
+          <p className="text-sm font-bold text-slate-600 mb-3">
+            Ada {fulfilledCount} {categoryLabel} yang sedang tumbuh dalam diri ananda:
+          </p>
+          {themes.map((theme, i) => {
+            const { pct, fulfilled, total } = themeStats[i];
+            if (pct === 0) return null;
+            return (
+              <div key={i} className="flex items-center gap-3 py-1 min-w-0">
+                <span
+                  className="text-[10px] font-black w-5 text-right flex-shrink-0"
+                  style={{ color: accentColor }}
+                >
+                  {theme.id}
+                </span>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-[11px] font-bold text-slate-600 leading-snug mb-1 break-words">
+                    {theme.title}
+                  </p>
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${pct}%`, backgroundColor: accentColor, opacity: 0.8 }}
+                    />
+                  </div>
+                </div>
+                <span className="text-[11px] font-black flex-shrink-0 tabular-nums" style={{ color: accentColor }}>
+                  {fulfilled}/{total}
+                </span>
               </div>
-            </div>
-            <span className="text-[11px] font-black flex-shrink-0 tabular-nums" style={{ color: accentColor }}>
-              {fulfilled}/{total}
-            </span>
+            );
+          })}
+        </>
+      )}
+
+      {/* ── Benih list ── */}
+      {benihThemes.length > 0 && (
+        <div className={fulfilledCount > 0 ? "mt-5 pt-4 border-t border-slate-100" : ""}>
+          <p className="text-sm font-bold text-slate-600 mb-2">
+            Dan ada {benihThemes.length} benih {categoryLabel} yang sudah nampak:
+          </p>
+          <div className="space-y-1">
+            {benihThemes.map((theme) => (
+              <div key={theme.id} className="flex items-center gap-2 py-0.5">
+                <span className="text-[10px] font-black text-slate-400 w-5 text-right flex-shrink-0">
+                  {theme.id}
+                </span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex-shrink-0">
+                  {catTitle}
+                </span>
+                <span className="text-[11px] font-bold text-slate-600 leading-snug">
+                  &ldquo;{theme.title}&rdquo;
+                </span>
+              </div>
+            ))}
           </div>
-        );
-      })}
+        </div>
+      )}
     </div>
   );
 }
