@@ -26,12 +26,11 @@ export function buildInterviewPrompt(
   frontierCriteriaContext: string,
   unexploredThemesContext: string,
   discoveredThemes: string[],
-  studentProfile?: string
+  studentProfile?: string,
+  knowledgeContext?: string
 ): string {
   const discovered = discoveredThemes.length > 0 ? discoveredThemes.join(", ") : "(belum ada)";
 
-  // Inject the student's historical profile if available so the AI can ask
-  // informed questions (e.g. probe known weak areas, validate previous strengths).
   const profileSection = studentProfile
     ? `
 ### PROFIL SANTRI (berdasarkan riwayat laporan sebelumnya):
@@ -40,15 +39,35 @@ Gunakan profil ini untuk menginformasikan pertanyaan Anda — misalnya, gali leb
 `
     : "";
 
+  // Knowledge context from the full PDF (intro theory + situasi chapters).
+  // Clearly labelled as REFERENSI so the AI knows it enriches understanding
+  // but is NOT a scoring rubric — scoring comes only from FRONTIER/UNEXPLORED.
+  const knowledgeSection = knowledgeContext
+    ? `
+### REFERENSI PENGETAHUAN KMS (dari buku panduan — bukan rubrik penilaian):
+${knowledgeContext}
+Gunakan referensi ini untuk memperkaya pertanyaan Anda dengan konteks Qurani atau panduan situasional yang relevan. JANGAN gunakan ini untuk menentukan kriteria penilaian.
+`
+    : "";
+
   return `
 Anda adalah "Asisten Reflektif CIA" untuk Sekolah Impian. Tujuan Anda adalah membantu guru (Ustadz) membangun asesmen karakter yang mendalam untuk seorang Santri melalui percakapan yang mengalir secara alami.
-${profileSection}
+${profileSection}${knowledgeSection}
+### DETEKSI JENIS PESAN:
+Sebelum merespons, tentukan dulu jenis pesan dari Ustadz:
+
+**A) PERTANYAAN PENGETAHUAN** — Ustadz bertanya tentang konsep, istilah, atau materi KMS (contoh: "Apa itu 3PFB?", "Jelaskan makna jihad", "Bagaimana cara menanamkan karakter?").
+→ WAJIB jawab langsung dan jelas menggunakan REFERENSI PENGETAHUAN KMS di bawah (jika tersedia). Jangan alihkan ke pertanyaan tentang santri. Setelah menjawab, boleh kembali ke asesmen secara natural dengan satu kalimat singkat.
+
+**B) OBSERVASI / CERITA TENTANG SANTRI** — Ustadz menceritakan perilaku, kebiasaan, atau situasi santri.
+→ Lanjutkan asesmen seperti biasa: apresiasi, gali lebih dalam, ajukan pertanyaan berikutnya.
+
 ### ATURAN ANDA:
 1. **Jangan pernah menyebutkan Kode atau Judul Tema**: Jangan katakan "Tema 1" atau "Makna Jihad". Gunakan bahasa sehari-hari yang alami.
 2. **Jadilah Pendengar yang Berempati**: Gunakan ungkapan seperti "MasyaAllah", "Alhamdulillah", atau "Saya mengerti" untuk menunjukkan bahwa Anda menyimak.
 3. **Gali Lebih Dalam**: Gunakan Indikator dan Sub-indikator untuk mengajukan pertanyaan yang spesifik dan mendalam. Jika Ustadz menyebutkan suatu perilaku, gali sub-indikator yang berkaitan.
 4. **Identifikasi Kekosongan**: Perhatikan Tema mana yang belum memiliki data berdasarkan transkrip.
-5. **Gaya Bahasa Percakapan**: Buat respons Anda singkat (1-2 kalimat) agar percakapan tetap mengalir.
+5. **Gaya Bahasa Percakapan**: Buat respons Anda singkat (1-2 kalimat) agar percakapan tetap mengalir — KECUALI saat menjawab pertanyaan pengetahuan, di mana jawaban boleh lebih panjang dan lengkap.
 6. **Bahasa**: Selalu gunakan Bahasa Indonesia. (Sangat Penting!)
 
 ### KONTEKS DINAMIS WAWANCARA:
@@ -84,9 +103,11 @@ ${unexploredThemesContext || "(tidak ada tema unexplored yang tersisa)"}
 // by the vector search in ai-analysis.ts. This reduces prompt size
 // from ~8,000 tokens down to ~500-800 tokens per analysis.
 
-export function buildFinalAnalysisPrompt(criteriaContext: string, studentProfile?: string): string {
-  // Inject profile so the treatment plan can reference the student's known
-  // personality patterns, not just the current session's transcript alone.
+export function buildFinalAnalysisPrompt(
+  criteriaContext: string,
+  studentProfile?: string,
+  knowledgeContext?: string
+): string {
   const profileSection = studentProfile
     ? `
 ### PROFIL SANTRI (dari riwayat laporan sebelumnya):
@@ -95,11 +116,21 @@ Gunakan profil ini untuk mempersonalisasi action_plan pada bagian treatment — 
 `
     : "";
 
+  // Situasi/theory knowledge injected here is for enriching action_plan prose —
+  // NOT for scoring. Scoring is determined solely by KRITERIA RELEVAN below.
+  const knowledgeSection = knowledgeContext
+    ? `
+### REFERENSI PANDUAN KMS (dari buku panduan — hanya untuk memperkaya action_plan):
+${knowledgeContext}
+Gunakan referensi ini HANYA untuk menulis action_plan yang lebih kaya dan berbasis panduan Qurani. JANGAN gunakan ini untuk menentukan kriteria atau sub-indikator yang terpenuhi.
+`
+    : "";
+
   return `
 Analisis transkrip wawancara berikut untuk seorang Santri di Sekolah Impian.
 Berdasarkan transkrip dan KRITERIA RELEVAN yang diberikan di bawah, buatlah penilaian ketercapaian yang presisi.
 Seluruh output teks deskriptif dalam JSON Anda harus dalam Bahasa Indonesia.
-${profileSection}
+${profileSection}${knowledgeSection}
 ### KRITERIA RELEVAN (Diambil dari Kerangka Kerja CIA berdasarkan isi transkrip):
 ${criteriaContext}
 

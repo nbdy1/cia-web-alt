@@ -393,6 +393,77 @@ async function retrieveRelevantCriteria(transcript: string, topK = 25): Promise<
   return (data as CriteriaRow[]) ?? [];
 }
 
+// ─── RAG: Retrieve relevant knowledge chunks from the full PDF ────────────────
+// Queries the pdf_knowledge table (seeded by scripts/ingest-pdf-knowledge.ts).
+// This covers intro theory (p.4–74) + implementation guide + 25 Situasi chapters
+// (p.254–596) — content that exists in the book but NOT in cia_criteria.
+//
+// Token budget: topK=4 chunks × ~120 tokens each ≈ 480 tokens added per call.
+// Only injected when similarity > threshold, so irrelevant queries cost nothing.
+
+interface KnowledgeRow {
+  id: number;
+  content: string;
+  section: string;
+  page_start: number;
+  similarity: number;
+}
+
+// If the query looks like a direct knowledge question ("Apa itu X?", "Jelaskan Y"),
+// expand it with KMS domain context so the embedding lands closer to the right
+// PDF chunks (which are dense 300-word passages, not short questions).
+function expandKnowledgeQuery(query: string): string {
+  // Strip speaker prefixes like "Guru: " or "AI: " that appear in transcript lines
+  const stripped = query.replace(/^(Guru|AI|Ustadz|Murid)\s*:\s*/im, "").trim();
+  const isQuestion = /^(apa|jelaskan|bagaimana|siapa|mengapa|kenapa|ceritakan|tolong|bisa|boleh)/i.test(stripped);
+  if (isQuestion) {
+    // Return expanded query WITHOUT the "Guru:" prefix so the embedding
+    // focuses on the actual question content, not the speaker label
+    return `${stripped} penjelasan dalam konteks Quran Character Building Mental Building Soft Skill KMS Quranik pesantren Islam`;
+  }
+  return stripped || query;
+}
+
+async function retrieveRelevantKnowledge(
+  query: string,
+  topK = 5
+): Promise<KnowledgeRow[]> {
+  try {
+    const expandedQuery = expandKnowledgeQuery(query);
+    const embedding = await embedText(expandedQuery);
+
+    const { data, error } = await supabase.rpc("match_pdf_knowledge", {
+      query_embedding: embedding,
+      match_threshold: 0.15,  // same as criteria — let the prompt handle relevance
+      match_count: topK,
+    });
+
+    if (error) {
+      // Non-fatal: if the table doesn't exist yet (before migration), just return empty
+      console.warn("[Knowledge RAG] RPC error (table may not exist yet):", error.message);
+      return [];
+    }
+
+    return (data as KnowledgeRow[]) ?? [];
+  } catch (err: any) {
+    console.warn("[Knowledge RAG] Skipped:", err.message);
+    return [];
+  }
+}
+
+function formatKnowledgeContext(rows: KnowledgeRow[]): string {
+  if (rows.length === 0) return "";
+
+  return rows
+    .map((row) => {
+      // Strip the "[Section Name]" prefix that was prepended during ingest
+      // so the AI sees clean prose, not the metadata tag
+      const cleanContent = row.content.replace(/^\[[^\]]+\]\n/, "").trim();
+      return `— ${row.section}:\n${cleanContent}`;
+    })
+    .join("\n\n");
+}
+
 // ─── Format retrieved rows into a compact, structured string ──────────────────
 
 function formatCriteriaContext(rows: CriteriaRow[]): string {
@@ -570,14 +641,29 @@ export async function processInterviewStep(
     }
 
     const recentWindow = getRecentTranscriptWindow(transcript, 4);
-    const frontierRows = await retrieveRelevantCriteria(recentWindow || transcript, 15);
+
+    // Run criteria RAG and knowledge RAG in parallel to save latency
+    const [frontierRows, knowledgeRows] = await Promise.all([
+      retrieveRelevantCriteria(recentWindow || transcript, 15),
+      retrieveRelevantKnowledge(recentWindow || transcript, 3),
+    ]);
+
     const frontierCriteriaContext = formatCriteriaContext(frontierRows);
     const unexploredThemesContext = buildUnexploredThemesContext(frontierRows, discoveredThemes, 4);
+    const knowledgeContext = formatKnowledgeContext(knowledgeRows);
+
+    const _kqRaw = recentWindow || transcript;
+    const _kqExpanded = expandKnowledgeQuery(_kqRaw);
+    console.log("[Knowledge RAG] Raw query:", _kqRaw);
+    console.log("[Knowledge RAG] Expanded query:", _kqExpanded);
+    console.log("[Knowledge RAG] Sections retrieved:", knowledgeRows.map((r) => `${r.section} (${r.similarity?.toFixed(2)})`));
+
     const interviewPrompt = buildInterviewPrompt(
       frontierCriteriaContext,
       unexploredThemesContext,
       discoveredThemes,
-      studentProfile
+      studentProfile,
+      knowledgeContext || undefined
     );
     const frontierThemeSet = Array.from(new Set(frontierRows.map((r) => r.theme)));
 
@@ -681,16 +767,25 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
       }
     }
 
-    // 2. RAG: retrieve only the most relevant criteria for this transcript
-    console.log("[RAG] Embedding transcript and retrieving relevant criteria...");
-    const relevantRows = await retrieveRelevantCriteria(transcript, 30);
+    // 2. RAG: run criteria and knowledge retrieval in parallel
+    console.log("[RAG] Embedding transcript and retrieving relevant criteria + knowledge...");
+    const [relevantRows, knowledgeRows] = await Promise.all([
+      retrieveRelevantCriteria(transcript, 30),
+      retrieveRelevantKnowledge(transcript, 4),
+    ]);
+
     const discoveredThemesContext = discoveredThemes.length
       ? `\n\n### TEMA YANG SUDAH DIEKSPLORASI SELAMA WAWANCARA:\n${discoveredThemes
           .map((theme) => `- ${theme}`)
           .join("\n")}\nGunakan konteks ini untuk memperkuat pemetaan bukti ke kriteria terkait.`
       : "";
     const criteriaContext = `${formatCriteriaContext(relevantRows)}${discoveredThemesContext}`;
-    console.log(`[RAG] Retrieved ${relevantRows.length} relevant criteria rows.`);
+    const knowledgeContext = formatKnowledgeContext(knowledgeRows);
+
+    console.log(`[RAG] Retrieved ${relevantRows.length} criteria rows, ${knowledgeRows.length} knowledge chunks.`);
+    if (knowledgeRows.length > 0) {
+      console.log("[Knowledge RAG] Sections injected:", knowledgeRows.map((r) => r.section));
+    }
     console.log("[Finalize][Server] Inputs for final summary", {
       discoveredThemesCount: discoveredThemes.length,
       discoveredThemes,
@@ -699,8 +794,12 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
       transcriptLines: transcript.split("\n").filter(Boolean).length,
     });
 
-    // 3. Build a lean prompt injecting only the retrieved criteria + student profile
-    const systemPrompt = buildFinalAnalysisPrompt(criteriaContext, studentProfile);
+    // 3. Build a lean prompt injecting criteria + knowledge context + student profile
+    const systemPrompt = buildFinalAnalysisPrompt(
+      criteriaContext,
+      studentProfile,
+      knowledgeContext || undefined
+    );
 
     // 4. Call the LLM
     const responseText = await callOpenRouter(
