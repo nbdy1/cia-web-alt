@@ -233,65 +233,83 @@ export default function ResultsPage() {
           <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
             <Bookmark size={9} /> Detail Ketercapaian
           </div>
-          {categories.map((cat) => {
-            const items = (
-              analysisData.detailed_assessments?.filter((a: any) => a.category === cat) || []
-            ).filter((item: any) => (item.fulfilled_sub_indicators?.length ?? 0) > 0);
-            if (items.length === 0) return null;
-            const isOpen = expandedCategory === cat;
-            const catColors: Record<string, { bg: string; icon: string; shadow: string }> = {
-              Karakter:   { bg: "bg-rose-100",   icon: "text-rose-600",   shadow: "0 3px 0 0 #e11d48" },
-              Mental:     { bg: "bg-blue-100",   icon: "text-blue-600",   shadow: "0 3px 0 0 #1d4ed8" },
-              "Soft Skill": { bg: "bg-purple-100", icon: "text-purple-600", shadow: "0 3px 0 0 #7c3aed" },
-            };
-            const c = catColors[cat] || { bg: "bg-slate-100", icon: "text-slate-600", shadow: "0 3px 0 0 #94a3b8" };
-            return (
-              <div key={cat} className="card-3d overflow-hidden">
-                <button
-                  onClick={() => setExpandedCategory(isOpen ? null : cat)}
-                  className="w-full flex items-center justify-between p-5"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isOpen ? "bg-emerald-500" : c.bg}`}
-                      style={{ boxShadow: isOpen ? "0 3px 0 0 #15803d" : c.shadow }}>
-                      {cat === "Karakter" && <Heart size={18} className={isOpen ? "text-white" : c.icon} />}
-                      {cat === "Mental"   && <Brain size={18} className={isOpen ? "text-white" : c.icon} />}
-                      {cat === "Soft Skill" && <Zap size={18} className={isOpen ? "text-white" : c.icon} />}
-                    </div>
-                    <span className="font-black text-slate-900 text-sm">{cat}</span>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">{items.length}</span>
-                  </div>
-                  {isOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-                </button>
-
-                {isOpen && (
-                  <div className="px-5 pb-5 space-y-4 border-t-2 border-slate-50 pt-4">
-                    {items.map((item: any, i: number) => (
-                      <div key={i} className="space-y-2">
-                        <div className="flex justify-between items-start gap-2">
-                          <div>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400 block w-fit mb-1">{item.theme}</span>
-                            <span className="font-black text-xs text-slate-800 leading-snug">{item.indicator}</span>
-                          </div>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">{item.fulfillment_fraction}</span>
-                        </div>
-                        <div className="bg-slate-50 p-3 rounded-xl border-2 border-slate-100 space-y-2">
-                          <p className="text-[11px] text-slate-500 leading-relaxed italic font-bold">"{item.reasoning}"</p>
-                          <div className="space-y-1">
-                            {item.fulfilled_sub_indicators?.map((si: string, idx: number) => (
-                              <div key={idx} className="flex items-start gap-2 text-[10px] text-emerald-700 font-black">
-                                <CheckCircle2 size={10} className="mt-0.5 flex-shrink-0" /> {si}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+          {(() => {
+            const categoryBlocks = categories.map((cat) => {
+              const items = (
+                analysisData.detailed_assessments?.filter((a: any) => a.category === cat) || []
+              ).filter((item: any) => (item.fulfilled_sub_indicators?.length ?? 0) > 0);
+              if (items.length === 0) return null;
+              const isOpen = expandedCategory === cat;
+              const catColors: Record<string, { bg: string; icon: string; shadow: string }> = {
+                Karakter:   { bg: "bg-rose-100",   icon: "text-rose-600",   shadow: "0 3px 0 0 #e11d48" },
+                Mental:     { bg: "bg-blue-100",   icon: "text-blue-600",   shadow: "0 3px 0 0 #1d4ed8" },
+                "Soft Skill": { bg: "bg-purple-100", icon: "text-purple-600", shadow: "0 3px 0 0 #7c3aed" },
+              };
+              const c = catColors[cat] || { bg: "bg-slate-100", icon: "text-slate-600", shadow: "0 3px 0 0 #94a3b8" };
+              return (
+                <div key={cat} className="card-3d overflow-hidden">
+                  <button
+                    onClick={() => setExpandedCategory(isOpen ? null : cat)}
+                    className="w-full flex items-center justify-between p-5"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isOpen ? "bg-emerald-500" : c.bg}`}
+                        style={{ boxShadow: isOpen ? "0 3px 0 0 #15803d" : c.shadow }}>
+                        {cat === "Karakter" && <Heart size={18} className={isOpen ? "text-white" : c.icon} />}
+                        {cat === "Mental"   && <Brain size={18} className={isOpen ? "text-white" : c.icon} />}
+                        {cat === "Soft Skill" && <Zap size={18} className={isOpen ? "text-white" : c.icon} />}
                       </div>
-                    ))}
+                      <span className="font-black text-slate-900 text-sm">{cat}</span>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">{items.length}</span>
+                    </div>
+                    {isOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-5 pb-5 space-y-4 border-t-2 border-slate-50 pt-4">
+                      {items.map((item: any, i: number) => (
+                        <div key={i} className="space-y-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <div>
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400 block w-fit mb-1">{item.theme}</span>
+                              <span className="font-black text-xs text-slate-800 leading-snug">{item.indicator}</span>
+                            </div>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">{item.fulfillment_fraction}</span>
+                          </div>
+                          <div className="bg-slate-50 p-3 rounded-xl border-2 border-slate-100 space-y-2">
+                            <p className="text-[11px] text-slate-500 leading-relaxed italic font-bold">"{item.reasoning}"</p>
+                            <div className="space-y-1">
+                              {item.fulfilled_sub_indicators?.map((si: string, idx: number) => (
+                                <div key={idx} className="flex items-start gap-2 text-[10px] text-emerald-700 font-black">
+                                  <CheckCircle2 size={10} className="mt-0.5 flex-shrink-0" /> {si}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            });
+
+            const hasAny = categoryBlocks.some(Boolean);
+            if (!hasAny) {
+              return (
+                <div className="card-3d p-8 flex flex-col items-center gap-3 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                    <Sparkles size={22} className="text-slate-300" />
                   </div>
-                )}
-              </div>
-            );
-          })}
+                  <p className="text-sm font-bold text-slate-400 leading-snug">
+                    Tidak ada pencapaian karakter, mental, ataupun soft skill di laporan ini.
+                  </p>
+                </div>
+              );
+            }
+
+            return categoryBlocks;
+          })()}
         </section>
       </main>
 

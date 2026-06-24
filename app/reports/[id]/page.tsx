@@ -355,85 +355,103 @@ export default async function ReportDetailPage({
             Detail Pencapaian
           </h3>
 
-          {categories.map((cat) => {
-            const items = (
-              analysis.detailed_assessments?.filter(
-                (a: any) => a.category === cat,
-              ) || []
-            ).filter((item: any) => getFulfilledDisplaySubs(item).length > 0);
-            if (items.length === 0) return null;
+          {(() => {
+            const categoryBlocks = categories.map((cat) => {
+              const items = (
+                analysis.detailed_assessments?.filter(
+                  (a: any) => a.category === cat,
+                ) || []
+              ).filter((item: any) => getFulfilledDisplaySubs(item).length > 0);
+              if (items.length === 0) return null;
 
-            return (
-              <div
-                key={cat}
-                className="bg-white rounded-[2rem] border-2 border-slate-100 overflow-hidden"
-                style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}
-              >
-                <div className="flex items-center gap-3 p-5 border-b border-slate-50">
-                  <div
-                    className={`p-2.5 rounded-xl ${cat === "Karakter" ? "bg-rose-50 text-rose-500" : cat === "Mental" ? "bg-blue-50 text-blue-500" : "bg-purple-50 text-purple-500"}`}
-                  >
-                    {cat === "Karakter" && <Heart size={18} />}
-                    {cat === "Mental" && <Brain size={18} />}
-                    {cat === "Soft Skill" && <Zap size={18} />}
+              return (
+                <div
+                  key={cat}
+                  className="bg-white rounded-[2rem] border-2 border-slate-100 overflow-hidden"
+                  style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}
+                >
+                  <div className="flex items-center gap-3 p-5 border-b border-slate-50">
+                    <div
+                      className={`p-2.5 rounded-xl ${cat === "Karakter" ? "bg-rose-50 text-rose-500" : cat === "Mental" ? "bg-blue-50 text-blue-500" : "bg-purple-50 text-purple-500"}`}
+                    >
+                      {cat === "Karakter" && <Heart size={18} />}
+                      {cat === "Mental" && <Brain size={18} />}
+                      {cat === "Soft Skill" && <Zap size={18} />}
+                    </div>
+                    <h4 className="font-bold text-slate-800 text-sm font-serif">
+                      Analisis {cat}
+                    </h4>
                   </div>
-                  <h4 className="font-bold text-slate-800 text-sm font-serif">
-                    Analisis {cat}
-                  </h4>
-                </div>
 
-                <div className="p-5 space-y-6">
-                  {items.map((item: any, i: number) => {
-                    // Look up the FULL sub-indicator list from the local framework.
-                    // Falls back to the AI's combined list if the theme/indicator
-                    // name doesn't match (e.g. legacy reports).
-                    const fullSubs = lookupFullIndicator(
-                      item.category,
-                      item.theme,
-                      item.indicator
-                    );
+                  <div className="p-5 space-y-6">
+                    {items.map((item: any, i: number) => {
+                      // Look up the FULL sub-indicator list from the local framework.
+                      // Falls back to the AI's combined list if the theme/indicator
+                      // name doesn't match (e.g. legacy reports).
+                      const fullSubs = lookupFullIndicator(
+                        item.category,
+                        item.theme,
+                        item.indicator
+                      );
 
-                    const displaySubs = getFulfilledDisplaySubs(item);
-                    const totalCount = fullSubs?.length ?? displaySubs.length;
-                    const fulfilledCount = displaySubs.length;
-                    const fraction = `${fulfilledCount}/${totalCount}`;
+                      const displaySubs = getFulfilledDisplaySubs(item);
+                      const totalCount = fullSubs?.length ?? displaySubs.length;
+                      const fulfilledCount = displaySubs.length;
+                      const fraction = `${fulfilledCount}/${totalCount}`;
 
-                    return (
-                      <div key={i} className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex flex-col">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-                              {item.theme}
-                            </span>
-                            <span className="font-bold text-xs text-slate-800 font-serif leading-tight">
-                              {item.indicator}
+                      return (
+                        <div key={i} className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                                {item.theme}
+                              </span>
+                              <span className="font-bold text-xs text-slate-800 font-serif leading-tight">
+                                {item.indicator}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0 ml-2">
+                              {fraction}
                             </span>
                           </div>
-                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0 ml-2">
-                            {fraction}
-                          </span>
-                        </div>
 
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
-                          <p className="text-[11px] text-slate-500 leading-relaxed italic">
-                            &ldquo;{item.reasoning}&rdquo;
-                          </p>
+                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                            <p className="text-[11px] text-slate-500 leading-relaxed italic">
+                              &ldquo;{item.reasoning}&rdquo;
+                            </p>
 
-                          <FulfilledSubsList
-                            reportId={report.id}
-                            category={item.category}
-                            theme={item.theme}
-                            indicator={item.indicator}
-                            subs={displaySubs}
-                          />
+                            <FulfilledSubsList
+                              reportId={report.id}
+                              category={item.category}
+                              theme={item.theme}
+                              indicator={item.indicator}
+                              subs={displaySubs}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            });
+
+            const hasAny = categoryBlocks.some(Boolean);
+            if (!hasAny) {
+              return (
+                <div className="bg-white rounded-[2rem] border-2 border-slate-100 p-8 flex flex-col items-center gap-3 text-center" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                    <BarChart3 size={22} className="text-slate-300" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-400 leading-snug">
+                    Tidak ada pencapaian karakter, mental, ataupun soft skill di laporan ini.
+                  </p>
+                </div>
+              );
+            }
+
+            return categoryBlocks;
+          })()}
         </section>
       </main>
     </div>
