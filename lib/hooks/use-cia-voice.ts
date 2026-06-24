@@ -62,7 +62,7 @@ export function useCIAVoice() {
     // Native Browser TTS
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'id-ID';
-    utterance.rate = 1.0;
+    utterance.rate = 1.3;
     utterance.pitch = 1.0;
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
