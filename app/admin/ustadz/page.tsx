@@ -117,18 +117,11 @@ export default function ManageUstadzPage() {
     setRoleError(null);
     const newRole = userToChangeRole.role === 'admin' ? 'ustadz' : 'admin';
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Sesi tidak ditemukan. Silakan login ulang.');
-      const res = await fetch('/api/admin/change-role', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ targetId: userToChangeRole.id, newRole }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Gagal mengubah role.');
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userToChangeRole.id);
+      if (error) throw error;
       setIsRoleModalOpen(false);
       setUserToChangeRole(null);
       fetchUstadz();
