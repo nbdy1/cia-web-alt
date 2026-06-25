@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalkulator Biaya ElevenLabs — CIA Assessment</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 680px; margin: 0 auto; }
+
+    h1 { font-size: 20px; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: #64748b; margin-bottom: 1.5rem; }
+
+    .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .pill {
+      font-size: 12px; background: white; border: 1px solid #e2e8f0;
+      border-radius: 20px; padding: 4px 12px; color: #475569;
+    }
+    .pill strong { color: #0f172a; font-weight: 600; }
+
+    .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .metric { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; }
+    .metric-label { font-size: 12px; color: #64748b; margin: 0 0 4px; }
+    .metric-value { font-size: 22px; font-weight: 600; color: #0f172a; margin: 0; line-height: 1.1; }
+    .metric-sub { font-size: 11px; color: #94a3b8; margin: 2px 0 0; }
+    .metric.hi { border-color: #bfdbfe; background: #eff6ff; }
+    .metric.hi .metric-value { color: #1d4ed8; }
+    .metric.hi .metric-label { color: #3b82f6; }
+
+    .section-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+      color: #94a3b8; margin: 1.25rem 0 8px;
+    }
+
+    .panel { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+    .panel-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 1rem; }
+
+    .slider-row { display: grid; grid-template-columns: 185px 1fr 52px; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .slider-row:last-child { margin-bottom: 0; }
+    .slider-label { font-size: 13px; color: #475569; }
+
+    input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #e2e8f0; outline: none; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: #3b82f6; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    input[type=range]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 3px #bfdbfe; }
+
+    .plan-row { display: grid; grid-template-columns: 90px 1fr 100px 140px; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 6px; }
+    .bar-bg { background: #f1f5f9; border-radius: 4px; height: 16px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+    .plan-price { color: #475569; text-align: right; font-size: 12px; }
+    .plan-name { color: #0f172a; font-weight: 600; font-size: 12px; }
+
+    .recommended { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 12px 16px; margin: 1rem 0 0; }
+    .rec-label { font-size: 11px; color: #16a34a; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px; font-weight: 600; }
+    .rec-name { font-size: 18px; font-weight: 600; color: #15803d; margin: 0 0 4px; }
+    .rec-detail { font-size: 12px; color: #16a34a; margin: 0; line-height: 1.7; }
+
+    .info-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 10px 14px; margin-top: 1rem; font-size: 12px; color: #0369a1; line-height: 1.6; }
+    .warn { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 10px 14px; margin-top: 1rem; font-size: 12px; color: #92400e; line-height: 1.5; }
+
+    footer { font-size: 12px; color: #94a3b8; text-align: center; margin-top: 1.5rem; line-height: 1.6; }
+
+    @media (max-width: 520px) {
+      .slider-row { grid-template-columns: 1fr 52px; }
+      .slider-row .slider-label { display: none; }
+      .plan-row { grid-template-columns: 80px 1fr 80px; }
+      .plan-price { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Kalkulator Biaya ElevenLabs</h1>
+  <p class="subtitle">CIA Assessment System — Text-to-Speech Flash v2.5</p>
+
+  <div class="pills">
+    <span class="pill">Flash v2.5 — <strong>$0,05</strong> per 1.000 karakter</span>
+    <span class="pill">= <strong>Rp898</strong> per 1.000 karakter</span>
+    <span class="pill" style="color:#94a3b8;font-style:italic;">kurs 1 USD = Rp17.950</span>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Parameter Penggunaan</div>
+    <div class="slider-row">
+      <span class="slider-label">Laporan / hari</span>
+      <input type="range" id="s-reports" min="10" max="200" step="5" value="50">
+      <span id="v-reports" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">50</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Giliran AI / sesi</span>
+      <input type="range" id="s-turns" min="3" max="12" step="1" value="6">
+      <span id="v-turns" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">6</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Karakter / respons AI</span>
+      <input type="range" id="s-chars" min="150" max="700" step="25" value="350">
+      <span id="v-chars" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">350</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Hari aktif / bulan</span>
+      <input type="range" id="s-days" min="18" max="30" step="1" value="26">
+      <span id="v-days" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">26</span>
+    </div>
+  </div>
+
+  <p class="section-label">Penggunaan Karakter</p>
+  <div class="calc-grid" id="char-metrics"></div>
+
+  <p class="section-label">Estimasi Biaya (Flash v2.5 · $0,05 / 1.000 kar.)</p>
+  <div class="calc-grid" id="cost-metrics"></div>
+
+  <div class="panel" style="margin-top:1rem;">
+    <div class="panel-title">Perbandingan Paket — Karakter Flash Termasuk</div>
+    <div id="plan-bars"></div>
+    <div id="recommendation"></div>
+  </div>
+
+  <footer>
+    Tarif Flash v2.5: $0,05 per 1.000 karakter — berlaku sama untuk PAYG maupun paket berlangganan.<br>
+    Langganan memberikan kuota karakter bulanan tanpa penagihan tambahan hingga batas paket.<br>
+    Kurs referensi: 1 USD = Rp17.950 (dapat berubah).
+  </footer>
+</div>
+
+<script>
+  const FLASH_PER_1K_USD = 0.05;           // $0.05 per 1,000 characters
+  const FLASH_PER_CHAR_USD = 0.05 / 1000; // $0.00005 per character
+  const IDR_RATE = 17950;
+
+  // Character allowances from ElevenLabs model pricing page
+  // charsIncluded = planPriceUSD / FLASH_PER_CHAR_USD (they're priced identically to PAYG)
+  const plans = [
+    { name: 'Starter',  priceUSD: 6,   charsIncluded: 120000 },
+    { name: 'Creator',  priceUSD: 22,  charsIncluded: 440000 },
+    { name: 'Pro',      priceUSD: 99,  charsIncluded: 1980000 },
+    { name: 'Scale',    priceUSD: 299, charsIncluded: 5980000 },
+    { name: 'Business', priceUSD: 990, charsIncluded: 19800000 },
+  ];
+
+  function eks(n) {
+    return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  function fmtIDR(usd) {
+    const n = Math.round(usd * IDR_RATE);
+    if (n >= 1e9) return 'Rp' + (n / 1e9).toFixed(2).replace('.', ',') + ' M';
+    if (n >= 1e6) return 'Rp' + (n / 1e6).toFixed(2).replace('.', ',') + ' jt';
+    return 'Rp' + eks(n);
+  }
+
+  function update() {
+    const reports = +document.getElementById('s-reports').value;
+    const turns   = +document.getElementById('s-turns').value;
+    const chars   = +document.getElementById('s-chars').value;
+    const days    = +document.getElementById('s-days').value;
+
+    document.getElementById('v-reports').textContent = reports;
+    document.getElementById('v-turns').textContent   = turns;
+    document.getElementById('v-chars').textContent   = chars;
+    document.getElementById('v-days').textContent    = days;
+
+    const charsPerSession = turns * chars;
+    const charsPerDay     = reports * charsPerSession;
+    const charsPerMonth   = charsPerDay * days;
+
+    // Character usage metrics
+    document.getElementById('char-metrics').innerHTML = `
+      <div class="metric">
+        <p class="metric-label">Karakter / sesi</p>
+        <p class="metric-value">${eks(charsPerSession)}</p>
+        <p class="metric-sub">${turns} giliran × ${eks(chars)} kar.</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Karakter / hari</p>
+        <p class="metric-value">${eks(charsPerDay)}</p>
+        <p class="metric-sub">${reports} sesi/hari</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Karakter / bulan</p>
+        <p class="metric-value">${eks(charsPerMonth)}</p>
+        <p class="metric-sub">${days} hari aktif</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Karakter / tahun</p>
+        <p class="metric-value">${eks(charsPerMonth * 12)}</p>
+        <p class="metric-sub">12 bulan</p>
+      </div>
+    `;
+
+    // Cost metrics — Flash rate $0.05/1K, same whether PAYG or subscription
+    const costPerSession = charsPerSession * FLASH_PER_CHAR_USD;
+    const costPerDay     = charsPerDay     * FLASH_PER_CHAR_USD;
+    const costPerMonth   = charsPerMonth   * FLASH_PER_CHAR_USD;
+
+    document.getElementById('cost-metrics').innerHTML = `
+      <div class="metric">
+        <p class="metric-label">Biaya / sesi</p>
+        <p class="metric-value">${fmtIDR(costPerSession)}</p>
+        <p class="metric-sub">${eks(charsPerSession)} kar.</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Biaya harian</p>
+        <p class="metric-value">${fmtIDR(costPerDay)}</p>
+        <p class="metric-sub">${reports} sesi</p>
+      </div>
+      <div class="metric hi">
+        <p class="metric-label">Biaya bulanan</p>
+        <p class="metric-value">${fmtIDR(costPerMonth)}</p>
+        <p class="metric-sub">${eks(charsPerMonth)} kar.</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Biaya tahunan</p>
+        <p class="metric-value">${fmtIDR(costPerMonth * 12)}</p>
+        <p class="metric-sub">12 bulan</p>
+      </div>
+    `;
+
+    // Plan comparison bars — just show scale, no "recommended" plan
+    let html = '';
+    plans.forEach(p => {
+      const fits = charsPerMonth <= p.charsIncluded;
+      const barColor = fits ? '#86efac' : '#f87171';
+      const usageWidth = Math.min(charsPerMonth / p.charsIncluded * 100, 100).toFixed(1);
+      html += `
+        <div class="plan-row">
+          <span class="plan-name">${p.name}</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:${usageWidth}%;background:${barColor};"></div></div>
+          <span style="font-size:11px;color:#94a3b8;text-align:right;">${eks(p.charsIncluded)} kar</span>
+          <span class="plan-price">${fmtIDR(p.priceUSD)}/bln</span>
+        </div>`;
+    });
+    document.getElementById('plan-bars').innerHTML = html;
+
+    // Actual cost recommendation: Starter + overage is the practical minimum
+    const starterPlan = plans[0]; // Starter $6
+    const starterCostUSD  = starterPlan.priceUSD; // $6 covers 120k chars
+    const overageChars    = Math.max(0, charsPerMonth - starterPlan.charsIncluded);
+    const overageCostUSD  = overageChars * FLASH_PER_CHAR_USD;
+    const totalActualUSD  = starterCostUSD + overageCostUSD;
+
+    const recEl = document.getElementById('recommendation');
+    recEl.innerHTML = `
+      <div class="recommended" style="margin-top:1rem;">
+        <p class="rec-label">Rekomendasi Praktis</p>
+        <p class="rec-name">Starter + Bayar Per Karakter</p>
+        <p class="rec-detail">
+          Rp${eks(Math.round(starterCostUSD * IDR_RATE))} langganan Starter/bln (lisensi komersial)<br>
+          + ${fmtIDR(overageCostUSD)} overage (${eks(overageChars)} kar. × $0,05/1.000)<br>
+          <strong>= ${fmtIDR(totalActualUSD)} total/bulan</strong> — sama dengan biaya TTS murni
+        </p>
+      </div>
+      <div class="info-box" style="margin-top:8px;">
+        <strong>Kenapa Starter dan bukan Free/PAYG?</strong><br>
+        Free tier tidak termasuk lisensi komersial — wajib minimal Starter ($6/bln) untuk produk yang di-deploy.
+        Karena tarif per-karakter sama di semua paket ($0,05/1.000), naik ke Scale/Pro hanya menaikkan tagihan
+        bulanan tetap tanpa mengurangi biaya TTS aktual.
+      </div>`;
+    if (charsPerMonth > plans[plans.length - 1].charsIncluded) {
+      recEl.innerHTML += `<div class="warn" style="margin-top:8px;">Penggunaan melebihi Business (19,8 juta kar). Pertimbangkan Enterprise atau batasi giliran TTS per sesi.</div>`;
+    }
+  }
+
+  ['s-reports','s-turns','s-chars','s-days'].forEach(id =>
+    document.getElementById(id).addEventListener('input', update)
+  );
+
+  update();
+</script>
+</body>
+</html>

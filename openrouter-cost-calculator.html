@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalkulator Biaya OpenRouter — CIA Assessment</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 680px; margin: 0 auto; }
+
+    h1 { font-size: 20px; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: #64748b; margin-bottom: 1.5rem; }
+
+    .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .pill {
+      font-size: 12px; background: white; border: 1px solid #e2e8f0;
+      border-radius: 20px; padding: 4px 12px; color: #475569;
+    }
+    .pill strong { color: #0f172a; font-weight: 600; }
+
+    .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+    .metric { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; }
+    .metric-label { font-size: 12px; color: #64748b; margin: 0 0 4px; }
+    .metric-value { font-size: 22px; font-weight: 600; color: #0f172a; margin: 0; line-height: 1.1; }
+    .metric-sub { font-size: 11px; color: #94a3b8; margin: 2px 0 0; }
+
+    .panel { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+    .panel-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 1rem; }
+
+    .slider-row { display: grid; grid-template-columns: 185px 1fr 52px; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .slider-row:last-child { margin-bottom: 0; }
+    .slider-label { font-size: 13px; color: #475569; }
+
+    input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #e2e8f0; outline: none; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: #3b82f6; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    input[type=range]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 3px #bfdbfe; }
+
+    .chart-row { display: grid; grid-template-columns: 180px 1fr; gap: 1.5rem; align-items: center; }
+    .donut-wrap { position: relative; height: 180px; }
+
+    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; color: #475569; }
+    .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .legend-pct { margin-left: auto; font-weight: 600; color: #0f172a; font-size: 13px; }
+
+    .breakdown-bar { margin-top: 1rem; }
+    .breakdown-label { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 4px; }
+    .bar-track { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+    .bar-fill { height: 100%; border-radius: 4px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 6px 10px; color: #94a3b8; font-weight: 500; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+    th:not(:first-child) { text-align: right; }
+    td { padding: 8px 10px; border-bottom: 1px solid #f8fafc; color: #475569; }
+    td:not(:first-child) { text-align: right; color: #0f172a; font-weight: 500; }
+    tr.current-row td { background: #f0f9ff; color: #1d4ed8; }
+    tr.current-row td:not(:first-child) { color: #1d4ed8; }
+    tr:last-child td { border-bottom: none; }
+
+    .toggle-btn {
+      background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer;
+      padding: 4px 0; display: flex; align-items: center; gap: 4px;
+    }
+    .toggle-btn:hover { color: #3b82f6; }
+    #advanced-panel { display: none; }
+
+    footer { font-size: 12px; color: #94a3b8; text-align: center; margin-top: 1.5rem; line-height: 1.6; }
+
+    @media (max-width: 520px) {
+      .slider-row { grid-template-columns: 1fr 52px; }
+      .slider-row .slider-label { display: none; }
+      .chart-row { grid-template-columns: 1fr; }
+      .donut-wrap { height: 160px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Kalkulator Biaya OpenRouter</h1>
+  <p class="subtitle">CIA Assessment System — Gemini 3 Flash Preview + text-embedding-3-small</p>
+
+  <div class="pills">
+    <span class="pill">Gemini 3 Flash Preview — <strong>Rp8.975</strong>/1 jt token masuk · <strong>Rp53.850</strong>/1 jt token keluar</span>
+    <span class="pill">text-embedding-3-small — <strong>Rp359</strong>/1 jt token</span>
+    <span class="pill" style="color:#94a3b8;font-style:italic;">Tarif dari log penggunaan aktual · kurs 1 USD = Rp17.950</span>
+  </div>
+
+  <div class="calc-grid" id="metrics"></div>
+
+  <div class="panel">
+    <div class="panel-title">Parameter Penggunaan</div>
+
+    <div class="slider-row">
+      <span class="slider-label">Laporan / hari</span>
+      <input type="range" id="s-reports" min="10" max="300" step="5" value="50">
+      <span id="v-reports" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">50</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Giliran AI / sesi</span>
+      <input type="range" id="s-turns" min="3" max="12" step="1" value="6">
+      <span id="v-turns" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">6</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Hari aktif / bulan</span>
+      <input type="range" id="s-days" min="18" max="30" step="1" value="26">
+      <span id="v-days" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">26</span>
+    </div>
+  </div>
+
+  <button class="toggle-btn" onclick="toggleAdvanced()">
+    <span id="toggle-arrow">▶</span> Asumsi token lanjutan
+  </button>
+
+  <div class="panel" id="advanced-panel" style="margin-top:8px;">
+    <div class="panel-title">Asumsi token (per panggilan)</div>
+    <div class="slider-row">
+      <span class="slider-label">Token masuk wawancara</span>
+      <input type="range" id="sl-ii" min="500" max="6000" step="100" value="3000" />
+      <span id="v-ii" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">3000</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Token keluar wawancara</span>
+      <input type="range" id="sl-io" min="50" max="400" step="10" value="175" />
+      <span id="v-io" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">175</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Token masuk finalisasi</span>
+      <input type="range" id="sl-fi" min="1000" max="8000" step="100" value="4000" />
+      <span id="v-fi" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">4000</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Token keluar finalisasi</span>
+      <input type="range" id="sl-fo" min="200" max="1200" step="50" value="600" />
+      <span id="v-fo" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">600</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Token embedding / panggilan</span>
+      <input type="range" id="sl-et" min="50" max="1000" step="10" value="250" />
+      <span id="v-et" style="font-size:13px;font-weight:600;color:#0f172a;text-align:right;">250</span>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:1rem;">
+    <div class="panel-title">Rincian biaya per laporan</div>
+    <div class="chart-row">
+      <div class="donut-wrap">
+        <canvas id="donut" role="img" aria-label="Grafik donat proporsi biaya token Gemini dan embedding per laporan">Rincian biaya per komponen.</canvas>
+      </div>
+      <div>
+        <div id="legend"></div>
+        <div class="breakdown-bar" id="bars"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Biaya bulanan berbagai skala</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Laporan / hari</th>
+          <th style="text-align:right">Per laporan</th>
+          <th style="text-align:right">Harian</th>
+          <th style="text-align:right">Bulanan</th>
+          <th style="text-align:right">Tahunan</th>
+        </tr>
+      </thead>
+      <tbody id="scale-body"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    Estimasi berdasarkan log API aktual. Biaya nyata dapat berbeda ±20% tergantung kedalaman percakapan.<br>
+    Kurs referensi: 1 USD = Rp17.950 (dapat berubah sesuai nilai tukar).
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  const GEMINI_IN  = 0.50 / 1e6;
+  const GEMINI_OUT = 3.00 / 1e6;
+  const EMBED      = 0.02 / 1e6;
+  const IDR_RATE   = 17950;
+  const EMBED_CALLS_PER_TURN = 4;
+  const EMBED_CALLS_FIN      = 4;
+  const PROFILE_IN  = 450;
+  const PROFILE_OUT = 250;
+
+  function calcReport(turns, ii, io, fi, fo, et) {
+    const embedTok = (turns * EMBED_CALLS_PER_TURN * et) + (EMBED_CALLS_FIN * et);
+    const ginTok   = (turns * ii) + fi + PROFILE_IN;
+    const goutTok  = (turns * io) + fo + PROFILE_OUT;
+    const eC   = embedTok * EMBED;
+    const inC  = ginTok   * GEMINI_IN;
+    const outC = goutTok  * GEMINI_OUT;
+    return { embed: eC, ginC: inC, goutC: outC, total: eC + inC + outC };
+  }
+
+  function ribuan(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+
+  function fmtIDR(usd) {
+    const n = Math.round(usd * IDR_RATE);
+    if (n >= 1e9) return 'Rp' + (n / 1e9).toFixed(2).replace('.', ',') + ' M';
+    if (n >= 1e6) return 'Rp' + (n / 1e6).toFixed(2).replace('.', ',') + ' jt';
+    return 'Rp' + ribuan(n);
+  }
+
+  function pct(v, total) { return total > 0 ? (v / total * 100).toFixed(1) : '0'; }
+
+  let donutChart;
+  const COLORS = ['#3b82f6', '#06b6d4', '#94a3b8'];
+
+  function updateChart(gin, gout, emb) {
+    const data = [gin, gout, emb];
+    if (donutChart) { donutChart.data.datasets[0].data = data; donutChart.update('none'); return; }
+    donutChart = new Chart(document.getElementById('donut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Token masuk Gemini', 'Token keluar Gemini', 'Embedding'],
+        datasets: [{ data, backgroundColor: COLORS, borderWidth: 2, borderColor: '#fff', hoverOffset: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + fmtIDR(c.raw) } }
+        }
+      }
+    });
+  }
+
+  function updateLegend(gin, gout, emb) {
+    const total = gin + gout + emb;
+    const labels = ['Token masuk Gemini', 'Token keluar Gemini', 'Embedding'];
+    const vals   = [gin, gout, emb];
+    document.getElementById('legend').innerHTML = labels.map((l, i) =>
+      `<div class="legend-item">
+        <span class="legend-swatch" style="background:${COLORS[i]}"></span>
+        <span>${l}</span>
+        <span class="legend-pct">${pct(vals[i], total)}%</span>
+       </div>`
+    ).join('');
+  }
+
+  function updateBars(gin, gout, emb) {
+    const total = gin + gout + emb;
+    const items = [
+      { label: 'Token masuk Gemini', val: gin, color: '#3b82f6' },
+      { label: 'Token keluar Gemini', val: gout, color: '#06b6d4' },
+      { label: 'Embedding', val: emb, color: '#94a3b8' },
+    ];
+    document.getElementById('bars').innerHTML = items.map(it => {
+      const w = total > 0 ? (it.val / total * 100).toFixed(1) : 0;
+      return `<div class="breakdown-label"><span>${it.label}</span><span>${fmtIDR(it.val)}</span></div>
+              <div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${it.color}"></div></div>`;
+    }).join('');
+  }
+
+  function updateTable(reports, days, r) {
+    const scales = [10, 25, 50, 100, 150, 200];
+    document.getElementById('scale-body').innerHTML = scales.map(sc => {
+      const daily   = r.total * sc;
+      const monthly = daily * days;
+      const yearly  = monthly * 12;
+      const isCur   = sc === reports;
+      return `<tr class="${isCur ? 'current-row' : ''}">
+        <td>${sc} laporan/hari${isCur ? ' ◀' : ''}</td>
+        <td>${fmtIDR(r.total)}</td>
+        <td>${fmtIDR(daily)}</td>
+        <td>${fmtIDR(monthly)}</td>
+        <td>${fmtIDR(yearly)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function calc() {
+    const reports = +document.getElementById('s-reports').value;
+    const turns   = +document.getElementById('s-turns').value;
+    const days    = +document.getElementById('s-days').value;
+    const ii = +document.getElementById('sl-ii').value;
+    const io = +document.getElementById('sl-io').value;
+    const fi = +document.getElementById('sl-fi').value;
+    const fo = +document.getElementById('sl-fo').value;
+    const et = +document.getElementById('sl-et').value;
+
+    document.getElementById('v-reports').textContent = reports;
+    document.getElementById('v-turns').textContent   = turns;
+    document.getElementById('v-days').textContent    = days;
+    document.getElementById('v-ii').textContent = ii;
+    document.getElementById('v-io').textContent = io;
+    document.getElementById('v-fi').textContent = fi;
+    document.getElementById('v-fo').textContent = fo;
+    document.getElementById('v-et').textContent = et;
+
+    const r       = calcReport(turns, ii, io, fi, fo, et);
+    const daily   = r.total * reports;
+    const monthly = daily * days;
+
+    document.getElementById('metrics').innerHTML = `
+      <div class="metric"><p class="metric-label">Per laporan</p><p class="metric-value">${fmtIDR(r.total)}</p><p class="metric-sub">${turns} giliran AI</p></div>
+      <div class="metric"><p class="metric-label">Biaya / sesi</p><p class="metric-value">${fmtIDR(r.ginC + r.goutC)}</p><p class="metric-sub">Gemini saja</p></div>
+      <div class="metric"><p class="metric-label">Biaya harian</p><p class="metric-value">${fmtIDR(daily)}</p><p class="metric-sub">${reports} laporan</p></div>
+      <div class="metric"><p class="metric-label">Biaya bulanan</p><p class="metric-value" style="color:#1d4ed8">${fmtIDR(monthly)}</p><p class="metric-sub">${days} hari aktif</p></div>
+    `;
+
+    updateChart(r.ginC * reports * days, r.goutC * reports * days, r.embed * reports * days);
+    updateLegend(r.ginC, r.goutC, r.embed);
+    updateBars(r.ginC, r.goutC, r.embed);
+    updateTable(reports, days, r);
+  }
+
+  function toggleAdvanced() {
+    const p = document.getElementById('advanced-panel');
+    const a = document.getElementById('toggle-arrow');
+    const open = p.style.display !== 'none';
+    p.style.display = open ? 'none' : 'block';
+    a.textContent = open ? '▶' : '▼';
+  }
+
+  ['s-reports','s-turns','s-days','sl-ii','sl-io','sl-fi','sl-fo','sl-et']
+    .forEach(id => document.getElementById(id).addEventListener('input', calc));
+
+  calc();
+</script>
+</body>
+</html>
