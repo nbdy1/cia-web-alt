@@ -19,7 +19,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
-import { Users, Search, Loader2, Sparkles, Mail, Calendar, X, Plus, UserPlus, AlertCircle, Eye, EyeOff, UserX, ArchiveX } from 'lucide-react';
+import { Users, Search, Loader2, Sparkles, Mail, Calendar, X, Plus, UserPlus, AlertCircle, Eye, EyeOff, UserX, ArchiveX, ShieldCheck, ArrowLeftRight } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 export default function ManageUstadzPage() {
@@ -43,6 +43,12 @@ export default function ManageUstadzPage() {
   const [removeReason, setRemoveReason] = useState('');
   const [isRemoving, setIsRemoving] = useState(false);
   const [removeError, setRemoveError] = useState<string | null>(null);
+
+  // Role Change Modal
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [userToChangeRole, setUserToChangeRole] = useState<any>(null);
+  const [isChangingRole, setIsChangingRole] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
 
   const fetchUstadz = async () => {
     setLoading(true);
@@ -96,6 +102,40 @@ export default function ManageUstadzPage() {
       setModalError(err.message || "Gagal mendaftarkan pengguna baru");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const openRoleModal = (user: any) => {
+    setUserToChangeRole(user);
+    setRoleError(null);
+    setIsRoleModalOpen(true);
+  };
+
+  const handleChangeRole = async () => {
+    if (!userToChangeRole) return;
+    setIsChangingRole(true);
+    setRoleError(null);
+    const newRole = userToChangeRole.role === 'admin' ? 'ustadz' : 'admin';
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sesi tidak ditemukan. Silakan login ulang.');
+      const res = await fetch('/api/admin/change-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ targetId: userToChangeRole.id, newRole }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Gagal mengubah role.');
+      setIsRoleModalOpen(false);
+      setUserToChangeRole(null);
+      fetchUstadz();
+    } catch (err: any) {
+      setRoleError(err.message || 'Gagal mengubah role pengguna.');
+    } finally {
+      setIsChangingRole(false);
     }
   };
 
@@ -207,7 +247,7 @@ export default function ManageUstadzPage() {
           {displayList.map((user) => (
             <div
               key={user.id}
-              className={`bg-white rounded-[1.5rem] border-2 p-4 flex items-start gap-3 group ${showRemoved ? 'border-rose-100 opacity-80' : 'border-slate-100'}`}
+              className={`bg-white rounded-[1.5rem] border-2 p-4 flex items-start gap-3 ${showRemoved ? 'border-rose-100 opacity-80' : 'border-slate-100'}`}
               style={{ boxShadow: showRemoved ? "0 3px 0 0 #fee2e2" : "0 3px 0 0 #e2e8f0" }}
             >
               <div
@@ -239,13 +279,22 @@ export default function ManageUstadzPage() {
                 )}
               </div>
               {!showRemoved && (
-                <button
-                  onClick={() => openRemoveModal(user)}
-                  className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors opacity-0 group-hover:opacity-100 shrink-0"
-                  title="Nonaktifkan pengguna"
-                >
-                  <UserX size={15} />
-                </button>
+                <div className="flex flex-col gap-1 shrink-0">
+                  <button
+                    onClick={() => openRoleModal(user)}
+                    className="p-2 text-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 rounded-xl transition-colors"
+                    title={user.role === 'admin' ? 'Jadikan Ustadz' : 'Jadikan Admin'}
+                  >
+                    <ArrowLeftRight size={15} />
+                  </button>
+                  <button
+                    onClick={() => openRemoveModal(user)}
+                    className="p-2 text-rose-300 hover:text-rose-500 hover:bg-rose-50 active:bg-rose-100 rounded-xl transition-colors"
+                    title="Nonaktifkan pengguna"
+                  >
+                    <UserX size={15} />
+                  </button>
+                </div>
               )}
             </div>
           ))}
@@ -302,6 +351,64 @@ export default function ManageUstadzPage() {
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan Pengguna
               </button>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Role Change Modal */}
+      {isRoleModalOpen && userToChangeRole && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] p-7 w-full max-w-md relative" style={{ boxShadow: "0 8px 0 0 #e2e8f0" }}>
+            <button onClick={() => setIsRoleModalOpen(false)} className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 transition-colors">
+              <X size={16} />
+            </button>
+            <div className="mb-6">
+              <div className="w-11 h-11 bg-indigo-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #c7d2fe" }}>
+                <ShieldCheck size={20} className="text-indigo-500" />
+              </div>
+              <h3 className="text-xl font-black text-slate-800">Ubah Role</h3>
+              <p className="text-slate-400 text-sm font-bold mt-0.5">
+                <strong className="text-slate-700">{userToChangeRole.name}</strong> saat ini adalah{' '}
+                <span className={`font-black ${userToChangeRole.role === 'admin' ? 'text-slate-900' : 'text-emerald-600'}`}>
+                  {userToChangeRole.role === 'admin' ? 'Admin' : 'Ustadz'}
+                </span>.
+              </p>
+            </div>
+            {roleError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={15} />{roleError}</div>}
+            <div className="flex items-center justify-center gap-4 mb-6 p-4 bg-slate-50 rounded-2xl border-2 border-slate-100">
+              <div className="text-center">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-slate-900 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+                  {userToChangeRole.name?.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  {userToChangeRole.role === 'admin' ? 'Admin' : 'Ustadz'}
+                </span>
+              </div>
+              <ArrowLeftRight size={18} className="text-indigo-400 shrink-0" />
+              <div className="text-center">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-900 text-white'}`}>
+                  {userToChangeRole.name?.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  {userToChangeRole.role === 'admin' ? 'Ustadz' : 'Admin'}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setIsRoleModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-black py-3 rounded-xl hover:bg-slate-200 transition-colors">
+                Batal
+              </button>
+              <button
+                onClick={handleChangeRole}
+                disabled={isChangingRole}
+                className="flex-1 bg-indigo-500 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
+                style={{ boxShadow: "0 3px 0 0 #4338ca" }}
+              >
+                {isChangingRole ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck size={14} />}
+                Konfirmasi
+              </button>
+            </div>
           </div>
         </div>,
         document.body
