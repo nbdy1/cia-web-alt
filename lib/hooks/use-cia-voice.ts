@@ -23,7 +23,7 @@
 import { useCallback, useState, useRef } from "react";
 import { generateSpeech } from "@/app/actions/speech";
 
-const USE_ELEVENLABS = false; // Toggle this to switch between ElevenLabs and Native Browser TTS
+const USE_ELEVENLABS = true; // Toggle this to switch between ElevenLabs and Native Browser TTS
 
 export function useCIAVoice() {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -62,7 +62,7 @@ export function useCIAVoice() {
     // Native Browser TTS
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'id-ID';
-    utterance.rate = 1.3;
+    utterance.rate = 1.0;
     utterance.pitch = 1.0;
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);

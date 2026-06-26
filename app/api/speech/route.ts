@@ -14,7 +14,8 @@
 
 export const runtime = "nodejs";
 
-const VOICE_ID = "TX3LPaxmHKxFdv7VOQHJ"; // Liam
+// const VOICE_ID = "TX3LPaxmHKxFdv7VOQHJ"; // Liam
+const VOICE_ID = "d888tBvGmQT2u05J1xTv"; // Ahmad
 // const VOICE_ID = "q8qwd1jY2jS3AWOBeq25"; // Pratama (lebih ekspresif, cocok untuk Bahasa Indonesia)
 const MODEL_ID = "eleven_flash_v2_5";
 
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.75,
-          speed: 1.2,
+          speed: 1.1,
         },
         lanquage_code: "id", // Indonesian
       }),

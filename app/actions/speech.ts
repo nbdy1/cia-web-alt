@@ -19,7 +19,8 @@
 
 export async function generateSpeech(text: string) {
   const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-  const VOICE_ID = "TX3LPaxmHKxFdv7VOQHJ"; // Liam
+  // const VOICE_ID = "TX3LPaxmHKxFdv7VOQHJ"; // Liam
+  const VOICE_ID = "d888tBvGmQT2u05J1xTv"; // Ahmad
   // const VOICE_ID = "q8qwd1jY2jS3AWOBeq25"; // Pratama (lebih ekspresif, cocok untuk Bahasa Indonesia)
 
   if (!ELEVENLABS_API_KEY) {
@@ -42,7 +43,7 @@ export async function generateSpeech(text: string) {
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.75,
-            speed: 1.2,
+            speed: 1.1,
           },
           language_code: "id", // Indonesian
         }),
