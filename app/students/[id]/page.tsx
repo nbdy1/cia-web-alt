@@ -155,18 +155,64 @@ export default async function StudentProfile({
                 <ChevronRight size={16} className="text-amber-400 transition-transform duration-200 group-open:rotate-90" />
               </div>
             </summary>
-            <div className="px-5 py-4">
-              <p className="text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-line">
-                {(() => {
-                  const raw = student.profile_summary;
-                  try {
-                    const parsed = JSON.parse(raw);
-                    return parsed.profil_santri ?? parsed.profile ?? raw;
-                  } catch {
-                    return raw;
+            <div className="px-5 py-4 space-y-3">
+              {(() => {
+                /* ── Extract the profile text from whatever JSON shape is stored ── */
+                const raw: string = student.profile_summary ?? "";
+                let text = raw.trim();
+
+                try {
+                  const parsed = JSON.parse(raw);
+
+                  // Helper: pull the profile string from a plain object
+                  const fromObject = (obj: Record<string, unknown>): string | null =>
+                    (typeof obj?.profil_karakter === "string" ? obj.profil_karakter
+                      : typeof obj?.profil_santri === "string" ? obj.profil_santri
+                      : typeof obj?.profil === "string" ? obj.profil
+                      : typeof obj?.profile === "string" ? obj.profile
+                      : null);
+
+                  if (Array.isArray(parsed)) {
+                    if (parsed.length > 0) {
+                      const first = parsed[0];
+                      if (typeof first === "string") {
+                        text = first;
+                      } else if (first && typeof first === "object") {
+                        text = fromObject(first as Record<string, unknown>) ?? raw;
+                      }
+                    }
+                  } else if (parsed && typeof parsed === "object") {
+                    text = fromObject(parsed as Record<string, unknown>) ?? raw;
+                  } else if (typeof parsed === "string") {
+                    text = parsed;
                   }
-                })()}
-              </p>
+                } catch {
+                  /* not JSON — use raw text as-is */
+                }
+
+                /*
+                 * ── Split into readable paragraphs ──
+                 * Strategy: split on sentence-ending punctuation followed by a
+                 * capital letter / "Namun" / "Selain" / "Bagi" / "Ia" / "Meski"
+                 * so long monolithic text breaks into 3-5 natural chunks.
+                 */
+                const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [text];
+                const paragraphs: string[] = [];
+                const CHUNK = 2; // sentences per paragraph
+                for (let i = 0; i < sentences.length; i += CHUNK) {
+                  paragraphs.push(sentences.slice(i, i + CHUNK).join(" ").trim());
+                }
+                if (paragraphs.length === 0) paragraphs.push(text);
+
+                return paragraphs.map((para, idx) => (
+                  <p
+                    key={idx}
+                    className="text-sm text-slate-700 leading-relaxed font-medium"
+                  >
+                    {para}
+                  </p>
+                ));
+              })()}
             </div>
           </details>
         )}

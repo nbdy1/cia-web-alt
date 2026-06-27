@@ -589,16 +589,44 @@ Profil harus mencakup:
 - Area kelemahan atau perkembangan yang masih perlu perhatian
 - Konteks singkat yang berguna bagi ustadz dan AI dalam asesmen berikutnya
 
-Tulis seperti catatan profesional yang disiapkan untuk seseorang yang belum pernah bertemu santri ini. Gunakan gaya narasi yang alami, bukan daftar poin. HANYA kembalikan teks profil, tanpa JSON, tanpa judul.`;
+Tulis seperti catatan profesional yang disiapkan untuk seseorang yang belum pernah bertemu santri ini. Gunakan gaya narasi yang alami, bukan daftar poin.
+
+PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak boleh ada array, tidak boleh ada markdown, tidak boleh ada judul, tidak boleh ada key-value. Hanya paragraf teks biasa.`;
 
     const profileText = await callOpenRouter(systemPrompt, reportContext);
 
-    // Strip any accidental markdown fences or JSON wrapping the model might add
-    let cleanProfile = profileText.replace(/```[\s\S]*?```/g, "").trim();
+    // ── Aggressively strip any JSON/markdown wrapping the model might produce ──
+    // Despite instructions, LLMs sometimes wrap output in arrays or objects.
+    // We normalise to plain text here so profile_summary is always clean.
+    let cleanProfile = profileText
+      .replace(/```[\s\S]*?```/g, "") // strip markdown fences
+      .trim();
+
+    // Helper: extract the profile string from a plain object, checking all
+    // observed key names the model has used in the past.
+    const extractFromObject = (obj: Record<string, unknown>): string | null =>
+      typeof obj?.profil_karakter === "string" ? obj.profil_karakter
+      : typeof obj?.profil_santri  === "string" ? obj.profil_santri
+      : typeof obj?.profil         === "string" ? obj.profil
+      : typeof obj?.profile        === "string" ? obj.profile
+      : null;
+
     try {
       const parsed = JSON.parse(cleanProfile);
-      cleanProfile = parsed.profil_santri ?? parsed.profile ?? cleanProfile;
-    } catch { /* not JSON, use as-is */ }
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const first = parsed[0];
+        cleanProfile =
+          typeof first === "string"
+            ? first
+            : extractFromObject(first as Record<string, unknown>) ?? cleanProfile;
+      } else if (parsed && typeof parsed === "object") {
+        cleanProfile = extractFromObject(parsed as Record<string, unknown>) ?? cleanProfile;
+      } else if (typeof parsed === "string") {
+        cleanProfile = parsed;
+      }
+    } catch { /* not JSON — already plain text, use as-is */ }
+
+    cleanProfile = cleanProfile.trim();
 
     await supabase
       .from("students")
