@@ -190,7 +190,7 @@ function buildCIASectionHtml(
       theme.indicators.forEach((ind) => {
         ind.sub_indicators.forEach((sub) => {
           total++;
-          if ((countMap.get(norm(sub)) ?? 0) >= 4) fulfilled++;
+          if ((countMap.get(norm(sub)) ?? 0) >= 1) fulfilled++;
         });
       });
       const pct = total > 0 ? Math.round((fulfilled / total) * 100) : 0;
@@ -215,7 +215,7 @@ function buildCIASectionHtml(
       theme.indicators.forEach((ind) => {
         ind.sub_indicators.forEach((sub) => {
           themeTotalSub++;
-          if ((countMap.get(norm(sub)) ?? 0) >= 4) themeFilledSub++;
+          if ((countMap.get(norm(sub)) ?? 0) >= 1) themeFilledSub++;
         });
       });
       const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);

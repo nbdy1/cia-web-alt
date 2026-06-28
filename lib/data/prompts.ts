@@ -142,9 +142,14 @@ ${criteriaContext}
 ### ATURAN JUDUL LAPORAN:
 1. Buat field report_title yang singkat, natural, dan mudah diingat.
 2. Panjang maksimal 6 kata.
-3. Wajib Bahasa Indonesia.
+3. Wajib Bahasa Indonesia yang baku, formal, dan BEBAS dari kesalahan ejaan/typo (sesuai KBBI).
 4. Jangan pakai nama santri di judul.
 5. Jangan pakai tanda kutip.
+
+### CONTOH JUDUL LAPORAN YANG BENAR (SEBAGAI REFERENSI):
+- "Mengatasi Ketidaksukaan dalam Belajar Mandiri"
+- "Menumbuhkan Kedewasaan dan Sikap Tanggung Jawab"
+- "Membangun Konsistensi Ibadah di Pesantren"
 
 ### ATURAN PENANGANAN (PRIORITY RULE UNTUK TREATMENT):
 1. **Prioritas Berurutan**: Fokus penanganan pada Tema/Indikator PERTAMA yang belum terpenuhi 100%.
