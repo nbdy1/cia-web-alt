@@ -26,12 +26,14 @@ import {
   Brain,
   Heart,
   Zap,
+  Cpu,
 } from "lucide-react";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { FulfilledSubsList } from "@/components/FulfilledSubsList";
+import { getModelLabel } from "@/lib/data/models";
 
 // ─── Framework lookup helpers ──────────────────────────────────────────────
 // Given a category + theme title + indicator title from the AI output,
@@ -179,6 +181,11 @@ export default async function ReportDetailPage({
         <div className="text-center">
           <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Laporan</p>
           <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
+          <div className="flex items-center justify-center gap-1 mt-1">
+            <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+              <Cpu size={8} /> {getModelLabel(report.model_used)}
+            </span>
+          </div>
         </div>
         <div className="w-9" />
       </header>

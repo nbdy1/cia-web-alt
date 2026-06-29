@@ -24,6 +24,7 @@ import localFont from "next/font/local";
 import { AuthProvider } from "@/lib/context/auth-context";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { ClickSoundProvider } from "@/components/ClickSoundProvider";
+import { SettingsProvider } from "@/lib/context/settings-context";
 import "./globals.css";
 
 const dinRounded = localFont({
@@ -121,11 +122,13 @@ export default function RootLayout({
       <body className={`${dinRounded.className} w-full bg-white min-h-screen flex flex-col relative m-0 p-0`}>
         <script dangerouslySetInnerHTML={{ __html: appearanceScript }} />
         <ClickSoundProvider />
-        <LayoutWrapper>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </LayoutWrapper>
+        <SettingsProvider>
+          <LayoutWrapper>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </LayoutWrapper>
+        </SettingsProvider>
       </body>
     </html>
   );

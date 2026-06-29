@@ -16,9 +16,20 @@
  */
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Settings, BookOpen, Sliders, HelpCircle, Shield, Type, RotateCcw } from 'lucide-react';
-import { CriteriaGlossaryModal } from './CriteriaGlossaryModal';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Settings,
+  BookOpen,
+  Sliders,
+  HelpCircle,
+  Shield,
+  Type,
+  RotateCcw,
+  Cpu,
+} from "lucide-react";
+import { CriteriaGlossaryModal } from "./CriteriaGlossaryModal";
+import { useSettings } from "@/lib/context/settings-context";
+import { MODEL_OPTIONS } from "@/lib/data/models";
 
 const FONT_STORAGE_KEY = "cia:font-family";
 const FONT_SCALE_STORAGE_KEY = "cia:font-scale";
@@ -98,7 +109,9 @@ function getInitialFontScale() {
     const raw = window.localStorage?.getItem(FONT_SCALE_STORAGE_KEY);
     if (raw === null || raw === undefined) return 1; // no saved preference → default 1
     const storedScale = Number(raw);
-    return Number.isFinite(storedScale) ? Math.min(Math.max(storedScale, 0.9), 1.18) : 1;
+    return Number.isFinite(storedScale)
+      ? Math.min(Math.max(storedScale, 0.9), 1.18)
+      : 1;
   } catch {
     return 1;
   }
@@ -107,9 +120,11 @@ function getInitialFontScale() {
 export function SettingsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
-  const [fontFamily, setFontFamily] = useState<FontOptionId>(getInitialFontFamily);
+  const [fontFamily, setFontFamily] =
+    useState<FontOptionId>(getInitialFontFamily);
   const [fontScale, setFontScale] = useState(getInitialFontScale);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { selectedModel, setSelectedModel } = useSettings();
 
   useEffect(() => {
     applyAppearance(fontFamily, fontScale);
@@ -117,15 +132,18 @@ export function SettingsDropdown() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
 
@@ -139,20 +157,67 @@ export function SettingsDropdown() {
             ? "bg-emerald-500 text-white border-emerald-400"
             : "bg-white text-slate-500 border-slate-200 hover:border-emerald-200"
         }`}
-        style={isOpen ? { boxShadow: "0 3px 0 0 #15803d" } : { boxShadow: "0 3px 0 0 #cbd5e1" }}
+        style={
+          isOpen
+            ? { boxShadow: "0 3px 0 0 #15803d" }
+            : { boxShadow: "0 3px 0 0 #cbd5e1" }
+        }
         title="Pengaturan & Panduan"
       >
-        <Settings className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
+        <Settings
+          className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`}
+        />
       </button>
 
       {/* Popover Menu */}
       {isOpen && (
-        <div className="fixed left-1/2 -translate-x-1/2 top-[4.5rem] w-[22rem] max-w-[calc(100vw-1.5rem)] bg-white rounded-[1.8rem] z-50 animate-fade-in border-2 border-slate-100" style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}>
+        <div
+          className="fixed left-1/2 -translate-x-1/2 top-[4.5rem] w-[22rem] max-w-[calc(100vw-1.5rem)] bg-white rounded-[1.8rem] z-50 animate-fade-in border-2 border-slate-100"
+          style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}
+        >
           <div className="px-5 py-4 border-b-2 border-slate-100 mb-2">
             <h4 className="font-black text-slate-800 text-base">Pengaturan</h4>
-            <p className="text-[11px] text-slate-400 font-bold mt-0.5">Preferensi & panduan CIA</p>
+            <p className="text-[11px] text-slate-400 font-bold mt-0.5">
+              Preferensi & panduan CIA
+            </p>
           </div>
 
+          {/* Model AI Setting */}
+          <div className="p-3 rounded-2xl bg-slate-50 border-2 border-slate-100">
+            <div className="flex items-center gap-3 mb-3">
+              <div
+                className="w-9 h-9 bg-white text-slate-600 rounded-xl border-2 border-slate-200 flex items-center justify-center flex-shrink-0"
+                style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}
+              >
+                <Cpu className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="block font-black text-slate-800 text-sm">
+                  Model AI
+                </span>
+                <span className="block text-[10px] text-slate-400 font-bold">
+                  Pilih otak asisten
+                </span>
+              </div>
+            </div>
+            <div className="rounded-2xl bg-white border border-slate-100 px-3 py-3">
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="w-full text-sm font-black text-slate-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-400 transition-colors cursor-pointer appearance-none"
+                style={{ boxShadow: "0 2px 0 0 #a7f3d0" }}
+              >
+                {MODEL_OPTIONS.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.label}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-2 text-[10px] font-semibold text-slate-400 leading-tight">
+                {MODEL_OPTIONS.find((m) => m.id === selectedModel)?.desc}
+              </div>
+            </div>
+          </div>
           <div className="px-2 space-y-1">
             {/* Glossary Modal Button */}
             <button
@@ -162,24 +227,38 @@ export function SettingsDropdown() {
               }}
               className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-emerald-50 text-left transition-colors group cursor-pointer"
             >
-              <div className="w-9 h-9 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0" style={{ boxShadow: "0 2px 0 0 #6ee7b7" }}>
+              <div
+                className="w-9 h-9 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0"
+                style={{ boxShadow: "0 2px 0 0 #6ee7b7" }}
+              >
                 <BookOpen className="w-4 h-4" />
               </div>
               <div>
-                <span className="block font-black text-slate-800 text-sm">Panduan Kriteria</span>
-                <span className="block text-[10px] text-slate-400 font-bold mt-0.5">Karakter, Mental, Soft Skill</span>
+                <span className="block font-black text-slate-800 text-sm">
+                  Panduan Kriteria
+                </span>
+                <span className="block text-[10px] text-slate-400 font-bold mt-0.5">
+                  Karakter, Mental, Soft Skill
+                </span>
               </div>
             </button>
 
             {/* App Preferences */}
             <div className="p-3 rounded-2xl bg-slate-50 border-2 border-slate-100">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 bg-white text-slate-600 rounded-xl border-2 border-slate-200 flex items-center justify-center flex-shrink-0" style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}>
+                <div
+                  className="w-9 h-9 bg-white text-slate-600 rounded-xl border-2 border-slate-200 flex items-center justify-center flex-shrink-0"
+                  style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}
+                >
                   <Sliders className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="block font-black text-slate-800 text-sm">Tampilan</span>
-                  <span className="block text-[10px] text-slate-400 font-bold">Huruf & ukuran teks</span>
+                  <span className="block font-black text-slate-800 text-sm">
+                    Tampilan
+                  </span>
+                  <span className="block text-[10px] text-slate-400 font-bold">
+                    Huruf & ukuran teks
+                  </span>
                 </div>
               </div>
 
@@ -269,37 +348,51 @@ export function SettingsDropdown() {
             {/* Help / Guide */}
             <button
               onClick={() => {
-                alert("Pusat Bantuan Ustadz CIA siap melayani. Panduan teknis dapat diunduh di portal santri.");
+                alert(
+                  "Pusat Bantuan Ustadz CIA siap melayani. Panduan teknis dapat diunduh di portal santri.",
+                );
                 setIsOpen(false);
               }}
               className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 text-left transition-colors group cursor-pointer"
             >
-              <div className="w-9 h-9 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0" style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}>
+              <div
+                className="w-9 h-9 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0"
+                style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}
+              >
                 <HelpCircle className="w-4 h-4" />
               </div>
               <div>
-                <span className="block font-black text-slate-800 text-sm">Pusat Bantuan</span>
-                <span className="block text-[10px] text-slate-400 font-bold mt-0.5">Panduan teknis pengisian laporan</span>
+                <span className="block font-black text-slate-800 text-sm">
+                  Pusat Bantuan
+                </span>
+                <span className="block text-[10px] text-slate-400 font-bold mt-0.5">
+                  Panduan teknis pengisian laporan
+                </span>
               </div>
             </button>
           </div>
 
           <div className="mt-2 pt-3 border-t-2 border-slate-100 px-5 pb-3 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[10px] text-slate-400 font-black">
-              <div className="w-4 h-4 bg-emerald-500 rounded-md flex items-center justify-center" style={{ boxShadow: "0 1px 0 0 #15803d" }}>
+              <div
+                className="w-4 h-4 bg-emerald-500 rounded-md flex items-center justify-center"
+                style={{ boxShadow: "0 1px 0 0 #15803d" }}
+              >
                 <Shield className="w-2.5 h-2.5 text-white" />
               </div>
               CIA V0.1
             </span>
-            <span className="text-[10px] text-slate-400 font-black">Bahasa Indonesia</span>
+            <span className="text-[10px] text-slate-400 font-black">
+              Bahasa Indonesia
+            </span>
           </div>
         </div>
       )}
 
       {/* Criteria Glossary Modal */}
-      <CriteriaGlossaryModal 
-        isOpen={isGlossaryOpen} 
-        onClose={() => setIsGlossaryOpen(false)} 
+      <CriteriaGlossaryModal
+        isOpen={isGlossaryOpen}
+        onClose={() => setIsGlossaryOpen(false)}
       />
     </div>
   );

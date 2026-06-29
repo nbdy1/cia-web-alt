@@ -316,7 +316,7 @@ function computeOverallStats(aiJson: any): {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function callOpenRouter(systemPrompt: string, userMessage: string) {
+async function callOpenRouter(systemPrompt: string, userMessage: string, model: string = CHAT_MODEL) {
   if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is missing");
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -326,7 +326,7 @@ async function callOpenRouter(systemPrompt: string, userMessage: string) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: CHAT_MODEL,
+      model: model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
@@ -653,7 +653,8 @@ PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak bol
 export async function processInterviewStep(
   transcript: string,
   discoveredThemes: string[] = [],
-  studentId?: string
+  studentId?: string,
+  selectedModel: string = CHAT_MODEL
 ) {
   try {
     // Fetch the student's historical profile if a studentId was provided.
@@ -707,7 +708,8 @@ export async function processInterviewStep(
 
     const responseText = await callOpenRouter(
       interviewPrompt,
-      `TRANSKRIP SAAT INI:\n"${transcript}"`
+      `TRANSKRIP SAAT INI:\n"${transcript}"`,
+      selectedModel
     );
     const cleanJson = responseText.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleanJson);
@@ -726,7 +728,8 @@ export async function processInterviewStep(
 export async function finalizeAssessment(
   transcript: string,
   studentId?: string,
-  discoveredThemes: string[] = []
+  discoveredThemes: string[] = [],
+  selectedModel: string = CHAT_MODEL
 ) {
   try {
     // 1. Fetch the student's previous progress + historical profile for context
@@ -832,13 +835,15 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     // 4. Call the LLM
     const responseText = await callOpenRouter(
       systemPrompt,
-      `${currentProgressContext}${previousTitlesContext}\n\nTRANSKRIP AKHIR:\n"${transcript}"`
+      `${currentProgressContext}${previousTitlesContext}\n\nTRANSKRIP AKHIR:\n"${transcript}"`,
+      selectedModel
     );
     const cleanJson = responseText.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleanJson);
     const enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? []);
     parsed.analysis_version = 2;
     parsed.report_title = normalizeReportTitle(parsed?.report_title, parsed);
+    parsed.model_used = selectedModel;
     parsed.detailed_assessments = enrichedAssessments;
     parsed.treatment = enrichTreatment(parsed?.treatment, enrichedAssessments);
     const finalThemes: string[] = Array.isArray(parsed?.detailed_assessments)

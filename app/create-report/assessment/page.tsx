@@ -34,6 +34,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useCIAVoice } from '@/lib/hooks/use-cia-voice';
 import { processInterviewStep, finalizeAssessment } from '@/app/actions/ai-analysis';
 import { transcribeAudio } from '@/app/actions/whisper';
+import { useSettings } from '@/lib/context/settings-context';
 
 // Set to true to use OpenRouter Whisper instead of the browser Web Speech API.
 // Flip this during testing; the UI toggle is intentionally removed.
@@ -59,6 +60,7 @@ export default function AssessmentPage() {
   const [discoveredCount, setDiscoveredCount] = useState(0);
   const [discoveredPillars, setDiscoveredPillars] = useState<string[]>([]);
 
+  const { selectedModel } = useSettings();
   const { speak, stop: stopVoice } = useCIAVoice();
   const recognitionRef = useRef<any>(null);
   // Tracks user *intent* to record — survives iOS onend auto-fires
@@ -249,7 +251,7 @@ export default function AssessmentPage() {
         previousAccumulatedCount: discoveredPillars.length,
       });
       const transcript = newMessages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
-      const result = await processInterviewStep(transcript, discoveredPillars, studentId || undefined);
+      const result = await processInterviewStep(transcript, discoveredPillars, studentId || undefined, selectedModel);
 
       if (result.reply) {
         const newDiscovered = Array.isArray(result.discoveredPillars) ? result.discoveredPillars : [];
@@ -289,7 +291,8 @@ export default function AssessmentPage() {
       const analysis = await finalizeAssessment(
         fullTranscript,
         studentId || undefined,
-        discoveredPillars
+        discoveredPillars,
+        selectedModel
       );
       console.log('[Finalize][Client] Final analysis received', {
         statusSummary: analysis?.status_summary,
@@ -303,6 +306,7 @@ export default function AssessmentPage() {
       // Save large JSON payload to sessionStorage to avoid URL length limits
       sessionStorage.setItem('current_analysis', JSON.stringify(analysis));
       sessionStorage.setItem('current_narrative', fullTranscript);
+      sessionStorage.setItem('current_model', selectedModel);
 
       const params = new URLSearchParams({
         id: studentId || "",

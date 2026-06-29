@@ -30,6 +30,7 @@ export async function saveAssessmentAction(data: {
   student_id: string;
   narrative: string;
   analysis: any; // Full structured analysis object
+  model_used?: string;
 }) {
   try {
     // Step 1: Insert the main Report
@@ -39,7 +40,8 @@ export async function saveAssessmentAction(data: {
         student_id: data.student_id,
         narrative: data.narrative,
         title: data.analysis?.report_title || "Laporan Perkembangan",
-        treatment_plan: data.analysis // JSONB
+        treatment_plan: data.analysis, // JSONB
+        model_used: data.model_used || "google/gemini-3-flash-preview"
       }])
       .select()
       .single();
