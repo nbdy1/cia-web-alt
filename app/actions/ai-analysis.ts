@@ -536,7 +536,7 @@ function buildUnexploredThemesContext(frontierRows: CriteriaRow[], discoveredThe
  * Errors are caught and logged — profile generation failure never blocks the
  * user from seeing their saved report.
  */
-export async function generateStudentProfile(studentId: string): Promise<void> {
+export async function generateStudentProfile(studentId: string, selectedModel: string = CHAT_MODEL): Promise<void> {
   try {
     // Fetch last 5 reports — enough history without blowing token budget
     const { data: reports } = await supabase
@@ -593,7 +593,7 @@ Tulis seperti catatan profesional yang disiapkan untuk seseorang yang belum pern
 
 PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak boleh ada array, tidak boleh ada markdown, tidak boleh ada judul, tidak boleh ada key-value. Hanya paragraf teks biasa.`;
 
-    const profileText = await callOpenRouter(systemPrompt, reportContext);
+    const profileText = await callOpenRouter(systemPrompt, reportContext, selectedModel);
 
     // ── Aggressively strip any JSON/markdown wrapping the model might produce ──
     // Despite instructions, LLMs sometimes wrap output in arrays or objects.

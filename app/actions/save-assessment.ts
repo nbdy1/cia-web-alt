@@ -53,7 +53,7 @@ export async function saveAssessmentAction(data: {
     // Step 2: Regenerate the student's rolling profile summary in the background.
     // This is non-fatal — if it fails, the report is already saved and the next
     // assessment will just run without an updated profile.
-    await generateStudentProfile(data.student_id);
+    await generateStudentProfile(data.student_id, data.model_used);
 
     return { success: true };
 
