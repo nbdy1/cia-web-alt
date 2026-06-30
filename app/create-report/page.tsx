@@ -25,6 +25,7 @@ import { ChevronLeft, Mic, Search, Loader2, CheckCircle2, MicOff } from 'lucide-
 import Link from 'next/link';
 import Fuse from 'fuse.js';
 import { supabase } from '@/lib/supabase';
+import { StudentAvatar } from '@/components/StudentAvatar';
 
 export default function CreateReport() {
   const [students, setStudents] = useState<any[]>([]);
@@ -221,9 +222,18 @@ export default function CreateReport() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black ${isSelected ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500"}`}>
-                        {student.name.charAt(0)}
-                      </div>
+                      {isSelected ? (
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black bg-emerald-500 text-white flex-shrink-0">
+                          {student.name.charAt(0)}
+                        </div>
+                      ) : (
+                        <StudentAvatar
+                          name={student.name}
+                          photoUrl={student.photo_url ?? null}
+                          size="sm"
+                          colorIndex={filteredStudents.indexOf(student)}
+                        />
+                      )}
                       <span className={isSelected ? "text-emerald-800" : "text-slate-700"}>{student.name}</span>
                     </div>
                     {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}

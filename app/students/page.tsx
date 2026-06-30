@@ -33,11 +33,13 @@ import {
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
+import { StudentAvatar } from "@/components/StudentAvatar";
 
 type StudentWithStats = {
   id: string;
   name: string;
   nis: string | null;
+  photo_url: string | null;
   assigned_ustadz_id: string | null;
   reportsCount: number;
   themesExplored: number;
@@ -117,6 +119,7 @@ export default function StudentsAnalyticsPage() {
           id: student.id,
           name: student.name,
           nis: student.nis,
+          photo_url: student.photo_url ?? null,
           assigned_ustadz_id: student.assigned_ustadz_id,
           reportsCount: reports.length,
           themesExplored: themeSet.size,
@@ -211,14 +214,6 @@ export default function StudentsAnalyticsPage() {
           ) : (
             <div className="grid gap-4">
               {students.map((student, i) => {
-                const avatarColors = [
-                  { bg: "#22c55e", shadow: "#15803d" },
-                  { bg: "#3b82f6", shadow: "#1d4ed8" },
-                  { bg: "#f59e0b", shadow: "#92400e" },
-                  { bg: "#8b5cf6", shadow: "#6d28d9" },
-                  { bg: "#ef4444", shadow: "#b91c1c" },
-                ];
-                const color = avatarColors[i % avatarColors.length];
                 return (
                   <Link
                     key={student.id}
@@ -228,12 +223,12 @@ export default function StudentsAnalyticsPage() {
                     <div className="card-3d p-5">
                       <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center gap-3">
-                          <div
-                            className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg text-white"
-                            style={{ background: color.bg, boxShadow: `0 3px 0 0 ${color.shadow}` }}
-                          >
-                            {student.name.charAt(0)}
-                          </div>
+                          <StudentAvatar
+                            name={student.name}
+                            photoUrl={student.photo_url}
+                            size="md"
+                            colorIndex={i}
+                          />
                           <div>
                             <p className="font-black text-slate-900 text-lg leading-tight">
                               {student.name}
@@ -306,9 +301,12 @@ export default function StudentsAnalyticsPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center font-black text-emerald-700 text-sm">
-                        {report.students?.name?.charAt(0)}
-                      </div>
+                      <StudentAvatar
+                        name={report.students?.name ?? "?"}
+                        photoUrl={null}
+                        size="sm"
+                        colorIndex={0}
+                      />
                       <div>
                         <p className="font-black text-slate-800 text-sm leading-tight">{report.students?.name}</p>
                         <p className="text-[10px] font-bold text-slate-400 mt-0.5">

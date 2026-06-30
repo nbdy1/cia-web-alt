@@ -34,6 +34,7 @@ import { softSkillData } from "@/lib/data/soft-skill";
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { FulfilledSubsList } from "@/components/FulfilledSubsList";
 import { getModelLabel } from "@/lib/data/models";
+import { StudentAvatar } from "@/components/StudentAvatar";
 
 // ─── Framework lookup helpers ──────────────────────────────────────────────
 // Given a category + theme title + indicator title from the AI output,
@@ -133,7 +134,7 @@ function computeDisplayOverallStats(analysis: any) {
 async function getReportDetails(id: string) {
   const { data: report } = await supabase
     .from("reports")
-    .select(`*, students(name)`)
+    .select(`*, students(name, photo_url)`)
     .eq("id", id)
     .single();
 
@@ -178,13 +179,21 @@ export default async function ReportDetailPage({
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 flex-shrink-0"
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
-        <div className="text-center">
-          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Laporan</p>
-          <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
-          <div className="flex items-center justify-center gap-1 mt-1">
-            <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
-              <Cpu size={8} /> {getModelLabel(report.model_used)}
-            </span>
+        <div className="flex flex-col items-center gap-1.5">
+          <StudentAvatar
+            name={report.students.name}
+            photoUrl={(report.students as any).photo_url ?? null}
+            size="lg"
+            colorIndex={0}
+          />
+          <div className="text-center">
+            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Laporan</p>
+            <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
+            <div className="flex items-center justify-center gap-1 mt-1">
+              <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                <Cpu size={8} /> {getModelLabel(report.model_used)}
+              </span>
+            </div>
           </div>
         </div>
         <div className="w-9" />

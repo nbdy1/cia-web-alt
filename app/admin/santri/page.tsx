@@ -20,6 +20,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { Search, Loader2, Plus, X, AlertCircle, Sparkles, UserX, GraduationCap, ArchiveX, ArrowLeft } from 'lucide-react';
+import { StudentAvatar } from '@/components/StudentAvatar';
 
 export default function ManageSantriPage() {
   const [students, setStudents] = useState<any[]>([]);
@@ -133,6 +134,7 @@ export default function ManageSantriPage() {
     s.nis?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // avatarColors kept for removed-student greyed state
   const avatarColors = ["#22c55e","#3b82f6","#f59e0b","#a855f7","#ef4444","#06b6d4"];
   const inputCls = "w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-colors";
   const labelCls = "block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5";
@@ -200,12 +202,22 @@ export default function ManageSantriPage() {
               className={`bg-white rounded-[1.5rem] border-2 p-4 flex items-start gap-3 group ${showRemoved ? 'border-rose-100 opacity-80' : 'border-slate-100'}`}
               style={{ boxShadow: showRemoved ? "0 3px 0 0 #fee2e2" : "0 3px 0 0 #e2e8f0" }}
             >
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base text-white shrink-0"
-                style={{ background: showRemoved ? '#94a3b8' : avatarColors[i % avatarColors.length], boxShadow: `0 2px 0 0 ${showRemoved ? '#cbd5e1' : avatarColors[i % avatarColors.length]}88` }}
-              >
-                {student.name?.charAt(0).toUpperCase() ?? "?"}
-              </div>
+              {showRemoved ? (
+                <div
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base text-white shrink-0"
+                  style={{ background: '#94a3b8', boxShadow: '0 2px 0 0 #cbd5e1' }}
+                >
+                  {student.name?.charAt(0).toUpperCase() ?? "?"}
+                </div>
+              ) : (
+                <StudentAvatar
+                  name={student.name ?? "?"}
+                  photoUrl={student.photo_url ?? null}
+                  size="sm"
+                  colorIndex={i}
+                  className="w-11 h-11 rounded-2xl shrink-0"
+                />
+              )}
               <div className="flex-1 overflow-hidden">
                 <p className="font-black text-slate-800 text-sm truncate">{student.name}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">

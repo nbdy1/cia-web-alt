@@ -7,6 +7,16 @@ const nextConfig: NextConfig = {
       allowedOrigins: ["ciadraft.portalsi.com"],
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        // Supabase Storage — covers any project subdomain
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

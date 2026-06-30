@@ -27,6 +27,8 @@ import {
 import Link from "next/link";
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { getModelLabel } from "@/lib/data/models";
+import { StudentPhotoUpload } from "@/components/StudentPhotoUpload";
+import { StudentAvatar } from "@/components/StudentAvatar";
 
 async function getStudentData(id: string) {
   const { data: student } = await supabase
@@ -89,12 +91,12 @@ export default async function StudentProfile({
         />
 
         <div className="flex items-center gap-4 mb-5">
-          <div
-            className="w-20 h-20 bg-emerald-500 rounded-[1.6rem] flex items-center justify-center text-white text-3xl font-black flex-shrink-0"
-            style={{ boxShadow: "0 5px 0 0 #15803d" }}
-          >
-            {student.name.charAt(0)}
-          </div>
+          <StudentPhotoUpload
+            studentId={student.id}
+            studentName={student.name}
+            initialPhotoUrl={student.photo_url}
+            colorIndex={0}
+          />
           <div>
             <h1 className="text-2xl font-black text-slate-900 leading-tight">{student.name}</h1>
             <div className="flex items-center gap-1 mt-1">
