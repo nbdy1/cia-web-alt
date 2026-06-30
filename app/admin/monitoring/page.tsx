@@ -17,6 +17,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BookOpen, Search, Loader2, Users, FileText, ChevronRight, Calendar, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { StudentAvatar } from '@/components/StudentAvatar';
 
 export default function MonitoringPage() {
   const [data, setData] = useState<any[]>([]);
@@ -43,6 +44,7 @@ export default function MonitoringPage() {
           .select(`
             id,
             name,
+            photo_url,
             assigned_ustadz_id,
             reports (
               id,
@@ -155,7 +157,13 @@ export default function MonitoringPage() {
                       ustadz.students.map((student: any) => (
                         <div key={student.id}>
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="w-7 h-7 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-600 text-xs">{student.name.charAt(0)}</div>
+                            <StudentAvatar
+                              name={student.name}
+                              photoUrl={student.photo_url ?? null}
+                              size="sm"
+                              colorIndex={0}
+                              className="w-7 h-7 rounded-xl"
+                            />
                             <span className="font-black text-slate-700 text-sm">{student.name}</span>
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black">
                               {student.reports.length} laporan

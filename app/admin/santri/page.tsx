@@ -16,11 +16,12 @@
  */
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
-import { Search, Loader2, Plus, X, AlertCircle, Sparkles, UserX, GraduationCap, ArchiveX, ArrowLeft } from 'lucide-react';
+import { Search, Loader2, Plus, X, AlertCircle, Sparkles, UserX, GraduationCap, ArchiveX, Camera } from 'lucide-react';
 import { StudentAvatar } from '@/components/StudentAvatar';
+import { StudentPhotoUpload } from '@/components/StudentPhotoUpload';
 
 export default function ManageSantriPage() {
   const [students, setStudents] = useState<any[]>([]);
@@ -35,6 +36,10 @@ export default function ManageSantriPage() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', nis: '' });
+  // Photo for new student
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+  const [pendingPhotoPreview, setPendingPhotoPreview] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Remove Modal
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
@@ -75,12 +80,31 @@ export default function ManageSantriPage() {
     setModalError(null);
     setModalSuccess(null);
     try {
-      const { error } = await supabase
+      // 1. Insert student row and get the new ID
+      const { data: inserted, error } = await supabase
         .from('students')
-        .insert([{ name: formData.name, nis: formData.nis }]);
+        .insert([{ name: formData.name, nis: formData.nis }])
+        .select('id')
+        .single();
       if (error) throw error;
+
+      // 2. Upload photo if one was picked
+      if (pendingPhotoFile && inserted?.id) {
+        const ext = pendingPhotoFile.name.split('.').pop() ?? 'jpg';
+        const path = `${inserted.id}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from('student-photos')
+          .upload(path, pendingPhotoFile, { upsert: true, contentType: pendingPhotoFile.type });
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from('student-photos').getPublicUrl(path);
+          await supabase.from('students').update({ photo_url: urlData.publicUrl }).eq('id', inserted.id);
+        }
+      }
+
       setModalSuccess("Santri berhasil ditambahkan!");
       setFormData({ name: '', nis: '' });
+      setPendingPhotoFile(null);
+      setPendingPhotoPreview(null);
       fetchStudents();
       setTimeout(() => { setIsAddModalOpen(false); setModalSuccess(null); }, 2000);
     } catch (err: any) {
@@ -88,6 +112,13 @@ export default function ManageSantriPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePendingPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingPhotoFile(file);
+    setPendingPhotoPreview(URL.createObjectURL(file));
   };
 
   const openRemoveModal = (student: any) => {
@@ -134,8 +165,10 @@ export default function ManageSantriPage() {
     s.nis?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // avatarColors kept for removed-student greyed state
-  const avatarColors = ["#22c55e","#3b82f6","#f59e0b","#a855f7","#ef4444","#06b6d4"];
+  // Update photo_url in local state after upload (avoids full refetch)
+  const handlePhotoUploaded = (studentId: string, newUrl: string) => {
+    setStudents(prev => prev.map(s => s.id === studentId ? { ...s, photo_url: newUrl } : s));
+  };
   const inputCls = "w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-colors";
   const labelCls = "block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5";
 
@@ -210,12 +243,14 @@ export default function ManageSantriPage() {
                   {student.name?.charAt(0).toUpperCase() ?? "?"}
                 </div>
               ) : (
-                <StudentAvatar
-                  name={student.name ?? "?"}
-                  photoUrl={student.photo_url ?? null}
-                  size="sm"
+                <StudentPhotoUpload
+                  studentId={student.id}
+                  studentName={student.name ?? "?"}
+                  initialPhotoUrl={student.photo_url ?? null}
                   colorIndex={i}
-                  className="w-11 h-11 rounded-2xl shrink-0"
+                  size="md"
+                  avatarStyle={{ width: 44, height: 44, borderRadius: '0.875rem' }}
+                  onUploaded={(url) => handlePhotoUploaded(student.id, url)}
                 />
               )}
               <div className="flex-1 overflow-hidden">
@@ -264,7 +299,7 @@ export default function ManageSantriPage() {
       {isAddModalOpen && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white rounded-[2rem] p-7 w-full max-w-md relative" style={{ boxShadow: "0 8px 0 0 #e2e8f0" }}>
-            <button onClick={() => { setIsAddModalOpen(false); setModalError(null); setModalSuccess(null); }} className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 transition-colors">
+            <button onClick={() => { setIsAddModalOpen(false); setModalError(null); setModalSuccess(null); setPendingPhotoFile(null); setPendingPhotoPreview(null); }} className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 transition-colors">
               <X size={16} />
             </button>
             <div className="mb-6">
@@ -277,6 +312,29 @@ export default function ManageSantriPage() {
             {modalError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={16} />{modalError}</div>}
             {modalSuccess && <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-200 text-emerald-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={16} />{modalSuccess}</div>}
             <form onSubmit={handleAddSantri} className="space-y-4">
+              {/* Photo picker */}
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  className="relative group"
+                >
+                  {pendingPhotoPreview ? (
+                    <img src={pendingPhotoPreview} alt="preview" className="w-20 h-20 rounded-2xl object-cover border-2 border-emerald-200" style={{ boxShadow: '0 3px 0 0 #a7f3d0' }} />
+                  ) : (
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1 text-slate-400 group-hover:border-emerald-400 group-hover:text-emerald-500 transition-colors">
+                      <Camera size={22} />
+                      <span className="text-[9px] font-black uppercase tracking-wider">Foto</span>
+                    </div>
+                  )}
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white border-2 border-slate-200 rounded-lg flex items-center justify-center" style={{ boxShadow: '0 2px 0 0 #e2e8f0' }}>
+                    <Camera size={11} className="text-slate-500" />
+                  </div>
+                </button>
+                <p className="text-[10px] text-slate-400 font-bold">Opsional — bisa diubah nanti</p>
+                <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePendingPhoto} />
+              </div>
+
               <div>
                 <label className={labelCls}>Nama Lengkap *</label>
                 <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ahmad Zaid" className={inputCls} />

@@ -16,6 +16,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Users, Search, Loader2, Save, UserCheck, AlertCircle } from 'lucide-react';
+import { StudentAvatar } from '@/components/StudentAvatar';
 
 export default function PlottingSantriPage() {
   const [students, setStudents] = useState<any[]>([]);
@@ -164,9 +165,13 @@ export default function PlottingSantriPage() {
               return (
                 <div key={student.id} className={`grid grid-cols-2 gap-4 px-5 py-3.5 items-center transition-colors ${hasChanged ? "bg-emerald-50/60" : "hover:bg-slate-50/50"}`}>
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center font-black text-xs shrink-0">
-                      {student.name.charAt(0)}
-                    </div>
+                    <StudentAvatar
+                      name={student.name}
+                      photoUrl={student.photo_url ?? null}
+                      size="sm"
+                      colorIndex={filteredStudents.indexOf(student)}
+                      className="w-8 h-8 rounded-xl shrink-0"
+                    />
                     <div>
                       <p className="font-black text-slate-800 text-sm leading-tight">{student.name}</p>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.nis ? `NIS: ${student.nis}` : "—"}</p>

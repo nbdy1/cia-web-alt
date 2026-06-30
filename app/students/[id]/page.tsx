@@ -27,7 +27,6 @@ import {
 import Link from "next/link";
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { getModelLabel } from "@/lib/data/models";
-import { StudentPhotoUpload } from "@/components/StudentPhotoUpload";
 import { StudentAvatar } from "@/components/StudentAvatar";
 
 async function getStudentData(id: string) {
@@ -91,11 +90,12 @@ export default async function StudentProfile({
         />
 
         <div className="flex items-center gap-4 mb-5">
-          <StudentPhotoUpload
-            studentId={student.id}
-            studentName={student.name}
-            initialPhotoUrl={student.photo_url}
+          <StudentAvatar
+            name={student.name}
+            photoUrl={student.photo_url ?? null}
+            size="xl"
             colorIndex={0}
+            style={{ boxShadow: "0 5px 0 0 #15803d" }}
           />
           <div>
             <h1 className="text-2xl font-black text-slate-900 leading-tight">{student.name}</h1>
