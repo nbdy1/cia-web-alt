@@ -42,6 +42,8 @@ import {
   X,
 } from "lucide-react";
 import { saveAssessmentAction } from "@/app/actions/save-assessment";
+import { supabase } from "@/lib/supabase";
+import { StudentAvatar } from "@/components/StudentAvatar";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
@@ -56,11 +58,22 @@ export default function ResultsPage() {
 
   const studentId = searchParams.get("id");
   const studentName = searchParams.get("name") || "Santri";
+  const [studentPhotoUrl, setStudentPhotoUrl] = useState<string | null>(null);
   const [narrative, setNarrative] = useState("");
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [modelUsed, setModelUsed] = useState<string>(
     "google/gemini-3-flash-preview",
   );
+
+  useEffect(() => {
+    if (!studentId) return;
+    supabase
+      .from("students")
+      .select("photo_url")
+      .eq("id", studentId)
+      .single()
+      .then(({ data }) => setStudentPhotoUrl(data?.photo_url ?? null));
+  }, [studentId]);
 
   useEffect(() => {
     const storedAnalysis = sessionStorage.getItem("current_analysis");
@@ -159,6 +172,22 @@ export default function ResultsPage() {
       </header>
 
       <main className="flex-1 overflow-y-auto px-5 pt-5 pb-36 space-y-5">
+        {/* 0. Student hero */}
+        <div className="flex flex-col items-center gap-2 pt-1 pb-1">
+          <StudentAvatar
+            name={studentName}
+            photoUrl={studentPhotoUrl}
+            size="xl"
+            colorIndex={0}
+            className="w-24 h-24 rounded-[2rem]"
+            style={{ boxShadow: "0 5px 0 0 #a7f3d0" }}
+          />
+          <div className="text-center">
+            <h2 className="text-lg font-black text-slate-900 leading-tight">{studentName}</h2>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Hasil Asesmen</p>
+          </div>
+        </div>
+
         {/* 1. Status Summary */}
         <section
           className="bg-emerald-500 rounded-[2rem] p-7 text-white relative overflow-hidden"

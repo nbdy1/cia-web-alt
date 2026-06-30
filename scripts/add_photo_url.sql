@@ -1,18 +1,34 @@
--- Migration: add photo_url column to students table
--- Run this once in your Supabase SQL editor or via the CLI.
+-- Migration: add photo_url column to students table + storage policies
+-- Run this once in your Supabase SQL editor.
 --
--- After running this script you also need to:
---   1. Go to Supabase → Storage → Create a new bucket named  student-photos
---   2. Set the bucket to Public (so the app can display images without auth)
---   3. Optionally add an RLS policy so only authenticated users can upload:
---
---        CREATE POLICY "Authenticated users can upload"
---          ON storage.objects FOR INSERT
---          TO authenticated
---          WITH CHECK (bucket_id = 'student-photos');
+-- Prerequisites:
+--   Go to Supabase → Storage → New bucket
+--   Name: student-photos   Public: YES   (toggle on)
 
+-- 1. Add the column
 ALTER TABLE students
   ADD COLUMN IF NOT EXISTS photo_url text;
 
 COMMENT ON COLUMN students.photo_url IS
   'Public URL of the student photo stored in the student-photos Supabase Storage bucket.';
+
+-- 2. Storage RLS policies for the student-photos bucket
+--    (Supabase Storage uses the storage.objects table)
+
+-- Allow authenticated users to upload / replace photos
+CREATE POLICY "Authenticated users can upload student photos"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'student-photos');
+
+-- Allow authenticated users to update (overwrite) existing photos
+CREATE POLICY "Authenticated users can update student photos"
+  ON storage.objects FOR UPDATE
+  TO authenticated
+  USING (bucket_id = 'student-photos');
+
+-- Allow everyone to read photos (needed for public <img> display)
+CREATE POLICY "Public can read student photos"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'student-photos');

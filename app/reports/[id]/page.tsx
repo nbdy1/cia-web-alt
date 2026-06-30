@@ -179,27 +179,37 @@ export default async function ReportDetailPage({
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 flex-shrink-0"
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
-        <div className="flex flex-col items-center gap-1.5">
-          <StudentAvatar
-            name={report.students.name}
-            photoUrl={(report.students as any).photo_url ?? null}
-            size="lg"
-            colorIndex={0}
-          />
-          <div className="text-center">
-            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Laporan</p>
-            <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
-            <div className="flex items-center justify-center gap-1 mt-1">
-              <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
-                <Cpu size={8} /> {getModelLabel(report.model_used)}
-              </span>
-            </div>
+        <div className="text-center">
+          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Laporan</p>
+          <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
+          <div className="flex items-center justify-center gap-1 mt-1">
+            <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+              <Cpu size={8} /> {getModelLabel(report.model_used)}
+            </span>
           </div>
         </div>
         <div className="w-9" />
       </header>
 
       <main className="px-5 py-6 space-y-6">
+        {/* 0. STUDENT HERO */}
+        <div className="flex flex-col items-center gap-3 pt-2 pb-2">
+          <StudentAvatar
+            name={report.students.name}
+            photoUrl={(report.students as any).photo_url ?? null}
+            size="xl"
+            colorIndex={0}
+            className="w-28 h-28 rounded-[2rem]"
+            style={{ boxShadow: "0 6px 0 0 #a7f3d0" }}
+          />
+          <div className="text-center">
+            <h2 className="text-xl font-black text-slate-900 leading-tight">{report.students.name}</h2>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+              {new Date(report.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+            </p>
+          </div>
+        </div>
+
         {/* 1. OVERALL PROGRESS */}
         <section className="bg-slate-900 rounded-[2rem] p-7 text-white relative overflow-hidden" style={{ boxShadow: "0 6px 0 0 #000" }}>
           <div className="absolute top-0 right-0 p-4 opacity-10">

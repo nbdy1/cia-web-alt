@@ -35,6 +35,8 @@ import { useCIAVoice } from '@/lib/hooks/use-cia-voice';
 import { processInterviewStep, finalizeAssessment } from '@/app/actions/ai-analysis';
 import { transcribeAudio } from '@/app/actions/whisper';
 import { useSettings } from '@/lib/context/settings-context';
+import { supabase } from '@/lib/supabase';
+import { StudentAvatar } from '@/components/StudentAvatar';
 
 // Set to true to use OpenRouter Whisper instead of the browser Web Speech API.
 // Flip this during testing; the UI toggle is intentionally removed.
@@ -73,6 +75,18 @@ export default function AssessmentPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [micError, setMicError] = useState<string | null>(null);
+  const [studentPhotoUrl, setStudentPhotoUrl] = useState<string | null>(null);
+
+  // Fetch student photo
+  useEffect(() => {
+    if (!studentId) return;
+    supabase
+      .from('students')
+      .select('photo_url')
+      .eq('id', studentId)
+      .single()
+      .then(({ data }) => setStudentPhotoUrl(data?.photo_url ?? null));
+  }, [studentId]);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -339,6 +353,12 @@ export default function AssessmentPage() {
           >
             <ChevronLeft size={18} />
           </Link>
+          <StudentAvatar
+            name={studentName}
+            photoUrl={studentPhotoUrl}
+            size="sm"
+            colorIndex={0}
+          />
           <div>
             <h1 className="text-base font-black text-slate-900 leading-tight">Diskusi dengan AI</h1>
             <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest leading-none">{studentName}</p>
@@ -411,8 +431,14 @@ export default function AssessmentPage() {
               <p className="text-sm leading-relaxed font-bold">{msg.text}</p>
             </div>
             {msg.role === "teacher" && (
-              <div className="w-8 h-8 bg-slate-200 rounded-xl flex items-center justify-center ml-2 flex-shrink-0 self-end mb-1">
-                <User size={14} className="text-slate-500" />
+              <div className="ml-2 flex-shrink-0 self-end mb-1">
+                <StudentAvatar
+                  name={studentName}
+                  photoUrl={studentPhotoUrl}
+                  size="sm"
+                  colorIndex={0}
+                  className="w-8 h-8 rounded-xl"
+                />
               </div>
             )}
           </div>

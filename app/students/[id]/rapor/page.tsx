@@ -41,7 +41,7 @@ const SCORE_TYPE_DEFS = [
 
 type ScoreCell = { nilai_harian: number | null; nilai_bulanan: number | null; nilai_akhir: number | null };
 type ScoreGrid = Record<string, Record<string, ScoreCell>>;
-type Student = { name: string; nis: string | null };
+type Student = { name: string; nis: string | null; photo_url: string | null };
 
 // ─── CIA helpers ──────────────────────────────────────────────────────────────
 
@@ -306,12 +306,13 @@ function buildCIASectionHtml(
 function buildPrintHTML(opts: {
   name: string;
   nis: string;
+  photoUrl: string | null;
   period: string;
   printDate: string;
   scoreGrid: ScoreGrid;
   countByCategory: Record<string, Map<string, number>>;
 }) {
-  const { name, nis, period, printDate, scoreGrid, countByCategory } = opts;
+  const { name, nis, photoUrl, period, printDate, scoreGrid, countByCategory } = opts;
 
   const scoreTablesHtml = SUBJECTS.map((subj) => {
     const grid = scoreGrid[subj] ?? {};
@@ -381,9 +382,12 @@ function buildPrintHTML(opts: {
 
 <!-- Student info -->
 <div style="padding:24px 32px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:20px">
-  <div style="width:60px;height:60px;background:#10b981;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-    <span style="color:white;font-size:24px;font-weight:900">${esc(name.charAt(0))}</span>
-  </div>
+  ${photoUrl
+    ? `<img src="${photoUrl}" alt="${esc(name)}" style="width:80px;height:80px;border-radius:16px;object-fit:cover;flex-shrink:0;border:2px solid #d1fae5" />`
+    : `<div style="width:80px;height:80px;background:#10b981;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <span style="color:white;font-size:32px;font-weight:900">${esc(name.charAt(0))}</span>
+       </div>`
+  }
   <div>
     <h2 style="font-size:20px;font-weight:900;color:#0f172a">${esc(name)}</h2>
     <div style="display:flex;gap:10px;margin-top:6px">
@@ -442,7 +446,7 @@ export default function RaporPage() {
   useEffect(() => {
     const init = async () => {
       const [{ data: s }, p] = await Promise.all([
-        supabase.from("students").select("name, nis").eq("id", studentId).single(),
+        supabase.from("students").select("name, nis, photo_url").eq("id", studentId).single(),
         getStudentPeriods(studentId),
       ]);
       setStudent(s);
@@ -497,6 +501,7 @@ export default function RaporPage() {
     const html = buildPrintHTML({
       name: student.name,
       nis: student.nis ?? "",
+      photoUrl: student.photo_url ?? null,
       period: selectedPeriod,
       printDate,
       scoreGrid,
