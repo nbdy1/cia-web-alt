@@ -139,8 +139,13 @@ function FulfillmentBars({
       {/* ── Benih list ── */}
       {benihThemes.length > 0 && (
         <div className={fulfilledCount > 0 ? "mt-5 pt-4 border-t border-slate-100" : ""}>
+          {fulfilledCount === 0 && (
+            <p className="text-sm font-bold text-slate-400 mb-2">
+              Belum ada {categoryLabel} yang tumbuh dalam diri ananda:
+            </p>
+          )}
           <p className="text-sm font-bold text-slate-600 mb-2">
-            Dan ada {benihThemes.length} benih {categoryLabel} yang sudah nampak:
+            {fulfilledCount === 0 ? "Namun, sudah ada" : "Dan ada"} {benihThemes.length} benih {categoryLabel} yang sudah nampak:
           </p>
           <div className="space-y-1">
             {benihThemes.map((theme) => (
