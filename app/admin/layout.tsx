@@ -16,7 +16,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap, Loader2, Settings } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth-context';
 import { useUserRole } from '@/lib/hooks/use-user-role';
 
@@ -51,6 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/ustadz', label: 'Kelola Ustadz', icon: Users },
     { href: '/admin/assignments', label: 'Plotting Santri', icon: UserPlus },
     { href: '/admin/monitoring', label: 'Monitor Laporan', icon: BookOpen },
+    { href: '/admin/settings', label: 'Pengaturan Sistem', icon: Settings },
   ];
 
   return (

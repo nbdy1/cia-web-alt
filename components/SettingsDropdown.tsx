@@ -25,11 +25,8 @@ import {
   Shield,
   Type,
   RotateCcw,
-  Cpu,
 } from "lucide-react";
 import { CriteriaGlossaryModal } from "./CriteriaGlossaryModal";
-import { useSettings } from "@/lib/context/settings-context";
-import { MODEL_OPTIONS } from "@/lib/data/models";
 
 const FONT_STORAGE_KEY = "cia:font-family";
 const FONT_SCALE_STORAGE_KEY = "cia:font-scale";
@@ -124,7 +121,6 @@ export function SettingsDropdown() {
     useState<FontOptionId>(getInitialFontFamily);
   const [fontScale, setFontScale] = useState(getInitialFontScale);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { selectedModel, setSelectedModel } = useSettings();
 
   useEffect(() => {
     applyAppearance(fontFamily, fontScale);
@@ -182,42 +178,7 @@ export function SettingsDropdown() {
             </p>
           </div>
 
-          {/* Model AI Setting */}
-          <div className="p-3 rounded-2xl bg-slate-50 border-2 border-slate-100">
-            <div className="flex items-center gap-3 mb-3">
-              <div
-                className="w-9 h-9 bg-white text-slate-600 rounded-xl border-2 border-slate-200 flex items-center justify-center flex-shrink-0"
-                style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}
-              >
-                <Cpu className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="block font-black text-slate-800 text-sm">
-                  Model AI
-                </span>
-                <span className="block text-[10px] text-slate-400 font-bold">
-                  Pilih otak asisten
-                </span>
-              </div>
-            </div>
-            <div className="rounded-2xl bg-white border border-slate-100 px-3 py-3">
-              <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                className="w-full text-sm font-black text-slate-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-400 transition-colors cursor-pointer appearance-none"
-                style={{ boxShadow: "0 2px 0 0 #a7f3d0" }}
-              >
-                {MODEL_OPTIONS.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.label}
-                  </option>
-                ))}
-              </select>
-              <div className="mt-2 text-[10px] font-semibold text-slate-400 leading-tight">
-                {MODEL_OPTIONS.find((m) => m.id === selectedModel)?.desc}
-              </div>
-            </div>
-          </div>
+
           <div className="px-2 space-y-1">
             {/* Glossary Modal Button */}
             <button
