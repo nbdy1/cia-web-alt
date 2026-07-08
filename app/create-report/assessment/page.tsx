@@ -63,7 +63,7 @@ export default function AssessmentPage() {
   const [discoveredPillars, setDiscoveredPillars] = useState<string[]>([]);
 
   const { selectedModel } = useSettings();
-  const { speak, stop: stopVoice } = useCIAVoice();
+  const { speak, stop: stopVoice, unlock: unlockVoice } = useCIAVoice();
   const recognitionRef = useRef<any>(null);
   // Tracks user *intent* to record — survives iOS onend auto-fires
   const shouldRecordRef = useRef(false);
@@ -208,6 +208,11 @@ export default function AssessmentPage() {
   };
 
   const toggleRecording = () => {
+    // Bless the shared TTS audio element while we still have a user gesture.
+    // Doing this BEFORE the mic engages is what keeps the ElevenLabs reply
+    // audible afterwards (see WHY unlock() in use-cia-voice.ts).
+    unlockVoice();
+
     if (USE_WHISPER) {
       if (isRecording) {
         mediaRecorderRef.current?.stop();
@@ -243,6 +248,10 @@ export default function AssessmentPage() {
 
   const handleSend = async () => {
     if (!currentInput.trim()) return;
+
+    // Ensure the audio element is unlocked within this tap, before the async
+    // TTS call — covers the case where the user sent without pressing the mic.
+    unlockVoice();
 
     const userText = currentInput.trim();
     const newMessages = [...messages, { role: 'teacher', text: userText } as Message];
