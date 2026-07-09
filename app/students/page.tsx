@@ -55,7 +55,7 @@ type RecentReport = {
 };
 
 export default function StudentsAnalyticsPage() {
-  const { user } = useAuth();
+  const { user, activeOrganizationId } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
 
   const [students, setStudents] = useState<StudentWithStats[]>([]);
@@ -78,6 +78,12 @@ export default function StudentsAnalyticsPage() {
           treatment_plan
         )
       `).or('is_removed.is.null,is_removed.eq.false');
+      
+      // Filter by active organization
+      if (activeOrganizationId) {
+        studentsQuery = studentsQuery.eq("organization_id", activeOrganizationId);
+      }
+
       if (ustadzId) {
         studentsQuery = studentsQuery.eq("assigned_ustadz_id", ustadzId);
       }
@@ -157,7 +163,7 @@ export default function StudentsAnalyticsPage() {
     };
 
     fetchData();
-  }, [user, role, roleLoading]);
+  }, [user, role, roleLoading, activeOrganizationId]);
 
   // ── Loading state ────────────────────────────────────────────────────────
   if (roleLoading || dataLoading) {

@@ -22,19 +22,22 @@
  */
 "use server";
 
-import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import { generateStudentProfile } from '@/app/actions/ai-analysis';
+import { createSupabaseWithAccessToken } from '@/lib/supabase-auth';
 
 export async function saveAssessmentAction(data: {
   student_id: string;
   narrative: string;
   analysis: any; // Full structured analysis object
   model_used?: string;
+  access_token?: string | null;
 }) {
   try {
+    const db = createSupabaseWithAccessToken(data.access_token);
+
     // Step 1: Insert the main Report
-    const { data: report, error: reportError } = await supabase
+    const { data: report, error: reportError } = await db
       .from('reports')
       .insert([{
         student_id: data.student_id,
@@ -53,7 +56,7 @@ export async function saveAssessmentAction(data: {
     // Step 2: Regenerate the student's rolling profile summary in the background.
     // This is non-fatal — if it fails, the report is already saved and the next
     // assessment will just run without an updated profile.
-    await generateStudentProfile(data.student_id, data.model_used);
+    await generateStudentProfile(data.student_id, data.model_used, data.access_token);
 
     return { success: true };
 

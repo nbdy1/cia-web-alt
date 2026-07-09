@@ -12,7 +12,7 @@
  *   - "Rekapitulasi"  → /students/[id]/recap  (CIA sub-indicator breakdown)
  */
 import React from "react";
-import { supabase } from "@/lib/supabase";
+import { getServerSupabase } from "@/lib/supabase-server";
 import {
   Calendar,
   User,
@@ -30,13 +30,15 @@ import { getModelLabel } from "@/lib/data/models";
 import { StudentAvatar } from "@/components/StudentAvatar";
 
 async function getStudentData(id: string) {
-  const { data: student } = await supabase
+  const db = await getServerSupabase();
+
+  const { data: student } = await db
     .from("students")
     .select("*")
     .eq("id", id)
     .single();
 
-  const { data: reports } = await supabase
+  const { data: reports } = await db
     .from("reports")
     .select(
       `

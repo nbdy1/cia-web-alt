@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { saveAssessmentAction } from "@/app/actions/save-assessment";
 import { supabase } from "@/lib/supabase";
+import { getCurrentAccessToken } from "@/lib/supabase-auth";
 import { StudentAvatar } from "@/components/StudentAvatar";
 
 export default function ResultsPage() {
@@ -111,11 +112,13 @@ export default function ResultsPage() {
     if (!studentId) return alert("ID santri tidak ditemukan");
 
     setIsSaving(true);
+    const accessToken = await getCurrentAccessToken();
     const result = await saveAssessmentAction({
       student_id: studentId,
       narrative: narrative,
       analysis: analysisData,
       model_used: modelUsed,
+      access_token: accessToken,
     });
 
     if (result.success) {

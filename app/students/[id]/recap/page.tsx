@@ -31,7 +31,7 @@
  * happen server-side. No client JS required for the charts.
  */
 import React from "react";
-import { supabase } from "@/lib/supabase";
+import { getServerSupabase } from "@/lib/supabase-server";
 import {
   ChevronLeft,
   CheckCircle2,
@@ -169,13 +169,15 @@ function FulfillmentBars({
 }
 
 async function getStudentRecap(id: string) {
-  const { data: student } = await supabase
+  const db = await getServerSupabase();
+
+  const { data: student } = await db
     .from("students")
     .select("*")
     .eq("id", id)
     .single();
 
-  const { data: reports } = await supabase
+  const { data: reports } = await db
     .from("reports")
     .select("treatment_plan")
     .eq("student_id", id);

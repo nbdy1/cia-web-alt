@@ -20,6 +20,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/context/auth-context";
 import {
   Users,
   BookOpen,
@@ -109,6 +110,7 @@ function BarChart({ data }: { data: DayBucket[] }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function AdminOverviewPage() {
+  const { activeOrganizationId } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ ustadz: 0, santri: 0, reports: 0, activeSantri: 0 });
   const [weekData, setWeekData] = useState<DayBucket[]>([]);
@@ -118,8 +120,25 @@ export default function AdminOverviewPage() {
 
   useEffect(() => {
     async function load() {
+      if (!activeOrganizationId) return;
       try {
+        setLoading(true);
         // ── 1. Counts ───────────────────────────────────────────────────────
+        let profilesQ = supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "ustadz").or("is_removed.is.null,is_removed.eq.false");
+        let studentsQ = supabase.from("students").select("*", { count: "exact", head: true }).or("is_removed.is.null,is_removed.eq.false");
+        let reportsQ = supabase.from("reports").select("id, created_at, student_id, treatment_plan, students(name)").order("created_at", { ascending: false }).limit(50);
+        let students2Q = supabase.from("students").select("id, assigned_ustadz_id, reports(id)").or("is_removed.is.null,is_removed.eq.false");
+        let profiles2Q = supabase.from("profiles").select("id, name").eq("role", "ustadz").or("is_removed.is.null,is_removed.eq.false");
+        let allReportsQ = supabase.from("reports").select("student_id, treatment_plan, students(id, name)");
+
+        // ── Filter by active organization ────────────────────────────────────
+        profilesQ = profilesQ.eq('organization_id', activeOrganizationId);
+        studentsQ = studentsQ.eq('organization_id', activeOrganizationId);
+        reportsQ = reportsQ.eq('organization_id', activeOrganizationId);
+        students2Q = students2Q.eq('organization_id', activeOrganizationId);
+        profiles2Q = profiles2Q.eq('organization_id', activeOrganizationId);
+        allReportsQ = allReportsQ.eq('organization_id', activeOrganizationId);
+
         const [
           { count: ustadzCount },
           { count: santriCount },
@@ -128,13 +147,12 @@ export default function AdminOverviewPage() {
           { data: ustadzRaw },
           { data: allReportsForLeader },
         ] = await Promise.all([
-          supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "ustadz").or("is_removed.is.null,is_removed.eq.false"),
-          supabase.from("students").select("*", { count: "exact", head: true }).or("is_removed.is.null,is_removed.eq.false"),
-          supabase.from("reports").select("id, created_at, student_id, treatment_plan, students(name)").order("created_at", { ascending: false }).limit(50),
-          supabase.from("students").select("id, assigned_ustadz_id, reports(id)").or("is_removed.is.null,is_removed.eq.false"),
-          supabase.from("profiles").select("id, name").eq("role", "ustadz").or("is_removed.is.null,is_removed.eq.false"),
-          // Fetch all reports (no limit) for the santri leaderboard — only the fields we need
-          supabase.from("reports").select("student_id, treatment_plan, students(id, name)"),
+          profilesQ,
+          studentsQ,
+          reportsQ,
+          students2Q,
+          profiles2Q,
+          allReportsQ,
         ]);
 
         const allReports = reportsRaw ?? [];
@@ -218,7 +236,7 @@ export default function AdminOverviewPage() {
       }
     }
     load();
-  }, []);
+  }, [activeOrganizationId]);
 
   if (loading) {
     return (

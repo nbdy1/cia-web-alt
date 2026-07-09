@@ -36,6 +36,7 @@ import { processInterviewStep, finalizeAssessment } from '@/app/actions/ai-analy
 import { transcribeAudio } from '@/app/actions/whisper';
 import { useSettings } from '@/lib/context/settings-context';
 import { supabase } from '@/lib/supabase';
+import { getCurrentAccessToken } from '@/lib/supabase-auth';
 import { StudentAvatar } from '@/components/StudentAvatar';
 
 // Set to true to use OpenRouter Whisper instead of the browser Web Speech API.
@@ -274,7 +275,8 @@ export default function AssessmentPage() {
         previousAccumulatedCount: discoveredPillars.length,
       });
       const transcript = newMessages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
-      const result = await processInterviewStep(transcript, discoveredPillars, studentId || undefined, selectedModel);
+      const accessToken = await getCurrentAccessToken();
+      const result = await processInterviewStep(transcript, discoveredPillars, studentId || undefined, selectedModel, accessToken);
 
       if (result.reply) {
         const newDiscovered = Array.isArray(result.discoveredPillars) ? result.discoveredPillars : [];
@@ -311,11 +313,13 @@ export default function AssessmentPage() {
         accumulatedThemesCount: discoveredPillars.length,
         transcriptLines: fullTranscript.split('\n').filter(Boolean).length,
       });
+      const accessToken = await getCurrentAccessToken();
       const analysis = await finalizeAssessment(
         fullTranscript,
         studentId || undefined,
         discoveredPillars,
-        selectedModel
+        selectedModel,
+        accessToken,
       );
       console.log('[Finalize][Client] Final analysis received', {
         statusSummary: analysis?.status_summary,

@@ -19,7 +19,7 @@
  */
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createSupabaseWithAccessToken } from "@/lib/supabase-auth";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const CHAT_MODEL = "google/gemini-3-flash-preview";
@@ -52,11 +52,14 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
 
 export async function generateRaporNarrative(
   studentId: string,
-  period: string
+  period: string,
+  accessToken?: string | null,
 ): Promise<{ success: boolean; narrative?: string; error?: string }> {
   try {
+    const db = createSupabaseWithAccessToken(accessToken);
+
     // 1. Fetch student + profile_summary
-    const { data: student } = await supabase
+    const { data: student } = await db
       .from("students")
       .select("name, nis, profile_summary")
       .eq("id", studentId)
@@ -66,7 +69,7 @@ export async function generateRaporNarrative(
 
     // 2. Fetch all reports — crucially, include the raw `narrative` field
     //    (the actual teacher-AI interview transcript) alongside the structured plan.
-    const { data: reports } = await supabase
+    const { data: reports } = await db
       .from("reports")
       .select("title, created_at, narrative, treatment_plan")
       .eq("student_id", studentId)

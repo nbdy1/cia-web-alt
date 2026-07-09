@@ -1,7 +1,8 @@
 /**
  * app/api/admin/change-role/route.ts
  *
- * Server-side endpoint for changing a profile's role between 'ustadz' and 'admin'.
+ * Server-side endpoint for changing a user's organization role between
+ * 'ustadz' and 'admin'.
  *
  * Auth pattern (Supabase v2 standard):
  *   - Anon client + user JWT  → validates who is calling
@@ -43,13 +44,15 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Confirm the caller's own profile has role = 'admin'
-    const { data: callerProfile, error: profileError } = await adminClient
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
+    // Confirm the caller is an owner/admin in at least one organization.
+    const { data: callerMembership, error: membershipError } = await adminClient
+      .from('organization_members')
+      .select('organization_id, role')
+      .eq('user_id', user.id)
+      .in('role', ['owner', 'admin'])
+      .limit(1)
       .single();
-    if (profileError || callerProfile?.role !== 'admin') {
+    if (membershipError || !callerMembership) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -71,13 +74,22 @@ export async function POST(req: NextRequest) {
       // Non-fatal — continue to update profiles table regardless
     }
 
-    // ── 5. Update the profiles table ─────────────────────────────────────────
-    const { error: updateError } = await adminClient
+    // ── 5. Update organization membership (source of truth) and profile mirror ─
+    const { error: memberUpdateError } = await adminClient
+      .from('organization_members')
+      .update({ role: newRole })
+      .eq('organization_id', callerMembership.organization_id)
+      .eq('user_id', targetId);
+    if (memberUpdateError) {
+      return NextResponse.json({ error: memberUpdateError.message }, { status: 500 });
+    }
+
+    const { error: profileUpdateError } = await adminClient
       .from('profiles')
       .update({ role: newRole })
       .eq('id', targetId);
-    if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    if (profileUpdateError) {
+      return NextResponse.json({ error: profileUpdateError.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

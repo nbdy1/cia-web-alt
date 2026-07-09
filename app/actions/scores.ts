@@ -15,7 +15,7 @@
  */
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createSupabaseWithAccessToken } from "@/lib/supabase-auth";
 import { revalidatePath } from "next/cache";
 
 export type ScoreRow = {
@@ -29,9 +29,12 @@ export type ScoreRow = {
 /** Fetch all scores for a student in a given period. */
 export async function getStudentScores(
   studentId: string,
-  period: string
+  period: string,
+  accessToken?: string | null,
 ): Promise<ScoreRow[]> {
-  const { data, error } = await supabase
+  const db = createSupabaseWithAccessToken(accessToken);
+
+  const { data, error } = await db
     .from("student_scores")
     .select("subject, score_type, nilai_harian, nilai_bulanan, nilai_akhir")
     .eq("student_id", studentId)
@@ -45,8 +48,10 @@ export async function getStudentScores(
 }
 
 /** Fetch all distinct periods for a student (most recent first). */
-export async function getStudentPeriods(studentId: string): Promise<string[]> {
-  const { data } = await supabase
+export async function getStudentPeriods(studentId: string, accessToken?: string | null): Promise<string[]> {
+  const db = createSupabaseWithAccessToken(accessToken);
+
+  const { data } = await db
     .from("student_scores")
     .select("period")
     .eq("student_id", studentId)
@@ -60,9 +65,12 @@ export async function getStudentPeriods(studentId: string): Promise<string[]> {
 export async function saveStudentScores(
   studentId: string,
   period: string,
-  rows: ScoreRow[]
+  rows: ScoreRow[],
+  accessToken?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const db = createSupabaseWithAccessToken(accessToken);
+
     const upsertRows = rows.map((r) => ({
       student_id: studentId,
       period,
@@ -73,7 +81,7 @@ export async function saveStudentScores(
       nilai_akhir: r.nilai_akhir ?? null,
     }));
 
-    const { error } = await supabase
+    const { error } = await db
       .from("student_scores")
       .upsert(upsertRows, {
         onConflict: "student_id,period,subject,score_type",

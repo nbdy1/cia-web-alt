@@ -50,6 +50,7 @@
 "use server";
 
 import { supabase } from "@/lib/supabase";
+import { createSupabaseWithAccessToken } from "@/lib/supabase-auth";
 import { buildFinalAnalysisPrompt, buildInterviewPrompt } from "@/lib/data/prompts";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
@@ -536,10 +537,16 @@ function buildUnexploredThemesContext(frontierRows: CriteriaRow[], discoveredThe
  * Errors are caught and logged — profile generation failure never blocks the
  * user from seeing their saved report.
  */
-export async function generateStudentProfile(studentId: string, selectedModel: string = CHAT_MODEL): Promise<void> {
+export async function generateStudentProfile(
+  studentId: string,
+  selectedModel: string = CHAT_MODEL,
+  accessToken?: string | null,
+): Promise<void> {
   try {
+    const db = createSupabaseWithAccessToken(accessToken);
+
     // Fetch last 5 reports — enough history without blowing token budget
-    const { data: reports } = await supabase
+    const { data: reports } = await db
       .from("reports")
       .select("title, created_at, treatment_plan")
       .eq("student_id", studentId)
@@ -628,7 +635,7 @@ PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak bol
 
     cleanProfile = cleanProfile.trim();
 
-    await supabase
+    await db
       .from("students")
       .update({ profile_summary: cleanProfile })
       .eq("id", studentId);
@@ -654,14 +661,17 @@ export async function processInterviewStep(
   transcript: string,
   discoveredThemes: string[] = [],
   studentId?: string,
-  selectedModel: string = CHAT_MODEL
+  selectedModel: string = CHAT_MODEL,
+  accessToken?: string | null,
 ) {
   try {
+    const db = createSupabaseWithAccessToken(accessToken);
+
     // Fetch the student's historical profile if a studentId was provided.
     // This is a single indexed read and adds ~250 tokens to the prompt.
     let studentProfile: string | undefined;
     if (studentId) {
-      const { data: studentData } = await supabase
+      const { data: studentData } = await db
         .from("students")
         .select("profile_summary")
         .eq("id", studentId)
@@ -729,9 +739,12 @@ export async function finalizeAssessment(
   transcript: string,
   studentId?: string,
   discoveredThemes: string[] = [],
-  selectedModel: string = CHAT_MODEL
+  selectedModel: string = CHAT_MODEL,
+  accessToken?: string | null,
 ) {
   try {
+    const db = createSupabaseWithAccessToken(accessToken);
+
     // 1. Fetch the student's previous progress + historical profile for context
     let currentProgressContext =
       "Belum ada data asesmen sebelumnya. Mulai dari awal kerangka kerja.";
@@ -741,12 +754,12 @@ export async function finalizeAssessment(
     if (studentId) {
       // Fetch profile and latest report in parallel to keep latency down
       const [profileResult, latestReportResult] = await Promise.all([
-        supabase
+        db
           .from("students")
           .select("profile_summary")
           .eq("id", studentId)
           .single(),
-        supabase
+        db
           .from("reports")
           .select("treatment_plan")
           .eq("student_id", studentId)
@@ -762,7 +775,7 @@ export async function finalizeAssessment(
         console.log(`[Finalize] Injecting student profile (${studentProfile.length} chars) into analysis prompt`);
       }
 
-      const { data: recentTitles } = await supabase
+      const { data: recentTitles } = await db
         .from("reports")
         .select("title")
         .eq("student_id", studentId)

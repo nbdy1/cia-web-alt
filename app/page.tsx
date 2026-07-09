@@ -18,27 +18,16 @@ import { Mic, BarChart3, LogOut, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { useAuth } from "@/lib/context/auth-context";
-import { supabase } from "@/lib/supabase";
 import { SettingsDropdown } from "@/components/SettingsDropdown";
+import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 
 export default function HomePage() {
   const { user, signOut } = useAuth();
-  const [role, setRole] = React.useState<string | null>(null);
+  const { role } = useUserRole();
+  const isAdmin = role === "owner" || role === "admin";
   const userName =
     user?.user_metadata?.name || user?.email?.split("@")[0] || "Ustaz Abdullah";
-
-  React.useEffect(() => {
-    if (user?.id) {
-      supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single()
-        .then(({ data, error }) => {
-          if (!error && data) setRole(data.role);
-        });
-    }
-  }, [user]);
 
   return (
     <div className="flex flex-col min-h-screen bg-paper">
@@ -51,6 +40,7 @@ export default function HomePage() {
           <span className="text-emerald-700 font-black text-xl tracking-tight">CIA</span>
         </div>
         <div className="flex items-center gap-2">
+          <OrganizationSwitcher />
           <SettingsDropdown />
           <button
             onClick={signOut}
@@ -112,7 +102,7 @@ export default function HomePage() {
         </Link>
 
         {/* Admin Portal */}
-        {role === "admin" && (
+        {isAdmin && (
           <Link href="/admin" className="block active:translate-y-1 transition-transform">
             <div
               className="w-full p-6 rounded-[2rem] flex flex-col items-center text-center gap-3 bg-slate-900 cursor-pointer select-none"

@@ -19,6 +19,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getStudentScores, getStudentPeriods } from "@/app/actions/scores";
+import { getCurrentAccessToken } from "@/lib/supabase-auth";
 import { ChevronLeft, Printer, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -445,9 +446,10 @@ export default function RaporPage() {
 
   useEffect(() => {
     const init = async () => {
+      const accessToken = await getCurrentAccessToken();
       const [{ data: s }, p] = await Promise.all([
         supabase.from("students").select("name, nis, photo_url").eq("id", studentId).single(),
-        getStudentPeriods(studentId),
+        getStudentPeriods(studentId, accessToken),
       ]);
       setStudent(s);
       setPeriods(p);
@@ -475,7 +477,8 @@ export default function RaporPage() {
     if (!selectedPeriod) return;
     const load = async () => {
       setLoading(true);
-      const rows = await getStudentScores(studentId, selectedPeriod);
+      const accessToken = await getCurrentAccessToken();
+      const rows = await getStudentScores(studentId, selectedPeriod, accessToken);
       const grid: ScoreGrid = {};
       rows.forEach((r) => {
         if (!grid[r.subject]) grid[r.subject] = {};

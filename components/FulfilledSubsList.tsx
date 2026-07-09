@@ -18,6 +18,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { removeSubIndicator } from "@/app/actions/reports";
+import { getCurrentAccessToken } from "@/lib/supabase-auth";
 
 interface Props {
   reportId: string;
@@ -49,7 +50,8 @@ export function FulfilledSubsList({
     setPendingDelete(null);
 
     startTransition(async () => {
-      const result = await removeSubIndicator(reportId, category, theme, indicator, sub);
+      const accessToken = await getCurrentAccessToken();
+      const result = await removeSubIndicator(reportId, category, theme, indicator, sub, accessToken);
       if (!result.success) {
         // Revert on failure
         setItems((prev) => [...prev, sub]);

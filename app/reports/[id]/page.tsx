@@ -17,7 +17,7 @@
  * ReportBackButton provides context-aware back navigation (admin vs. ustadz).
  */
 import React from "react";
-import { supabase } from "@/lib/supabase";
+import { getServerSupabase } from "@/lib/supabase-server";
 import {
   Calendar,
   Quote,
@@ -132,7 +132,9 @@ function computeDisplayOverallStats(analysis: any) {
 
 
 async function getReportDetails(id: string) {
-  const { data: report } = await supabase
+  const db = await getServerSupabase();
+
+  const { data: report } = await db
     .from("reports")
     .select(`*, students(name, photo_url)`)
     .eq("id", id)

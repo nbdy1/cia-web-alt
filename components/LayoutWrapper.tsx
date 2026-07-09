@@ -21,7 +21,7 @@ import { usePathname } from 'next/navigation';
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdmin = pathname?.startsWith('/admin');
+  const isAdmin = pathname?.startsWith('/admin') || pathname?.startsWith('/super-admin');
 
   useEffect(() => {
     if (typeof window === "undefined" || !pathname) return;

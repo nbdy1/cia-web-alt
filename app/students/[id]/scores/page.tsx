@@ -18,6 +18,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { saveStudentScores, getStudentScores, getStudentPeriods } from "@/app/actions/scores";
+import { getCurrentAccessToken } from "@/lib/supabase-auth";
 import {
   ChevronLeft,
   Plus,
@@ -86,7 +87,8 @@ export default function ScoresPage() {
 
   // ── Fetch periods ───────────────────────────────────────────────────────
   const refreshPeriods = useCallback(async () => {
-    const p = await getStudentPeriods(studentId);
+    const accessToken = await getCurrentAccessToken();
+    const p = await getStudentPeriods(studentId, accessToken);
     setPeriods(p);
     if (p.length > 0 && !selectedPeriod) setSelectedPeriod(p[0]);
     setLoading(false);
@@ -98,7 +100,7 @@ export default function ScoresPage() {
   useEffect(() => {
     if (!selectedPeriod) return;
     setLoading(true);
-    getStudentScores(studentId, selectedPeriod).then((rows) => {
+    getCurrentAccessToken().then((accessToken) => getStudentScores(studentId, selectedPeriod, accessToken)).then((rows) => {
       const map: ScoreMap = {};
       rows.forEach((r) => {
         const colKey = (
@@ -147,7 +149,8 @@ export default function ScoresPage() {
       });
     });
 
-    const result = await saveStudentScores(studentId, selectedPeriod, Object.values(rowMap));
+    const accessToken = await getCurrentAccessToken();
+    const result = await saveStudentScores(studentId, selectedPeriod, Object.values(rowMap), accessToken);
     setSaving(false);
     if (result.success) {
       setSaveStatus("success");

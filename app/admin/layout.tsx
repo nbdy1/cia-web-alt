@@ -8,7 +8,7 @@
  *      Dashboard, Santri, Ustadz, Assignments, Monitoring.
  *   3. Full-width layout (vs. the mobile-card layout used in teacher routes).
  *
- * Access: only users with role = "admin" in the `profiles` table can reach
+ * Access: only users with role = "owner" or "admin" in organization_members can reach
  * these routes. All other users are silently redirected to the home page.
  */
 "use client";
@@ -19,19 +19,21 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap, Loader2, Settings } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth-context';
 import { useUserRole } from '@/lib/hooks/use-user-role';
+import { OrganizationSwitcher } from '@/components/OrganizationSwitcher';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
+  const isAdmin = role === 'owner' || role === 'admin';
 
   // Redirect non-admin users away from /admin
   useEffect(() => {
-    if (!roleLoading && role !== null && role !== 'admin') {
+    if (!roleLoading && role !== null && !isAdmin) {
       router.replace('/');
     }
-  }, [role, roleLoading, router]);
+  }, [isAdmin, role, roleLoading, router]);
   
   // Show spinner while role is being fetched
   if (roleLoading || (role === null && user)) {
@@ -43,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // Render nothing while redirect fires for non-admins
-  if (role !== 'admin') return null;
+  if (!isAdmin) return null;
 
   const navItems = [
     { href: '/admin', label: 'Overview', icon: LayoutDashboard },
@@ -75,8 +77,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <p className="text-[10px] text-emerald-400 font-black uppercase tracking-wider">CIA Management</p>
           </div>
         </div>
-        <div className="text-[10px] font-black bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-slate-300">
-          {user?.user_metadata?.name || 'Admin'}
+        <div className="flex items-center gap-3">
+          <OrganizationSwitcher />
+          <div className="text-[10px] font-black bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-slate-300">
+            {user?.user_metadata?.name || 'Admin'}
+          </div>
         </div>
       </header>
 

@@ -16,7 +16,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { supabase } from "@/lib/supabase";
+import { createSupabaseWithAccessToken } from "@/lib/supabase-auth";
 
 const norm = (s: string) => s.trim().toLowerCase();
 const isLikelySame = (a: string, b: string) => {
@@ -39,8 +39,11 @@ export async function removeSubIndicator(
   theme: string,
   indicator: string,
   canonicalSub: string,
+  accessToken?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
-  const { data: report, error: fetchError } = await supabase
+  const db = createSupabaseWithAccessToken(accessToken);
+
+  const { data: report, error: fetchError } = await db
     .from("reports")
     .select("treatment_plan")
     .eq("id", reportId)
@@ -73,7 +76,7 @@ export async function removeSubIndicator(
     });
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await db
     .from("reports")
     .update({ treatment_plan: plan })
     .eq("id", reportId);
@@ -89,12 +92,15 @@ export async function saveStudentReport(data: {
   narrative: string;
   treatment: string;
   scores: { category: string; pillar_id: string; score: number }[];
+  access_token?: string | null;
 }) {
   console.log("Starting save for student:", data.student_id);
 
   try {
+    const db = createSupabaseWithAccessToken(data.access_token);
+
     // Step 1: Insert Report
-    const { data: report, error: reportError } = await supabase
+    const { data: report, error: reportError } = await db
       .from('reports') 
       .insert({
         student_id: data.student_id,

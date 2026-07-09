@@ -14,17 +14,19 @@
  */
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { getServerSupabase } from "@/lib/supabase-server";
 
 export async function getPerformanceData() {
+  const db = await getServerSupabase();
+
   // 1. Total Student Count
-  const { count: studentCount } = await supabase
+  const { count: studentCount } = await db
     .from('students')
     .select('*', { count: 'exact', head: true })
     .or('is_removed.is.null,is_removed.eq.false');
 
   // 2. Recent Activity Feed
-  const { data: recentReports } = await supabase
+  const { data: recentReports } = await db
     .from('reports')
     .select(`
       id,

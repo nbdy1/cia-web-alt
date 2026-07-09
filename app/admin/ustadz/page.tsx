@@ -21,8 +21,10 @@ import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { Users, Search, Loader2, Sparkles, Mail, Calendar, X, Plus, UserPlus, AlertCircle, Eye, EyeOff, UserX, ArchiveX, ShieldCheck, ArrowLeftRight } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { useUserRole } from '@/lib/hooks/use-user-role';
 
 export default function ManageUstadzPage() {
+  const { organizationId } = useUserRole();
   const [ustadzList, setUstadzList] = useState<any[]>([]);
   const [removedList, setRemovedList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ export default function ManageUstadzPage() {
   const fetchUstadz = async () => {
     setLoading(true);
     try {
-      const [activeRes, removedRes] = await Promise.all([
+      const [activeRes, removedRes, membersRes] = await Promise.all([
         supabase
           .from('profiles')
           .select('*')
@@ -64,9 +66,20 @@ export default function ManageUstadzPage() {
           .select('*')
           .eq('is_removed', true)
           .order('removed_at', { ascending: false }),
+        organizationId
+          ? supabase
+              .from('organization_members')
+              .select('user_id, role')
+              .eq('organization_id', organizationId)
+          : Promise.resolve({ data: [] }),
       ]);
-      if (activeRes.data) setUstadzList(activeRes.data);
-      if (removedRes.data) setRemovedList(removedRes.data);
+      const roleByUserId = new Map((membersRes.data ?? []).map((m: any) => [m.user_id, m.role]));
+      if (activeRes.data) {
+        setUstadzList(activeRes.data.map((u: any) => ({ ...u, role: roleByUserId.get(u.id) ?? u.role })));
+      }
+      if (removedRes.data) {
+        setRemovedList(removedRes.data.map((u: any) => ({ ...u, role: roleByUserId.get(u.id) ?? u.role })));
+      }
     } catch (err) {
       console.error("Error fetching ustadz profiles:", err);
     } finally {
@@ -74,7 +87,7 @@ export default function ManageUstadzPage() {
     }
   };
 
-  useEffect(() => { fetchUstadz(); }, []);
+  useEffect(() => { fetchUstadz(); }, [organizationId]);
 
   const handleAddUstadz = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,6 +130,13 @@ export default function ManageUstadzPage() {
     setRoleError(null);
     const newRole = userToChangeRole.role === 'admin' ? 'ustadz' : 'admin';
     try {
+      const { error: memberError } = await supabase
+        .from('organization_members')
+        .update({ role: newRole })
+        .eq('organization_id', organizationId)
+        .eq('user_id', userToChangeRole.id);
+      if (memberError) throw memberError;
+
       const { error } = await supabase
         .from('profiles')
         .update({ role: newRole })
