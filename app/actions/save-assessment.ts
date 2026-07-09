@@ -24,17 +24,19 @@
 
 import { revalidatePath } from 'next/cache';
 import { generateStudentProfile } from '@/app/actions/ai-analysis';
-import { createSupabaseWithAccessToken } from '@/lib/supabase-auth';
+import { createClient } from '@/lib/supabase/server';
 
 export async function saveAssessmentAction(data: {
   student_id: string;
   narrative: string;
   analysis: any; // Full structured analysis object
   model_used?: string;
+  // access_token is no longer needed — @supabase/ssr reads session from cookies automatically
   access_token?: string | null;
 }) {
   try {
-    const db = createSupabaseWithAccessToken(data.access_token);
+    // Server-side Supabase client reads the session from cookies set by middleware
+    const db = await createClient();
 
     // Step 1: Insert the main Report
     const { data: report, error: reportError } = await db
@@ -56,7 +58,7 @@ export async function saveAssessmentAction(data: {
     // Step 2: Regenerate the student's rolling profile summary in the background.
     // This is non-fatal — if it fails, the report is already saved and the next
     // assessment will just run without an updated profile.
-    await generateStudentProfile(data.student_id, data.model_used, data.access_token);
+    await generateStudentProfile(data.student_id, data.model_used);
 
     return { success: true };
 

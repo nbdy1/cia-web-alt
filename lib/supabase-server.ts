@@ -1,9 +1,11 @@
-import { cookies } from "next/headers";
-
-import { createSupabaseWithAccessToken, SUPABASE_ACCESS_TOKEN_COOKIE } from "@/lib/supabase-auth";
+/**
+ * lib/supabase-server.ts
+ *
+ * Re-exports the server Supabase client creator for backward compat with
+ * existing server actions that call getServerSupabase().
+ */
+import { createClient } from '@/lib/supabase/server';
 
 export async function getServerSupabase() {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get(SUPABASE_ACCESS_TOKEN_COOKIE)?.value ?? null;
-  return createSupabaseWithAccessToken(accessToken);
+  return createClient();
 }

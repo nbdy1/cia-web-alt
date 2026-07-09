@@ -15,12 +15,11 @@
  */
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { SUPABASE_ACCESS_TOKEN_COOKIE } from '@/lib/supabase-auth';
 import Cookies from 'js-cookie';
 
 export const CIA_ACTIVE_ORG_COOKIE = "cia_active_organization";
@@ -43,18 +42,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function syncAccessTokenCookie(accessToken?: string | null, maxAgeSeconds = 3600) {
-  if (typeof document === 'undefined') return;
-
-  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-  if (accessToken) {
-    document.cookie = `${SUPABASE_ACCESS_TOKEN_COOKIE}=${encodeURIComponent(accessToken)}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax${secure}`;
-  } else {
-    document.cookie = `${SUPABASE_ACCESS_TOKEN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
-  }
-}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrganizationId, setActiveOrgId] = useState<string | null>(null);
@@ -80,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           const u = session?.user ?? null;
           setUser(u);
-          syncAccessTokenCookie(session?.access_token, session?.expires_in ?? 3600);
 
           if (u) {
             // Fetch organizations for user
@@ -136,10 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (_event, session) => {
         if (mounted) {
           setUser(session?.user ?? null);
-          syncAccessTokenCookie(session?.access_token, session?.expires_in ?? 3600);
           setLoading(false);
           if (_event === 'SIGNED_OUT') {
-            syncAccessTokenCookie(null);
             router.push('/login');
           }
         }
@@ -160,7 +147,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    syncAccessTokenCookie(null);
     Cookies.remove(CIA_ACTIVE_ORG_COOKIE);
     setUser(null);
     setOrganizations([]);

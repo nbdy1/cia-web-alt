@@ -50,7 +50,7 @@
 "use server";
 
 import { supabase } from "@/lib/supabase";
-import { createSupabaseWithAccessToken } from "@/lib/supabase-auth";
+import { createClient } from "@/lib/supabase/server";
 import { buildFinalAnalysisPrompt, buildInterviewPrompt } from "@/lib/data/prompts";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
@@ -540,10 +540,9 @@ function buildUnexploredThemesContext(frontierRows: CriteriaRow[], discoveredThe
 export async function generateStudentProfile(
   studentId: string,
   selectedModel: string = CHAT_MODEL,
-  accessToken?: string | null,
 ): Promise<void> {
   try {
-    const db = createSupabaseWithAccessToken(accessToken);
+    const db = await createClient();
 
     // Fetch last 5 reports — enough history without blowing token budget
     const { data: reports } = await db
@@ -662,10 +661,10 @@ export async function processInterviewStep(
   discoveredThemes: string[] = [],
   studentId?: string,
   selectedModel: string = CHAT_MODEL,
-  accessToken?: string | null,
+  accessToken?: string | null, // kept for backward compat, no longer used
 ) {
   try {
-    const db = createSupabaseWithAccessToken(accessToken);
+    const db = await createClient();
 
     // Fetch the student's historical profile if a studentId was provided.
     // This is a single indexed read and adds ~250 tokens to the prompt.
@@ -740,10 +739,10 @@ export async function finalizeAssessment(
   studentId?: string,
   discoveredThemes: string[] = [],
   selectedModel: string = CHAT_MODEL,
-  accessToken?: string | null,
+  accessToken?: string | null, // kept for backward compat, no longer used
 ) {
   try {
-    const db = createSupabaseWithAccessToken(accessToken);
+    const db = await createClient();
 
     // 1. Fetch the student's previous progress + historical profile for context
     let currentProgressContext =
