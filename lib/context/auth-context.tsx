@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (u) {
             // Fetch organizations for user
-            const { data: orgsData } = await supabase
+            const { data: orgsData, error: orgsError } = await supabase
               .from('organization_members')
               .select(`
                 role,
@@ -84,6 +84,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 )
               `)
               .eq('user_id', u.id);
+
+            // Surface RLS / query problems instead of silently showing an empty
+            // portal. If this logs "permission denied", "infinite recursion", or
+            // returns 0 rows for a user who clearly has a membership, the issue
+            // is the session JWT not reaching PostgREST (auth.uid() is null) or a
+            // missing organization_members row — not the UI.
+            if (orgsError) {
+              console.error('[Auth] organization_members fetch failed:', orgsError);
+            } else if ((orgsData ?? []).length === 0) {
+              console.warn(
+                `[Auth] No organization memberships returned for user ${u.id} (${u.email}). ` +
+                `If a membership exists in the DB, the request is likely unauthenticated (auth.uid() is null).`
+              );
+            }
 
             const mappedOrgs = (orgsData ?? []).map((row: any) => ({
               id: row.organizations.id,

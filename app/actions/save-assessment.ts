@@ -31,8 +31,6 @@ export async function saveAssessmentAction(data: {
   narrative: string;
   analysis: any; // Full structured analysis object
   model_used?: string;
-  // access_token is no longer needed — @supabase/ssr reads session from cookies automatically
-  access_token?: string | null;
 }) {
   try {
     // Server-side Supabase client reads the session from cookies set by middleware

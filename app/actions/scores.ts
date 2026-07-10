@@ -15,7 +15,7 @@
  */
 "use server";
 
-import { createSupabaseWithAccessToken } from "@/lib/supabase-auth";
+import { getServerSupabase } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
 
 export type ScoreRow = {
@@ -30,9 +30,8 @@ export type ScoreRow = {
 export async function getStudentScores(
   studentId: string,
   period: string,
-  accessToken?: string | null,
 ): Promise<ScoreRow[]> {
-  const db = createSupabaseWithAccessToken(accessToken);
+  const db = await getServerSupabase();
 
   const { data, error } = await db
     .from("student_scores")
@@ -48,8 +47,8 @@ export async function getStudentScores(
 }
 
 /** Fetch all distinct periods for a student (most recent first). */
-export async function getStudentPeriods(studentId: string, accessToken?: string | null): Promise<string[]> {
-  const db = createSupabaseWithAccessToken(accessToken);
+export async function getStudentPeriods(studentId: string): Promise<string[]> {
+  const db = await getServerSupabase();
 
   const { data } = await db
     .from("student_scores")
@@ -66,10 +65,9 @@ export async function saveStudentScores(
   studentId: string,
   period: string,
   rows: ScoreRow[],
-  accessToken?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const db = createSupabaseWithAccessToken(accessToken);
+    const db = await getServerSupabase();
 
     const upsertRows = rows.map((r) => ({
       student_id: studentId,

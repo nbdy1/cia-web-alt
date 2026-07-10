@@ -56,6 +56,13 @@ ALTER TABLE public.reports
 ALTER TABLE public.student_scores
   ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES public.organizations(id);
 
+-- profiles.organization_id is a denormalised pointer to the user's PRIMARY
+-- organization. Membership remains the source of truth (organization_members),
+-- but several dashboard queries filter profiles directly by organization_id,
+-- so we keep this column in sync via the membership trigger below.
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES public.organizations(id);
+
 WITH default_org AS (
   SELECT id FROM public.organizations WHERE slug = 'sekolah-impian'
 )
@@ -119,6 +126,9 @@ CREATE INDEX IF NOT EXISTS student_scores_organization_id_idx
 CREATE INDEX IF NOT EXISTS student_scores_student_org_idx
   ON public.student_scores (student_id, organization_id);
 
+CREATE INDEX IF NOT EXISTS profiles_organization_id_idx
+  ON public.profiles (organization_id);
+
 CREATE INDEX IF NOT EXISTS organization_members_user_id_idx
   ON public.organization_members (user_id);
 
@@ -154,6 +164,28 @@ UPDATE public.organization_members om
 SET role = 'owner'
 FROM first_admin
 WHERE om.id = first_admin.id;
+
+-- Backfill profiles.organization_id from each user's primary membership
+-- (owner > admin > ustadz, then earliest joined).
+WITH primary_membership AS (
+  SELECT DISTINCT ON (om.user_id)
+    om.user_id,
+    om.organization_id
+  FROM public.organization_members om
+  ORDER BY
+    om.user_id,
+    CASE om.role
+      WHEN 'owner' THEN 1
+      WHEN 'admin' THEN 2
+      ELSE 3
+    END,
+    om.created_at ASC
+)
+UPDATE public.profiles p
+SET organization_id = pm.organization_id
+FROM primary_membership pm
+WHERE p.id = pm.user_id
+  AND p.organization_id IS DISTINCT FROM pm.organization_id;
 
 CREATE OR REPLACE FUNCTION public.current_organization_id()
 RETURNS UUID
@@ -404,6 +436,12 @@ BEGIN
   VALUES (default_org_id, NEW.id, member_role)
   ON CONFLICT (organization_id, user_id) DO NOTHING;
 
+  -- Keep the denormalised primary-org pointer on the profile in sync.
+  UPDATE public.profiles
+  SET organization_id = default_org_id
+  WHERE id = NEW.id
+    AND organization_id IS NULL;
+
   RETURN NEW;
 END;
 $$;
@@ -456,6 +494,16 @@ CREATE POLICY "Users can read profiles in their organizations"
   FOR SELECT
   TO authenticated
   USING (id = auth.uid() OR public.is_same_organization_user(id));
+
+-- Signup normally creates the profile row via a SECURITY DEFINER auth trigger
+-- (which bypasses RLS), but this policy also lets a user insert their own
+-- profile row directly if the client ever needs to.
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+CREATE POLICY "Users can insert their own profile"
+  ON public.profiles
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (id = auth.uid());
 
 DROP POLICY IF EXISTS "Users and org admins can update profiles" ON public.profiles;
 CREATE POLICY "Users and org admins can update profiles"
@@ -582,5 +630,24 @@ CREATE POLICY "Assigned organization users can update scores"
     public.is_organization_admin(organization_id)
     OR public.is_assigned_student(student_id)
   );
+
+-- ─── Schema grants ────────────────────────────────────────────────────────────
+-- Restore Supabase's default privileges. If the public schema was ever recreated
+-- (e.g. during a rollback), these grants are lost and every client query fails
+-- with "permission denied for schema public" (42501) BEFORE RLS is evaluated.
+-- RLS still governs which rows each role can see; these only grant the ability
+-- to query at all.
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
+GRANT ALL ON ALL TABLES    IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES  IN SCHEMA public TO anon, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  GRANT ALL ON TABLES    TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  GRANT ALL ON ROUTINES  TO anon, authenticated, service_role;
 
 COMMIT;

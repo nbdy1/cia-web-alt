@@ -19,7 +19,7 @@
  */
 "use server";
 
-import { createSupabaseWithAccessToken } from "@/lib/supabase-auth";
+import { getServerSupabase } from "@/lib/supabase-server";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const CHAT_MODEL = "google/gemini-3-flash-preview";
@@ -53,10 +53,9 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
 export async function generateRaporNarrative(
   studentId: string,
   period: string,
-  accessToken?: string | null,
 ): Promise<{ success: boolean; narrative?: string; error?: string }> {
   try {
-    const db = createSupabaseWithAccessToken(accessToken);
+    const db = await getServerSupabase();
 
     // 1. Fetch student + profile_summary
     const { data: student } = await db

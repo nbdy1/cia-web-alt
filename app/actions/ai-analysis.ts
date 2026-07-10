@@ -661,7 +661,6 @@ export async function processInterviewStep(
   discoveredThemes: string[] = [],
   studentId?: string,
   selectedModel: string = CHAT_MODEL,
-  accessToken?: string | null, // kept for backward compat, no longer used
 ) {
   try {
     const db = await createClient();
@@ -739,7 +738,6 @@ export async function finalizeAssessment(
   studentId?: string,
   discoveredThemes: string[] = [],
   selectedModel: string = CHAT_MODEL,
-  accessToken?: string | null, // kept for backward compat, no longer used
 ) {
   try {
     const db = await createClient();

@@ -16,7 +16,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { createSupabaseWithAccessToken } from "@/lib/supabase-auth";
+import { getServerSupabase } from "@/lib/supabase-server";
 
 const norm = (s: string) => s.trim().toLowerCase();
 const isLikelySame = (a: string, b: string) => {
@@ -39,9 +39,8 @@ export async function removeSubIndicator(
   theme: string,
   indicator: string,
   canonicalSub: string,
-  accessToken?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
-  const db = createSupabaseWithAccessToken(accessToken);
+  const db = await getServerSupabase();
 
   const { data: report, error: fetchError } = await db
     .from("reports")
@@ -92,12 +91,11 @@ export async function saveStudentReport(data: {
   narrative: string;
   treatment: string;
   scores: { category: string; pillar_id: string; score: number }[];
-  access_token?: string | null;
 }) {
   console.log("Starting save for student:", data.student_id);
 
   try {
-    const db = createSupabaseWithAccessToken(data.access_token);
+    const db = await getServerSupabase();
 
     // Step 1: Insert Report
     const { data: report, error: reportError } = await db
