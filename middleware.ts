@@ -21,6 +21,12 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // Persist auth cookies across browser restarts (match the browser client).
+      cookieOptions: {
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+        path: '/',
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll();

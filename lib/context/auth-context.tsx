@@ -15,9 +15,9 @@
  */
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useCallback, useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import Cookies from 'js-cookie';
@@ -44,7 +44,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrganizationId, setActiveOrgId] = useState<string | null>(null);
@@ -59,99 +58,90 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.reload();
   };
 
+  // Fetch the user's organizations + resolve the active org. Runs on EVERY auth
+  // resolution (see effect below), so a fresh login populates orgs immediately
+  // instead of requiring a manual page refresh.
+  const loadOrganizations = useCallback(async (u: User) => {
+    const { data: orgsData, error: orgsError } = await supabase
+      .from('organization_members')
+      .select(`
+        role,
+        organizations (
+          id,
+          name,
+          slug
+        )
+      `)
+      .eq('user_id', u.id);
+
+    // Surface RLS / grant problems instead of silently showing an empty portal.
+    // "permission denied for schema public" (42501) means the DB role grants are
+    // missing; 0 rows for a user who has a membership means auth.uid() is null.
+    if (orgsError) {
+      console.error('[Auth] organization_members fetch failed:', orgsError);
+    } else if ((orgsData ?? []).length === 0) {
+      console.warn(
+        `[Auth] No organization memberships returned for user ${u.id} (${u.email}).`
+      );
+    }
+
+    const mappedOrgs = (orgsData ?? []).map((row: any) => ({
+      id: row.organizations.id,
+      name: row.organizations.name,
+      slug: row.organizations.slug,
+      role: row.role,
+    }));
+
+    setOrganizations(mappedOrgs);
+
+    if (mappedOrgs.length > 0) {
+      const savedOrgId = Cookies.get(CIA_ACTIVE_ORG_COOKIE);
+      const isValidSaved = !!savedOrgId && mappedOrgs.some((o: Organization) => o.id === savedOrgId);
+      if (isValidSaved) {
+        setActiveOrgId(savedOrgId!);
+      } else {
+        setActiveOrgId(mappedOrgs[0].id);
+        Cookies.set(CIA_ACTIVE_ORG_COOKIE, mappedOrgs[0].id, { path: '/', expires: 365, sameSite: 'lax' });
+      }
+    } else {
+      setActiveOrgId(null);
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 
-    async function initializeAuth() {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        if (mounted) {
-          const u = session?.user ?? null;
-          setUser(u);
+    // onAuthStateChange fires an INITIAL_SESSION event on subscribe (cold load /
+    // tab reopen, restored from the cookie), plus SIGNED_IN on login and
+    // TOKEN_REFRESHED on refresh. Handling all of them here — and loading orgs
+    // each time — is what removes the "need to refresh after login" quirk.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
 
-          if (u) {
-            // Fetch organizations for user
-            const { data: orgsData, error: orgsError } = await supabase
-              .from('organization_members')
-              .select(`
-                role,
-                organizations (
-                  id,
-                  name,
-                  slug
-                )
-              `)
-              .eq('user_id', u.id);
+      const u = session?.user ?? null;
+      setUser(u);
 
-            // Surface RLS / query problems instead of silently showing an empty
-            // portal. If this logs "permission denied", "infinite recursion", or
-            // returns 0 rows for a user who clearly has a membership, the issue
-            // is the session JWT not reaching PostgREST (auth.uid() is null) or a
-            // missing organization_members row — not the UI.
-            if (orgsError) {
-              console.error('[Auth] organization_members fetch failed:', orgsError);
-            } else if ((orgsData ?? []).length === 0) {
-              console.warn(
-                `[Auth] No organization memberships returned for user ${u.id} (${u.email}). ` +
-                `If a membership exists in the DB, the request is likely unauthenticated (auth.uid() is null).`
-              );
-            }
-
-            const mappedOrgs = (orgsData ?? []).map((row: any) => ({
-              id: row.organizations.id,
-              name: row.organizations.name,
-              slug: row.organizations.slug,
-              role: row.role,
-            }));
-            
-            setOrganizations(mappedOrgs);
-
-            if (mappedOrgs.length > 0) {
-              const savedOrgId = Cookies.get(CIA_ACTIVE_ORG_COOKIE);
-              const isValidSaved = mappedOrgs.some((o: Organization) => o.id === savedOrgId);
-              if (isValidSaved && savedOrgId) {
-                setActiveOrgId(savedOrgId);
-              } else {
-                setActiveOrgId(mappedOrgs[0].id);
-                Cookies.set(CIA_ACTIVE_ORG_COOKIE, mappedOrgs[0].id, { path: '/', expires: 365, sameSite: 'lax' });
-              }
-            } else {
-              setActiveOrgId(null);
-            }
-          } else {
-            setOrganizations([]);
-            setActiveOrgId(null);
-          }
-
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error("Error getting auth session:", err);
-        if (mounted) setLoading(false);
-      }
-    }
-
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (mounted) {
-          setUser(session?.user ?? null);
-          setLoading(false);
-          if (_event === 'SIGNED_OUT') {
-            router.push('/login');
-          }
+      if (u) {
+        // Fire-and-forget: awaiting other supabase calls directly inside the
+        // auth callback can deadlock GoTrue, so we don't await here.
+        loadOrganizations(u).finally(() => {
+          if (mounted) setLoading(false);
+        });
+      } else {
+        setOrganizations([]);
+        setActiveOrgId(null);
+        setLoading(false);
+        if (event === 'SIGNED_OUT') {
+          router.push('/login');
         }
       }
-    );
+    });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, [loadOrganizations, router]);
 
   useEffect(() => {
     if (!loading && !user && pathname !== '/login') {
