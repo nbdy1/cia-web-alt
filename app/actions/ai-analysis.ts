@@ -59,107 +59,100 @@ import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const CHAT_MODEL = "openai/gpt-5-mini";
+const CHAT_MODEL = "google/gemini-3-flash-preview";
 const EMBEDDING_MODEL = "openai/text-embedding-3-small";
 // Experimental: lets the admin settings page sweep temperature per-model to
 // find the best fit. Not a permanent feature — expected to be removed once
 // we settle on a model.
 const DEFAULT_TEMPERATURE = 0.7;
 
-// ─── RAG reranking ──────────────────────────────────────────────────────────
-// OpenRouter doesn't expose a dedicated cross-encoder /rerank endpoint (the
-// kind Cohere/Jina/Voyage offer natively) — everything there is chat or
-// embeddings. So the second-stage reranker below is an LLM-as-reranker:
-// pull a wider embedding-similarity candidate pool, hand the whole numbered
-// list to a fast/cheap chat model in one shot, and keep only the indices it
-// judges relevant, in relevance order (a standard "listwise LLM rerank"
-// pattern, e.g. RankGPT). temperature=0 keeps ranking deterministic-ish.
-const RERANK_MODEL = "openai/gpt-5-mini";
-const RERANK_CANDIDATE_MULTIPLIER = 3; // fetch ~3x the final topK before reranking
-const RERANK_MAX_CANDIDATES = 90; // hard cap so the rerank prompt never balloons
+// ─── RAG: lightweight local re-scoring (no extra network call) ───────────────
+// A pure embedding top-K has a known precision gap: cosine similarity often
+// surfaces items that are merely topically adjacent to the query rather than
+// actually on-topic. The obvious fix is a dedicated reranker model, but no
+// such model is reliably available on OpenRouter today — we tried routing
+// through a full chat model as an LLM listwise reranker, but that adds a
+// whole extra network round-trip per retrieval call (2 per interview turn:
+// criteria + knowledge), which measured out to several extra seconds per
+// turn — worse than the precision problem it was meant to fix. Reverted.
+//
+// Instead: a hybrid dense+lexical re-score done entirely in-process, with
+// effectively zero added latency. We still cast a wider net from pgvector
+// (cheap — same query, just a higher match_count), then blend each
+// candidate's embedding similarity with a lexical keyword-overlap score
+// against the query. Keyword overlap catches exact domain-term matches
+// (e.g. "disiplin", "tanggung jawab", "sabar") that a bi-encoder can
+// under-weight, without needing a second model call.
+
+const STOPWORDS_ID = new Set([
+  "yang", "dan", "di", "ke", "dari", "untuk", "dengan", "pada", "adalah",
+  "itu", "ini", "atau", "juga", "akan", "tidak", "ada", "saya", "kamu",
+  "dia", "nya", "apa", "bagaimana", "siapa", "mengapa", "kenapa", "boleh",
+  "bisa", "tolong", "ceritakan", "jelaskan", "guru", "murid", "ustadz",
+  "santri", "sudah", "belum", "sangat", "lebih", "kurang", "banyak", "saat",
+  "hari", "kalau", "jika", "karena", "sebagai", "atas", "dalam", "oleh",
+]);
+
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !STOPWORDS_ID.has(word));
+}
 
 /**
- * Re-orders `candidates` by relevance to `query` using an LLM listwise
- * reranker, returning at most `topK` items. Falls back to the original
- * (embedding-similarity) order — truncated to topK — if the rerank call
- * fails or the model output can't be parsed, so a flaky rerank never breaks
- * retrieval, it just degrades to the old behavior for that call.
+ * Blends each candidate's pgvector cosine similarity with a lexical
+ * keyword-overlap score against the query, then returns the top `topK`.
+ * Pure in-process computation — no network call, sub-millisecond even for
+ * a few dozen candidates. `label` is just for the console logs below, to
+ * make it easy to see whether this is actually changing anything.
  */
-async function rerankByRelevance<T>(
+function hybridRescore<T extends { similarity: number }>(
   query: string,
   candidates: T[],
   toText: (item: T) => string,
   topK: number,
-): Promise<T[]> {
+  label: string,
+): T[] {
   if (candidates.length <= topK) return candidates;
-  if (!OPENROUTER_API_KEY || !query.trim()) return candidates.slice(0, topK);
 
-  const pool = candidates.slice(0, RERANK_MAX_CANDIDATES);
-  const listText = pool.map((c, i) => `[${i}] ${toText(c)}`).join("\n");
+  const startedAt = Date.now();
+  const queryTokens = new Set(tokenize(query));
 
-  const systemPrompt = `Anda adalah lapisan reranking untuk sistem RAG. Diberikan QUERY dan daftar KANDIDAT bernomor, urutkan nomor kandidat dari yang PALING relevan ke PALING TIDAK relevan terhadap QUERY. Hanya sertakan nomor yang benar-benar relevan — boleh lebih sedikit dari jumlah total jika banyak kandidat tidak relevan. Kembalikan HANYA JSON dengan bentuk persis: {"ranked_indices": [nomor, nomor, ...]}. Jangan menyertakan penjelasan apa pun di luar JSON.`;
-  const userPrompt = `QUERY:\n${query}\n\nKANDIDAT:\n${listText}`;
+  const scored = candidates.map((row) => {
+    const rowTokens = tokenize(toText(row));
+    const overlap = rowTokens.filter((t) => queryTokens.has(t)).length;
+    const lexicalScore = queryTokens.size > 0 ? overlap / queryTokens.size : 0;
+    // Embedding similarity stays the dominant signal; lexical overlap is a
+    // boost for candidates that share exact domain terms with the query.
+    const combinedScore = row.similarity + lexicalScore * 0.25;
+    return { row, combinedScore, lexicalScore };
+  });
 
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: RERANK_MODEL,
-        temperature: 0,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
+  scored.sort((a, b) => b.combinedScore - a.combinedScore);
+  const picked = scored.slice(0, topK);
+  const elapsedMs = Date.now() - startedAt;
 
-    if (!response.ok) throw new Error(await response.text());
+  // Log which originally-top embedding matches got displaced by the lexical
+  // boost — the clearest signal of whether this is doing anything useful.
+  const originalTopTexts = new Set(candidates.slice(0, topK).map(toText));
+  const promoted = picked.filter((p) => !originalTopTexts.has(toText(p.row)));
 
-    const data = await response.json();
-    recordUsage({
-      provider: "openrouter",
-      model: RERANK_MODEL,
-      purpose: "rerank",
-      inputTokens: data.usage?.prompt_tokens ?? 0,
-      outputTokens: data.usage?.completion_tokens ?? 0,
-    });
-
-    const parsed = JSON.parse(data.choices[0].message.content);
-    const rankedIndices: unknown[] = Array.isArray(parsed?.ranked_indices) ? parsed.ranked_indices : [];
-
-    const seen = new Set<number>();
-    const reranked: T[] = [];
-    for (const raw of rankedIndices) {
-      const idx = Number(raw);
-      if (Number.isInteger(idx) && idx >= 0 && idx < pool.length && !seen.has(idx)) {
-        seen.add(idx);
-        reranked.push(pool[idx]);
-        if (reranked.length >= topK) break;
-      }
-    }
-
-    // Backfill from the original similarity order if the model returned
-    // fewer valid indices than requested — never return less than topK
-    // just because the reranker was conservative.
-    if (reranked.length < topK) {
-      for (let i = 0; i < pool.length && reranked.length < topK; i++) {
-        if (!seen.has(i)) {
-          reranked.push(pool[i]);
-          seen.add(i);
-        }
-      }
-    }
-
-    return reranked;
-  } catch (err: any) {
-    console.warn("[Rerank] Failed, falling back to embedding-similarity order:", err.message);
-    return candidates.slice(0, topK);
+  console.log(
+    `[RAG][${label}] rescored ${candidates.length} -> ${picked.length} candidates in ${elapsedMs}ms` +
+    (promoted.length > 0 ? ` (${promoted.length} promoted by lexical overlap)` : ` (embedding order unchanged)`)
+  );
+  if (promoted.length > 0) {
+    console.log(
+      `[RAG][${label}] promoted:`,
+      promoted.map((p) => ({ sim: p.row.similarity.toFixed(3), lex: p.lexicalScore.toFixed(2), text: toText(p.row).slice(0, 70) }))
+    );
   }
+
+  return picked.map((p) => p.row);
 }
 
 // ─── Deterministic Stats & Enrichment Helpers ────────────────────────────────
@@ -555,10 +548,13 @@ interface CriteriaRow {
 }
 
 async function retrieveRelevantCriteria(transcript: string, topK = 25): Promise<CriteriaRow[]> {
+  const startedAt = Date.now();
   const embedding = await embedText(transcript);
+  const embedMs = Date.now() - startedAt;
 
-  // Stage 1 (recall): cast a wider net with cheap embedding similarity.
-  const candidateCount = Math.min(topK * RERANK_CANDIDATE_MULTIPLIER, RERANK_MAX_CANDIDATES);
+  // Cast a slightly wider net than topK — cheap (same query, higher
+  // match_count) and gives hybridRescore below more to work with.
+  const candidateCount = Math.min(topK * 3, 90);
   const { data, error } = await supabase.rpc("match_cia_criteria", {
     query_embedding: embedding,
     match_threshold: 0.15,
@@ -567,13 +563,16 @@ async function retrieveRelevantCriteria(transcript: string, topK = 25): Promise<
 
   if (error) throw new Error(`Supabase RPC Error: ${error.message}`);
   const candidates = (data as CriteriaRow[]) ?? [];
+  console.log(
+    `[RAG][criteria] embedText ${embedMs}ms, embedding search ${candidates.length}/${candidateCount} candidates (threshold 0.15)`
+  );
 
-  // Stage 2 (precision): rerank the wider pool down to topK with an LLM.
-  return rerankByRelevance(
+  return hybridRescore(
     transcript,
     candidates,
     (row) => `${row.category} > ${row.theme} > ${row.indicator}: ${row.sub_indicator}`,
     topK,
+    "criteria",
   );
 }
 
@@ -613,11 +612,14 @@ async function retrieveRelevantKnowledge(
   topK = 5
 ): Promise<KnowledgeRow[]> {
   try {
+    const startedAt = Date.now();
     const expandedQuery = expandKnowledgeQuery(query);
     const embedding = await embedText(expandedQuery);
+    const embedMs = Date.now() - startedAt;
 
-    // Stage 1 (recall): cast a wider net with cheap embedding similarity.
-    const candidateCount = Math.min(topK * RERANK_CANDIDATE_MULTIPLIER, RERANK_MAX_CANDIDATES);
+    // Cast a slightly wider net than topK — cheap (same query, higher
+    // match_count) and gives hybridRescore below more to work with.
+    const candidateCount = Math.min(topK * 3, 90);
     const { data, error } = await supabase.rpc("match_pdf_knowledge", {
       query_embedding: embedding,
       match_threshold: 0.15,  // same as criteria — let the prompt handle relevance
@@ -631,13 +633,16 @@ async function retrieveRelevantKnowledge(
     }
 
     const candidates = (data as KnowledgeRow[]) ?? [];
+    console.log(
+      `[RAG][knowledge] embedText ${embedMs}ms, embedding search ${candidates.length}/${candidateCount} candidates (threshold 0.15)`
+    );
 
-    // Stage 2 (precision): rerank the wider pool down to topK with an LLM.
-    return await rerankByRelevance(
+    return hybridRescore(
       expandedQuery,
       candidates,
       (row) => `[${row.section}] ${row.content.replace(/^\[[^\]]+\]\n/, "").trim().slice(0, 300)}`,
       topK,
+      "knowledge",
     );
   } catch (err: any) {
     console.warn("[Knowledge RAG] Skipped:", err.message);
