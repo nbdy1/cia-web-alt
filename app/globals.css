@@ -8,7 +8,7 @@
 
   /* Design system tokens */
   --btn-depth: 4px;
-  --grid-color: rgba(16, 185, 129, 0.07);
+  --grid-color: rgba(var(--brand-500-rgb), 0.07);
   --grid-size: 28px;
 
   /* Organization brand color scale — defaults to emerald, overridden at
@@ -24,6 +24,9 @@
   --brand-800: #065f46;
   --brand-900: #064e3b;
   --brand-950: #022c22;
+  /* "R, G, B" components of --brand-500, for rgba() mixes like the grid
+     background below. Kept in sync with --brand-500 by applyBrandScale(). */
+  --brand-500-rgb: 16, 185, 129;
 }
 
 @theme inline {
@@ -78,10 +81,10 @@ body {
 @layer utilities {
   /* ─── Paper grid background ────────────────────────────────────── */
   .bg-paper {
-    background-color: #f0fdf7;
+    background-color: color-mix(in srgb, var(--brand-500) 4%, white);
     background-image:
-      linear-gradient(rgba(16, 185, 129, 0.07) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(16, 185, 129, 0.07) 1px, transparent 1px);
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
     background-size: 28px 28px;
   }
 
@@ -95,21 +98,21 @@ body {
   }
 
   .card-3d-selected {
-    background: #f0fdf4;
-    border: 2px solid #22c55e;
+    background: var(--brand-50);
+    border: 2px solid var(--brand-500);
     border-radius: 1.5rem;
-    box-shadow: 0 4px 0 0 #15803d;
+    box-shadow: 0 4px 0 0 var(--brand-700);
   }
 
   .card-3d-link:hover .card-3d,
   a.card-3d-link:hover .card-3d {
-    border-color: #a7f3d0;
-    box-shadow: 0 4px 0 0 #6ee7b7;
+    border-color: var(--brand-200);
+    box-shadow: 0 4px 0 0 var(--brand-300);
   }
   .card-3d-link:active .card-3d,
   a.card-3d-link:active .card-3d {
     transform: translateY(2px);
-    box-shadow: 0 2px 0 0 #6ee7b7;
+    box-shadow: 0 2px 0 0 var(--brand-300);
   }
 }
 

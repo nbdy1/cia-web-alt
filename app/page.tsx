@@ -31,21 +31,16 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-paper">
       {/* Top Bar */}
-      <header className="flex justify-between items-center px-6 pt-10 pb-2">
+      <header className="flex justify-between items-center gap-1 px-6 pt-10 pb-2">
         <div className="flex items-center gap-2">
-          {activeOrganization?.logoUrl ? (
+          {activeOrganization?.logoUrl && (
             <img
               src={activeOrganization.logoUrl}
               alt={activeOrganization.name}
-              className="w-9 h-9 rounded-2xl object-cover shadow-md"
-              style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
+              className="w-9 h-9 rounded-2xl object-cover"
             />
-          ) : (
-            <div className="w-9 h-9 rounded-2xl bg-brand-500 flex items-center justify-center shadow-md" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
-              <span className="text-white font-black text-sm">C</span>
-            </div>
           )}
-          <span className="text-brand-700 font-black text-xl tracking-tight">
+          <span className="text-brand-700 font-black text-sm tracking-tight">
             {activeOrganization?.name || "CIA"}
           </span>
         </div>
@@ -78,7 +73,7 @@ export default function HomePage() {
         <Link href="/create-report" className="block active:translate-y-1 transition-transform">
           <div
             className="w-full p-8 rounded-[2rem] flex flex-col items-center text-center gap-4 bg-brand-500 cursor-pointer select-none"
-            style={{ boxShadow: "0 5px 0 0 #15803d" }}
+            style={{ boxShadow: "0 5px 0 0 var(--brand-700)" }}
           >
             <div className="w-20 h-20 bg-white/20 rounded-[1.4rem] flex items-center justify-center">
               <Mic className="w-10 h-10 text-white" />

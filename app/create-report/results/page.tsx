@@ -135,8 +135,8 @@ export default function ResultsPage() {
         <div
           className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center animate-bounce-in"
           style={{
-            boxShadow: "0 4px 0 0 #a7f3d0",
-            border: "2px solid #d1fae5",
+            boxShadow: "0 4px 0 0 var(--brand-200)",
+            border: "2px solid var(--brand-100)",
           }}
         >
           <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
@@ -180,7 +180,7 @@ export default function ResultsPage() {
             size="xl"
             colorIndex={0}
             className="w-24 h-24 rounded-[2rem]"
-            style={{ boxShadow: "0 5px 0 0 #a7f3d0" }}
+            style={{ boxShadow: "0 5px 0 0 var(--brand-200)" }}
           />
           <div className="text-center">
             <h2 className="text-lg font-black text-slate-900 leading-tight">{studentName}</h2>
@@ -191,7 +191,7 @@ export default function ResultsPage() {
         {/* 1. Status Summary */}
         <section
           className="bg-brand-500 rounded-[2rem] p-7 text-white relative overflow-hidden"
-          style={{ boxShadow: "0 6px 0 0 #15803d" }}
+          style={{ boxShadow: "0 6px 0 0 var(--brand-700)" }}
         >
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Sparkles size={80} />
@@ -367,7 +367,7 @@ export default function ResultsPage() {
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center ${isOpen ? "bg-brand-500" : c.bg}`}
                         style={{
-                          boxShadow: isOpen ? "0 3px 0 0 #15803d" : c.shadow,
+                          boxShadow: isOpen ? "0 3px 0 0 var(--brand-700)" : c.shadow,
                         }}
                       >
                         {cat === "Karakter" && (
@@ -479,7 +479,7 @@ export default function ResultsPage() {
               ? "bg-slate-300 text-slate-400 cursor-not-allowed"
               : "bg-brand-500 text-white"
           }`}
-          style={isSaving ? {} : { boxShadow: "0 4px 0 0 #15803d" }}
+          style={isSaving ? {} : { boxShadow: "0 4px 0 0 var(--brand-700)" }}
         >
           {isSaving ? (
             <Loader2 className="w-5 h-5 animate-spin" />

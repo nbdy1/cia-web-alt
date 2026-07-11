@@ -147,6 +147,16 @@ export function isValidHexColor(value: string): boolean {
   return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim());
 }
 
+/** "#10b981" -> "16, 185, 129", for use inside rgba(var(--brand-500-rgb), alpha). */
+export function hexToRgbString(hex: string): string {
+  const clean = hex.replace("#", "");
+  const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
 /** Apply a brand scale to the document root as CSS custom properties. */
 export function applyBrandScale(scale: BrandScale) {
   if (typeof document === "undefined") return;
@@ -154,6 +164,7 @@ export function applyBrandScale(scale: BrandScale) {
   for (const shade of BRAND_SHADES) {
     root.style.setProperty(`--brand-${shade}`, scale[shade]);
   }
+  root.style.setProperty("--brand-500-rgb", hexToRgbString(scale[500]));
 }
 
 export const BRAND_SCALE_STORAGE_KEY = "cia:brand-scale";

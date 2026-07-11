@@ -133,7 +133,7 @@ export default function MonitoringPage() {
                   className="w-full p-5 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-brand-500 text-white rounded-2xl flex items-center justify-center font-black text-base shrink-0" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
+                    <div className="w-11 h-11 bg-brand-500 text-white rounded-2xl flex items-center justify-center font-black text-base shrink-0" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
                       {ustadz.name ? ustadz.name.charAt(0).toUpperCase() : "?"}
                     </div>
                     <div>

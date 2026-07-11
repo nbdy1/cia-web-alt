@@ -211,7 +211,7 @@ export function SettingsDropdown() {
         }`}
         style={
           isOpen
-            ? { boxShadow: "0 3px 0 0 #15803d" }
+            ? { boxShadow: "0 3px 0 0 var(--brand-700)" }
             : { boxShadow: "0 3px 0 0 #cbd5e1" }
         }
         title="Pengaturan"
@@ -461,7 +461,7 @@ export function SettingsDropdown() {
                       isUpdatingPassword || !newPassword || !confirmPassword
                     }
                     className="mt-3 flex h-10 w-full items-center justify-center rounded-2xl bg-brand-500 text-xs font-black text-white transition-all hover:bg-brand-600 active:translate-y-px disabled:cursor-not-allowed disabled:bg-slate-300"
-                    style={{ boxShadow: "0 3px 0 0 #15803d" }}
+                    style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
                   >
                     {isUpdatingPassword ? "Menyimpan..." : "Simpan Password"}
                   </button>
@@ -582,7 +582,7 @@ export function SettingsDropdown() {
                 >
                   <div
                     className="w-9 h-9 bg-brand-100 text-brand-700 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0"
-                    style={{ boxShadow: "0 2px 0 0 #6ee7b7" }}
+                    style={{ boxShadow: "0 2px 0 0 var(--brand-300)" }}
                   >
                     <BookOpen className="w-4 h-4" />
                   </div>
@@ -629,7 +629,7 @@ export function SettingsDropdown() {
             <span className="flex items-center gap-1.5 text-[10px] text-slate-400 font-black">
               <div
                 className="w-4 h-4 bg-brand-500 rounded-md flex items-center justify-center"
-                style={{ boxShadow: "0 1px 0 0 #15803d" }}
+                style={{ boxShadow: "0 1px 0 0 var(--brand-700)" }}
               >
                 <Shield className="w-2.5 h-2.5 text-white" />
               </div>

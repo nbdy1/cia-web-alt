@@ -214,7 +214,7 @@ export default function ManageUstadzPage() {
           <button
             onClick={() => setIsModalOpen(true)}
             className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
-            style={{ boxShadow: "0 3px 0 0 #15803d" }}
+            style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
           >
             <UserPlus size={15} /> Tambah Pengguna
           </button>
@@ -226,7 +226,7 @@ export default function ManageUstadzPage() {
         <button
           onClick={() => { setShowRemoved(false); setSearchQuery(''); }}
           className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-          style={!showRemoved ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
+          style={!showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
         >
           Aktif ({ustadzList.length})
         </button>
@@ -265,7 +265,7 @@ export default function ManageUstadzPage() {
             >
               <div
                 className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 ${showRemoved ? 'bg-slate-200 text-slate-500' : user.role === "admin" ? "bg-slate-900 text-white" : "bg-brand-100 text-brand-700"}`}
-                style={!showRemoved && user.role === "admin" ? { boxShadow: "0 3px 0 0 #000" } : !showRemoved ? { boxShadow: "0 3px 0 0 #a7f3d0" } : {}}
+                style={!showRemoved && user.role === "admin" ? { boxShadow: "0 3px 0 0 #000" } : !showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-200)" } : {}}
               >
                 {user.name?.charAt(0).toUpperCase() ?? "?"}
               </div>
@@ -333,7 +333,7 @@ export default function ManageUstadzPage() {
               <X size={16} />
             </button>
             <div className="mb-6">
-              <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #a7f3d0" }}>
+              <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}>
                 <UserPlus size={20} className="text-brand-600" />
               </div>
               <h3 className="text-xl font-black text-slate-800">Tambah Pengguna</h3>
@@ -360,7 +360,7 @@ export default function ManageUstadzPage() {
                   <option value="admin">Admin</option>
                 </select>
               </div>
-              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
+              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan Pengguna
               </button>
             </form>

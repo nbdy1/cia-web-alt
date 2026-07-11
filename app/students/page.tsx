@@ -169,7 +169,7 @@ export default function StudentsAnalyticsPage() {
   if (roleLoading || dataLoading) {
     return (
       <div className="min-h-screen bg-paper flex flex-col items-center justify-center gap-4">
-        <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center animate-bounce-in" style={{ boxShadow: "0 4px 0 0 #a7f3d0" }}>
+        <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center animate-bounce-in" style={{ boxShadow: "0 4px 0 0 var(--brand-200)" }}>
           <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
         </div>
         <p className="text-brand-600 text-xs font-black uppercase tracking-widest">Memuat data…</p>
@@ -194,7 +194,7 @@ export default function StudentsAnalyticsPage() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 bg-brand-500 rounded-[1.2rem] flex items-center justify-center" style={{ boxShadow: "0 4px 0 0 #15803d" }}>
+          <div className="w-14 h-14 bg-brand-500 rounded-[1.2rem] flex items-center justify-center" style={{ boxShadow: "0 4px 0 0 var(--brand-700)" }}>
             <LayoutDashboard size={26} className="text-white" />
           </div>
           <div>

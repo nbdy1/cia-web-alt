@@ -121,7 +121,7 @@ export default function PlottingSantriPage() {
           onClick={saveAssignments}
           disabled={saving || loading}
           className="inline-flex items-center gap-2 bg-brand-500 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
-          style={{ boxShadow: saving || loading ? "none" : "0 3px 0 0 #15803d" }}
+          style={{ boxShadow: saving || loading ? "none" : "0 3px 0 0 var(--brand-700)" }}
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={15} />} Simpan Perubahan
         </button>

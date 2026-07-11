@@ -114,6 +114,13 @@ const appearanceScript = `
       for (const shade of Object.keys(brandScale)) {
         root.style.setProperty("--brand-" + shade, brandScale[shade]);
       }
+      if (brandScale["500"]) {
+        const hex = brandScale["500"].replace("#", "");
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        root.style.setProperty("--brand-500-rgb", r + ", " + g + ", " + b);
+      }
     }
   } catch {}
 })();

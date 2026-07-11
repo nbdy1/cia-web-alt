@@ -34,7 +34,7 @@ export function OrganizationSwitcher() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-xl px-3 py-1.5 active:translate-y-px transition-all hover:border-brand-200"
-        style={{ boxShadow: isOpen ? "0 3px 0 0 #15803d" : "0 3px 0 0 #cbd5e1" }}
+        style={{ boxShadow: isOpen ? "0 3px 0 0 var(--brand-700)" : "0 3px 0 0 #cbd5e1" }}
       >
         <div className="w-6 h-6 bg-brand-100 rounded-lg flex items-center justify-center text-brand-600">
           <Building2 size={12} />

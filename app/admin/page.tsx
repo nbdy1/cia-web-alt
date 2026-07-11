@@ -79,7 +79,7 @@ function BarChart({ data }: { data: DayBucket[] }) {
             <rect
               x={x} y={y} width={BAR_W} height={barH}
               rx={6}
-              fill={isToday ? "#22c55e" : "#e2e8f0"}
+              fill={isToday ? "var(--brand-500)" : "#e2e8f0"}
             />
             {d.count > 0 && (
               <text
@@ -87,7 +87,7 @@ function BarChart({ data }: { data: DayBucket[] }) {
                 textAnchor="middle"
                 fontSize={9}
                 fontWeight="900"
-                fill={isToday ? "#15803d" : "#94a3b8"}
+                fill={isToday ? "var(--brand-700)" : "#94a3b8"}
               >
                 {d.count}
               </text>
@@ -97,7 +97,7 @@ function BarChart({ data }: { data: DayBucket[] }) {
               textAnchor="middle"
               fontSize={9}
               fontWeight="700"
-              fill={isToday ? "#15803d" : "#94a3b8"}
+              fill={isToday ? "var(--brand-700)" : "#94a3b8"}
             >
               {d.label}
             </text>
@@ -298,7 +298,7 @@ export default function AdminOverviewPage() {
             </div>
             <div
               className="px-3 py-1.5 rounded-xl text-xs font-black text-brand-700 bg-brand-50"
-              style={{ boxShadow: "0 2px 0 0 #a7f3d0" }}
+              style={{ boxShadow: "0 2px 0 0 var(--brand-200)" }}
             >
               {totalWeek} total
             </div>

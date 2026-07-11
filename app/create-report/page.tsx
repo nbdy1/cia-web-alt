@@ -181,7 +181,7 @@ export default function CreateReport() {
                   ? "bg-red-500 text-white border-red-400"
                   : "bg-white text-brand-600 border-brand-200"
               }`}
-              style={isListening ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
+              style={isListening ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 var(--brand-200)" }}
             >
               {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
@@ -254,7 +254,7 @@ export default function CreateReport() {
                   ? "bg-brand-500 text-white"
                   : "bg-slate-100 text-slate-300 cursor-not-allowed"
               }`}
-              style={selectedStudent ? { boxShadow: "0 4px 0 0 #15803d" } : {}}
+              style={selectedStudent ? { boxShadow: "0 4px 0 0 var(--brand-700)" } : {}}
             >
               Mulai Input →
             </button>

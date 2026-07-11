@@ -388,7 +388,7 @@ export default function AssessmentPage() {
         {/* Topics badge */}
         <div
           className="flex items-center gap-2 px-3 py-2 bg-white rounded-2xl border-2 border-brand-200"
-          style={{ boxShadow: "0 3px 0 0 #a7f3d0" }}
+          style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}
         >
           <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
           <span className="text-xs font-black text-brand-700">{discoveredCount} Topik</span>
@@ -431,7 +431,7 @@ export default function AssessmentPage() {
             {msg.role === "ai" && (
               <div
                 className="w-8 h-8 bg-brand-500 rounded-xl flex items-center justify-center mr-2 flex-shrink-0 self-end mb-1"
-                style={{ boxShadow: "0 2px 0 0 #15803d" }}
+                style={{ boxShadow: "0 2px 0 0 var(--brand-700)" }}
               >
                 <Brain size={14} className="text-white" />
               </div>
@@ -444,7 +444,7 @@ export default function AssessmentPage() {
               }`}
               style={
                 msg.role === "teacher"
-                  ? { boxShadow: "0 3px 0 0 #15803d" }
+                  ? { boxShadow: "0 3px 0 0 var(--brand-700)" }
                   : { boxShadow: "0 3px 0 0 #e2e8f0" }
               }
             >
@@ -514,7 +514,7 @@ export default function AssessmentPage() {
                 ? "bg-red-500 text-white border-red-400"
                 : "bg-white text-brand-600 border-brand-200"
             }`}
-            style={isRecording ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
+            style={isRecording ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 var(--brand-200)" }}
           >
             {isTranscribing ? (
               <Loader2 size={18} className="animate-spin" />
@@ -543,7 +543,7 @@ export default function AssessmentPage() {
                 ? "bg-brand-500 text-white border-2 border-brand-400"
                 : "bg-slate-100 text-slate-300 border-2 border-slate-100 cursor-not-allowed"
             }`}
-            style={currentInput.trim() && !isProcessing ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
+            style={currentInput.trim() && !isProcessing ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
           >
             <Send size={18} />
           </button>

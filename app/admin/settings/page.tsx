@@ -236,7 +236,7 @@ function BrandingCard({ organization }: { organization: OrgForBranding }) {
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={isValidHexColor(customHex) ? customHex : "#10b981"}
+              value={isValidHexColor(customHex) ? customHex : "var(--brand-500)"}
               onChange={(e) => {
                 setCustomHex(e.target.value);
                 persistColor(e.target.value);
@@ -250,7 +250,7 @@ function BrandingCard({ organization }: { organization: OrgForBranding }) {
               onChange={(e) => setCustomHex(e.target.value)}
               onBlur={handleCustomHexSubmit}
               onKeyDown={(e) => e.key === "Enter" && handleCustomHexSubmit()}
-              placeholder="#10b981"
+              placeholder="var(--brand-500)"
               className="flex-1 text-xs font-bold text-slate-700 bg-white border-2 border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-brand-400 transition-colors"
             />
           </div>

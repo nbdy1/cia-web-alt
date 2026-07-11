@@ -186,7 +186,7 @@ export default function ManageSantriPage() {
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
-            style={{ boxShadow: "0 3px 0 0 #15803d" }}
+            style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
           >
             <Plus size={15} /> Tambah Santri
           </button>
@@ -198,7 +198,7 @@ export default function ManageSantriPage() {
         <button
           onClick={() => { setShowRemoved(false); setSearchQuery(''); }}
           className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-          style={!showRemoved ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
+          style={!showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
         >
           Aktif ({students.length})
         </button>
@@ -303,7 +303,7 @@ export default function ManageSantriPage() {
               <X size={16} />
             </button>
             <div className="mb-6">
-              <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #a7f3d0" }}>
+              <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}>
                 <Plus size={20} className="text-brand-600" />
               </div>
               <h3 className="text-xl font-black text-slate-800">Tambah Santri</h3>
@@ -320,7 +320,7 @@ export default function ManageSantriPage() {
                   className="relative group"
                 >
                   {pendingPhotoPreview ? (
-                    <img src={pendingPhotoPreview} alt="preview" className="w-20 h-20 rounded-2xl object-cover border-2 border-brand-200" style={{ boxShadow: '0 3px 0 0 #a7f3d0' }} />
+                    <img src={pendingPhotoPreview} alt="preview" className="w-20 h-20 rounded-2xl object-cover border-2 border-brand-200" style={{ boxShadow: '0 3px 0 0 var(--brand-200)' }} />
                   ) : (
                     <div className="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1 text-slate-400 group-hover:border-brand-400 group-hover:text-brand-500 transition-colors">
                       <Camera size={22} />
@@ -343,7 +343,7 @@ export default function ManageSantriPage() {
                 <label className={labelCls}>NIS (Nomor Induk Santri)</label>
                 <input type="text" value={formData.nis} onChange={e => setFormData({...formData, nis: e.target.value})} placeholder="2024001" className={inputCls} />
               </div>
-              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
+              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan Santri
               </button>
             </form>

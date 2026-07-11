@@ -202,7 +202,7 @@ export default async function ReportDetailPage({
             size="xl"
             colorIndex={0}
             className="w-28 h-28 rounded-[2rem]"
-            style={{ boxShadow: "0 6px 0 0 #a7f3d0" }}
+            style={{ boxShadow: "0 6px 0 0 var(--brand-200)" }}
           />
           <div className="text-center">
             <h2 className="text-xl font-black text-slate-900 leading-tight">{report.students.name}</h2>
@@ -301,7 +301,7 @@ export default async function ReportDetailPage({
                             ? "bg-brand-500 text-white rounded-[1.4rem] rounded-br-md"
                             : "bg-slate-100 text-slate-700 rounded-[1.4rem] rounded-bl-md"
                         }`}
-                        style={isGuru ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
+                        style={isGuru ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
                       >
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
                           {isGuru ? "Ustadz" : "Asisten CIA"}

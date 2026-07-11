@@ -97,7 +97,7 @@ export default async function StudentProfile({
             photoUrl={student.photo_url ?? null}
             size="xl"
             colorIndex={0}
-            style={{ boxShadow: "0 5px 0 0 #15803d" }}
+            style={{ boxShadow: "0 5px 0 0 var(--brand-700)" }}
           />
           <div>
             <h1 className="text-2xl font-black text-slate-900 leading-tight">{student.name}</h1>
@@ -132,7 +132,7 @@ export default async function StudentProfile({
         <Link
           href={`/students/${student.id}/recap`}
           className="flex items-center gap-2 px-5 py-3 w-full justify-center font-black text-sm text-brand-700 bg-white rounded-2xl border-2 border-brand-200 active:translate-y-px transition-transform"
-          style={{ boxShadow: "0 4px 0 0 #6ee7b7" }}
+          style={{ boxShadow: "0 4px 0 0 var(--brand-300)" }}
         >
           <FileText size={16} />
           Persentase CMS

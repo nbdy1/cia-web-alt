@@ -69,17 +69,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              {activeOrganization?.logoUrl ? (
+              {activeOrganization?.logoUrl && (
                 <img
                   src={activeOrganization.logoUrl}
                   alt={activeOrganization.name}
                   className="w-5 h-5 rounded-md object-cover"
-                  style={{ boxShadow: "0 2px 0 0 var(--brand-700)" }}
                 />
-              ) : (
-                <div className="w-5 h-5 bg-brand-500 rounded-md flex items-center justify-center" style={{ boxShadow: "0 2px 0 0 var(--brand-700)" }}>
-                  <span className="text-white font-black text-[10px]">C</span>
-                </div>
               )}
               <h1 className="text-base font-black text-white">Admin Portal</h1>
             </div>
@@ -115,7 +110,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     ? 'bg-brand-500 text-white'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                 }`}
-                style={isActive ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
+                style={isActive ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
               >
                 <Icon size={16} className={isActive ? "text-white" : "text-slate-400"} />
                 {item.label}
