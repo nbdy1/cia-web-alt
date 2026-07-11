@@ -18,8 +18,10 @@ import { supabase } from '@/lib/supabase';
 import { BookOpen, Search, Loader2, Users, FileText, ChevronRight, Calendar, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { StudentAvatar } from '@/components/StudentAvatar';
+import { useAuth } from '@/lib/context/auth-context';
 
 export default function MonitoringPage() {
+  const { activeOrganizationId } = useAuth();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,18 +29,32 @@ export default function MonitoringPage() {
 
   useEffect(() => {
     async function fetchMonitoringData() {
+      if (!activeOrganizationId) return;
       try {
-        // Fetch all Ustadz
-        const { data: ustadzList, error: ustadzError } = await supabase
-          .from('profiles')
-          .select('id, name')
-          .eq('role', 'ustadz')
-          .or('is_removed.is.null,is_removed.eq.false')
-          .order('name');
+        // Ustadz membership is scoped via organization_members — querying
+        // `profiles` directly would (per RLS) return ustadz from every org
+        // this admin belongs to, not just the active one.
+        const { data: memberRows, error: membersError } = await supabase
+          .from('organization_members')
+          .select('user_id')
+          .eq('organization_id', activeOrganizationId)
+          .eq('role', 'ustadz');
+
+        if (membersError) throw membersError;
+        const ustadzIds = (memberRows ?? []).map((m: any) => m.user_id);
+
+        const { data: ustadzList, error: ustadzError } = ustadzIds.length > 0
+          ? await supabase
+              .from('profiles')
+              .select('id, name')
+              .in('id', ustadzIds)
+              .or('is_removed.is.null,is_removed.eq.false')
+              .order('name')
+          : { data: [] as any[], error: null };
 
         if (ustadzError) throw ustadzError;
 
-        // Fetch all students with their reports
+        // Fetch all students (in this org) with their reports
         const { data: studentsList, error: studentsError } = await supabase
           .from('students')
           .select(`
@@ -52,6 +68,7 @@ export default function MonitoringPage() {
               narrative
             )
           `)
+          .eq('organization_id', activeOrganizationId)
           .or('is_removed.is.null,is_removed.eq.false')
           .order('name');
 
@@ -82,7 +99,7 @@ export default function MonitoringPage() {
     }
 
     fetchMonitoringData();
-  }, []);
+  }, [activeOrganizationId]);
 
   const filteredData = data.filter(ustadz => {
     // Match ustadz name

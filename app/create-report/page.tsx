@@ -34,7 +34,7 @@ export default function CreateReport() {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [isListening, setIsListening] = useState(false);
   const { role } = useUserRole();
-  const { user } = useAuth();
+  const { user, activeOrganizationId } = useAuth();
   const recognitionRef = useRef<any>(null);
   // Tracks user *intent* to listen — survives iOS onend auto-fires
   const shouldListenRef = useRef(false);
@@ -42,9 +42,11 @@ export default function CreateReport() {
   // FETCH REAL STUDENTS FROM DB
   useEffect(() => {
     async function fetchStudents() {
+      if (!activeOrganizationId) return;
       const { data, error } = await supabase
         .from('students')
         .select('*, user:profiles(id)')
+        .eq('organization_id', activeOrganizationId)
         .or('is_removed.is.null,is_removed.eq.false')
         .order('name', { ascending: true });
 
@@ -52,7 +54,7 @@ export default function CreateReport() {
       setLoading(false);
     }
     fetchStudents();
-  }, []);
+  }, [activeOrganizationId]);
 
   const fuse = useMemo(() => new Fuse(students, {
     keys: ['name'],
@@ -62,7 +64,7 @@ export default function CreateReport() {
 
   const filteredStudents = React.useMemo(() => {
     const list = searchQuery ? fuse.search(searchQuery).map(r => r.item) : students;
-    if (role === 'admin') return list;
+    if (role === 'admin' || role === 'owner') return list;
     // For ustadz: only show students assigned to them
     return list.filter(s => s.assigned_ustadz_id === user?.id);
   }, [searchQuery, students, role, user?.id]);

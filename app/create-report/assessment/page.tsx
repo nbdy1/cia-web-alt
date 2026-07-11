@@ -62,7 +62,7 @@ export default function AssessmentPage() {
   const [discoveredCount, setDiscoveredCount] = useState(0);
   const [discoveredPillars, setDiscoveredPillars] = useState<string[]>([]);
 
-  const { selectedModel } = useSettings();
+  const { selectedModel, temperature } = useSettings();
   const { speak, stop: stopVoice, unlock: unlockVoice } = useCIAVoice();
   const recognitionRef = useRef<any>(null);
   // Tracks user *intent* to record — survives iOS onend auto-fires
@@ -274,7 +274,7 @@ export default function AssessmentPage() {
         previousAccumulatedCount: discoveredPillars.length,
       });
       const transcript = newMessages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
-      const result = await processInterviewStep(transcript, discoveredPillars, studentId || undefined, selectedModel);
+      const result = await processInterviewStep(transcript, discoveredPillars, studentId || undefined, selectedModel, temperature);
 
       if (result.reply) {
         const newDiscovered = Array.isArray(result.discoveredPillars) ? result.discoveredPillars : [];
@@ -319,6 +319,7 @@ export default function AssessmentPage() {
         studentId || undefined,
         discoveredPillars,
         selectedModel,
+        temperature,
       );
       console.log('[Finalize][Client] Final analysis received', {
         statusSummary: analysis?.status_summary,

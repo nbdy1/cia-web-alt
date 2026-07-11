@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Plus, Building2, UserPlus, ShieldAlert, X, Users, Trash2, Crown } from "lucide-react";
+import { Loader2, Plus, Building2, UserPlus, X, Users, Trash2, Crown } from "lucide-react";
 import {
   createOrganization,
   assignUserToOrganization,
@@ -139,13 +139,6 @@ export default function SuperAdminPage() {
           <Plus size={16} />
           New Organization
         </button>
-      </div>
-
-      <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3 text-rose-800 mb-6">
-        <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
-        <p className="text-sm font-medium">
-          <strong>Note:</strong> Currently logged in as Super Admin. You are viewing global data across all organizations. Remember to create proper RLS bypass policies for Super Admins in production.
-        </p>
       </div>
 
       <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>

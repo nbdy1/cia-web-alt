@@ -177,7 +177,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    Cookies.remove(CIA_ACTIVE_ORG_COOKIE);
+    // Deliberately keep CIA_ACTIVE_ORG_COOKIE so the next login on this
+    // browser resumes the same organization instead of falling back to
+    // whichever org the membership query happens to return first.
+    // loadOrganizations() already validates the saved id against the
+    // logged-in user's own memberships, so a stale/foreign id is harmless.
     setUser(null);
     setOrganizations([]);
     setActiveOrgId(null);

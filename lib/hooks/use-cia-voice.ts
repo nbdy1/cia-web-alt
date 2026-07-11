@@ -36,6 +36,11 @@
 import { useCallback, useState, useRef } from "react";
 import { generateSpeech } from "@/app/actions/speech";
 
+// Master kill switch — when false, speak() is a no-op regardless of backend
+// (no ElevenLabs call, no browser SpeechSynthesis fallback). TTS is disabled
+// app-wide for now; flip back to true to re-enable.
+const TTS_ENABLED = false;
+
 const USE_ELEVENLABS = true; // Toggle this to switch between ElevenLabs and Native Browser TTS
 
 // A tiny (~0.05s) silent WAV used only to "unlock" the shared audio element
@@ -121,7 +126,7 @@ export function useCIAVoice() {
 
   const speak = useCallback(
     async (text: string) => {
-      if (!text) return;
+      if (!text || !TTS_ENABLED) return;
 
       const el = getAudioEl();
 

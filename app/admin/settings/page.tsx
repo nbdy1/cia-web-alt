@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Cpu, ImageUp, Palette, Check, Loader2 } from "lucide-react";
+import { Cpu, ImageUp, Palette, Check, Loader2, Thermometer } from "lucide-react";
 import { useSettings } from "@/lib/context/settings-context";
 import { MODEL_OPTIONS } from "@/lib/data/models";
 import { useAuth } from "@/lib/context/auth-context";
@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { COLOR_PRESETS, generateBrandScale, isValidHexColor, applyBrandScale } from "@/lib/theme/colors";
 
 export default function AdminSettingsPage() {
-  const { selectedModel, setSelectedModel } = useSettings();
+  const { selectedModel, setSelectedModel, temperature, setTemperature } = useSettings();
   const { activeOrganization } = useAuth();
 
   return (
@@ -57,6 +57,49 @@ export default function AdminSettingsPage() {
             </select>
             <div className="mt-3 text-xs font-semibold text-slate-500 leading-relaxed">
               {MODEL_OPTIONS.find((m) => m.id === selectedModel)?.desc}
+            </div>
+          </div>
+        </div>
+
+        {/* Temperature — experimental, for comparing model outputs. Likely to
+            be removed once we settle on a model + temperature combo. */}
+        <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 max-w-md mt-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              className="w-10 h-10 bg-white text-slate-600 rounded-xl border-2 border-slate-200 flex items-center justify-center flex-shrink-0"
+              style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}
+            >
+              <Thermometer className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="block font-black text-slate-800 text-base">
+                Temperature
+                <span className="ml-2 align-middle text-[9px] font-black text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                  Eksperimental
+                </span>
+              </span>
+              <span className="block text-xs text-slate-400 font-bold">
+                Mengatur variasi/kreativitas jawaban AI
+              </span>
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white border border-slate-100 px-4 py-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black text-slate-500">Konsisten</span>
+              <span className="text-sm font-black text-brand-600">{temperature.toFixed(1)}</span>
+              <span className="text-xs font-black text-slate-500">Kreatif</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={2}
+              step={0.1}
+              value={temperature}
+              onChange={(e) => setTemperature(Number(e.target.value))}
+              className="w-full accent-brand-500 cursor-pointer"
+            />
+            <div className="mt-3 text-xs font-semibold text-slate-500 leading-relaxed">
+              Nilai rendah (0) menghasilkan jawaban yang lebih deterministik dan berulang; nilai tinggi (2) menghasilkan jawaban yang lebih beragam namun bisa kurang stabil.
             </div>
           </div>
         </div>

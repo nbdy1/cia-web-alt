@@ -66,7 +66,7 @@ const fontOptions = [
 const tabs = [
   { id: "account", label: "Akun", icon: UserRound },
   { id: "appearance", label: "Tampilan", icon: Sliders },
-  { id: "guide", label: "Panduan", icon: BookOpen },
+  // { id: "guide", label: "Panduan", icon: BookOpen },
 ] as const;
 
 type FontOptionId = (typeof fontOptions)[number]["id"];
@@ -229,12 +229,12 @@ export function SettingsDropdown() {
           <div className="px-5 py-4 border-b-2 border-slate-100">
             <h4 className="font-black text-slate-800 text-base">Pengaturan</h4>
             <p className="text-[11px] text-slate-400 font-bold mt-0.5">
-              Akun, tampilan, dan panduan
+              Akun & tampilan 
             </p>
           </div>
 
           <div className="px-3 pt-3">
-            <div className="grid grid-cols-3 gap-1 rounded-2xl bg-slate-100 p-1">
+            <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isSelected = activeTab === tab.id;
@@ -461,7 +461,12 @@ export function SettingsDropdown() {
                       isUpdatingPassword || !newPassword || !confirmPassword
                     }
                     className="mt-3 flex h-10 w-full items-center justify-center rounded-2xl bg-brand-500 text-xs font-black text-white transition-all hover:bg-brand-600 active:translate-y-px disabled:cursor-not-allowed disabled:bg-slate-300"
-                    style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
+                    style={{
+                      boxShadow:
+                        isUpdatingPassword || !newPassword || !confirmPassword
+                          ? "0 3px 0 0 #94a3b8"
+                          : "0 3px 0 0 var(--brand-700)",
+                    }}
                   >
                     {isUpdatingPassword ? "Menyimpan..." : "Simpan Password"}
                   </button>
@@ -570,7 +575,7 @@ export function SettingsDropdown() {
               </div>
             )}
 
-            {activeTab === "guide" && (
+            {/* {activeTab === "guide" && (
               <div className="space-y-2">
                 <button
                   type="button"
@@ -622,7 +627,7 @@ export function SettingsDropdown() {
                   </div>
                 </button>
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="border-t-2 border-slate-100 px-5 py-3 flex items-center justify-between">

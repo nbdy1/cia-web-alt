@@ -67,7 +67,7 @@ export default function StudentsAnalyticsPage() {
 
     const fetchData = async () => {
       setDataLoading(true);
-      const isAdmin = role === "admin";
+      const isAdmin = role === "admin" || role === "owner";
       const ustadzId = isAdmin ? null : user.id;
 
       // ── 1. Fetch students (with optional ustadz filter) ──────────────────
@@ -151,6 +151,12 @@ export default function StudentsAnalyticsPage() {
         `)
         .order("created_at", { ascending: false })
         .limit(8);
+
+      // Without this, an admin/owner of multiple orgs would see recent
+      // reports from every org they administer, not just the active one.
+      if (activeOrganizationId) {
+        recentQuery = recentQuery.eq("organization_id", activeOrganizationId);
+      }
 
       if (!isAdmin && studentIds.length > 0) {
         recentQuery = recentQuery.in("student_id", studentIds);

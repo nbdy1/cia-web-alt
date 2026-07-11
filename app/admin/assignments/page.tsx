@@ -17,26 +17,51 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Users, Search, Loader2, Save, UserCheck, AlertCircle } from 'lucide-react';
 import { StudentAvatar } from '@/components/StudentAvatar';
+import { useAuth } from '@/lib/context/auth-context';
 
 export default function PlottingSantriPage() {
+  const { activeOrganizationId } = useAuth();
   const [students, setStudents] = useState<any[]>([]);
   const [ustadzList, setUstadzList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Track changes locally before saving
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
   useEffect(() => {
     async function fetchData() {
+      if (!activeOrganizationId) return;
       try {
+        // Ustadz membership is scoped via organization_members — querying
+        // `profiles` directly would (per RLS) return ustadz from every org
+        // this admin belongs to, not just the active one.
+        const membersRes = await supabase
+          .from('organization_members')
+          .select('user_id, role')
+          .eq('organization_id', activeOrganizationId)
+          .eq('role', 'ustadz');
+        const ustadzIds = (membersRes.data ?? []).map((m: any) => m.user_id);
+
         const [studentsRes, profilesRes] = await Promise.all([
-          supabase.from('students').select('*').or('is_removed.is.null,is_removed.eq.false').order('name'),
-          supabase.from('profiles').select('*').eq('role', 'ustadz').or('is_removed.is.null,is_removed.eq.false').order('name')
+          supabase
+            .from('students')
+            .select('*')
+            .eq('organization_id', activeOrganizationId)
+            .or('is_removed.is.null,is_removed.eq.false')
+            .order('name'),
+          ustadzIds.length > 0
+            ? supabase
+                .from('profiles')
+                .select('*')
+                .in('id', ustadzIds)
+                .or('is_removed.is.null,is_removed.eq.false')
+                .order('name')
+            : Promise.resolve({ data: [] as any[] }),
         ]);
-        
+
         if (studentsRes.data) {
           setStudents(studentsRes.data);
           // Initialize assignments state with current values
@@ -48,7 +73,7 @@ export default function PlottingSantriPage() {
           });
           setAssignments(initialAssigns);
         }
-        
+
         if (profilesRes.data) {
           setUstadzList(profilesRes.data);
         }
@@ -59,7 +84,7 @@ export default function PlottingSantriPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [activeOrganizationId]);
 
   const handleAssignmentChange = (studentId: string, ustadzId: string) => {
     setAssignments(prev => ({

@@ -59,8 +59,108 @@ import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const CHAT_MODEL = "google/gemini-3-flash-preview";
+const CHAT_MODEL = "openai/gpt-5-mini";
 const EMBEDDING_MODEL = "openai/text-embedding-3-small";
+// Experimental: lets the admin settings page sweep temperature per-model to
+// find the best fit. Not a permanent feature — expected to be removed once
+// we settle on a model.
+const DEFAULT_TEMPERATURE = 0.7;
+
+// ─── RAG reranking ──────────────────────────────────────────────────────────
+// OpenRouter doesn't expose a dedicated cross-encoder /rerank endpoint (the
+// kind Cohere/Jina/Voyage offer natively) — everything there is chat or
+// embeddings. So the second-stage reranker below is an LLM-as-reranker:
+// pull a wider embedding-similarity candidate pool, hand the whole numbered
+// list to a fast/cheap chat model in one shot, and keep only the indices it
+// judges relevant, in relevance order (a standard "listwise LLM rerank"
+// pattern, e.g. RankGPT). temperature=0 keeps ranking deterministic-ish.
+const RERANK_MODEL = "openai/gpt-5-mini";
+const RERANK_CANDIDATE_MULTIPLIER = 3; // fetch ~3x the final topK before reranking
+const RERANK_MAX_CANDIDATES = 90; // hard cap so the rerank prompt never balloons
+
+/**
+ * Re-orders `candidates` by relevance to `query` using an LLM listwise
+ * reranker, returning at most `topK` items. Falls back to the original
+ * (embedding-similarity) order — truncated to topK — if the rerank call
+ * fails or the model output can't be parsed, so a flaky rerank never breaks
+ * retrieval, it just degrades to the old behavior for that call.
+ */
+async function rerankByRelevance<T>(
+  query: string,
+  candidates: T[],
+  toText: (item: T) => string,
+  topK: number,
+): Promise<T[]> {
+  if (candidates.length <= topK) return candidates;
+  if (!OPENROUTER_API_KEY || !query.trim()) return candidates.slice(0, topK);
+
+  const pool = candidates.slice(0, RERANK_MAX_CANDIDATES);
+  const listText = pool.map((c, i) => `[${i}] ${toText(c)}`).join("\n");
+
+  const systemPrompt = `Anda adalah lapisan reranking untuk sistem RAG. Diberikan QUERY dan daftar KANDIDAT bernomor, urutkan nomor kandidat dari yang PALING relevan ke PALING TIDAK relevan terhadap QUERY. Hanya sertakan nomor yang benar-benar relevan — boleh lebih sedikit dari jumlah total jika banyak kandidat tidak relevan. Kembalikan HANYA JSON dengan bentuk persis: {"ranked_indices": [nomor, nomor, ...]}. Jangan menyertakan penjelasan apa pun di luar JSON.`;
+  const userPrompt = `QUERY:\n${query}\n\nKANDIDAT:\n${listText}`;
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: RERANK_MODEL,
+        temperature: 0,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (!response.ok) throw new Error(await response.text());
+
+    const data = await response.json();
+    recordUsage({
+      provider: "openrouter",
+      model: RERANK_MODEL,
+      purpose: "rerank",
+      inputTokens: data.usage?.prompt_tokens ?? 0,
+      outputTokens: data.usage?.completion_tokens ?? 0,
+    });
+
+    const parsed = JSON.parse(data.choices[0].message.content);
+    const rankedIndices: unknown[] = Array.isArray(parsed?.ranked_indices) ? parsed.ranked_indices : [];
+
+    const seen = new Set<number>();
+    const reranked: T[] = [];
+    for (const raw of rankedIndices) {
+      const idx = Number(raw);
+      if (Number.isInteger(idx) && idx >= 0 && idx < pool.length && !seen.has(idx)) {
+        seen.add(idx);
+        reranked.push(pool[idx]);
+        if (reranked.length >= topK) break;
+      }
+    }
+
+    // Backfill from the original similarity order if the model returned
+    // fewer valid indices than requested — never return less than topK
+    // just because the reranker was conservative.
+    if (reranked.length < topK) {
+      for (let i = 0; i < pool.length && reranked.length < topK; i++) {
+        if (!seen.has(i)) {
+          reranked.push(pool[i]);
+          seen.add(i);
+        }
+      }
+    }
+
+    return reranked;
+  } catch (err: any) {
+    console.warn("[Rerank] Failed, falling back to embedding-similarity order:", err.message);
+    return candidates.slice(0, topK);
+  }
+}
 
 // ─── Deterministic Stats & Enrichment Helpers ────────────────────────────────
 // The AI only sees ~30 retrieved criteria via RAG, so we cannot trust its
@@ -372,7 +472,12 @@ function computeOverallStats(aiJson: any): {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function callOpenRouter(systemPrompt: string, userMessage: string, model: string = CHAT_MODEL) {
+async function callOpenRouter(
+  systemPrompt: string,
+  userMessage: string,
+  model: string = CHAT_MODEL,
+  temperature: number = DEFAULT_TEMPERATURE,
+) {
   if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is missing");
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -383,6 +488,7 @@ async function callOpenRouter(systemPrompt: string, userMessage: string, model: 
     },
     body: JSON.stringify({
       model: model,
+      temperature,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
@@ -451,14 +557,24 @@ interface CriteriaRow {
 async function retrieveRelevantCriteria(transcript: string, topK = 25): Promise<CriteriaRow[]> {
   const embedding = await embedText(transcript);
 
+  // Stage 1 (recall): cast a wider net with cheap embedding similarity.
+  const candidateCount = Math.min(topK * RERANK_CANDIDATE_MULTIPLIER, RERANK_MAX_CANDIDATES);
   const { data, error } = await supabase.rpc("match_cia_criteria", {
     query_embedding: embedding,
     match_threshold: 0.15,
-    match_count: topK,
+    match_count: candidateCount,
   });
 
   if (error) throw new Error(`Supabase RPC Error: ${error.message}`);
-  return (data as CriteriaRow[]) ?? [];
+  const candidates = (data as CriteriaRow[]) ?? [];
+
+  // Stage 2 (precision): rerank the wider pool down to topK with an LLM.
+  return rerankByRelevance(
+    transcript,
+    candidates,
+    (row) => `${row.category} > ${row.theme} > ${row.indicator}: ${row.sub_indicator}`,
+    topK,
+  );
 }
 
 // ─── RAG: Retrieve relevant knowledge chunks from the full PDF ────────────────
@@ -500,10 +616,12 @@ async function retrieveRelevantKnowledge(
     const expandedQuery = expandKnowledgeQuery(query);
     const embedding = await embedText(expandedQuery);
 
+    // Stage 1 (recall): cast a wider net with cheap embedding similarity.
+    const candidateCount = Math.min(topK * RERANK_CANDIDATE_MULTIPLIER, RERANK_MAX_CANDIDATES);
     const { data, error } = await supabase.rpc("match_pdf_knowledge", {
       query_embedding: embedding,
       match_threshold: 0.15,  // same as criteria — let the prompt handle relevance
-      match_count: topK,
+      match_count: candidateCount,
     });
 
     if (error) {
@@ -512,7 +630,15 @@ async function retrieveRelevantKnowledge(
       return [];
     }
 
-    return (data as KnowledgeRow[]) ?? [];
+    const candidates = (data as KnowledgeRow[]) ?? [];
+
+    // Stage 2 (precision): rerank the wider pool down to topK with an LLM.
+    return await rerankByRelevance(
+      expandedQuery,
+      candidates,
+      (row) => `[${row.section}] ${row.content.replace(/^\[[^\]]+\]\n/, "").trim().slice(0, 300)}`,
+      topK,
+    );
   } catch (err: any) {
     console.warn("[Knowledge RAG] Skipped:", err.message);
     return [];
@@ -607,6 +733,7 @@ function buildUnexploredThemesContext(frontierRows: CriteriaRow[], discoveredThe
 export async function generateStudentProfile(
   studentId: string,
   selectedModel: string = CHAT_MODEL,
+  temperature: number = DEFAULT_TEMPERATURE,
 ): Promise<void> {
   return withUsageContext({ purpose: "profile_summary", studentId }, async () => {
     try {
@@ -667,7 +794,7 @@ Tulis seperti catatan profesional yang disiapkan untuk seseorang yang belum pern
 
 PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak boleh ada array, tidak boleh ada markdown, tidak boleh ada judul, tidak boleh ada key-value. Hanya paragraf teks biasa.`;
 
-    const profileText = await callOpenRouter(systemPrompt, reportContext, selectedModel);
+    const profileText = await callOpenRouter(systemPrompt, reportContext, selectedModel, temperature);
 
     // ── Aggressively strip any JSON/markdown wrapping the model might produce ──
     // Despite instructions, LLMs sometimes wrap output in arrays or objects.
@@ -730,6 +857,7 @@ export async function processInterviewStep(
   discoveredThemes: string[] = [],
   studentId?: string,
   selectedModel: string = CHAT_MODEL,
+  temperature: number = DEFAULT_TEMPERATURE,
 ) {
   return withUsageContext({ purpose: "interview_step", studentId }, async () => {
     try {
@@ -793,7 +921,8 @@ export async function processInterviewStep(
     const responseText = await callOpenRouter(
       interviewPrompt,
       `TRANSKRIP SAAT INI:\n"${transcript}"`,
-      selectedModel
+      selectedModel,
+      temperature
     );
     const parsed = parseModelJson(responseText, "Interview step");
     console.log("[Interview][Server] Model output", {
@@ -814,6 +943,7 @@ export async function finalizeAssessment(
   studentId?: string,
   discoveredThemes: string[] = [],
   selectedModel: string = CHAT_MODEL,
+  temperature: number = DEFAULT_TEMPERATURE,
 ) {
   return withUsageContext({ purpose: "finalize", studentId }, async () => {
     try {
@@ -929,7 +1059,8 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     const responseText = await callOpenRouter(
       systemPrompt,
       `${currentProgressContext}${previousTitlesContext}\n\nTRANSKRIP AKHIR:\n"${transcript}"`,
-      selectedModel
+      selectedModel,
+      temperature
     );
     const parsed = parseModelJson(responseText, "Finalize assessment");
     const enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? []);

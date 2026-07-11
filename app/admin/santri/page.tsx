@@ -22,8 +22,10 @@ import { supabase } from '@/lib/supabase';
 import { Search, Loader2, Plus, X, AlertCircle, Sparkles, UserX, GraduationCap, ArchiveX, Camera } from 'lucide-react';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { StudentPhotoUpload } from '@/components/StudentPhotoUpload';
+import { useAuth } from '@/lib/context/auth-context';
 
 export default function ManageSantriPage() {
+  const { activeOrganizationId } = useAuth();
   const [students, setStudents] = useState<any[]>([]);
   const [removedStudents, setRemovedStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,17 +51,20 @@ export default function ManageSantriPage() {
   const [removeError, setRemoveError] = useState<string | null>(null);
 
   const fetchStudents = async () => {
+    if (!activeOrganizationId) return;
     setLoading(true);
     try {
       const [activeRes, removedRes] = await Promise.all([
         supabase
           .from('students')
           .select('*, profiles:assigned_ustadz_id (name)')
+          .eq('organization_id', activeOrganizationId)
           .or('is_removed.is.null,is_removed.eq.false')
           .order('name'),
         supabase
           .from('students')
           .select('*, profiles:assigned_ustadz_id (name)')
+          .eq('organization_id', activeOrganizationId)
           .eq('is_removed', true)
           .order('removed_at', { ascending: false }),
       ]);
@@ -72,7 +77,7 @@ export default function ManageSantriPage() {
     }
   };
 
-  useEffect(() => { fetchStudents(); }, []);
+  useEffect(() => { fetchStudents(); }, [activeOrganizationId]);
 
   const handleAddSantri = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,10 +85,14 @@ export default function ManageSantriPage() {
     setModalError(null);
     setModalSuccess(null);
     try {
-      // 1. Insert student row and get the new ID
+      // 1. Insert student row and get the new ID. organization_id is set
+      // explicitly to the currently active org — the DB trigger's fallback
+      // (current_organization_id(), ranked owner > admin > ustadz across ALL
+      // of the user's orgs) would otherwise misfile new students into the
+      // wrong org for anyone who owns/admins more than one.
       const { data: inserted, error } = await supabase
         .from('students')
-        .insert([{ name: formData.name, nis: formData.nis }])
+        .insert([{ name: formData.name, nis: formData.nis, organization_id: activeOrganizationId }])
         .select('id')
         .single();
       if (error) throw error;

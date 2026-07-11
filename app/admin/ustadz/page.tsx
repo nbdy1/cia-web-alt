@@ -53,27 +53,41 @@ export default function ManageUstadzPage() {
   const [roleError, setRoleError] = useState<string | null>(null);
 
   const fetchUstadz = async () => {
+    if (!organizationId) return;
     setLoading(true);
     try {
-      const [activeRes, removedRes, membersRes] = await Promise.all([
+      // Membership in the ACTIVE org is the source of truth for who belongs
+      // here — querying `profiles` directly (as this used to) is scoped only
+      // by RLS, which allows reading any profile that shares ANY org with the
+      // caller. For an owner of multiple orgs that leaked every org's
+      // members into every org's list.
+      const membersRes = await supabase
+        .from('organization_members')
+        .select('user_id, role')
+        .eq('organization_id', organizationId);
+      const memberIds = (membersRes.data ?? []).map((m: any) => m.user_id);
+      const roleByUserId = new Map((membersRes.data ?? []).map((m: any) => [m.user_id, m.role]));
+
+      if (memberIds.length === 0) {
+        setUstadzList([]);
+        setRemovedList([]);
+        return;
+      }
+
+      const [activeRes, removedRes] = await Promise.all([
         supabase
           .from('profiles')
           .select('*')
+          .in('id', memberIds)
           .or('is_removed.is.null,is_removed.eq.false')
           .order('name'),
         supabase
           .from('profiles')
           .select('*')
+          .in('id', memberIds)
           .eq('is_removed', true)
           .order('removed_at', { ascending: false }),
-        organizationId
-          ? supabase
-              .from('organization_members')
-              .select('user_id, role')
-              .eq('organization_id', organizationId)
-          : Promise.resolve({ data: [] }),
       ]);
-      const roleByUserId = new Map((membersRes.data ?? []).map((m: any) => [m.user_id, m.role]));
       if (activeRes.data) {
         setUstadzList(activeRes.data.map((u: any) => ({ ...u, role: roleByUserId.get(u.id) ?? u.role })));
       }
@@ -101,12 +115,28 @@ export default function ManageUstadzPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
       );
-      const { error } = await authClient.auth.signUp({
+      const { data: signUpData, error } = await authClient.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: { data: { name: formData.name, role: formData.role } }
       });
       if (error) throw error;
+
+      // A DB trigger auto-enrolls every new profile into the hardcoded
+      // "sekolah-impian" org. That's wrong when the admin creating this
+      // account is currently switched into a different org — explicitly
+      // upsert membership into the ACTIVE org so the new ustadz lands where
+      // the admin actually intended.
+      if (signUpData.user?.id && organizationId) {
+        const { error: memberError } = await supabase
+          .from('organization_members')
+          .upsert(
+            { organization_id: organizationId, user_id: signUpData.user.id, role: formData.role },
+            { onConflict: 'organization_id,user_id' }
+          );
+        if (memberError) throw memberError;
+      }
+
       setModalSuccess("Pengguna berhasil didaftarkan!");
       setFormData({ name: '', email: '', password: '', role: 'ustadz' });
       fetchUstadz();
