@@ -170,9 +170,9 @@ export default function StudentsAnalyticsPage() {
     return (
       <div className="min-h-screen bg-paper flex flex-col items-center justify-center gap-4">
         <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center animate-bounce-in" style={{ boxShadow: "0 4px 0 0 #a7f3d0" }}>
-          <Loader2 className="w-7 h-7 animate-spin text-emerald-500" />
+          <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
         </div>
-        <p className="text-emerald-600 text-xs font-black uppercase tracking-widest">Memuat data…</p>
+        <p className="text-brand-600 text-xs font-black uppercase tracking-widest">Memuat data…</p>
       </div>
     );
   }
@@ -188,18 +188,18 @@ export default function StudentsAnalyticsPage() {
           <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500" style={{ boxShadow: "0 3px 0 0 #e2e8f0", minWidth: 32 }}>
             <ChevronLeft size={16} />
           </div>
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-emerald-600 transition-colors">
+          <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">
             Beranda
           </span>
         </Link>
 
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 bg-emerald-500 rounded-[1.2rem] flex items-center justify-center" style={{ boxShadow: "0 4px 0 0 #15803d" }}>
+          <div className="w-14 h-14 bg-brand-500 rounded-[1.2rem] flex items-center justify-center" style={{ boxShadow: "0 4px 0 0 #15803d" }}>
             <LayoutDashboard size={26} className="text-white" />
           </div>
           <div>
             <h1 className="text-3xl font-black text-slate-800 leading-none">Santri</h1>
-            <p className="text-emerald-600 text-xs font-black uppercase tracking-widest mt-0.5">Analitik & Histori</p>
+            <p className="text-brand-600 text-xs font-black uppercase tracking-widest mt-0.5">Analitik & Histori</p>
           </div>
         </div>
       </header>
@@ -208,7 +208,7 @@ export default function StudentsAnalyticsPage() {
         {/* 1. STUDENT DIRECTORY */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+            <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
               <Users size={10} /> {students.length} Santri
             </div>
           </div>
@@ -250,9 +250,9 @@ export default function StudentsAnalyticsPage() {
                       </div>
 
                       <div className="flex gap-2">
-                        <div className="flex-1 bg-emerald-50 rounded-xl py-2 px-3 text-center border border-emerald-100">
-                          <p className="text-base font-black text-emerald-700">{student.themesExplored}</p>
-                          <p className="text-[9px] font-black text-emerald-500 uppercase tracking-wider">Tema</p>
+                        <div className="flex-1 bg-brand-50 rounded-xl py-2 px-3 text-center border border-brand-100">
+                          <p className="text-base font-black text-brand-700">{student.themesExplored}</p>
+                          <p className="text-[9px] font-black text-brand-500 uppercase tracking-wider">Tema</p>
                         </div>
                         <div className="flex-1 bg-sky-50 rounded-xl py-2 px-3 text-center border border-sky-100">
                           <p className="text-base font-black text-sky-700">{student.fulfilledSubIndicators}</p>
@@ -302,7 +302,7 @@ export default function StudentsAnalyticsPage() {
                   <Link
                     href={`/reports/${report.id}?from=${encodeURIComponent("/students")}`}
                     key={report.id}
-                    className={`flex items-center justify-between px-5 py-4 hover:bg-emerald-50 transition-colors ${
+                    className={`flex items-center justify-between px-5 py-4 hover:bg-brand-50 transition-colors ${
                       idx !== recentReports.length - 1 ? "border-b-2 border-slate-50" : ""
                     }`}
                   >
@@ -321,7 +321,7 @@ export default function StudentsAnalyticsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">{themesCount} tema</span>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">{themesCount} tema</span>
                       <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-100 text-sky-700">{fulfilledCount} SI</span>
                     </div>
                   </Link>

@@ -106,12 +106,12 @@ export function StudentPhotoUpload({
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading}
-        className={`absolute ${btn.offset} ${btn.wh} bg-white border-2 border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:border-emerald-300 active:translate-y-px transition-all disabled:opacity-60`}
+        className={`absolute ${btn.offset} ${btn.wh} bg-white border-2 border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-brand-600 hover:border-brand-300 active:translate-y-px transition-all disabled:opacity-60`}
         style={{ boxShadow: "0 2px 0 0 #e2e8f0" }}
         title="Ganti foto santri"
       >
         {uploading
-          ? <Loader2 className="animate-spin text-emerald-500" style={{ width: btn.icon, height: btn.icon }} />
+          ? <Loader2 className="animate-spin text-brand-500" style={{ width: btn.icon, height: btn.icon }} />
           : <Camera style={{ width: btn.icon, height: btn.icon }} />}
       </button>
 

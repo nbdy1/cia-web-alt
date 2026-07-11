@@ -20,6 +20,7 @@
 "use server";
 
 import { getServerSupabase } from "@/lib/supabase-server";
+import { recordUsage, withUsageContext } from "@/lib/usage/usage-tracker";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const CHAT_MODEL = "google/gemini-3-flash-preview";
@@ -47,6 +48,13 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
     throw new Error(`OpenRouter error: ${err}`);
   }
   const data = await response.json();
+  recordUsage({
+    provider: "openrouter",
+    model: CHAT_MODEL,
+    purpose: "rapor",
+    inputTokens: data.usage?.prompt_tokens ?? 0,
+    outputTokens: data.usage?.completion_tokens ?? 0,
+  });
   return data.choices[0].message.content as string;
 }
 
@@ -54,7 +62,8 @@ export async function generateRaporNarrative(
   studentId: string,
   period: string,
 ): Promise<{ success: boolean; narrative?: string; error?: string }> {
-  try {
+  return withUsageContext({ purpose: "rapor", studentId }, async () => {
+    try {
     const db = await getServerSupabase();
 
     // 1. Fetch student + profile_summary
@@ -161,4 +170,5 @@ ${reportContext}`;
     console.error("[Rapor] generateRaporNarrative error:", err);
     return { success: false, error: err.message };
   }
+  });
 }

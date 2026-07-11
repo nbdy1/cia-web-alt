@@ -102,7 +102,7 @@ export default async function StudentProfile({
           <div>
             <h1 className="text-2xl font-black text-slate-900 leading-tight">{student.name}</h1>
             <div className="flex items-center gap-1 mt-1">
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
                 <User size={9} /> {student.nis ? `NIS: ${student.nis}` : "Santri"}
               </span>
             </div>
@@ -131,7 +131,7 @@ export default async function StudentProfile({
 
         <Link
           href={`/students/${student.id}/recap`}
-          className="flex items-center gap-2 px-5 py-3 w-full justify-center font-black text-sm text-emerald-700 bg-white rounded-2xl border-2 border-emerald-200 active:translate-y-px transition-transform"
+          className="flex items-center gap-2 px-5 py-3 w-full justify-center font-black text-sm text-brand-700 bg-white rounded-2xl border-2 border-brand-200 active:translate-y-px transition-transform"
           style={{ boxShadow: "0 4px 0 0 #6ee7b7" }}
         >
           <FileText size={16} />
@@ -242,9 +242,9 @@ export default async function StudentProfile({
                 <div className="card-3d p-5 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div
-                      className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center border-2 border-emerald-100"
+                      className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center border-2 border-brand-100"
                     >
-                      <FileText className="w-5 h-5 text-emerald-600" />
+                      <FileText className="w-5 h-5 text-brand-600" />
                     </div>
                     <div>
                       <p className="font-black text-slate-900 text-sm leading-tight">

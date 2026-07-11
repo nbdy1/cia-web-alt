@@ -95,18 +95,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Background Gradients & Effects */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-600/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-600/15 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-10 left-10 w-[300px] h-[300px] bg-teal-600/10 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-500">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-4">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-semibold mb-4">
+            <ShieldCheck className="w-4 h-4 text-brand-400" />
             <span>Portal Evaluasi Ustadz</span>
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2 font-serif">
-            <span className="text-emerald-500">CIA</span> Portal
+            <span className="text-brand-500">CIA</span> Portal
           </h1>
           <p className="text-slate-400 text-sm mt-2 font-medium">
            Character Integrated Assessment Platform
@@ -114,7 +114,7 @@ export default function LoginPage() {
         </div>
 
         {/* Auth Glassmorphism Card */}
-        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-[2.5rem] p-8 shadow-2xl shadow-emerald-950/40 relative">
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-[2.5rem] p-8 shadow-2xl shadow-brand-950/40 relative">
           
           {/* Tab Switcher */}
           <div className="flex bg-slate-950/60 p-1.5 rounded-2xl border border-slate-800 mb-8">
@@ -123,7 +123,7 @@ export default function LoginPage() {
               onClick={() => { setIsLogin(true); setError(null); setSuccess(null); }}
               className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
                 isLogin
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 font-semibold'
+                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -134,7 +134,7 @@ export default function LoginPage() {
               onClick={() => { setIsLogin(false); setError(null); setSuccess(null); }}
               className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
                 !isLogin
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 font-semibold'
+                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -152,8 +152,8 @@ export default function LoginPage() {
           )}
 
           {success && (
-            <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300 font-medium">
-              <Loader2 className="w-5 h-5 text-emerald-400 shrink-0 animate-spin" />
+            <div className="mb-6 p-4 bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300 font-medium">
+              <Loader2 className="w-5 h-5 text-brand-400 shrink-0 animate-spin" />
               <span>{success}</span>
             </div>
           )}
@@ -172,7 +172,7 @@ export default function LoginPage() {
                     placeholder="Contoh: Ustaz Abdullah Fauzi"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors shadow-inner"
+                    className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-brand-500 transition-colors shadow-inner"
                   />
                 </div>
               </div>
@@ -190,7 +190,7 @@ export default function LoginPage() {
                   placeholder="ustadz@pesantren.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors shadow-inner"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-brand-500 transition-colors shadow-inner"
                 />
               </div>
             </div>
@@ -207,7 +207,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-12 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors shadow-inner"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-12 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-brand-500 transition-colors shadow-inner"
                 />
                 <button
                   type="button"
@@ -224,8 +224,8 @@ export default function LoginPage() {
               disabled={loading}
               className={`w-full mt-6 py-4 px-6 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] ${
                 loading
-                  ? 'bg-emerald-600/50 cursor-not-allowed'
-                  : 'bg-emerald-600 hover:bg-emerald-500 shadow-xl shadow-emerald-950'
+                  ? 'bg-brand-600/50 cursor-not-allowed'
+                  : 'bg-brand-600 hover:bg-brand-500 shadow-xl shadow-brand-950'
               }`}
             >
               {loading ? (

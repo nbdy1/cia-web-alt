@@ -19,11 +19,10 @@ import Link from "next/link";
 import React from "react";
 import { useAuth } from "@/lib/context/auth-context";
 import { SettingsDropdown } from "@/components/SettingsDropdown";
-import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 
 export default function HomePage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, activeOrganization } = useAuth();
   const { role } = useUserRole();
   const isAdmin = role === "owner" || role === "admin";
   const userName =
@@ -34,13 +33,23 @@ export default function HomePage() {
       {/* Top Bar */}
       <header className="flex justify-between items-center px-6 pt-10 pb-2">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-md" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
-            <span className="text-white font-black text-sm">C</span>
-          </div>
-          <span className="text-emerald-700 font-black text-xl tracking-tight">CIA</span>
+          {activeOrganization?.logoUrl ? (
+            <img
+              src={activeOrganization.logoUrl}
+              alt={activeOrganization.name}
+              className="w-9 h-9 rounded-2xl object-cover shadow-md"
+              style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-2xl bg-brand-500 flex items-center justify-center shadow-md" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
+              <span className="text-white font-black text-sm">C</span>
+            </div>
+          )}
+          <span className="text-brand-700 font-black text-xl tracking-tight">
+            {activeOrganization?.name || "CIA"}
+          </span>
         </div>
         <div className="flex items-center gap-2">
-          <OrganizationSwitcher />
           <SettingsDropdown />
           <button
             onClick={signOut}
@@ -57,7 +66,7 @@ export default function HomePage() {
       <main className="flex-1 px-6 pt-8 pb-10 flex flex-col gap-8 animate-fade-in">
         {/* Welcome */}
         <section>
-          <p className="text-emerald-600 font-black text-sm uppercase tracking-widest mb-1">
+          <p className="text-brand-600 font-black text-sm uppercase tracking-widest mb-1">
             Assalamualaikum 👋
           </p>
           <h1 className="text-4xl font-black text-slate-800 leading-tight">
@@ -68,14 +77,14 @@ export default function HomePage() {
         {/* Primary Action — Create Report */}
         <Link href="/create-report" className="block active:translate-y-1 transition-transform">
           <div
-            className="w-full p-8 rounded-[2rem] flex flex-col items-center text-center gap-4 bg-emerald-500 cursor-pointer select-none"
+            className="w-full p-8 rounded-[2rem] flex flex-col items-center text-center gap-4 bg-brand-500 cursor-pointer select-none"
             style={{ boxShadow: "0 5px 0 0 #15803d" }}
           >
             <div className="w-20 h-20 bg-white/20 rounded-[1.4rem] flex items-center justify-center">
               <Mic className="w-10 h-10 text-white" />
             </div>
             <div>
-              <p className="text-emerald-100 text-xs font-black uppercase tracking-widest mb-1">Mulai Sekarang</p>
+              <p className="text-brand-100 text-xs font-black uppercase tracking-widest mb-1">Mulai Sekarang</p>
               <span className="text-white text-2xl font-black leading-tight">
                 Input Data Santri
               </span>
@@ -89,8 +98,8 @@ export default function HomePage() {
             className="w-full p-7 rounded-[2rem] flex flex-col items-center text-center gap-4 bg-white border-2 border-slate-200 cursor-pointer select-none"
             style={{ boxShadow: "0 5px 0 0 #cbd5e1" }}
           >
-            <div className="w-16 h-16 bg-emerald-50 rounded-[1.2rem] flex items-center justify-center border-2 border-emerald-100">
-              <BarChart3 className="w-8 h-8 text-emerald-600" />
+            <div className="w-16 h-16 bg-brand-50 rounded-[1.2rem] flex items-center justify-center border-2 border-brand-100">
+              <BarChart3 className="w-8 h-8 text-brand-600" />
             </div>
             <div>
               <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Pantau & Analisis</p>
@@ -109,7 +118,7 @@ export default function HomePage() {
               style={{ boxShadow: "0 5px 0 0 #000" }}
             >
               <div className="w-14 h-14 bg-white/10 rounded-[1.1rem] flex items-center justify-center">
-                <ShieldCheck className="w-7 h-7 text-emerald-400" />
+                <ShieldCheck className="w-7 h-7 text-brand-400" />
               </div>
               <span className="text-white text-lg font-black">Portal Admin</span>
             </div>

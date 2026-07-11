@@ -23,7 +23,7 @@ import { OrganizationSwitcher } from '@/components/OrganizationSwitcher';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, activeOrganization } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
   const isAdmin = role === 'owner' || role === 'admin';
@@ -39,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (roleLoading || (role === null && user)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="animate-spin text-emerald-600 w-8 h-8" />
+        <Loader2 className="animate-spin text-brand-600 w-8 h-8" />
       </div>
     );
   }
@@ -69,12 +69,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 bg-emerald-500 rounded-md flex items-center justify-center" style={{ boxShadow: "0 2px 0 0 #15803d" }}>
-                <span className="text-white font-black text-[10px]">C</span>
-              </div>
+              {activeOrganization?.logoUrl ? (
+                <img
+                  src={activeOrganization.logoUrl}
+                  alt={activeOrganization.name}
+                  className="w-5 h-5 rounded-md object-cover"
+                  style={{ boxShadow: "0 2px 0 0 var(--brand-700)" }}
+                />
+              ) : (
+                <div className="w-5 h-5 bg-brand-500 rounded-md flex items-center justify-center" style={{ boxShadow: "0 2px 0 0 var(--brand-700)" }}>
+                  <span className="text-white font-black text-[10px]">C</span>
+                </div>
+              )}
               <h1 className="text-base font-black text-white">Admin Portal</h1>
             </div>
-            <p className="text-[10px] text-emerald-400 font-black uppercase tracking-wider">CIA Management</p>
+            <p className="text-[10px] text-brand-400 font-black uppercase tracking-wider">
+              {activeOrganization?.name || "CIA Management"}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -101,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-black text-sm ${
                   isActive
-                    ? 'bg-emerald-500 text-white'
+                    ? 'bg-brand-500 text-white'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                 }`}
                 style={isActive ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
@@ -127,11 +138,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-2 min-w-[60px] transition-all border-b-2 ${
                   isActive
-                    ? 'border-emerald-500 text-emerald-600'
+                    ? 'border-brand-500 text-brand-600'
                     : 'border-transparent text-slate-400'
                 }`}
               >
-                <Icon size={15} className={isActive ? "text-emerald-600" : "text-slate-400"} />
+                <Icon size={15} className={isActive ? "text-brand-600" : "text-slate-400"} />
                 <span className="text-[8px] font-black uppercase tracking-tight leading-tight text-center whitespace-nowrap">
                   {item.label}
                 </span>

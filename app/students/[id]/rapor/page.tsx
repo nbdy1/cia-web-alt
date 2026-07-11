@@ -586,7 +586,7 @@ export default function RaporPage() {
         >
           <div className="bg-slate-800 px-8 py-5 flex justify-between items-center">
             <div>
-              <p className="text-xs font-black text-emerald-400">Sekolah Impian — Laporan Nilai</p>
+              <p className="text-xs font-black text-brand-400">Sekolah Impian — Laporan Nilai</p>
               <p className="text-base font-black text-white">{displayName}</p>
             </div>
             <p className="text-sm text-slate-300 font-bold">{selectedPeriod}</p>
@@ -779,9 +779,9 @@ export default function RaporPage() {
                                         {ind.subs.map((sub, sIdx) => {
                                           const subCount = countMap.get(norm(sub)) ?? 0;
                                           const tier = subCount >= 7 ? "kuat" : subCount >= 4 ? "tumbuh" : "benih";
-                                          const rowCls = tier === "kuat" ? "border-emerald-100 bg-emerald-50" : tier === "tumbuh" ? "border-amber-100 bg-amber-50/60" : "border-slate-100 bg-slate-50/50";
-                                          const iconCls = tier === "kuat" ? "text-emerald-500" : tier === "tumbuh" ? "text-amber-400" : "text-slate-300";
-                                          const badgeCls = tier === "kuat" ? "bg-emerald-500 text-white" : tier === "tumbuh" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500";
+                                          const rowCls = tier === "kuat" ? "border-brand-100 bg-brand-50" : tier === "tumbuh" ? "border-amber-100 bg-amber-50/60" : "border-slate-100 bg-slate-50/50";
+                                          const iconCls = tier === "kuat" ? "text-brand-500" : tier === "tumbuh" ? "text-amber-400" : "text-slate-300";
+                                          const badgeCls = tier === "kuat" ? "bg-brand-500 text-white" : tier === "tumbuh" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500";
                                           const label = tier === "kuat" ? "Kuat" : tier === "tumbuh" ? "Tumbuh" : "Benih";
                                           return (
                                             <div key={sIdx} className={`flex items-start gap-2 px-2.5 py-2 rounded-lg border ${rowCls}`}>

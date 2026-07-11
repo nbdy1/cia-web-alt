@@ -151,7 +151,7 @@ export default function CreateReport() {
           <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500" style={{ boxShadow: "0 3px 0 0 #e2e8f0", minWidth: 32 }}>
             <ChevronLeft className="w-4 h-4" />
           </div>
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-emerald-600 transition-colors">Beranda</span>
+          <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">Beranda</span>
         </Link>
         <h1 className="text-3xl font-black text-slate-800">Pilih Santri</h1>
         <p className="text-slate-400 text-sm font-bold mt-1">Siapa yang akan dinilai hari ini?</p>
@@ -170,7 +170,7 @@ export default function CreateReport() {
               className={`w-full border-2 rounded-2xl py-4 pl-12 pr-14 font-bold text-slate-800 outline-none transition-all ${
                 isListening
                   ? "border-red-300 bg-red-50 placeholder:text-red-300"
-                  : "border-slate-200 bg-white focus:border-emerald-400"
+                  : "border-slate-200 bg-white focus:border-brand-400"
               }`}
               style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
             />
@@ -179,7 +179,7 @@ export default function CreateReport() {
               className={`absolute right-2 p-2.5 rounded-xl flex items-center justify-center active:translate-y-px transition-transform border-2 ${
                 isListening
                   ? "bg-red-500 text-white border-red-400"
-                  : "bg-white text-emerald-600 border-emerald-200"
+                  : "bg-white text-brand-600 border-brand-200"
               }`}
               style={isListening ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
             >
@@ -205,7 +205,7 @@ export default function CreateReport() {
           </p>
           {loading ? (
             <div className="flex justify-center py-10">
-              <Loader2 className="animate-spin text-emerald-400 w-7 h-7" />
+              <Loader2 className="animate-spin text-brand-400 w-7 h-7" />
             </div>
           ) : (
             <div className="space-y-3">
@@ -223,7 +223,7 @@ export default function CreateReport() {
                   >
                     <div className="flex items-center gap-3">
                       {isSelected ? (
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black bg-emerald-500 text-white flex-shrink-0">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black bg-brand-500 text-white flex-shrink-0">
                           {student.name.charAt(0)}
                         </div>
                       ) : (
@@ -234,9 +234,9 @@ export default function CreateReport() {
                           colorIndex={filteredStudents.indexOf(student)}
                         />
                       )}
-                      <span className={isSelected ? "text-emerald-800" : "text-slate-700"}>{student.name}</span>
+                      <span className={isSelected ? "text-brand-800" : "text-slate-700"}>{student.name}</span>
                     </div>
-                    {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                    {isSelected && <CheckCircle2 className="w-5 h-5 text-brand-500" />}
                   </button>
                 );
               })}
@@ -251,7 +251,7 @@ export default function CreateReport() {
               disabled={!selectedStudent}
               className={`w-full py-5 rounded-2xl font-black text-lg active:translate-y-1 transition-transform ${
                 selectedStudent
-                  ? "bg-emerald-500 text-white"
+                  ? "bg-brand-500 text-white"
                   : "bg-slate-100 text-slate-300 cursor-not-allowed"
               }`}
               style={selectedStudent ? { boxShadow: "0 4px 0 0 #15803d" } : {}}

@@ -10,6 +10,20 @@
   --btn-depth: 4px;
   --grid-color: rgba(16, 185, 129, 0.07);
   --grid-size: 28px;
+
+  /* Organization brand color scale — defaults to emerald, overridden at
+     runtime per-organization by AuthProvider (see lib/theme/colors.ts). */
+  --brand-50: #ecfdf5;
+  --brand-100: #d1fae5;
+  --brand-200: #a7f3d0;
+  --brand-300: #6ee7b7;
+  --brand-400: #34d399;
+  --brand-500: #10b981;
+  --brand-600: #059669;
+  --brand-700: #047857;
+  --brand-800: #065f46;
+  --brand-900: #064e3b;
+  --brand-950: #022c22;
 }
 
 @theme inline {
@@ -18,6 +32,18 @@
   --font-sans: var(--app-font-family);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--app-font-family);
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
 }
 
 html {

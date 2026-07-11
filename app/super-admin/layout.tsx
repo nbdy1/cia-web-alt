@@ -3,25 +3,24 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Building2, Server, ChevronLeft, Loader2 } from 'lucide-react';
-import { useAuth } from '@/lib/context/auth-context';
+import { Building2, Server, ChevronLeft, Loader2, BarChart3 } from 'lucide-react';
+import { useIsPlatformAdmin } from '@/lib/hooks/use-platform-admin';
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  // For this prototype, we'll assume a super admin is determined by a specific email or metadata flag.
-  // We'll use a hardcoded check or user_metadata.is_super_admin.
-  const isSuperAdmin = user?.user_metadata?.is_super_admin === true || user?.email === 'superadmin@ciaportal.com';
+  // Gate on membership of public.platform_admins — the SAME check the
+  // super-admin server actions enforce, so page and actions never disagree.
+  const { isPlatformAdmin, loading: adminLoading } = useIsPlatformAdmin();
 
   useEffect(() => {
-    if (!authLoading && !isSuperAdmin) {
+    if (!adminLoading && !isPlatformAdmin) {
       router.replace('/');
     }
-  }, [isSuperAdmin, authLoading, router]);
+  }, [isPlatformAdmin, adminLoading, router]);
 
-  if (authLoading) {
+  if (adminLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="animate-spin text-emerald-600 w-8 h-8" />
@@ -29,10 +28,11 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     );
   }
 
-  if (!isSuperAdmin) return null;
+  if (!isPlatformAdmin) return null;
 
   const navItems = [
     { href: '/super-admin', label: 'Organizations', icon: Building2 },
+    { href: '/super-admin/usage', label: 'Usage & Billing', icon: BarChart3 },
     { href: '/super-admin/system', label: 'System Metrics', icon: Server },
   ];
 

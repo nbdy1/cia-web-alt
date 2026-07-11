@@ -325,7 +325,7 @@ export default async function RecapPage({
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div className="text-center">
-          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Rekapitulasi</p>
+          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest">Rekapitulasi</p>
           <h1 className="text-sm font-black text-slate-900">{student.name}</h1>
         </div>
         <div className="w-9" />
@@ -338,7 +338,7 @@ export default async function RecapPage({
             <ShieldCheck size={120} />
           </div>
           <div className="relative z-10">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-2">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-400 mb-2">
               Total Laporan Dianalisis
             </h3>
             <div className="flex items-baseline gap-2">
@@ -507,9 +507,9 @@ export default async function RecapPage({
                                     {ind.sub_indicators.map((sub: string, sIdx: number) => {
                                       const subCount = getSubCount(sub, countMap);
                                       const tier = subCount >= 7 ? "kuat" : subCount >= 4 ? "tumbuh" : "benih";
-                                      const rowCls = tier === "kuat" ? "border-emerald-200 bg-emerald-50" : tier === "tumbuh" ? "border-amber-100/80 bg-amber-50/60" : "border-slate-100/80 bg-slate-50/50";
-                                      const iconCls = tier === "kuat" ? "text-emerald-500" : tier === "tumbuh" ? "text-amber-400" : "text-slate-300";
-                                      const badgeCls = tier === "kuat" ? "bg-emerald-500 text-white" : tier === "tumbuh" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500";
+                                      const rowCls = tier === "kuat" ? "border-brand-200 bg-brand-50" : tier === "tumbuh" ? "border-amber-100/80 bg-amber-50/60" : "border-slate-100/80 bg-slate-50/50";
+                                      const iconCls = tier === "kuat" ? "text-brand-500" : tier === "tumbuh" ? "text-amber-400" : "text-slate-300";
+                                      const badgeCls = tier === "kuat" ? "bg-brand-500 text-white" : tier === "tumbuh" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500";
                                       const label = tier === "kuat" ? "Kuat" : tier === "tumbuh" ? "Tumbuh" : "Benih";
                                       return (
                                         <div key={sIdx} className={`flex items-start gap-3 p-2.5 rounded-xl border ${rowCls}`}>

@@ -17,6 +17,9 @@
  */
 "use server";
 
+import { logSingleUsage } from "@/lib/usage/usage-tracker";
+import { checkQuota } from "@/lib/usage/quota";
+
 export async function generateSpeech(text: string) {
   const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
   // const VOICE_ID = "TX3LPaxmHKxFdv7VOQHJ"; // Liam
@@ -25,6 +28,13 @@ export async function generateSpeech(text: string) {
 
   if (!ELEVENLABS_API_KEY) {
     throw new Error("ELEVENLABS_API_KEY is missing");
+  }
+
+  // Voice is gated by plan (feature flag + monthly character quota). When blocked
+  // we throw; the voice hook catches this and falls back to browser speech.
+  const quota = await checkQuota("voice");
+  if (!quota.ok) {
+    throw new Error(quota.message);
   }
 
   try {
@@ -57,7 +67,15 @@ export async function generateSpeech(text: string) {
 
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    
+
+    // Meter voice usage (characters) — non-fatal.
+    await logSingleUsage({
+      purpose: "tts",
+      provider: "elevenlabs",
+      model: "flash-v2.5",
+      charCount: text.length,
+    });
+
     // Return as base64 string to the client
     return buffer.toString('base64');
   } catch (error: any) {

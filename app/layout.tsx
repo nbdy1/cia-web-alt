@@ -104,6 +104,17 @@ const appearanceScript = `
     if (document.body) {
       document.body.style.fontFamily = "var(--app-font-family)";
     }
+
+    // Apply the last-known organization brand color immediately, before
+    // AuthProvider re-fetches it from Supabase, to avoid a flash of the
+    // default emerald theme on repeat visits.
+    const cachedScale = window.localStorage.getItem("cia:brand-scale");
+    if (cachedScale) {
+      const brandScale = JSON.parse(cachedScale);
+      for (const shade of Object.keys(brandScale)) {
+        root.style.setProperty("--brand-" + shade, brandScale[shade]);
+      }
+    }
   } catch {}
 })();
 `;

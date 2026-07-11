@@ -101,8 +101,8 @@ export default function ResultsPage() {
 
   const getFulfillmentColor = (level: string) => {
     const l = level.toLowerCase();
-    if (l.includes("membudaya")) return "bg-emerald-500 text-white";
-    if (l.includes("berkembang")) return "bg-emerald-100 text-emerald-700";
+    if (l.includes("membudaya")) return "bg-brand-500 text-white";
+    if (l.includes("berkembang")) return "bg-brand-100 text-brand-700";
     if (l.includes("tumbuh")) return "bg-amber-100 text-amber-700";
     return "bg-slate-100 text-slate-500";
   };
@@ -139,9 +139,9 @@ export default function ResultsPage() {
             border: "2px solid #d1fae5",
           }}
         >
-          <Loader2 className="w-7 h-7 animate-spin text-emerald-500" />
+          <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
         </div>
-        <p className="text-emerald-600 text-xs font-black uppercase tracking-widest">
+        <p className="text-brand-600 text-xs font-black uppercase tracking-widest">
           Memuat Hasil…
         </p>
       </div>
@@ -164,7 +164,7 @@ export default function ResultsPage() {
         </button>
         <div className="text-center">
           <h1 className="text-sm font-black text-slate-900">{studentName}</h1>
-          <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">
+          <p className="text-[10px] text-brand-600 font-black uppercase tracking-widest">
             Asesmen Perkembangan
           </p>
         </div>
@@ -190,7 +190,7 @@ export default function ResultsPage() {
 
         {/* 1. Status Summary */}
         <section
-          className="bg-emerald-500 rounded-[2rem] p-7 text-white relative overflow-hidden"
+          className="bg-brand-500 rounded-[2rem] p-7 text-white relative overflow-hidden"
           style={{ boxShadow: "0 6px 0 0 #15803d" }}
         >
           <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -221,7 +221,7 @@ export default function ResultsPage() {
                       }));
                       setIsEditingSummary(false);
                     }}
-                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white text-emerald-700 hover:bg-emerald-50 transition-colors"
+                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white text-brand-700 hover:bg-brand-50 transition-colors"
                   >
                     <Check size={9} /> Simpan
                   </button>
@@ -287,8 +287,8 @@ export default function ResultsPage() {
                 Treatment Prioritas
               </span>
             </div>
-            <div className="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100">
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-200 text-emerald-800 mb-2">
+            <div className="bg-brand-50 p-4 rounded-2xl border-2 border-brand-100">
+              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-200 text-brand-800 mb-2">
                 {analysisData.treatment.priority_theme}
               </span>
               <h4 className="text-sm font-black text-slate-900 leading-snug mb-3">
@@ -301,13 +301,13 @@ export default function ResultsPage() {
                       key={i}
                       className="flex items-start gap-2 text-[11px] text-slate-600 font-bold"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-brand-400 mt-1.5 flex-shrink-0" />
                       {si}
                     </div>
                   ),
                 )}
               </div>
-              <div className="bg-white p-3 rounded-xl border-2 border-emerald-100">
+              <div className="bg-white p-3 rounded-xl border-2 border-brand-100">
                 <p className="text-xs text-slate-600 leading-relaxed italic font-bold">
                   {analysisData.treatment.action_plan}
                 </p>
@@ -365,7 +365,7 @@ export default function ResultsPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center ${isOpen ? "bg-emerald-500" : c.bg}`}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center ${isOpen ? "bg-brand-500" : c.bg}`}
                         style={{
                           boxShadow: isOpen ? "0 3px 0 0 #15803d" : c.shadow,
                         }}
@@ -416,7 +416,7 @@ export default function ResultsPage() {
                                 {item.indicator}
                               </span>
                             </div>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700 flex-shrink-0">
                               {item.fulfillment_fraction}
                             </span>
                           </div>
@@ -429,7 +429,7 @@ export default function ResultsPage() {
                                 (si: string, idx: number) => (
                                   <div
                                     key={idx}
-                                    className="flex items-start gap-2 text-[10px] text-emerald-700 font-black"
+                                    className="flex items-start gap-2 text-[10px] text-brand-700 font-black"
                                   >
                                     <CheckCircle2
                                       size={10}
@@ -477,7 +477,7 @@ export default function ResultsPage() {
           className={`w-full max-w-sm rounded-2xl font-black text-base flex items-center justify-center gap-3 py-5 pointer-events-auto active:translate-y-1 transition-transform ${
             isSaving
               ? "bg-slate-300 text-slate-400 cursor-not-allowed"
-              : "bg-emerald-500 text-white"
+              : "bg-brand-500 text-white"
           }`}
           style={isSaving ? {} : { boxShadow: "0 4px 0 0 #15803d" }}
         >

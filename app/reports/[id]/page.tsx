@@ -182,7 +182,7 @@ export default async function ReportDetailPage({
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
         <div className="text-center">
-          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Laporan</p>
+          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest">Laporan</p>
           <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
           <div className="flex items-center justify-center gap-1 mt-1">
             <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
@@ -218,7 +218,7 @@ export default async function ReportDetailPage({
             <BarChart3 size={80} />
           </div>
           <div className="relative z-10">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-3">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-400 mb-3">
               Perkembangan Keseluruhan
             </h3>
             <div className="grid grid-cols-3 gap-3">
@@ -228,7 +228,7 @@ export default async function ReportDetailPage({
                     key={key}
                     className="bg-white/10 rounded-2xl p-3 border border-white/10"
                   >
-                    <p className="text-[8px] font-black uppercase text-emerald-300 mb-1">
+                    <p className="text-[8px] font-black uppercase text-brand-300 mb-1">
                       {key}
                     </p>
                     <div className="flex items-baseline gap-1">
@@ -238,7 +238,7 @@ export default async function ReportDetailPage({
                     </div>
                     <div className="w-full h-1 bg-white/20 rounded-full mt-2 overflow-hidden">
                       <div
-                        className="h-full bg-emerald-400"
+                        className="h-full bg-brand-400"
                         style={{ width: `${stats.percentage}%` }}
                       />
                     </div>
@@ -298,7 +298,7 @@ export default async function ReportDetailPage({
                       <div
                         className={`max-w-[90%] px-4 py-3 ${
                           isGuru
-                            ? "bg-emerald-500 text-white rounded-[1.4rem] rounded-br-md"
+                            ? "bg-brand-500 text-white rounded-[1.4rem] rounded-br-md"
                             : "bg-slate-100 text-slate-700 rounded-[1.4rem] rounded-bl-md"
                         }`}
                         style={isGuru ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
@@ -339,14 +339,14 @@ export default async function ReportDetailPage({
         {analysis.treatment && (
           <section className="bg-white rounded-[2rem] p-6 border-2 border-slate-100 space-y-4" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
             <div className="flex items-center gap-2">
-              <Lightbulb className="text-emerald-600" size={18} />
+              <Lightbulb className="text-brand-600" size={18} />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                 Rencana Penanganan
               </h3>
             </div>
-            <div className="bg-emerald-50 p-5 rounded-[2rem] border border-emerald-100">
+            <div className="bg-brand-50 p-5 rounded-[2rem] border border-brand-100">
               <div className="flex flex-col mb-4">
-                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">
+                <span className="text-[10px] font-black text-brand-600 uppercase tracking-tighter">
                   {analysis.treatment.priority_theme}
                 </span>
                 <h4 className="text-base font-bold text-slate-900 font-serif leading-tight">
@@ -361,14 +361,14 @@ export default async function ReportDetailPage({
                       key={i}
                       className="flex items-start gap-2 text-[11px] text-slate-600 font-medium leading-tight"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1 flex-shrink-0" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-brand-400 mt-1 flex-shrink-0" />
                       {si}
                     </div>
                   ),
                 )}
               </div>
 
-              <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm">
+              <div className="bg-white p-5 rounded-2xl border border-brand-100 shadow-sm">
                 <p className="text-xs text-slate-700 leading-relaxed font-medium">
                   {analysis.treatment.action_plan}
                 </p>
@@ -438,7 +438,7 @@ export default async function ReportDetailPage({
                                 {item.indicator}
                               </span>
                             </div>
-                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0 ml-2">
+                            <span className="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full shrink-0 ml-2">
                               {fraction}
                             </span>
                           </div>

@@ -21,6 +21,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import Cookies from 'js-cookie';
+import { applyBrandScale, generateBrandScale, BRAND_SCALE_STORAGE_KEY } from '@/lib/theme/colors';
 
 export const CIA_ACTIVE_ORG_COOKIE = "cia_active_organization";
 
@@ -29,12 +30,15 @@ interface Organization {
   name: string;
   slug: string;
   role: string;
+  logoUrl: string | null;
+  primaryColor: string;
 }
 
 interface AuthContextType {
   user: User | null;
   organizations: Organization[];
   activeOrganizationId: string | null;
+  activeOrganization: Organization | null;
   setActiveOrganizationId: (id: string) => void;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -69,7 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         organizations (
           id,
           name,
-          slug
+          slug,
+          logo_url,
+          primary_color
         )
       `)
       .eq('user_id', u.id);
@@ -90,6 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: row.organizations.name,
       slug: row.organizations.slug,
       role: row.role,
+      logoUrl: row.organizations.logo_url ?? null,
+      primaryColor: row.organizations.primary_color ?? '#10b981',
     }));
 
     setOrganizations(mappedOrgs);
@@ -149,6 +157,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loading, user, pathname, router]);
 
+  const activeOrganization = organizations.find((o) => o.id === activeOrganizationId) ?? null;
+
+  // Apply the active organization's brand color as CSS variables so every
+  // `*-brand-*` Tailwind utility across the app repaints to match. Also
+  // cached to localStorage so the next page load can apply it before React
+  // hydrates (see appearanceScript in app/layout.tsx), avoiding a flash of
+  // the default emerald theme.
+  useEffect(() => {
+    if (!activeOrganization) return;
+    const scale = generateBrandScale(activeOrganization.primaryColor);
+    applyBrandScale(scale);
+    try {
+      window.localStorage.setItem(BRAND_SCALE_STORAGE_KEY, JSON.stringify(scale));
+    } catch {
+      // localStorage unavailable (private browsing) — safe to skip caching.
+    }
+  }, [activeOrganization?.primaryColor]);
+
   const signOut = async () => {
     await supabase.auth.signOut();
     Cookies.remove(CIA_ACTIVE_ORG_COOKIE);
@@ -175,7 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, organizations, activeOrganizationId, setActiveOrganizationId, loading, signOut }}>
+    <AuthContext.Provider value={{ user, organizations, activeOrganizationId, activeOrganization, setActiveOrganizationId, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

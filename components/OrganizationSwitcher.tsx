@@ -33,10 +33,10 @@ export function OrganizationSwitcher() {
     <div className="relative inline-block z-[1000] text-left ml-2" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-xl px-3 py-1.5 active:translate-y-px transition-all hover:border-emerald-200"
+        className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-xl px-3 py-1.5 active:translate-y-px transition-all hover:border-brand-200"
         style={{ boxShadow: isOpen ? "0 3px 0 0 #15803d" : "0 3px 0 0 #cbd5e1" }}
       >
-        <div className="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
+        <div className="w-6 h-6 bg-brand-100 rounded-lg flex items-center justify-center text-brand-600">
           <Building2 size={12} />
         </div>
         <span className="text-xs font-black text-slate-700 truncate max-w-[120px]">
@@ -64,17 +64,17 @@ export function OrganizationSwitcher() {
                     setIsOpen(false);
                   }}
                   className={`w-full flex items-center justify-between p-3 rounded-2xl transition-colors text-left ${
-                    isSelected ? "bg-emerald-50" : "hover:bg-slate-50"
+                    isSelected ? "bg-brand-50" : "hover:bg-slate-50"
                   }`}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      isSelected ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500"
+                      isSelected ? "bg-brand-500 text-white" : "bg-slate-100 text-slate-500"
                     }`}>
                       <Building2 size={14} />
                     </div>
                     <div className="min-w-0">
-                      <p className={`text-sm font-black truncate ${isSelected ? "text-emerald-800" : "text-slate-700"}`}>
+                      <p className={`text-sm font-black truncate ${isSelected ? "text-brand-800" : "text-slate-700"}`}>
                         {org.name}
                       </p>
                       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
@@ -82,7 +82,7 @@ export function OrganizationSwitcher() {
                       </p>
                     </div>
                   </div>
-                  {isSelected && <CheckCircle2 size={16} className="text-emerald-500 shrink-0 ml-2" />}
+                  {isSelected && <CheckCircle2 size={16} className="text-brand-500 shrink-0 ml-2" />}
                 </button>
               );
             })}

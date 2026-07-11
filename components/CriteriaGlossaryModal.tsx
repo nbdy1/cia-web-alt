@@ -116,20 +116,20 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
       <div className="bg-white w-full max-w-5xl sm:rounded-[2.5rem] rounded-t-[2rem] shadow-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
 
         {/* Header */}
-        <div className="bg-emerald-900 text-white px-4 sm:px-8 py-4 sm:py-6 sm:rounded-t-[2.5rem] rounded-t-[2rem] flex items-center justify-between relative overflow-hidden shrink-0">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-800/30 rounded-full blur-2xl" />
+        <div className="bg-brand-900 text-white px-4 sm:px-8 py-4 sm:py-6 sm:rounded-t-[2.5rem] rounded-t-[2rem] flex items-center justify-between relative overflow-hidden shrink-0">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-800/30 rounded-full blur-2xl" />
           <div className="relative z-10 flex items-center gap-3">
             <div className="w-9 h-9 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/10 shadow-inner shrink-0">
-              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-300" />
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-brand-300" />
             </div>
             <div>
               <h2 className="text-base sm:text-2xl font-bold tracking-tight font-serif leading-tight">Panduan Kriteria Asesmen CIA</h2>
-              <p className="text-emerald-200/80 text-[10px] sm:text-xs mt-0.5 hidden sm:block">Standar indikator penilaian santri berdasarkan kurikulum Asesmen Karakter Terintegrasi</p>
+              <p className="text-brand-200/80 text-[10px] sm:text-xs mt-0.5 hidden sm:block">Standar indikator penilaian santri berdasarkan kurikulum Asesmen Karakter Terintegrasi</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="relative z-10 p-2 text-emerald-200 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/10 shrink-0"
+            className="relative z-10 p-2 text-brand-200 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/10 shrink-0"
             title="Tutup"
           >
             <X className="w-5 h-5" />
@@ -144,7 +144,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
               onClick={() => { setActiveTab('karakter'); setSearchQuery(''); }}
               className={`flex-1  flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm whitespace-nowrap ${
                 activeTab === 'karakter'
-                  ? 'bg-white text-emerald-700 shadow'
+                  ? 'bg-white text-brand-700 shadow'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -155,7 +155,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
               onClick={() => { setActiveTab('mental'); setSearchQuery(''); }}
               className={`flex-1  flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm whitespace-nowrap ${
                 activeTab === 'mental'
-                  ? 'bg-white text-emerald-700 shadow'
+                  ? 'bg-white text-brand-700 shadow'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -166,7 +166,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
               onClick={() => { setActiveTab('softskill'); setSearchQuery(''); }}
               className={`flex-1  flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm whitespace-nowrap ${
                 activeTab === 'softskill'
-                  ? 'bg-white text-emerald-700 shadow'
+                  ? 'bg-white text-brand-700 shadow'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -183,7 +183,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari kriteria, tema, indikator..."
-              className="lg:block w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-sm"
+              className="lg:block w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
             />
             {searchQuery && (
               <button
@@ -197,9 +197,9 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
         </div>
 
         {/* Category Definition Bar */}
-        <div className="bg-emerald-50/50 px-3 sm:px-8 py-2.5 sm:py-3 border-b border-emerald-100 flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-          <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white px-2.5 py-1 rounded-lg whitespace-nowrap shrink-0">{definisiLabel}</span>
-          <p className="text-xs font-semibold text-emerald-950 font-serif italic flex-1 min-w-0">{currentData.definition}</p>
+        <div className="bg-brand-50/50 px-3 sm:px-8 py-2.5 sm:py-3 border-b border-brand-100 flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+          <span className="text-[10px] font-black uppercase tracking-wider bg-brand-600 text-white px-2.5 py-1 rounded-lg whitespace-nowrap shrink-0">{definisiLabel}</span>
+          <p className="text-xs font-semibold text-brand-950 font-serif italic flex-1 min-w-0">{currentData.definition}</p>
           <span className="text-xs font-bold text-slate-500 whitespace-nowrap shrink-0">
             {filteredThemes.length} Kriteria
           </span>
@@ -232,7 +232,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
                         </span>
                         <div className="flex-1 min-w-0">
                           {theme.badge && (
-                            <span className="inline-block text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200 mb-1.5">
+                            <span className="inline-block text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 border border-brand-200 mb-1.5">
                               {theme.badge}
                             </span>
                           )}
@@ -241,7 +241,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
                           <div className="mt-2 flex flex-wrap gap-1.5">
                             {theme.indicators.map((ind, iIdx) => (
                               <span key={iIdx} className="inline-flex items-center gap-1 text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg font-semibold border border-slate-200/60">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-brand-600 shrink-0" />
                                 {ind.title} ({ind.sub_indicators.length})
                               </span>
                             ))}
@@ -253,20 +253,20 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
                       </button>
 
                       {expanded && (
-                        <div className="px-4 pb-4 bg-emerald-50/40 border-t border-emerald-100/60">
+                        <div className="px-4 pb-4 bg-brand-50/40 border-t border-brand-100/60">
                           <div className="pt-3 space-y-3">
-                            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                            <h4 className="text-xs font-black uppercase tracking-wider text-brand-800 flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-brand-600" />
                               Rincian Sub-Indikator
                             </h4>
                             <div className="space-y-3">
                               {theme.indicators.map((ind, idx) => (
-                                <div key={idx} className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm">
+                                <div key={idx} className="bg-white p-4 rounded-xl border border-brand-100 shadow-sm">
                                   <h5 className="font-bold text-slate-900 text-sm mb-2 pb-2 border-b border-slate-100 font-serif">{ind.title}</h5>
                                   <ul className="space-y-1.5">
                                     {ind.sub_indicators.map((sub, sIdx) => (
                                       <li key={sIdx} className="flex items-start gap-2 text-slate-600 text-xs leading-normal">
-                                        <span className="w-4 h-4 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-[9px] font-bold mt-0.5 shrink-0 border border-emerald-200">
+                                        <span className="w-4 h-4 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center text-[9px] font-bold mt-0.5 shrink-0 border border-brand-200">
                                           {sIdx + 1}
                                         </span>
                                         <span>{sub}</span>
@@ -310,11 +310,11 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
                             <td className="py-5 px-6 align-top">
                               <div className="flex flex-col gap-1.5">
                                 {theme.badge && (
-                                  <span className="w-fit text-[9px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                  <span className="w-fit text-[9px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-md bg-brand-100 text-brand-800 border border-brand-200">
                                     {theme.badge}
                                   </span>
                                 )}
-                                <span className="font-bold text-slate-900 text-sm font-serif leading-snug group-hover:text-emerald-700 transition-colors">
+                                <span className="font-bold text-slate-900 text-sm font-serif leading-snug group-hover:text-brand-700 transition-colors">
                                   {theme.title}
                                 </span>
                               </div>
@@ -324,37 +324,37 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
                               <div className="mt-2.5 flex items-center gap-2 flex-wrap">
                                 {theme.indicators.map((ind, iIdx) => (
                                   <span key={iIdx} className="inline-flex items-center gap-1 text-[11px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-semibold border border-slate-200/60">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-600" />
                                     {ind.title} ({ind.sub_indicators.length})
                                   </span>
                                 ))}
                               </div>
                             </td>
                             <td className="py-5 px-6 text-center align-middle">
-                              <button className="p-2 rounded-xl bg-slate-100 group-hover:bg-emerald-50 text-slate-500 group-hover:text-emerald-600 transition-colors">
+                              <button className="p-2 rounded-xl bg-slate-100 group-hover:bg-brand-50 text-slate-500 group-hover:text-brand-600 transition-colors">
                                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                               </button>
                             </td>
                           </tr>
 
                           {expanded && (
-                            <tr className="bg-emerald-50/30">
-                              <td colSpan={4} className="py-6 px-8 border-t border-b border-emerald-100/60">
+                            <tr className="bg-brand-50/30">
+                              <td colSpan={4} className="py-6 px-8 border-t border-b border-brand-100/60">
                                 <div className="space-y-4 max-w-4xl mx-auto">
-                                  <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                                  <h4 className="text-xs font-black uppercase tracking-wider text-brand-800 flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-brand-600" />
                                     Rincian Sub-Indikator Penilaian
                                   </h4>
                                   <div className="grid gap-4 md:grid-cols-2">
                                     {theme.indicators.map((ind, idx) => (
-                                      <div key={idx} className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm">
+                                      <div key={idx} className="bg-white p-5 rounded-2xl border border-brand-100 shadow-sm">
                                         <h5 className="font-bold text-slate-900 text-sm mb-3 pb-2 border-b border-slate-100 font-serif">
                                           {ind.title}
                                         </h5>
                                         <ul className="space-y-2">
                                           {ind.sub_indicators.map((sub, sIdx) => (
                                             <li key={sIdx} className="flex items-start gap-2.5 text-slate-600 text-xs leading-normal">
-                                              <span className="w-4 h-4 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-[9px] font-bold mt-0.5 shrink-0 border border-emerald-200">
+                                              <span className="w-4 h-4 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center text-[9px] font-bold mt-0.5 shrink-0 border border-brand-200">
                                                 {sIdx + 1}
                                               </span>
                                               <span>{sub}</span>

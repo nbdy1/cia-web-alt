@@ -172,7 +172,7 @@ export default function ScoresPage() {
   const cellCls = (active: boolean) =>
     `w-full text-center text-sm font-bold py-2 px-1 rounded-xl border-2 focus:outline-none transition-colors ${
       active
-        ? "bg-white border-slate-200 focus:border-emerald-400 text-slate-800"
+        ? "bg-white border-slate-200 focus:border-brand-400 text-slate-800"
         : "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed"
     }`;
 
@@ -188,7 +188,7 @@ export default function ScoresPage() {
   if (loading && !selectedPeriod && periods.length === 0) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center">
-        <Loader2 className="w-7 h-7 animate-spin text-emerald-500" />
+        <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
       </div>
     );
   }
@@ -353,7 +353,7 @@ export default function ScoresPage() {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-100 px-5 py-4 z-50" style={{ boxShadow: "0 -4px 0 0 #f1f5f9" }}>
           <div className="max-w-2xl mx-auto space-y-2">
             {saveStatus === "success" && (
-              <div className="flex items-center gap-2 text-emerald-700 text-sm font-black bg-emerald-50 border-2 border-emerald-100 rounded-xl px-4 py-2">
+              <div className="flex items-center gap-2 text-brand-700 text-sm font-black bg-brand-50 border-2 border-brand-100 rounded-xl px-4 py-2">
                 <CheckCircle2 size={15} /> Nilai berhasil disimpan!
               </div>
             )}

@@ -292,6 +292,9 @@ export default function AssessmentPage() {
         setDiscoveredCount(mergedDiscovered.length);
         speak(result.reply);
         requestAnimationFrame(() => inputRef.current?.focus());
+      } else if (result?.error) {
+        // e.g. monthly report quota reached or subscription inactive
+        alert(result.error);
       }
     } catch (error) {
       console.error("Analysis Error:", error);
@@ -325,6 +328,14 @@ export default function AssessmentPage() {
         ),
         priorityTheme: analysis?.treatment?.priority_theme,
       });
+
+      // Guard: don't persist/navigate on an error result (e.g. quota reached).
+      if (!analysis || analysis.error) {
+        alert(analysis?.error || "Gagal menyelesaikan asesmen. Coba lagi.");
+        setIsFinalizing(false);
+        setIsProcessing(false);
+        return;
+      }
 
       // Save large JSON payload to sessionStorage to avoid URL length limits
       sessionStorage.setItem('current_analysis', JSON.stringify(analysis));
@@ -370,17 +381,17 @@ export default function AssessmentPage() {
           />
           <div>
             <h1 className="text-base font-black text-slate-900 leading-tight">Diskusi dengan AI</h1>
-            <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest leading-none">{studentName}</p>
+            <p className="text-[10px] text-brand-600 font-black uppercase tracking-widest leading-none">{studentName}</p>
           </div>
         </div>
 
         {/* Topics badge */}
         <div
-          className="flex items-center gap-2 px-3 py-2 bg-white rounded-2xl border-2 border-emerald-200"
+          className="flex items-center gap-2 px-3 py-2 bg-white rounded-2xl border-2 border-brand-200"
           style={{ boxShadow: "0 3px 0 0 #a7f3d0" }}
         >
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-black text-emerald-700">{discoveredCount} Topik</span>
+          <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
+          <span className="text-xs font-black text-brand-700">{discoveredCount} Topik</span>
         </div>
       </header>
 
@@ -419,7 +430,7 @@ export default function AssessmentPage() {
           <div key={idx} className={`flex ${msg.role === "teacher" ? "justify-end" : "justify-start"} animate-slide-up`}>
             {msg.role === "ai" && (
               <div
-                className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center mr-2 flex-shrink-0 self-end mb-1"
+                className="w-8 h-8 bg-brand-500 rounded-xl flex items-center justify-center mr-2 flex-shrink-0 self-end mb-1"
                 style={{ boxShadow: "0 2px 0 0 #15803d" }}
               >
                 <Brain size={14} className="text-white" />
@@ -428,7 +439,7 @@ export default function AssessmentPage() {
             <div
               className={`max-w-[82%] px-4 py-3 ${
                 msg.role === "teacher"
-                  ? "bg-emerald-500 text-white rounded-[1.4rem] rounded-br-md"
+                  ? "bg-brand-500 text-white rounded-[1.4rem] rounded-br-md"
                   : "bg-white border-2 border-slate-100 text-slate-800 rounded-[1.4rem] rounded-bl-md"
               }`}
               style={
@@ -455,7 +466,7 @@ export default function AssessmentPage() {
 
         {currentInput && isRecording && (
           <div className="flex justify-end opacity-50">
-            <div className="max-w-[82%] px-4 py-3 bg-emerald-50 border-2 border-emerald-200 text-emerald-800 rounded-[1.4rem] rounded-br-md italic text-sm font-bold">
+            <div className="max-w-[82%] px-4 py-3 bg-brand-50 border-2 border-brand-200 text-brand-800 rounded-[1.4rem] rounded-br-md italic text-sm font-bold">
               {currentInput}…
             </div>
           </div>
@@ -479,7 +490,7 @@ export default function AssessmentPage() {
               className="bg-white border-2 border-slate-100 px-4 py-3 rounded-[1.4rem] rounded-bl-md flex items-center gap-2"
               style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
             >
-              <Loader2 size={14} className="animate-spin text-emerald-500" />
+              <Loader2 size={14} className="animate-spin text-brand-500" />
               <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Berpikir…</span>
             </div>
           </div>
@@ -501,7 +512,7 @@ export default function AssessmentPage() {
             className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center border-2 active:translate-y-px transition-transform disabled:opacity-50 disabled:cursor-not-allowed ${
               isRecording
                 ? "bg-red-500 text-white border-red-400"
-                : "bg-white text-emerald-600 border-emerald-200"
+                : "bg-white text-brand-600 border-brand-200"
             }`}
             style={isRecording ? { boxShadow: "0 3px 0 0 #b91c1c" } : { boxShadow: "0 3px 0 0 #a7f3d0" }}
           >
@@ -529,7 +540,7 @@ export default function AssessmentPage() {
             disabled={!currentInput.trim() || isProcessing}
             className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center active:translate-y-px transition-transform ${
               currentInput.trim() && !isProcessing
-                ? "bg-emerald-500 text-white border-2 border-emerald-400"
+                ? "bg-brand-500 text-white border-2 border-brand-400"
                 : "bg-slate-100 text-slate-300 border-2 border-slate-100 cursor-not-allowed"
             }`}
             style={currentInput.trim() && !isProcessing ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
@@ -555,12 +566,12 @@ export default function AssessmentPage() {
           >
             {isFinalizing ? (
               <>
-                <Loader2 size={16} className="animate-spin text-emerald-400" />
+                <Loader2 size={16} className="animate-spin text-brand-400" />
                 Menyusun Laporan…
               </>
             ) : (
               <>
-                <Sparkles size={16} className="text-emerald-400" />
+                <Sparkles size={16} className="text-brand-400" />
                 Selesai & Buat Laporan
               </>
             )}

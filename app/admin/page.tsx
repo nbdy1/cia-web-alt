@@ -241,7 +241,7 @@ export default function AdminOverviewPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 gap-3">
-        <Loader2 className="w-7 h-7 animate-spin text-emerald-500" />
+        <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
         <span className="text-sm font-black text-slate-400 uppercase tracking-widest">Memuat…</span>
       </div>
     );
@@ -297,7 +297,7 @@ export default function AdminOverviewPage() {
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Laporan dibuat per hari</p>
             </div>
             <div
-              className="px-3 py-1.5 rounded-xl text-xs font-black text-emerald-700 bg-emerald-50"
+              className="px-3 py-1.5 rounded-xl text-xs font-black text-brand-700 bg-brand-50"
               style={{ boxShadow: "0 2px 0 0 #a7f3d0" }}
             >
               {totalWeek} total
@@ -315,7 +315,7 @@ export default function AdminOverviewPage() {
               <p className="font-black text-slate-800">Cakupan Ketercapaian</p>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Santri dengan sub-indikator unik terbanyak</p>
             </div>
-            <Award size={16} className="text-emerald-400" />
+            <Award size={16} className="text-brand-400" />
           </div>
           <div className="divide-y-2 divide-slate-50">
             {santriLeader.length === 0 ? (
@@ -344,12 +344,12 @@ export default function AdminOverviewPage() {
                     <p className="font-black text-slate-800 text-sm truncate leading-tight">{s.name}</p>
                     <div className="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-emerald-400 transition-all"
+                        className="h-full rounded-full bg-brand-400 transition-all"
                         style={{ width: `${Math.round((s.fulfilled / maxFulfilled) * 100)}%` }}
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-black text-emerald-600 flex-shrink-0">{s.fulfilled}</span>
+                  <span className="text-sm font-black text-brand-600 flex-shrink-0">{s.fulfilled}</span>
                 </Link>
               ));
             })()}
@@ -367,7 +367,7 @@ export default function AdminOverviewPage() {
               <p className="font-black text-slate-800">Laporan Terbaru</p>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">6 laporan terakhir</p>
             </div>
-            <Link href="/admin/monitoring" className="text-[10px] font-black text-emerald-600 uppercase tracking-wider hover:underline">
+            <Link href="/admin/monitoring" className="text-[10px] font-black text-brand-600 uppercase tracking-wider hover:underline">
               Lihat semua →
             </Link>
           </div>
@@ -385,7 +385,7 @@ export default function AdminOverviewPage() {
                   className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center font-black text-emerald-700 text-sm flex-shrink-0">
+                    <div className="w-9 h-9 bg-brand-100 rounded-xl flex items-center justify-center font-black text-brand-700 text-sm flex-shrink-0">
                       {r.studentName.charAt(0)}
                     </div>
                     <div>
@@ -397,7 +397,7 @@ export default function AdminOverviewPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black">{r.themesCount}T</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 text-[10px] font-black">{r.themesCount}T</span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 text-[10px] font-black">{r.siCount}SI</span>
                   </div>
                 </Link>

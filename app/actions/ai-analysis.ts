@@ -51,6 +51,8 @@
 
 import { supabase } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
+import { recordUsage, withUsageContext } from "@/lib/usage/usage-tracker";
+import { checkQuota } from "@/lib/usage/quota";
 import { buildFinalAnalysisPrompt, buildInterviewPrompt } from "@/lib/data/prompts";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
@@ -68,6 +70,59 @@ const EMBEDDING_MODEL = "openai/text-embedding-3-small";
 
 function normalise(s: string) {
   return s.trim().toLowerCase();
+}
+
+function parseModelJson(responseText: string, label: string) {
+  const stripped = responseText
+    .replace(/^\s*```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
+
+  try {
+    return JSON.parse(stripped);
+  } catch {
+    // Some providers occasionally append notes after a valid JSON object even
+    // when response_format is requested. Extract the first balanced JSON value.
+  }
+
+  const start = stripped.search(/[\[{]/);
+  if (start === -1) {
+    throw new SyntaxError(`${label}: model response did not contain JSON`);
+  }
+
+  const stack: string[] = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < stripped.length; i++) {
+    const char = stripped[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === "\"") {
+      inString = true;
+    } else if (char === "{" || char === "[") {
+      stack.push(char === "{" ? "}" : "]");
+    } else if (char === "}" || char === "]") {
+      if (stack.pop() !== char) {
+        break;
+      }
+      if (stack.length === 0) {
+        return JSON.parse(stripped.slice(start, i + 1));
+      }
+    }
+  }
+
+  throw new SyntaxError(`${label}: model response contained incomplete JSON`);
 }
 
 function buildFallbackTitle(parsed: any): string {
@@ -342,6 +397,12 @@ async function callOpenRouter(systemPrompt: string, userMessage: string, model: 
   }
 
   const data = await response.json();
+  recordUsage({
+    provider: "openrouter",
+    model,
+    inputTokens: data.usage?.prompt_tokens ?? 0,
+    outputTokens: data.usage?.completion_tokens ?? 0,
+  });
   return data.choices[0].message.content as string;
 }
 
@@ -368,6 +429,12 @@ async function embedText(text: string): Promise<number[]> {
   }
 
   const data = await response.json();
+  recordUsage({
+    provider: "openrouter",
+    model: EMBEDDING_MODEL,
+    purpose: "embedding",
+    inputTokens: data.usage?.prompt_tokens ?? data.usage?.total_tokens ?? 0,
+  });
   return data.data[0].embedding as number[];
 }
 
@@ -541,7 +608,8 @@ export async function generateStudentProfile(
   studentId: string,
   selectedModel: string = CHAT_MODEL,
 ): Promise<void> {
-  try {
+  return withUsageContext({ purpose: "profile_summary", studentId }, async () => {
+    try {
     const db = await createClient();
 
     // Fetch last 5 reports — enough history without blowing token budget
@@ -644,6 +712,7 @@ PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak bol
     // Non-fatal — a missing profile just means the next interview runs without it
     console.error("[Profile] Failed to generate student profile:", err);
   }
+  });
 }
 
 // ─── Public Actions ───────────────────────────────────────────────────────────
@@ -662,8 +731,15 @@ export async function processInterviewStep(
   studentId?: string,
   selectedModel: string = CHAT_MODEL,
 ) {
-  try {
+  return withUsageContext({ purpose: "interview_step", studentId }, async () => {
+    try {
     const db = await createClient();
+
+    // Hard-cap: block once the org's monthly report quota / subscription is spent.
+    const quota = await checkQuota("report", { studentId });
+    if (!quota.ok) {
+      return { error: quota.message, quotaExceeded: true, quotaReason: quota.reason };
+    }
 
     // Fetch the student's historical profile if a studentId was provided.
     // This is a single indexed read and adds ~250 tokens to the prompt.
@@ -719,8 +795,7 @@ export async function processInterviewStep(
       `TRANSKRIP SAAT INI:\n"${transcript}"`,
       selectedModel
     );
-    const cleanJson = responseText.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(cleanJson);
+    const parsed = parseModelJson(responseText, "Interview step");
     console.log("[Interview][Server] Model output", {
       discoveredPillarsThisStep: parsed?.discoveredPillars ?? [],
       discoveredPillarsCount: parsed?.discoveredPillars?.length ?? 0,
@@ -731,6 +806,7 @@ export async function processInterviewStep(
     console.error("Interview Step Error:", error);
     return { error: error.message };
   }
+  });
 }
 
 export async function finalizeAssessment(
@@ -739,8 +815,15 @@ export async function finalizeAssessment(
   discoveredThemes: string[] = [],
   selectedModel: string = CHAT_MODEL,
 ) {
-  try {
+  return withUsageContext({ purpose: "finalize", studentId }, async () => {
+    try {
     const db = await createClient();
+
+    // Hard-cap: block finalising a report once the monthly quota is spent.
+    const quota = await checkQuota("report", { studentId });
+    if (!quota.ok) {
+      return { error: quota.message, quotaExceeded: true, quotaReason: quota.reason };
+    }
 
     // 1. Fetch the student's previous progress + historical profile for context
     let currentProgressContext =
@@ -848,8 +931,7 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
       `${currentProgressContext}${previousTitlesContext}\n\nTRANSKRIP AKHIR:\n"${transcript}"`,
       selectedModel
     );
-    const cleanJson = responseText.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(cleanJson);
+    const parsed = parseModelJson(responseText, "Finalize assessment");
     const enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? []);
     parsed.analysis_version = 2;
     parsed.report_title = normalizeReportTitle(parsed?.report_title, parsed);
@@ -880,6 +962,7 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     console.error("Finalize Assessment Error:", error);
     return { error: error.message };
   }
+  });
 }
 
 export const runFullAnalysis = finalizeAssessment;

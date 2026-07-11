@@ -103,12 +103,12 @@ export function FulfilledSubsList({
         return (
           <div
             key={si}
-            className="flex items-start gap-2 p-2 rounded-xl bg-emerald-50/80 border border-emerald-100/50"
+            className="flex items-start gap-2 p-2 rounded-xl bg-brand-50/80 border border-brand-100/50"
           >
             <div className="mt-0.5 shrink-0">
-              <CheckCircle2 size={13} className="text-emerald-500" />
+              <CheckCircle2 size={13} className="text-brand-500" />
             </div>
-            <span className="flex-1 text-[11px] leading-snug font-medium text-emerald-900">
+            <span className="flex-1 text-[11px] leading-snug font-medium text-brand-900">
               {si}
             </span>
             <button

@@ -120,7 +120,7 @@ export default function PlottingSantriPage() {
         <button
           onClick={saveAssignments}
           disabled={saving || loading}
-          className="inline-flex items-center gap-2 bg-emerald-500 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
+          className="inline-flex items-center gap-2 bg-brand-500 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
           style={{ boxShadow: saving || loading ? "none" : "0 3px 0 0 #15803d" }}
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={15} />} Simpan Perubahan
@@ -129,7 +129,7 @@ export default function PlottingSantriPage() {
 
       {message && (
         <div className={`p-3.5 rounded-xl flex items-center gap-2.5 text-sm font-black border-2 ${
-          message.type === "success" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200"
+          message.type === "success" ? "bg-brand-50 text-brand-700 border-brand-200" : "bg-rose-50 text-rose-700 border-rose-200"
         }`}>
           {message.type === "success" ? <UserCheck size={16} /> : <AlertCircle size={16} />}
           {message.text}
@@ -139,13 +139,13 @@ export default function PlottingSantriPage() {
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input type="text" placeholder="Cari nama santri…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-all"
+          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-emerald-500" /></div>
+        <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-brand-500" /></div>
       ) : ustadzList.length === 0 ? (
         <div className="text-center py-14 bg-amber-50 rounded-[1.5rem] border-2 border-amber-200">
           <AlertCircle className="w-8 h-8 mx-auto text-amber-400 mb-3" />
@@ -163,7 +163,7 @@ export default function PlottingSantriPage() {
               const currentUstadz = assignments[student.id] || "";
               const hasChanged = currentUstadz !== (student.assigned_ustadz_id || "");
               return (
-                <div key={student.id} className={`grid grid-cols-2 gap-4 px-5 py-3.5 items-center transition-colors ${hasChanged ? "bg-emerald-50/60" : "hover:bg-slate-50/50"}`}>
+                <div key={student.id} className={`grid grid-cols-2 gap-4 px-5 py-3.5 items-center transition-colors ${hasChanged ? "bg-brand-50/60" : "hover:bg-slate-50/50"}`}>
                   <div className="flex items-center gap-2.5">
                     <StudentAvatar
                       name={student.name}
@@ -181,7 +181,7 @@ export default function PlottingSantriPage() {
                     value={currentUstadz}
                     onChange={(e) => handleAssignmentChange(student.id, e.target.value)}
                     className={`w-full p-2.5 rounded-xl text-sm font-bold border-2 focus:outline-none transition-all appearance-none ${
-                      currentUstadz ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-slate-50 border-slate-200 text-slate-400"
+                      currentUstadz ? "bg-brand-50 border-brand-200 text-brand-800" : "bg-slate-50 border-slate-200 text-slate-400"
                     }`}
                   >
                     <option value="">— Belum Ditugaskan —</option>

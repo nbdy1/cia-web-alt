@@ -110,14 +110,14 @@ export default function MonitoringPage() {
           placeholder="Cari Ustadz atau Santri…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-all"
+          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
       </div>
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Loader2 className="w-7 h-7 animate-spin text-emerald-500" />
+          <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
         </div>
       ) : filteredData.length > 0 ? (
         <div className="space-y-3">
@@ -133,13 +133,13 @@ export default function MonitoringPage() {
                   className="w-full p-5 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-emerald-500 text-white rounded-2xl flex items-center justify-center font-black text-base shrink-0" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
+                    <div className="w-11 h-11 bg-brand-500 text-white rounded-2xl flex items-center justify-center font-black text-base shrink-0" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
                       {ustadz.name ? ustadz.name.charAt(0).toUpperCase() : "?"}
                     </div>
                     <div>
                       <h3 className="font-black text-slate-800 text-sm">{ustadz.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-100">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 text-[10px] font-black border border-brand-100">
                           <Users size={9} /> {totalStudents} Santri
                         </span>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black border border-blue-100">
@@ -172,17 +172,17 @@ export default function MonitoringPage() {
                           {student.reports.length > 0 ? (
                             <div className="pl-3 border-l-2 border-slate-100 ml-3.5 space-y-2">
                               {student.reports.map((report: any) => (
-                                <div key={report.id} className="bg-slate-50 rounded-xl p-3.5 border-2 border-slate-100 hover:border-emerald-200 transition-colors">
+                                <div key={report.id} className="bg-slate-50 rounded-xl p-3.5 border-2 border-slate-100 hover:border-brand-200 transition-colors">
                                   <div className="flex items-center justify-between mb-1.5">
                                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-                                      <Calendar size={11} className="text-emerald-500" />
+                                      <Calendar size={11} className="text-brand-500" />
                                       {new Date(report.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                       <Link href={`/students/${student.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-black text-slate-600 bg-white px-2.5 py-1 rounded-lg border-2 border-slate-200 hover:border-slate-300 transition-colors flex items-center gap-1">
                                         <Users size={10} /> Profil
                                       </Link>
-                                      <Link href={`/reports/${report.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border-2 border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center gap-1">
+                                      <Link href={`/reports/${report.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-black text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg border-2 border-brand-200 hover:bg-brand-100 transition-colors flex items-center gap-1">
                                         <FileText size={10} /> Detail
                                       </Link>
                                     </div>

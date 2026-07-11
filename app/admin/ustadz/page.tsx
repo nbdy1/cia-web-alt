@@ -199,7 +199,7 @@ export default function ManageUstadzPage() {
 
   const displayList = showRemoved ? removedFiltered : activeFiltered;
 
-  const inputCls = "w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-colors";
+  const inputCls = "w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-brand-400 transition-colors";
   const labelCls = "block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5";
 
   return (
@@ -213,7 +213,7 @@ export default function ManageUstadzPage() {
         {!showRemoved && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
+            className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
             style={{ boxShadow: "0 3px 0 0 #15803d" }}
           >
             <UserPlus size={15} /> Tambah Pengguna
@@ -225,7 +225,7 @@ export default function ManageUstadzPage() {
       <div className="flex gap-2">
         <button
           onClick={() => { setShowRemoved(false); setSearchQuery(''); }}
-          className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={!showRemoved ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
         >
           Aktif ({ustadzList.length})
@@ -247,14 +247,14 @@ export default function ManageUstadzPage() {
           placeholder={showRemoved ? "Cari pengguna yang dinonaktifkan…" : "Cari nama, email, atau role…"}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-all"
+          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
       </div>
 
       {/* List */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-emerald-500" /></div>
+        <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-brand-500" /></div>
       ) : displayList.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {displayList.map((user) => (
@@ -264,7 +264,7 @@ export default function ManageUstadzPage() {
               style={{ boxShadow: showRemoved ? "0 3px 0 0 #fee2e2" : "0 3px 0 0 #e2e8f0" }}
             >
               <div
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 ${showRemoved ? 'bg-slate-200 text-slate-500' : user.role === "admin" ? "bg-slate-900 text-white" : "bg-emerald-100 text-emerald-700"}`}
+                className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 ${showRemoved ? 'bg-slate-200 text-slate-500' : user.role === "admin" ? "bg-slate-900 text-white" : "bg-brand-100 text-brand-700"}`}
                 style={!showRemoved && user.role === "admin" ? { boxShadow: "0 3px 0 0 #000" } : !showRemoved ? { boxShadow: "0 3px 0 0 #a7f3d0" } : {}}
               >
                 {user.name?.charAt(0).toUpperCase() ?? "?"}
@@ -333,14 +333,14 @@ export default function ManageUstadzPage() {
               <X size={16} />
             </button>
             <div className="mb-6">
-              <div className="w-11 h-11 bg-emerald-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #a7f3d0" }}>
-                <UserPlus size={20} className="text-emerald-600" />
+              <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #a7f3d0" }}>
+                <UserPlus size={20} className="text-brand-600" />
               </div>
               <h3 className="text-xl font-black text-slate-800">Tambah Pengguna</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">Daftarkan akun Ustadz atau Admin baru.</p>
             </div>
             {modalError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={15} />{modalError}</div>}
-            {modalSuccess && <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-200 text-emerald-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={15} />{modalSuccess}</div>}
+            {modalSuccess && <div className="mb-4 p-3 bg-brand-50 border-2 border-brand-200 text-brand-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={15} />{modalSuccess}</div>}
             <form onSubmit={handleAddUstadz} className="space-y-4">
               <div><label className={labelCls}>Nama Lengkap *</label><input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ustaz Abdullah" className={inputCls} /></div>
               <div><label className={labelCls}>Email *</label><input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="ustadz@pesantren.com" className={inputCls} /></div>
@@ -360,7 +360,7 @@ export default function ManageUstadzPage() {
                   <option value="admin">Admin</option>
                 </select>
               </div>
-              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-emerald-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
+              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan Pengguna
               </button>
             </form>
@@ -383,7 +383,7 @@ export default function ManageUstadzPage() {
               <h3 className="text-xl font-black text-slate-800">Ubah Role</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">
                 <strong className="text-slate-700">{userToChangeRole.name}</strong> saat ini adalah{' '}
-                <span className={`font-black ${userToChangeRole.role === 'admin' ? 'text-slate-900' : 'text-emerald-600'}`}>
+                <span className={`font-black ${userToChangeRole.role === 'admin' ? 'text-slate-900' : 'text-brand-600'}`}>
                   {userToChangeRole.role === 'admin' ? 'Admin' : 'Ustadz'}
                 </span>.
               </p>
@@ -391,7 +391,7 @@ export default function ManageUstadzPage() {
             {roleError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={15} />{roleError}</div>}
             <div className="flex items-center justify-center gap-4 mb-6 p-4 bg-slate-50 rounded-2xl border-2 border-slate-100">
               <div className="text-center">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-slate-900 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-slate-900 text-white' : 'bg-brand-100 text-brand-700'}`}>
                   {userToChangeRole.name?.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -400,7 +400,7 @@ export default function ManageUstadzPage() {
               </div>
               <ArrowLeftRight size={18} className="text-indigo-400 shrink-0" />
               <div className="text-center">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-900 text-white'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-slate-900 text-white'}`}>
                   {userToChangeRole.name?.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">

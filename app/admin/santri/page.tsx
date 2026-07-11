@@ -169,7 +169,7 @@ export default function ManageSantriPage() {
   const handlePhotoUploaded = (studentId: string, newUrl: string) => {
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, photo_url: newUrl } : s));
   };
-  const inputCls = "w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-colors";
+  const inputCls = "w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-brand-400 transition-colors";
   const labelCls = "block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5";
 
   const displayList = showRemoved ? removedList : activeList;
@@ -185,7 +185,7 @@ export default function ManageSantriPage() {
         {!showRemoved && (
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
+            className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
             style={{ boxShadow: "0 3px 0 0 #15803d" }}
           >
             <Plus size={15} /> Tambah Santri
@@ -197,7 +197,7 @@ export default function ManageSantriPage() {
       <div className="flex gap-2">
         <button
           onClick={() => { setShowRemoved(false); setSearchQuery(''); }}
-          className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={!showRemoved ? { boxShadow: "0 3px 0 0 #15803d" } : {}}
         >
           Aktif ({students.length})
@@ -219,14 +219,14 @@ export default function ManageSantriPage() {
           placeholder={showRemoved ? "Cari santri yang dinonaktifkan…" : "Cari nama atau NIS…"}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-emerald-400 transition-all"
+          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
       </div>
 
       {/* List */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-emerald-500" /></div>
+        <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-brand-500" /></div>
       ) : displayList.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {displayList.map((student, i) => (
@@ -258,7 +258,7 @@ export default function ManageSantriPage() {
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.nis ? `NIS: ${student.nis}` : "—"}</span>
                   {student.profiles?.name && (
-                    <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">{student.profiles.name}</span>
+                    <span className="text-[10px] font-black text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">{student.profiles.name}</span>
                   )}
                 </div>
                 {showRemoved && (
@@ -303,14 +303,14 @@ export default function ManageSantriPage() {
               <X size={16} />
             </button>
             <div className="mb-6">
-              <div className="w-11 h-11 bg-emerald-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #a7f3d0" }}>
-                <Plus size={20} className="text-emerald-600" />
+              <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #a7f3d0" }}>
+                <Plus size={20} className="text-brand-600" />
               </div>
               <h3 className="text-xl font-black text-slate-800">Tambah Santri</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">Masukkan data santri baru.</p>
             </div>
             {modalError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={16} />{modalError}</div>}
-            {modalSuccess && <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-200 text-emerald-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={16} />{modalSuccess}</div>}
+            {modalSuccess && <div className="mb-4 p-3 bg-brand-50 border-2 border-brand-200 text-brand-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={16} />{modalSuccess}</div>}
             <form onSubmit={handleAddSantri} className="space-y-4">
               {/* Photo picker */}
               <div className="flex flex-col items-center gap-2">
@@ -320,9 +320,9 @@ export default function ManageSantriPage() {
                   className="relative group"
                 >
                   {pendingPhotoPreview ? (
-                    <img src={pendingPhotoPreview} alt="preview" className="w-20 h-20 rounded-2xl object-cover border-2 border-emerald-200" style={{ boxShadow: '0 3px 0 0 #a7f3d0' }} />
+                    <img src={pendingPhotoPreview} alt="preview" className="w-20 h-20 rounded-2xl object-cover border-2 border-brand-200" style={{ boxShadow: '0 3px 0 0 #a7f3d0' }} />
                   ) : (
-                    <div className="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1 text-slate-400 group-hover:border-emerald-400 group-hover:text-emerald-500 transition-colors">
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1 text-slate-400 group-hover:border-brand-400 group-hover:text-brand-500 transition-colors">
                       <Camera size={22} />
                       <span className="text-[9px] font-black uppercase tracking-wider">Foto</span>
                     </div>
@@ -343,7 +343,7 @@ export default function ManageSantriPage() {
                 <label className={labelCls}>NIS (Nomor Induk Santri)</label>
                 <input type="text" value={formData.nis} onChange={e => setFormData({...formData, nis: e.target.value})} placeholder="2024001" className={inputCls} />
               </div>
-              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-emerald-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
+              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 #15803d" }}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan Santri
               </button>
             </form>

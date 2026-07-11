@@ -67,10 +67,10 @@ export default function AnalysisPage() {
   }, [searchParams, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-emerald-950 text-white p-10 text-center">
-      <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-6" />
+    <div className="flex flex-col items-center justify-center h-screen bg-brand-950 text-white p-10 text-center">
+      <div className="w-16 h-16 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-6" />
       <h2 className="text-xl font-bold tracking-tight">{status}</h2>
-      <p className="text-emerald-400/60 text-sm mt-4 animate-pulse">
+      <p className="text-brand-400/60 text-sm mt-4 animate-pulse">
         Please do not close this page
       </p>
     </div>
