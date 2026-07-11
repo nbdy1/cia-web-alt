@@ -15,7 +15,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 );
 
 const MODEL_STORAGE_KEY = "cia:selected-model";
-const DEFAULT_MODEL = "openai/gpt-5-mini";
+const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 
 const TEMPERATURE_STORAGE_KEY = "cia:temperature";
 const DEFAULT_TEMPERATURE = 0.7;

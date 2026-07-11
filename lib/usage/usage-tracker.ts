@@ -30,7 +30,6 @@ export type UsagePurpose =
   | 'profile_summary'
   | 'rapor'
   | 'embedding'
-  | 'rerank'
   | 'tts';
 
 interface BufferedEvent {

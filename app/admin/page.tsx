@@ -32,12 +32,35 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
+import { karakterData } from "@/lib/data/karakter";
+import { mentalData } from "@/lib/data/mental";
+import { softSkillData } from "@/lib/data/soft-skill";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 type DayBucket = { label: string; count: number };
 type UstadzRow = { id: string; name: string; reportCount: number; studentCount: number };
 type RecentReport = { id: string; studentName: string; date: string; themesCount: number; siCount: number };
-type SantriLeaderRow = { id: string; name: string; fulfilled: number };
+type SantriLeaderRow = { id: string; name: string; kmsPercentage: number };
+
+// Total sub-indicator count per KMS pillar, from the local framework source —
+// the fixed denominator each student's fulfilled count is measured against.
+const normaliseCategory = (s: string) => s.trim().toLowerCase();
+
+function countSubIndicators(data: { themes: { indicators: { sub_indicators: string[] }[] }[] }): number {
+  let total = 0;
+  for (const theme of data.themes) {
+    for (const ind of theme.indicators) {
+      total += ind.sub_indicators.length;
+    }
+  }
+  return total;
+}
+
+const KMS_TOTALS: Record<string, number> = {
+  [normaliseCategory("Karakter")]: countSubIndicators(karakterData),
+  [normaliseCategory("Mental")]: countSubIndicators(mentalData),
+  [normaliseCategory("Soft Skill")]: countSubIndicators(softSkillData),
+};
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 function parsePlan(raw: any) {
@@ -206,27 +229,48 @@ export default function AdminOverviewPage() {
             .sort((a, b) => b.reportCount - a.reportCount)
         );
 
-        // ── 6. Santri leaderboard — unique fulfilled sub-indicators ─────────
-        // For each student, collect all fulfilled sub-indicators across every
-        // report and deduplicate by normalised text. The student with the most
-        // unique fulfilled sub-indicators ranks highest.
-        const santriMap: Record<string, { id: string; name: string; fulfilled: Set<string> }> = {};
+        // ── 6. Santri leaderboard — highest overall KMS score ────────────────
+        // For each student, collect fulfilled sub-indicators per KMS pillar
+        // (Karakter / Mental / Soft Skill) across every report, then average
+        // the three pillar percentages into one "KMS overall" score. This is
+        // deliberately an average of percentages rather than a raw fulfilled
+        // count: the pillars have very different sub-indicator totals, so a
+        // raw count would just reward whoever has the most Karakter hits
+        // (the largest pillar) instead of well-rounded growth across all three.
+        const santriMap: Record<string, { id: string; name: string; fulfilled: Record<string, Set<string>> }> = {};
         (allReportsForLeader ?? []).forEach((r: any) => {
           const sid = r.student_id as string;
           const sname = (r.students as any)?.name ?? "—";
-          if (!santriMap[sid]) santriMap[sid] = { id: sid, name: sname, fulfilled: new Set() };
+          if (!santriMap[sid]) {
+            santriMap[sid] = {
+              id: sid,
+              name: sname,
+              fulfilled: { karakter: new Set(), mental: new Set(), "soft skill": new Set() },
+            };
+          }
           const plan = parsePlan(r.treatment_plan);
           const assessments: any[] = plan?.detailed_assessments ?? [];
           assessments.forEach((a: any) => {
+            const cat = normaliseCategory(String(a?.category ?? ""));
+            const bucket = santriMap[sid].fulfilled[cat];
+            if (!bucket) return;
             (a.fulfilled_sub_indicators ?? []).forEach((si: string) => {
-              santriMap[sid].fulfilled.add(si.trim().toLowerCase());
+              bucket.add(si.trim().toLowerCase());
             });
           });
         });
         setSantriLeader(
           Object.values(santriMap)
-            .map((s) => ({ id: s.id, name: s.name, fulfilled: s.fulfilled.size }))
-            .sort((a, b) => b.fulfilled - a.fulfilled)
+            .map((s) => {
+              const pillarPercentages = Object.entries(s.fulfilled).map(([cat, fulfilledSet]) => {
+                const total = KMS_TOTALS[cat] ?? 0;
+                return total > 0 ? (fulfilledSet.size / total) * 100 : 0;
+              });
+              const kmsPercentage =
+                pillarPercentages.reduce((sum, p) => sum + p, 0) / pillarPercentages.length;
+              return { id: s.id, name: s.name, kmsPercentage: Math.round(kmsPercentage * 10) / 10 };
+            })
+            .sort((a, b) => b.kmsPercentage - a.kmsPercentage)
             .slice(0, 8)
         );
       } catch (err) {
@@ -313,7 +357,7 @@ export default function AdminOverviewPage() {
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
               <p className="font-black text-slate-800">Cakupan Ketercapaian</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Santri dengan sub-indikator unik terbanyak</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Santri dengan skor KMS keseluruhan tertinggi</p>
             </div>
             <Award size={16} className="text-brand-400" />
           </div>
@@ -324,7 +368,6 @@ export default function AdminOverviewPage() {
                 <p className="text-xs font-black">Belum ada data</p>
               </div>
             ) : (() => {
-              const maxFulfilled = santriLeader[0]?.fulfilled || 1;
               const medalColors = ["#f59e0b", "#94a3b8", "#b45309"];
               return santriLeader.map((s, i) => (
                 <Link
@@ -345,11 +388,13 @@ export default function AdminOverviewPage() {
                     <div className="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full bg-brand-400 transition-all"
-                        style={{ width: `${Math.round((s.fulfilled / maxFulfilled) * 100)}%` }}
+                        style={{ width: `${Math.min(100, Math.round(s.kmsPercentage))}%` }}
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-black text-brand-600 flex-shrink-0">{s.fulfilled}</span>
+                  <span className="text-sm font-black text-brand-600 flex-shrink-0">
+                    {s.kmsPercentage.toFixed(1).replace(".", ",")}%
+                  </span>
                 </Link>
               ));
             })()}
