@@ -114,7 +114,7 @@ export default function HomePage() {
             <div>
               <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Pantau & Analisis</p>
               <span className="text-slate-800 text-xl font-black leading-tight">
-                Profil KMS Santri
+                Profil CMS Santri
               </span>
             </div>
           </div>

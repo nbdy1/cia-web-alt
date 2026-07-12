@@ -165,6 +165,24 @@ function normalise(s: string) {
   return s.trim().toLowerCase();
 }
 
+// Strips accidental JSON/markup artifacts (stray `[[...]]`, `{...}`, code
+// fences, leftover `"key": ` fragments) that occasionally leak into free-text
+// model output. This most often happens when a previously-corrupted
+// profile_summary gets echoed back into the prompt as context and the model
+// pattern-matches its formatting into the new response — see studentProfile
+// sanitization in finalizeAssessment() and generateStudentProfile().
+function sanitizeFreeText(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/\[\[|\]\]/g, "")
+    .replace(/^\s*[{[]+\s*|\s*[}\]]+\s*$/g, "")
+    .replace(/"\s*[a-zA-Z_]+"\s*:\s*/g, "")
+    .replace(/[{}]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function parseModelJson(responseText: string, label: string) {
   const stripped = responseText
     .replace(/^\s*```(?:json)?\s*/i, "")
@@ -229,7 +247,7 @@ function buildFallbackTitle(parsed: any): string {
 }
 
 function normalizeReportTitle(rawTitle: unknown, parsed: any): string {
-  const source = typeof rawTitle === "string" ? rawTitle : "";
+  const source = typeof rawTitle === "string" ? sanitizeFreeText(rawTitle) : "";
   const cleaned = source
     .replace(/["'`]/g, "")
     .replace(/\s+/g, " ")
@@ -345,7 +363,7 @@ function enrichDetailedAssessments(rawAssessments: any[]): any[] {
       fulfilled_sub_indicators: canonicalFulfilled,
       missing_sub_indicators: canonicalMissing,
       fulfillment_fraction: `${canonicalFulfilled.length}/${canonical.subIndicators.length}`,
-      reasoning: String(item?.reasoning ?? "").trim(),
+      reasoning: sanitizeFreeText(String(item?.reasoning ?? "")),
     });
   }
 
@@ -370,9 +388,12 @@ function enrichTreatment(
       normalise(a.indicator) === normalise(priorityIndicator)
   );
 
+  const actionPlan = sanitizeFreeText(String(treatment.action_plan ?? ""));
+
   if (!matchedAssessment) {
     return {
       ...treatment,
+      action_plan: actionPlan,
       target_sub_indicators: targetRaw,
     };
   }
@@ -387,6 +408,7 @@ function enrichTreatment(
 
   return {
     ...treatment,
+    action_plan: actionPlan,
     priority_theme: matchedAssessment.theme,
     priority_indicator: matchedAssessment.indicator,
     target_sub_indicators:
@@ -593,7 +615,7 @@ interface KnowledgeRow {
 }
 
 // If the query looks like a direct knowledge question ("Apa itu X?", "Jelaskan Y"),
-// expand it with KMS domain context so the embedding lands closer to the right
+// expand it with CMS domain context so the embedding lands closer to the right
 // PDF chunks (which are dense 300-word passages, not short questions).
 function expandKnowledgeQuery(query: string): string {
   // Strip speaker prefixes like "Guru: " or "AI: " that appear in transcript lines
@@ -602,7 +624,7 @@ function expandKnowledgeQuery(query: string): string {
   if (isQuestion) {
     // Return expanded query WITHOUT the "Guru:" prefix so the embedding
     // focuses on the actual question content, not the speaker label
-    return `${stripped} penjelasan dalam konteks Quran Character Building Mental Building Soft Skill KMS Quranik pesantren Islam`;
+    return `${stripped} penjelasan dalam konteks Quran Character Building Mental Building Soft Skill CMS Quranik pesantren Islam`;
   }
   return stripped || query;
 }
@@ -768,6 +790,8 @@ export async function generateStudentProfile(
         const summary = String(plan?.status_summary ?? "").trim();
         const priorityTheme = String(plan?.treatment?.priority_theme ?? "").trim();
         const priorityIndicator = String(plan?.treatment?.priority_indicator ?? "").trim();
+        const treatmentStatus = plan?.treatment?.status as string | undefined;
+        const outcomeNote = String(plan?.treatment?.outcome_note ?? "").trim();
 
         // Extract up to 4 distinct assessed themes for context
         const themes: string[] = Array.isArray(plan?.detailed_assessments)
@@ -776,11 +800,19 @@ export async function generateStudentProfile(
             )).slice(0, 4)
           : [];
 
+        let treatmentOutcomeLine: string | null = null;
+        if (treatmentStatus === "completed") {
+          treatmentOutcomeLine = `Hasil penanganan: SUDAH diterapkan ustadz.${outcomeNote ? ` Catatan ustadz tentang efektivitasnya: ${outcomeNote}` : ""}`;
+        } else if (treatmentStatus === "declined") {
+          treatmentOutcomeLine = `Hasil penanganan: TIDAK diterapkan ustadz.${outcomeNote ? ` Alasan: ${outcomeNote}` : ""}`;
+        }
+
         return [
-          `[Laporan ${i + 1} — ${date}]`,
+          `Laporan ${i + 1} (${date}):`,
           summary ? `Ringkasan: ${summary}` : null,
           themes.length > 0 ? `Tema yang dinilai: ${themes.join(", ")}` : null,
           priorityTheme ? `Prioritas penanganan: ${priorityTheme}${priorityIndicator ? ` → ${priorityIndicator}` : ""}` : null,
+          treatmentOutcomeLine,
         ]
           .filter(Boolean)
           .join("\n");
@@ -793,6 +825,7 @@ Profil harus mencakup:
 - Kesan umum kepribadian dan karakter santri secara alami
 - Pola kekuatan yang konsisten muncul dari laporan ke laporan
 - Area kelemahan atau perkembangan yang masih perlu perhatian
+- Rencana penanganan yang SUDAH diterapkan dan efektivitasnya (jika ada catatan hasil penanganan), atau yang TIDAK diterapkan beserta alasannya — ini penting agar ustadz berikutnya tidak mengulang penanganan yang sudah terbukti tidak efektif atau ditolak
 - Konteks singkat yang berguna bagi ustadz dan AI dalam asesmen berikutnya
 
 Tulis seperti catatan profesional yang disiapkan untuk seseorang yang belum pernah bertemu santri ini. Gunakan gaya narasi yang alami, bukan daftar poin.
@@ -832,7 +865,7 @@ PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak bol
       }
     } catch { /* not JSON — already plain text, use as-is */ }
 
-    cleanProfile = cleanProfile.trim();
+    cleanProfile = sanitizeFreeText(cleanProfile);
 
     await db
       .from("students")
@@ -983,7 +1016,11 @@ export async function finalizeAssessment(
           .single(),
       ]);
 
-      studentProfile = profileResult.data?.profile_summary ?? undefined;
+      // Defensive: sanitize even here, in case an older profile_summary was
+      // saved before this cleanup existed — otherwise a corrupted profile
+      // keeps re-poisoning every future report via the injected context.
+      const rawProfile = profileResult.data?.profile_summary ?? undefined;
+      studentProfile = rawProfile ? sanitizeFreeText(rawProfile) : undefined;
       const latestReport = latestReportResult.data;
 
       if (studentProfile) {
@@ -1006,12 +1043,21 @@ export async function finalizeAssessment(
           } catch (e) {}
         }
 
+        const prevTreatmentStatus = prevAnalysis?.treatment?.status as string | undefined;
+        const prevOutcomeNote = String(prevAnalysis?.treatment?.outcome_note ?? "").trim();
+        let prevTreatmentLine = "";
+        if (prevTreatmentStatus === "completed") {
+          prevTreatmentLine = `\nRENCANA PENANGANAN LAPORAN TERAKHIR SUDAH DITERAPKAN ustadz.${prevOutcomeNote ? ` Catatan efektivitas dari ustadz: "${prevOutcomeNote}"` : ""} Pertimbangkan hasil ini saat menyusun rencana penanganan baru — lanjutkan jika efektif, atau sesuaikan pendekatan jika catatan menunjukkan kurang berhasil.`;
+        } else if (prevTreatmentStatus === "declined") {
+          prevTreatmentLine = `\nRENCANA PENANGANAN LAPORAN TERAKHIR TIDAK DITERAPKAN ustadz.${prevOutcomeNote ? ` Alasan: "${prevOutcomeNote}"` : ""} JANGAN ulangi pendekatan yang sama tanpa penyesuaian — pertimbangkan alasan penolakan di atas.`;
+        }
+
         currentProgressContext = `
 PROGRES SEBELUMNYA (kumulatif dari seluruh laporan terdahulu):
-- Karakter: ${prevAnalysis?.overall_stats?.karakter?.percentage ?? 0}% (${prevAnalysis?.overall_stats?.karakter?.fulfilled ?? 0}/${prevAnalysis?.overall_stats?.karakter?.total ?? 0})
+- Character: ${prevAnalysis?.overall_stats?.karakter?.percentage ?? 0}% (${prevAnalysis?.overall_stats?.karakter?.fulfilled ?? 0}/${prevAnalysis?.overall_stats?.karakter?.total ?? 0})
 - Mental: ${prevAnalysis?.overall_stats?.mental?.percentage ?? 0}% (${prevAnalysis?.overall_stats?.mental?.fulfilled ?? 0}/${prevAnalysis?.overall_stats?.mental?.total ?? 0})
 - Soft Skill: ${prevAnalysis?.overall_stats?.soft_skill?.percentage ?? 0}% (${prevAnalysis?.overall_stats?.soft_skill?.fulfilled ?? 0}/${prevAnalysis?.overall_stats?.soft_skill?.total ?? 0})
-
+${prevTreatmentLine}
 PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarkan statistik di atas.
         `;
       }
@@ -1070,6 +1116,7 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     const parsed = parseModelJson(responseText, "Finalize assessment");
     const enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? []);
     parsed.analysis_version = 2;
+    parsed.status_summary = sanitizeFreeText(String(parsed?.status_summary ?? ""));
     parsed.report_title = normalizeReportTitle(parsed?.report_title, parsed);
     parsed.model_used = selectedModel;
     parsed.detailed_assessments = enrichedAssessments;

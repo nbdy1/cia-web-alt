@@ -19,9 +19,14 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
-import { Users, Search, Loader2, Sparkles, Mail, Calendar, X, Plus, UserPlus, AlertCircle, Eye, EyeOff, UserX, ArchiveX, ShieldCheck, ArrowLeftRight } from 'lucide-react';
+import { Users, Search, Loader2, Sparkles, Mail, Calendar, X, Plus, UserPlus, AlertCircle, Eye, EyeOff, UserX, ArchiveX, ShieldCheck, ArrowLeftRight, Crown } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { useUserRole } from '@/lib/hooks/use-user-role';
+
+// "owner" and "admin" are both full admin-tier roles (see AdminLayout's guard:
+// role === 'owner' || role === 'admin') — treat them the same visually here,
+// same as /super-admin already distinguishes owner (crown) vs admin (plain).
+const isAdminTier = (role: string) => role === 'admin' || role === 'owner';
 
 export default function ManageUstadzPage() {
   const { organizationId } = useUserRole();
@@ -294,14 +299,19 @@ export default function ManageUstadzPage() {
               style={{ boxShadow: showRemoved ? "0 3px 0 0 #fee2e2" : "0 3px 0 0 #e2e8f0" }}
             >
               <div
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 ${showRemoved ? 'bg-slate-200 text-slate-500' : user.role === "admin" ? "bg-slate-900 text-white" : "bg-brand-100 text-brand-700"}`}
-                style={!showRemoved && user.role === "admin" ? { boxShadow: "0 3px 0 0 #000" } : !showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-200)" } : {}}
+                className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 ${showRemoved ? 'bg-slate-200 text-slate-500' : isAdminTier(user.role) ? "bg-slate-900 text-white" : "bg-brand-100 text-brand-700"}`}
+                style={!showRemoved && isAdminTier(user.role) ? { boxShadow: "0 3px 0 0 #000" } : !showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-200)" } : {}}
               >
                 {user.name?.charAt(0).toUpperCase() ?? "?"}
               </div>
               <div className="flex-1 overflow-hidden">
                 <div className="flex items-center gap-2">
                   <p className="font-black text-slate-800 text-sm truncate">{user.name}</p>
+                  {!showRemoved && user.role === "owner" && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md shrink-0">
+                      <Crown size={9} /> Pemilik
+                    </span>
+                  )}
                   {!showRemoved && user.role === "admin" && (
                     <span className="text-[9px] font-black uppercase tracking-widest bg-slate-900 text-white px-2 py-0.5 rounded-md shrink-0">Admin</span>
                   )}
@@ -324,9 +334,14 @@ export default function ManageUstadzPage() {
               {!showRemoved && (
                 <div className="flex flex-col gap-1 shrink-0">
                   <button
-                    onClick={() => openRoleModal(user)}
-                    className="p-2 text-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 rounded-xl transition-colors"
-                    title={user.role === 'admin' ? 'Jadikan Ustadz' : 'Jadikan Admin'}
+                    onClick={() => user.role !== 'owner' && openRoleModal(user)}
+                    disabled={user.role === 'owner'}
+                    className={`p-2 rounded-xl transition-colors ${
+                      user.role === 'owner'
+                        ? 'text-slate-200 cursor-not-allowed'
+                        : 'text-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100'
+                    }`}
+                    title={user.role === 'owner' ? 'Pemilik organisasi tidak dapat diubah di sini' : user.role === 'admin' ? 'Jadikan Ustadz' : 'Jadikan Admin'}
                   >
                     <ArrowLeftRight size={15} />
                   </button>

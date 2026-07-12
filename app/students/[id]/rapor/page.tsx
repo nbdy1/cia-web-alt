@@ -26,6 +26,7 @@ import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
 import { getCIAPhase } from "@/lib/cia-phases";
+import { categoryDisplayLabel } from "@/lib/data/category-labels";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -172,7 +173,7 @@ function buildCIASectionHtml(
     const pctStr = String(pct).replace(".", ",");
     return `
       <div style="background:${cat.lightBg};border:1px solid ${cat.borderColor};border-radius:8px;padding:12px 16px">
-        <p style="font-size:9px;font-weight:800;color:${cat.color};text-transform:uppercase;letter-spacing:0.1em;margin:0 0 4px">${esc(cat.label)}</p>
+        <p style="font-size:9px;font-weight:800;color:${cat.color};text-transform:uppercase;letter-spacing:0.1em;margin:0 0 4px">${esc(categoryDisplayLabel(cat.label))}</p>
         <p style="font-size:22px;font-weight:900;color:${cat.color};margin:0 0 2px">${pctStr}%</p>
         <p style="font-size:10px;color:#64748b;font-weight:600;margin:0 0 8px">${fulfilledSub} dari ${totalSub} sub-indikator</p>
         <div style="width:100%;height:4px;background:${cat.borderColor};border-radius:99px;overflow:hidden">
@@ -273,7 +274,7 @@ function buildCIASectionHtml(
     return `
       <div style="margin-bottom:16px;page-break-inside:avoid">
         <div style="background:#1e293b;padding:8px 14px;border-radius:8px 8px 0 0">
-          <span style="color:white;font-weight:800;font-size:13px">${esc(cat.label)}</span>
+          <span style="color:white;font-weight:800;font-size:13px">${esc(categoryDisplayLabel(cat.label))}</span>
         </div>
         <div style="border:1px solid #e2e8f0;border-top:none;padding:12px 14px;border-radius:0 0 8px 8px">
           ${isEmpty
@@ -672,7 +673,7 @@ export default function RaporPage() {
                         className={`${cat.twBg} border-2 ${cat.twBorder} rounded-xl p-3`}
                       >
                         <p className={`text-[9px] font-black uppercase tracking-wide ${cat.twColor}`}>
-                          {cat.label}
+                          {categoryDisplayLabel(cat.label)}
                         </p>
                         <p className={`text-xl font-black ${cat.twColor} mt-1`}>
                           {String(pct).replace(".", ",")}%
@@ -710,7 +711,7 @@ export default function RaporPage() {
                   return (
                     <div key={cat.label} className="border-2 border-slate-100 rounded-2xl overflow-hidden">
                       <div className="bg-slate-800 px-4 py-2.5">
-                        <span className="text-white font-black text-xs">{cat.label}</span>
+                        <span className="text-white font-black text-xs">{categoryDisplayLabel(cat.label)}</span>
                       </div>
                       <div className="p-4 space-y-1.5">
                         {/* Theme bars */}

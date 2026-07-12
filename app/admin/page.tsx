@@ -357,7 +357,7 @@ export default function AdminOverviewPage() {
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
               <p className="font-black text-slate-800">Cakupan Ketercapaian</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Santri dengan skor KMS keseluruhan tertinggi</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Santri dengan skor CMS keseluruhan tertinggi</p>
             </div>
             <Award size={16} className="text-brand-400" />
           </div>

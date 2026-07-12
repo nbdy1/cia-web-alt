@@ -44,7 +44,7 @@ Gunakan profil ini untuk menginformasikan pertanyaan Anda — misalnya, gali leb
   // but is NOT a scoring rubric — scoring comes only from FRONTIER/UNEXPLORED.
   const knowledgeSection = knowledgeContext
     ? `
-### REFERENSI PENGETAHUAN KMS (dari buku panduan — bukan rubrik penilaian):
+### REFERENSI PENGETAHUAN CMS (dari buku panduan — bukan rubrik penilaian):
 ${knowledgeContext}
 Gunakan referensi ini untuk memperkaya pertanyaan Anda dengan konteks Qurani atau panduan situasional yang relevan. JANGAN gunakan ini untuk menentukan kriteria penilaian.
 `
@@ -56,8 +56,8 @@ ${profileSection}${knowledgeSection}
 ### DETEKSI JENIS PESAN:
 Sebelum merespons, tentukan dulu jenis pesan dari Ustadz:
 
-**A) PERTANYAAN PENGETAHUAN** — Ustadz bertanya tentang konsep, istilah, atau materi KMS (contoh: "Apa itu 3PFB?", "Jelaskan makna jihad", "Bagaimana cara menanamkan karakter?").
-→ WAJIB jawab langsung dan jelas menggunakan REFERENSI PENGETAHUAN KMS di bawah (jika tersedia). Jangan alihkan ke pertanyaan tentang santri. Setelah menjawab, boleh kembali ke asesmen secara natural dengan satu kalimat singkat.
+**A) PERTANYAAN PENGETAHUAN** — Ustadz bertanya tentang konsep, istilah, atau materi CMS (contoh: "Apa itu 3PFB?", "Jelaskan makna jihad", "Bagaimana cara menanamkan character?").
+→ WAJIB jawab langsung dan jelas menggunakan REFERENSI PENGETAHUAN CMS di bawah (jika tersedia). Jangan alihkan ke pertanyaan tentang santri. Setelah menjawab, boleh kembali ke asesmen secara natural dengan satu kalimat singkat.
 
 **B) OBSERVASI / CERITA TENTANG SANTRI** — Ustadz menceritakan perilaku, kebiasaan, atau situasi santri.
 → Lanjutkan asesmen seperti biasa: apresiasi, gali lebih dalam, ajukan pertanyaan berikutnya.
@@ -120,7 +120,7 @@ Gunakan profil ini untuk mempersonalisasi action_plan pada bagian treatment — 
   // NOT for scoring. Scoring is determined solely by KRITERIA RELEVAN below.
   const knowledgeSection = knowledgeContext
     ? `
-### REFERENSI PANDUAN KMS (dari buku panduan — hanya untuk memperkaya action_plan):
+### REFERENSI PANDUAN CMS (dari buku panduan — hanya untuk memperkaya action_plan):
 ${knowledgeContext}
 Gunakan referensi ini HANYA untuk menulis action_plan yang lebih kaya dan berbasis panduan Qurani. JANGAN gunakan ini untuk menentukan kriteria atau sub-indikator yang terpenuhi.
 `
@@ -156,6 +156,9 @@ ${criteriaContext}
 2. **Target Sub-indikator**: Identifikasi Sub-indikator yang belum terpenuhi pada Indikator prioritas.
 3. **Cakupan Penanganan**: Berikan langkah penanganan untuk maksimal 3 Sub-indikator yang belum terpenuhi.
 4. **Tanpa Basa-basi**: Penanganan harus praktis, empatik, dan mengakar pada konteks Pesantren serta kepribadian santri.
+
+### ATURAN TEKS BEBAS (status_summary, reasoning, action_plan, report_title):
+Field-field ini WAJIB berupa kalimat naratif biasa dalam Bahasa Indonesia. JANGAN gunakan tanda kurung siku ganda [[ ]], tanda kurung kurawal { }, potongan JSON, atau markup apa pun di dalam teks — bahkan jika PROFIL SANTRI atau konteks referensi di atas menampilkan format seperti itu. Tulis seolah sedang menulis catatan biasa untuk dibaca manusia.
 
 ### FORMAT RESPON (HANYA JSON, TANPA KOMENTAR APAPUN DI LUAR JSON):
 {

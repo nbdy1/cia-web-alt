@@ -1,7 +1,7 @@
 /**
  * lib/cia-phases.ts
  *
- * 5-phase KMS (Karakter / Mental / Soft Skill) classification system.
+ * 5-phase CMS (Character / Mental / Soft Skill) classification system.
  *
  * Replaces the old binary Kuat / Lemah system with a graduated 5-phase scale
  * defined by the school's pedagogical framework. The phase is derived from a
@@ -55,7 +55,7 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     label: "Fase Instingtif / Mentah",
     shortLabel: "Instingtif",
     range: "1–20%",
-    description: "KMS awal yang masih labil",
+    description: "CMS awal yang masih labil",
     narrativeLabel: "instingtif",
     narrativeDescription: "karakter yang masih bersifat naluriah dan labil — bereaksi berdasarkan insting, bukan nilai yang telah disadari atau dipelajari",
     bg: "bg-slate-50",
@@ -75,7 +75,7 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     label: "Fase Imitasi / Adaptasi",
     shortLabel: "Imitasi",
     range: "21–40%",
-    description: "KMS lahir karena meniru lingkungan",
+    description: "CMS lahir karena meniru lingkungan",
     narrativeLabel: "imitatif",
     narrativeDescription: "karakter yang lahir dengan dorongan \"meniru\" atau \"mengadaptasi\" lingkungan sekitar",
     bg: "bg-amber-50",
@@ -95,7 +95,7 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     label: "Fase Internalisasi",
     shortLabel: "Internalisasi",
     range: "41–60%",
-    description: "Nilai-nilai KMS mulai terserap ke dalam diri",
+    description: "Nilai-nilai CMS mulai terserap ke dalam diri",
     narrativeLabel: "internalisasi",
     narrativeDescription: "karakter yang mulai terserap ke dalam diri — nilai-nilai mulai dipahami, diyakini, dan dirasakan secara personal",
     bg: "bg-sky-50",
@@ -115,7 +115,7 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     label: "Fase Aktualisasi",
     shortLabel: "Aktualisasi",
     range: "61–80%",
-    description: "KMS diimplementasikan secara sadar",
+    description: "CMS diimplementasikan secara sadar",
     narrativeLabel: "aktualisasi",
     narrativeDescription: "karakter yang diwujudkan secara sadar — nilai-nilai mulai tercermin dalam tindakan dan keputusan nyata sehari-hari",
     bg: "bg-violet-50",
@@ -135,7 +135,7 @@ export const CIA_PHASES: readonly CIAPhase[] = [
     label: "Fase Integrasi / Sempurna",
     shortLabel: "Integrasi",
     range: "81–100%",
-    description: "KMS menyatu sepenuhnya, keluar secara refleks",
+    description: "CMS menyatu sepenuhnya, keluar secara refleks",
     narrativeLabel: "integratif",
     narrativeDescription: "karakter yang telah menyatu sepenuhnya dengan diri — muncul secara refleks, natural, dan konsisten tanpa perlu usaha sadar",
     bg: "bg-emerald-50",

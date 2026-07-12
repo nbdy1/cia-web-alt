@@ -44,6 +44,7 @@ import {
 import { saveAssessmentAction } from "@/app/actions/save-assessment";
 import { supabase } from "@/lib/supabase";
 import { StudentAvatar } from "@/components/StudentAvatar";
+import { categoryDisplayLabel } from "@/lib/data/category-labels";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
@@ -255,7 +256,7 @@ export default function ResultsPage() {
                     className="bg-white/15 rounded-xl p-3 border border-white/20"
                   >
                     <p className="text-[8px] font-black uppercase text-white/70 mb-1">
-                      {key}
+                      {categoryDisplayLabel(key)}
                     </p>
                     <span className="text-xl font-black">
                       {stats.percentage}%
@@ -390,7 +391,7 @@ export default function ResultsPage() {
                         )}
                       </div>
                       <span className="font-black text-slate-900 text-sm">
-                        {cat}
+                        {categoryDisplayLabel(cat)}
                       </span>
                       <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
                         {items.length}

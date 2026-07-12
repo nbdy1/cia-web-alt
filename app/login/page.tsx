@@ -93,50 +93,48 @@ export default function LoginPage() {
 
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Background Gradients & Effects */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-600/15 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 left-10 w-[300px] h-[300px] bg-teal-600/10 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-500">
+    <div className="min-h-screen w-full bg-paper text-slate-800 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      <div className="w-full max-w-md relative z-10 animate-fade-in">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-semibold mb-4">
-            <ShieldCheck className="w-4 h-4 text-brand-400" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-black mb-4">
+            <ShieldCheck className="w-4 h-4 text-brand-600" />
             <span>Portal Evaluasi Ustadz</span>
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2 font-serif">
-            <span className="text-brand-500">CIA</span> Portal
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 flex items-center justify-center gap-2 font-serif">
+            <span className="text-brand-600">CIA</span> Portal
           </h1>
-          <p className="text-slate-400 text-sm mt-2 font-medium">
+          <p className="text-slate-400 text-sm mt-2 font-bold">
            Character Integrated Assessment Platform
           </p>
         </div>
 
-        {/* Auth Glassmorphism Card */}
-        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-[2.5rem] p-8 shadow-2xl shadow-brand-950/40 relative">
-          
+        {/* Auth Card */}
+        <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] p-8 relative" style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}>
+
           {/* Tab Switcher */}
-          <div className="flex bg-slate-950/60 p-1.5 rounded-2xl border border-slate-800 mb-8">
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-8">
             <button
               type="button"
               onClick={() => { setIsLogin(true); setError(null); setSuccess(null); }}
-              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3 text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
                 isLogin
-                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 font-semibold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-brand-500 text-white'
+                  : 'text-slate-400 hover:text-slate-600'
               }`}
+              style={isLogin ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
             >
               Masuk
             </button>
             <button
               type="button"
               onClick={() => { setIsLogin(false); setError(null); setSuccess(null); }}
-              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3 text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
                 !isLogin
-                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 font-semibold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-brand-500 text-white'
+                  : 'text-slate-400 hover:text-slate-600'
               }`}
+              style={!isLogin ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
             >
               <Sparkles className="w-4 h-4" />
               Daftar Ustadz
@@ -145,15 +143,15 @@ export default function LoginPage() {
 
           {/* Feedback Messages */}
           {error && (
-            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300 font-medium">
-              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+            <div className="mb-6 p-4 bg-rose-50 border-2 border-rose-100 text-rose-600 text-xs rounded-2xl flex items-center gap-3 animate-fade-in font-bold">
+              <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mb-6 p-4 bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300 font-medium">
-              <Loader2 className="w-5 h-5 text-brand-400 shrink-0 animate-spin" />
+            <div className="mb-6 p-4 bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs rounded-2xl flex items-center gap-3 animate-fade-in font-bold">
+              <Loader2 className="w-5 h-5 text-brand-500 shrink-0 animate-spin" />
               <span>{success}</span>
             </div>
           )}
@@ -161,58 +159,61 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                   Nama Lengkap & Gelar
                 </label>
                 <div className="relative flex items-center">
-                  <User className="absolute left-4 w-5 h-5 text-slate-500 pointer-events-none" />
+                  <User className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
                   <input
                     type="text"
                     required
                     placeholder="Contoh: Ustaz Abdullah Fauzi"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-brand-500 transition-colors shadow-inner"
+                    className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-800 font-bold text-sm placeholder:text-slate-300 placeholder:font-normal focus:outline-none focus:border-brand-400 transition-colors"
+                    style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                 Alamat Email
               </label>
               <div className="relative flex items-center">
-                <Mail className="absolute left-4 w-5 h-5 text-slate-500 pointer-events-none" />
+                <Mail className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
                 <input
                   type="email"
                   required
                   placeholder="ustadz@pesantren.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-brand-500 transition-colors shadow-inner"
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-800 font-bold text-sm placeholder:text-slate-300 placeholder:font-normal focus:outline-none focus:border-brand-400 transition-colors"
+                  style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                 Kata Sandi
               </label>
               <div className="relative flex items-center">
-                <Lock className="absolute left-4 w-5 h-5 text-slate-500 pointer-events-none" />
+                <Lock className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-12 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-brand-500 transition-colors shadow-inner"
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-12 pr-12 text-slate-800 font-bold text-sm placeholder:text-slate-300 placeholder:font-normal focus:outline-none focus:border-brand-400 transition-colors"
+                  style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 p-1 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-4 p-1 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -222,11 +223,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full mt-6 py-4 px-6 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] ${
-                loading
-                  ? 'bg-brand-600/50 cursor-not-allowed'
-                  : 'bg-brand-600 hover:bg-brand-500 shadow-xl shadow-brand-950'
+              className={`w-full mt-6 py-4 px-6 rounded-2xl font-black text-sm text-white flex items-center justify-center gap-3 transition-all active:translate-y-1 ${
+                loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand-500'
               }`}
+              style={loading ? {} : { boxShadow: "0 4px 0 0 var(--brand-700)" }}
             >
               {loading ? (
                 <>
@@ -243,8 +243,8 @@ export default function LoginPage() {
           </form>
 
           {/* Quick Info */}
-          <div className="mt-8 pt-6 border-t border-slate-800/80 text-center">
-            <p className="text-slate-500 text-xs italic">
+          <div className="mt-8 pt-6 border-t-2 border-slate-100 text-center">
+            <p className="text-slate-400 text-xs italic font-bold">
               &quot;Menjaga dan memantau perkembangan santri dengan sepenuh hati dan ketelitian.&quot;
             </p>
           </div>

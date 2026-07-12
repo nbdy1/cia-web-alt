@@ -596,7 +596,7 @@ export function SettingsDropdown() {
                       Panduan Kriteria
                     </span>
                     <span className="block text-[10px] text-slate-400 font-bold mt-0.5">
-                      Karakter, Mental, Soft Skill
+                      Character, Mental, Soft Skill
                     </span>
                   </div>
                 </button>

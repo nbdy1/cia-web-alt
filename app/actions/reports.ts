@@ -86,6 +86,64 @@ export async function removeSubIndicator(
   return { success: true };
 }
 
+export type TreatmentPlanStatusValue = "pending" | "completed" | "declined";
+
+/**
+ * Sets a report's treatment plan ("Rencana Penanganan") status:
+ *   - "completed" — ustadz implemented it; note holds the outcome.
+ *   - "declined"  — ustadz chose not to implement it; note holds the reason.
+ *   - "pending"   — reset back to unresolved (undo).
+ * Stored directly on treatment_plan.treatment since there is exactly one
+ * treatment/action-plan block per report.
+ */
+export async function setTreatmentPlanStatus(
+  reportId: string,
+  status: TreatmentPlanStatusValue,
+  note?: string,
+): Promise<{ success: boolean; error?: string }> {
+  const db = await getServerSupabase();
+
+  const { data: report, error: fetchError } = await db
+    .from("reports")
+    .select("treatment_plan")
+    .eq("id", reportId)
+    .single();
+
+  if (fetchError || !report) {
+    return { success: false, error: fetchError?.message ?? "Report not found" };
+  }
+
+  let plan = report.treatment_plan;
+  if (typeof plan === "string") {
+    try { plan = JSON.parse(plan); } catch {
+      return { success: false, error: "Failed to parse treatment_plan" };
+    }
+  }
+
+  if (!plan?.treatment) {
+    return { success: false, error: "Report has no treatment plan" };
+  }
+
+  const isResolved = status === "completed" || status === "declined";
+  plan.treatment.status = status;
+  plan.treatment.resolved_at = isResolved ? new Date().toISOString() : null;
+  plan.treatment.outcome_note = isResolved ? (note?.trim() || null) : null;
+  // Legacy fields kept for any already-rendered pages during this rollout.
+  plan.treatment.completed = status === "completed";
+  plan.treatment.completed_at = status === "completed" ? plan.treatment.resolved_at : null;
+
+  const { error: updateError } = await db
+    .from("reports")
+    .update({ treatment_plan: plan })
+    .eq("id", reportId);
+
+  if (updateError) return { success: false, error: updateError.message };
+
+  revalidatePath(`/reports/${reportId}`);
+  revalidatePath("/admin/treatment-plans");
+  return { success: true };
+}
+
 export async function saveStudentReport(data: {
   student_id: string;
   narrative: string;

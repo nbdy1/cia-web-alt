@@ -190,13 +190,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   if (loading || (!user && pathname !== '/login')) {
     return (
-      <div className="min-h-screen w-full bg-slate-900 flex flex-col items-center justify-center p-6 animate-in fade-in duration-300">
+      <div className="min-h-screen w-full bg-paper flex flex-col items-center justify-center p-6 animate-fade-in">
         <div className="text-center space-y-4">
-          <div className="w-20 h-20 bg-emerald-600/20 rounded-3xl border border-emerald-500/30 flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/20 animate-pulse">
-            <span className="text-emerald-400 font-extrabold text-3xl tracking-tighter">CIA</span>
+          <div className="w-20 h-20 bg-brand-50 rounded-3xl border-2 border-brand-100 flex items-center justify-center mx-auto animate-pulse" style={{ boxShadow: "0 4px 0 0 var(--brand-200)" }}>
+            <span className="text-brand-600 font-black text-3xl tracking-tighter">CIA</span>
           </div>
-          <div className="flex items-center justify-center gap-2 text-emerald-400/80 text-sm font-medium">
-            <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+          <div className="flex items-center justify-center gap-2 text-brand-600 text-sm font-bold">
+            <Loader2 className="w-4 h-4 animate-spin text-brand-500" />
             <span>Verifying credentials...</span>
           </div>
         </div>

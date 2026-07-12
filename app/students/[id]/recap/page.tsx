@@ -12,7 +12,7 @@
  *     `treatment_plan.detailed_assessments` JSONB. A Map<string, number> tracks
  *     how many reports fulfilled each sub-indicator (normalised to lowercase).
  *
- *   5-Phase KMS Classification (replaces the old Kuat / Lemah binary)
+ *   5-Phase CMS Classification (replaces the old Kuat / Lemah binary)
  *     Phase is determined by (count / totalReports) × 100 per sub-indicator,
  *     or (fulfilledSub / totalSub) × 100 at the category level.
  *     1. Instingtif / Mentah   1–20%    (raw, still unstable)
@@ -45,6 +45,7 @@ import Link from "next/link";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
+import { categoryDisplayLabel } from "@/lib/data/category-labels";
 
 // ─── Theme Fulfillment Bar Chart ─────────────────────────────────────────────
 // Replaces the radar chart. Shows only themes with ≥ 1 fulfilled sub-indicator
@@ -150,11 +151,8 @@ function FulfillmentBars({
           <div className="space-y-1">
             {benihThemes.map((theme) => (
               <div key={theme.id} className="flex items-center gap-2 py-0.5">
-                <span className="text-[10px] font-black text-slate-400 w-5 text-right flex-shrink-0">
-                  {theme.id}
-                </span>
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex-shrink-0">
-                  {catTitle}
+                  {catTitle} no. {theme.id}
                 </span>
                 <span className="text-[11px] font-bold text-slate-600 leading-snug">
                   &ldquo;{theme.title}&rdquo;
@@ -348,7 +346,7 @@ export default async function RecapPage({
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-4 max-w-sm leading-relaxed">
-              Persentase pertumbuhan KMS ini di simpulkan dari{" "}
+              Persentase pertumbuhan CMS ini di simpulkan dari{" "}
               <span className="text-white font-black">{totalReports}</span>{" "}
               laporan yang masuk.
             </p>
@@ -392,7 +390,7 @@ export default async function RecapPage({
                     </div>
                     <div>
                       <h2 className="text-lg font-bold text-slate-800">
-                        {cat.label}
+                        {categoryDisplayLabel(cat.label)}
                       </h2>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <p className="text-xs font-bold text-slate-400">
@@ -421,7 +419,7 @@ export default async function RecapPage({
                       themes={cat.data.themes}
                       countMap={countMap}
                       accentColor={cat.accentColor}
-                      categoryLabel={cat.label.toLowerCase()}
+                      categoryLabel={categoryDisplayLabel(cat.label).toLowerCase()}
                     />
                   </div>
 
@@ -483,10 +481,10 @@ export default async function RecapPage({
                                   {themeFilledSub} dari {themeTotalSub} indikator kuat / {Math.round((themeFilledSub / themeTotalSub) * 100)}%
                                 </p>
                                 <p className={`text-[11px] font-bold mt-1 ${themePhase.text}`}>
-                                  Fase pertumbuhan {cat.label.toLowerCase()} nya adalah &ldquo;{themePhase.narrativeLabel}&rdquo;
+                                  Fase pertumbuhan {categoryDisplayLabel(cat.label).toLowerCase()} nya adalah &ldquo;{themePhase.narrativeLabel}&rdquo;
                                 </p>
                                 <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                                  Yaitu {themePhase.narrativeDescription.replace(/karakter/g, cat.label.toLowerCase())}.
+                                  Yaitu {themePhase.narrativeDescription.replace(/karakter/g, categoryDisplayLabel(cat.label).toLowerCase())}.
                                 </p>
                               </div>
                             )}

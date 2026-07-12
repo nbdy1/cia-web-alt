@@ -33,8 +33,10 @@ import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { FulfilledSubsList } from "@/components/FulfilledSubsList";
+import { TreatmentPlanStatus } from "@/components/TreatmentPlanStatus";
 import { getModelLabel } from "@/lib/data/models";
 import { StudentAvatar } from "@/components/StudentAvatar";
+import { categoryDisplayLabel } from "@/lib/data/category-labels";
 
 // ─── Framework lookup helpers ──────────────────────────────────────────────
 // Given a category + theme title + indicator title from the AI output,
@@ -206,8 +208,13 @@ export default async function ReportDetailPage({
           />
           <div className="text-center">
             <h2 className="text-xl font-black text-slate-900 leading-tight">{report.students.name}</h2>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
-              {new Date(report.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+            {report.title && (
+              <p className="text-sm font-bold text-slate-500 mt-1 max-w-xs">{report.title}</p>
+            )}
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">
+              {new Date(report.created_at).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {" · "}
+              {new Date(report.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
             </p>
           </div>
         </div>
@@ -229,7 +236,7 @@ export default async function ReportDetailPage({
                     className="bg-white/10 rounded-2xl p-3 border border-white/10"
                   >
                     <p className="text-[8px] font-black uppercase text-brand-300 mb-1">
-                      {key}
+                      {categoryDisplayLabel(key)}
                     </p>
                     <div className="flex items-baseline gap-1">
                       <span className="text-lg font-bold">
@@ -253,7 +260,7 @@ export default async function ReportDetailPage({
         </section>
 
         <section className="bg-white p-6 rounded-[2rem] border-2 border-slate-100 relative" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
-          <Quote className="absolute top-6 left-6 w-8 h-8 text-slate-50" />
+          {/* <Quote className="absolute top-6 left-6 w-8 h-8 text-slate-50" /> */}
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
             Narasi Observasi
           </h3>
@@ -328,8 +335,9 @@ export default async function ReportDetailPage({
           <div className="mt-6 flex items-center gap-2 text-slate-300">
             <Calendar size={12} />
             <span className="text-[9px] font-bold uppercase tracking-tighter">
-              {new Date(report.created_at).toLocaleDateString("id-ID", {
+              {new Date(report.created_at).toLocaleString("id-ID", {
                 dateStyle: "full",
+                timeStyle: "short",
               })}
             </span>
           </div>
@@ -373,6 +381,13 @@ export default async function ReportDetailPage({
                   {analysis.treatment.action_plan}
                 </p>
               </div>
+
+              <TreatmentPlanStatus
+                reportId={report.id}
+                status={analysis.treatment.status ?? (analysis.treatment.completed ? "completed" : "pending")}
+                resolvedAt={analysis.treatment.resolved_at ?? analysis.treatment.completed_at ?? null}
+                outcomeNote={analysis.treatment.outcome_note ?? null}
+              />
             </div>
           </section>
         )}
@@ -407,7 +422,7 @@ export default async function ReportDetailPage({
                       {cat === "Soft Skill" && <Zap size={18} />}
                     </div>
                     <h4 className="font-bold text-slate-800 text-sm font-serif">
-                      Analisis {cat}
+                      Analisis {categoryDisplayLabel(cat)}
                     </h4>
                   </div>
 
@@ -472,7 +487,7 @@ export default async function ReportDetailPage({
                     <BarChart3 size={22} className="text-slate-300" />
                   </div>
                   <p className="text-sm font-bold text-slate-400 leading-snug">
-                    Tidak ada pencapaian karakter, mental, ataupun soft skill di laporan ini.
+                    Tidak ada pencapaian character, mental, ataupun soft skill di laporan ini.
                   </p>
                 </div>
               );

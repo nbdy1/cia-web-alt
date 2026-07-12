@@ -104,7 +104,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
   };
 
   const definisiLabel = {
-    karakter: 'Definisi Karakter',
+    karakter: 'Definisi Character',
     mental: 'Definisi Mental',
     softskill: 'Definisi Soft Skill',
   }[activeTab];
@@ -124,7 +124,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
             </div>
             <div>
               <h2 className="text-base sm:text-2xl font-bold tracking-tight font-serif leading-tight">Panduan Kriteria Asesmen CIA</h2>
-              <p className="text-brand-200/80 text-[10px] sm:text-xs mt-0.5 hidden sm:block">Standar indikator penilaian santri berdasarkan kurikulum Asesmen Karakter Terintegrasi</p>
+              <p className="text-brand-200/80 text-[10px] sm:text-xs mt-0.5 hidden sm:block">Standar indikator penilaian santri berdasarkan kurikulum Asesmen Character Terintegrasi</p>
             </div>
           </div>
           <button
@@ -149,7 +149,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
               }`}
             >
               <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 shrink-0" />
-              <span>Karakter</span>
+              <span>Character</span>
             </button>
             <button
               onClick={() => { setActiveTab('mental'); setSearchQuery(''); }}

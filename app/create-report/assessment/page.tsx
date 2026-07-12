@@ -47,6 +47,13 @@ interface Message {
   text: string;
 }
 
+const FINALIZE_STEPS = [
+  "Menganalisis transkrip…",
+  "Mencocokkan kriteria CIA…",
+  "Menyusun rencana penanganan…",
+  "Merapikan laporan akhir…",
+];
+
 export default function AssessmentPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -59,6 +66,8 @@ export default function AssessmentPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [finalizeStepIndex, setFinalizeStepIndex] = useState(0);
+  const [finalizeProgress, setFinalizeProgress] = useState(0);
   const [discoveredCount, setDiscoveredCount] = useState(0);
   const [discoveredPillars, setDiscoveredPillars] = useState<string[]>([]);
 
@@ -76,6 +85,25 @@ export default function AssessmentPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [micError, setMicError] = useState<string | null>(null);
   const [studentPhotoUrl, setStudentPhotoUrl] = useState<string | null>(null);
+
+  // Drives the rotating status text + fake progress bar while the AI report is being generated
+  useEffect(() => {
+    if (!isFinalizing) {
+      setFinalizeStepIndex(0);
+      setFinalizeProgress(0);
+      return;
+    }
+    const stepInterval = setInterval(() => {
+      setFinalizeStepIndex((i) => (i + 1) % FINALIZE_STEPS.length);
+    }, 2600);
+    const progressInterval = setInterval(() => {
+      setFinalizeProgress((p) => (p < 92 ? p + (92 - p) * 0.06 : p));
+    }, 200);
+    return () => {
+      clearInterval(stepInterval);
+      clearInterval(progressInterval);
+    };
+  }, [isFinalizing]);
 
   // Fetch student photo
   useEffect(() => {
@@ -577,6 +605,20 @@ export default function AssessmentPage() {
               </>
             )}
           </button>
+        )}
+
+        {isFinalizing && (
+          <div className="mt-3 space-y-1.5 animate-fade-in">
+            <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-brand-500 rounded-full transition-all duration-200 ease-out"
+                style={{ width: `${finalizeProgress}%` }}
+              />
+            </div>
+            <p className="text-center text-[10px] font-bold text-slate-400">
+              {FINALIZE_STEPS[finalizeStepIndex]}
+            </p>
+          </div>
         )}
       </footer>
     </div>
