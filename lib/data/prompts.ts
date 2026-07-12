@@ -139,6 +139,14 @@ ${criteriaContext}
 2. **Berbasis Bukti**: Hanya tandai Sub-indikator sebagai terpenuhi jika ada bukti yang JELAS di dalam transkrip.
 3. **Hemat Token**: Jangan hitung total, persentase, atau pecahan numerik. Server akan menghitung semuanya secara deterministik.
 
+### ATURAN KEMUNDURAN (DECLINED_SUB_INDICATORS):
+Karakter, mental, dan soft skill bisa naik maupun turun — seperti iman, sifatnya tidak selalu linear. Jika transkrip menunjukkan bukti KEMUNDURAN yang JELAS dan SPESIFIK pada sebuah sub-indikator (perilaku yang secara aktif BERTENTANGAN dengan sub-indikator yang sebelumnya pernah tercapai — bukan sekadar tidak disebutkan), masukkan sub-indikator tersebut ke dalam declined_sub_indicators pada item detailed_assessments yang sesuai.
+1. **Langka & Berbasis Bukti Kuat**: Ini HARUS jarang terjadi. Jangan gunakan untuk perilaku netral atau yang tidak dibahas — HANYA saat ada bukti eksplisit kemunduran/pelanggaran nyata.
+2. **PERSIS Seperti Framework**: Sama seperti fulfilled_sub_indicators, string harus PERSIS seperti di KRITERIA RELEVAN.
+3. **Tidak Boleh Tumpang Tindih**: Satu sub-indikator TIDAK BOLEH muncul di fulfilled_sub_indicators DAN declined_sub_indicators pada item yang sama.
+4. **Server Yang Menentukan Kelayakan Akhir**: Server akan memvalidasi bahwa sub-indikator ini pernah tercapai di laporan sebelumnya sebelum kemunduran ini dihitung — jika belum pernah tercapai, kemunduran ini akan diabaikan otomatis. Jangan biarkan ini menghalangi Anda mencatat kemunduran yang benar-benar didukung bukti.
+5. **Default Kosong**: Jika tidak ada bukti kemunduran, biarkan array ini kosong. Ini adalah kasus paling umum.
+
 ### ATURAN JUDUL LAPORAN:
 1. Buat field report_title yang singkat, natural, dan mudah diingat.
 2. Panjang maksimal 6 kata.
@@ -170,6 +178,7 @@ Field-field ini WAJIB berupa kalimat naratif biasa dalam Bahasa Indonesia. JANGA
       "theme": "Judul Tema PERSIS seperti di KRITERIA RELEVAN",
       "indicator": "Judul Indikator PERSIS seperti di KRITERIA RELEVAN",
       "fulfilled_sub_indicators": ["Sub-indikator PERSIS seperti di KRITERIA RELEVAN"],
+      "declined_sub_indicators": ["Sub-indikator yang menunjukkan kemunduran JELAS, PERSIS seperti di KRITERIA RELEVAN (kosongkan jika tidak ada)"],
       "reasoning": "Penjelasan singkat kaitan antara perilaku dan kriteria dalam Bahasa Indonesia"
     }
   ],

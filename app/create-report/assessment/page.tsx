@@ -37,6 +37,7 @@ import { transcribeAudio } from '@/app/actions/whisper';
 import { useSettings } from '@/lib/context/settings-context';
 import { supabase } from '@/lib/supabase';
 import { StudentAvatar } from '@/components/StudentAvatar';
+import { useTerminology } from '@/lib/hooks/use-terminology';
 
 // Set to true to use OpenRouter Whisper instead of the browser Web Speech API.
 // Flip this during testing; the UI toggle is intentionally removed.
@@ -58,7 +59,8 @@ export default function AssessmentPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const studentId = searchParams.get('id');
-  const studentName = searchParams.get('name') || 'Santri';
+  const t = useTerminology();
+  const studentName = searchParams.get('name') || t.santri;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState('');

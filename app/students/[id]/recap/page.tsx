@@ -175,10 +175,15 @@ async function getStudentRecap(id: string) {
     .eq("id", id)
     .single();
 
+  // Ordered oldest-first: declined_sub_indicators decrements the running
+  // count floored at 0, so reports must be replayed in the same chronological
+  // order they were created in — otherwise a decline could be processed
+  // before the fulfillment it's regressing, clamping to 0 prematurely.
   const { data: reports } = await db
     .from("reports")
     .select("treatment_plan")
-    .eq("student_id", id);
+    .eq("student_id", id)
+    .order("created_at", { ascending: true });
 
   // Aggregate canonical fulfilled sub-indicators by category.
   // Map value = number of reports in which the sub-indicator was fulfilled.
@@ -254,6 +259,19 @@ async function getStudentRecap(id: string) {
             bucket.set(key, (bucket.get(key) ?? 0) + 1);
           }
         });
+
+        // Character/mental/soft-skill growth isn't strictly linear — a report
+        // can mark a sub-indicator as regressed (declined_sub_indicators),
+        // undoing one prior fulfillment. Floored at 0: it can never make a
+        // sub-indicator "fulfilled" a negative number of times.
+        if (Array.isArray(assessment.declined_sub_indicators)) {
+          fullSubs.forEach((frameworkSub) => {
+            if (assessment.declined_sub_indicators.some((si: string) => isLikelySame(si, frameworkSub))) {
+              const key = norm(frameworkSub);
+              bucket.set(key, Math.max(0, (bucket.get(key) ?? 0) - 1));
+            }
+          });
+        }
       });
     }
   });

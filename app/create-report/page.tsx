@@ -26,6 +26,7 @@ import Link from 'next/link';
 import Fuse from 'fuse.js';
 import { supabase } from '@/lib/supabase';
 import { StudentAvatar } from '@/components/StudentAvatar';
+import { useTerminology } from '@/lib/hooks/use-terminology';
 
 export default function CreateReport() {
   const [students, setStudents] = useState<any[]>([]);
@@ -35,6 +36,7 @@ export default function CreateReport() {
   const [isListening, setIsListening] = useState(false);
   const { role } = useUserRole();
   const { user, activeOrganizationId } = useAuth();
+  const t = useTerminology();
   const recognitionRef = useRef<any>(null);
   // Tracks user *intent* to listen — survives iOS onend auto-fires
   const shouldListenRef = useRef(false);
@@ -156,7 +158,7 @@ export default function CreateReport() {
           </div>
           <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">Beranda</span>
         </Link>
-        <h1 className="text-3xl font-black text-slate-800">Pilih Santri</h1>
+        <h1 className="text-3xl font-black text-slate-800">Pilih {t.santri}</h1>
         <p className="text-slate-400 text-sm font-bold mt-1">Siapa yang akan dinilai hari ini?</p>
       </header>
 
@@ -167,7 +169,7 @@ export default function CreateReport() {
             <Search className="absolute left-4 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder={isListening ? "Mendengar…" : "Cari nama santri…"}
+              placeholder={isListening ? "Mendengar…" : `Cari nama ${t.santriLower}…`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full border-2 rounded-2xl py-4 pl-12 pr-14 font-bold text-slate-800 outline-none transition-all ${
@@ -204,7 +206,7 @@ export default function CreateReport() {
         {/* Student list */}
         <div className="mt-6 flex-1 overflow-y-auto pb-28">
           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-3">
-            {searchQuery ? "Hasil Pencarian" : "Semua Santri"}
+            {searchQuery ? "Hasil Pencarian" : `Semua ${t.santri}`}
           </p>
           {loading ? (
             <div className="flex justify-center py-10">

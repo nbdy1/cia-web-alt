@@ -18,9 +18,11 @@ import { supabase } from '@/lib/supabase';
 import { Users, Search, Loader2, Save, UserCheck, AlertCircle } from 'lucide-react';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { useAuth } from '@/lib/context/auth-context';
+import { useTerminology } from '@/lib/hooks/use-terminology';
 
 export default function PlottingSantriPage() {
   const { activeOrganizationId } = useAuth();
+  const t = useTerminology();
   const [students, setStudents] = useState<any[]>([]);
   const [ustadzList, setUstadzList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,7 +116,7 @@ export default function PlottingSantriPage() {
       );
 
       await Promise.all(promises);
-      setMessage({ type: 'success', text: 'Plotting santri berhasil disimpan!' });
+      setMessage({ type: 'success', text: `Plotting ${t.santriLower} berhasil disimpan!` });
       
       // Update local students list to reflect saved state
       setStudents(prev => prev.map(s => ({
@@ -139,8 +141,8 @@ export default function PlottingSantriPage() {
     <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Plotting Santri</h2>
-          <p className="text-slate-400 text-sm font-bold mt-0.5">Tugaskan santri ke Ustadz pembimbing</p>
+          <h2 className="text-2xl font-black text-slate-800">Plotting {t.santri}</h2>
+          <p className="text-slate-400 text-sm font-bold mt-0.5">Tugaskan {t.santriLower} ke {t.ustadzLower} pembimbing</p>
         </div>
         <button
           onClick={saveAssignments}
@@ -163,7 +165,7 @@ export default function PlottingSantriPage() {
 
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input type="text" placeholder="Cari nama santri…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+        <input type="text" placeholder={`Cari nama ${t.santriLower}…`} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
@@ -174,14 +176,14 @@ export default function PlottingSantriPage() {
       ) : ustadzList.length === 0 ? (
         <div className="text-center py-14 bg-amber-50 rounded-[1.5rem] border-2 border-amber-200">
           <AlertCircle className="w-8 h-8 mx-auto text-amber-400 mb-3" />
-          <p className="text-amber-800 font-black text-sm mb-1">Belum ada Ustadz terdaftar</p>
-          <p className="text-amber-600 text-xs font-bold">Daftarkan Ustadz terlebih dahulu di menu Kelola Ustadz.</p>
+          <p className="text-amber-800 font-black text-sm mb-1">Belum ada {t.ustadz} terdaftar</p>
+          <p className="text-amber-600 text-xs font-bold">Daftarkan {t.ustadz} terlebih dahulu di menu Kelola {t.ustadz}.</p>
         </div>
       ) : filteredStudents.length > 0 ? (
         <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="grid grid-cols-2 px-5 py-3 bg-slate-50 border-b-2 border-slate-100">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Santri</p>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ustadz Pembimbing</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.santri}</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.ustadz} Pembimbing</p>
           </div>
           <div className="divide-y-2 divide-slate-50">
             {filteredStudents.map((student) => {
@@ -220,7 +222,7 @@ export default function PlottingSantriPage() {
       ) : (
         <div className="text-center py-16 bg-white rounded-[1.5rem] border-2 border-dashed border-slate-200">
           <Users className="w-8 h-8 mx-auto text-slate-200 mb-3" />
-          <p className="text-slate-400 font-black text-sm">Tidak ada santri ditemukan</p>
+          <p className="text-slate-400 font-black text-sm">Tidak ada {t.santriLower} ditemukan</p>
         </div>
       )}
     </div>

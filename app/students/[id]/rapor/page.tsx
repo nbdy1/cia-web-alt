@@ -27,6 +27,8 @@ import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
 import { getCIAPhase } from "@/lib/cia-phases";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
+import { useTerminology } from "@/lib/hooks/use-terminology";
+import type { Terminology } from "@/lib/data/terminology";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -84,6 +86,9 @@ const CIA_CATEGORIES = [
 
 const norm = (s: string) => s.trim().toLowerCase();
 
+// NOTE: reports must be passed oldest-first — declined_sub_indicators
+// decrements the running count floored at 0, which is only correct when
+// replayed in the same chronological order the reports were created in.
 function buildCIACounts(
   reports: Array<{ treatment_plan: unknown }>
 ): Record<string, Map<string, number>> {
@@ -144,6 +149,22 @@ function buildCIACounts(
           bucket.set(key, (bucket.get(key) ?? 0) + 1);
         }
       });
+
+      // Growth isn't strictly linear — a report can mark a sub-indicator as
+      // regressed (declined_sub_indicators), undoing one prior fulfillment.
+      // Floored at 0: it can never go negative.
+      if (Array.isArray(assessment.declined_sub_indicators)) {
+        fullSubs.forEach((frameworkSub) => {
+          if (
+            assessment.declined_sub_indicators.some((si: string) =>
+              isLikelySame(si, frameworkSub)
+            )
+          ) {
+            const key = norm(frameworkSub);
+            bucket.set(key, Math.max(0, (bucket.get(key) ?? 0) - 1));
+          }
+        });
+      }
     });
   });
 
@@ -312,8 +333,9 @@ function buildPrintHTML(opts: {
   printDate: string;
   scoreGrid: ScoreGrid;
   countByCategory: Record<string, Map<string, number>>;
+  t: Terminology;
 }) {
-  const { name, nis, photoUrl, period, printDate, scoreGrid, countByCategory } = opts;
+  const { name, nis, photoUrl, period, printDate, scoreGrid, countByCategory, t } = opts;
 
   const scoreTablesHtml = SUBJECTS.map((subj) => {
     const grid = scoreGrid[subj] ?? {};
@@ -372,7 +394,7 @@ function buildPrintHTML(opts: {
   <div>
     <p style="font-size:9px;font-weight:800;color:#34d399;text-transform:uppercase;letter-spacing:0.25em;margin-bottom:4px">Pesantren</p>
     <h1 style="font-size:26px;font-weight:900;color:white;line-height:1.1">Sekolah Impian</h1>
-    <p style="font-size:11px;color:#94a3b8;font-weight:600;margin-top:4px">Laporan Perkembangan Santri</p>
+    <p style="font-size:11px;color:#94a3b8;font-weight:600;margin-top:4px">Laporan Perkembangan ${esc(t.santri)}</p>
   </div>
   <div style="text-align:right">
     <p style="font-size:9px;color:#94a3b8;font-weight:600">Periode</p>
@@ -409,7 +431,7 @@ function buildPrintHTML(opts: {
   <!-- Signatures -->
   <div style="margin-top:40px;border-top:1px solid #e2e8f0;padding-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:48px">
     <div style="text-align:center">
-      <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:56px">Ustadz / Wali Kelas</p>
+      <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:56px">${esc(t.ustadz)} / Wali Kelas</p>
       <div style="border-bottom:1.5px solid #94a3b8;margin-bottom:8px"></div>
       <p style="font-size:9px;color:#94a3b8;font-weight:600">Tanda Tangan &amp; Nama</p>
     </div>
@@ -431,6 +453,7 @@ function buildPrintHTML(opts: {
 export default function RaporPage() {
   const params = useParams<{ id: string }>();
   const studentId = params.id;
+  const t = useTerminology();
 
   const [student, setStudent] = useState<Student | null>(null);
   const [periods, setPeriods] = useState<string[]>([]);
@@ -460,10 +483,12 @@ export default function RaporPage() {
   // CIA sub-indicator counts — aggregated across all reports (same as recap page)
   useEffect(() => {
     const loadCIA = async () => {
+      // Ordered oldest-first — see buildCIACounts() comment on why order matters.
       const { data: reports } = await supabase
         .from("reports")
         .select("treatment_plan")
-        .eq("student_id", studentId);
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: true });
       if (reports) {
         setTotalReports(reports.length);
         setCountByCategory(buildCIACounts(reports));
@@ -507,6 +532,7 @@ export default function RaporPage() {
       printDate,
       scoreGrid,
       countByCategory,
+      t,
     });
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) { alert("Popup diblokir. Izinkan popup untuk halaman ini."); return; }
@@ -814,7 +840,7 @@ export default function RaporPage() {
             {/* Signatures */}
             <div className="border-t-2 border-slate-100 pt-6">
               <div className="grid grid-cols-2 gap-8">
-                {["Ustadz / Wali Kelas", "Orang Tua / Wali"].map((label) => (
+                {[`${t.ustadz} / Wali Kelas`, "Orang Tua / Wali"].map((label) => (
                   <div key={label} className="text-center">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-12">
                       {label}

@@ -40,11 +40,13 @@ import {
   Pencil,
   Check,
   X,
+  TrendingDown,
 } from "lucide-react";
 import { saveAssessmentAction } from "@/app/actions/save-assessment";
 import { supabase } from "@/lib/supabase";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
+import { useTerminology } from "@/lib/hooks/use-terminology";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
@@ -57,8 +59,9 @@ export default function ResultsPage() {
   const [isEditingSummary, setIsEditingSummary] = useState(false);
   const [editedSummary, setEditedSummary] = useState("");
 
+  const t = useTerminology();
   const studentId = searchParams.get("id");
-  const studentName = searchParams.get("name") || "Santri";
+  const studentName = searchParams.get("name") || t.santri;
   const [studentPhotoUrl, setStudentPhotoUrl] = useState<string | null>(null);
   const [narrative, setNarrative] = useState("");
   const [analysisData, setAnalysisData] = useState<any>(null);
@@ -109,7 +112,7 @@ export default function ResultsPage() {
   };
 
   const handleSave = async () => {
-    if (!studentId) return alert("ID santri tidak ditemukan");
+    if (!studentId) return alert(`ID ${t.santriLower} tidak ditemukan`);
 
     setIsSaving(true);
     const result = await saveAssessmentAction({
@@ -329,7 +332,9 @@ export default function ResultsPage() {
                   (a: any) => a.category === cat,
                 ) || []
               ).filter(
-                (item: any) => (item.fulfilled_sub_indicators?.length ?? 0) > 0,
+                (item: any) =>
+                  (item.fulfilled_sub_indicators?.length ?? 0) > 0 ||
+                  (item.declined_sub_indicators?.length ?? 0) > 0,
               );
               if (items.length === 0) return null;
               const isOpen = expandedCategory === cat;
@@ -441,6 +446,27 @@ export default function ResultsPage() {
                                 ),
                               )}
                             </div>
+                            {item.declined_sub_indicators?.length > 0 && (
+                              <div className="space-y-1 pt-2 border-t border-slate-200">
+                                <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">
+                                  Kemunduran Terdeteksi
+                                </p>
+                                {item.declined_sub_indicators.map(
+                                  (si: string, idx: number) => (
+                                    <div
+                                      key={idx}
+                                      className="flex items-start gap-2 text-[10px] text-rose-600 font-black"
+                                    >
+                                      <TrendingDown
+                                        size={10}
+                                        className="mt-0.5 flex-shrink-0"
+                                      />{" "}
+                                      {si}
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}

@@ -20,11 +20,13 @@ import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap,
 import { useAuth } from '@/lib/context/auth-context';
 import { useUserRole } from '@/lib/hooks/use-user-role';
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher';
+import { useTerminology } from '@/lib/hooks/use-terminology';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, activeOrganization } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
+  const t = useTerminology();
   const router = useRouter();
   const isAdmin = role === 'owner' || role === 'admin';
 
@@ -49,9 +51,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-    { href: '/admin/santri', label: 'Kelola Santri', icon: GraduationCap },
-    { href: '/admin/ustadz', label: 'Kelola Ustadz', icon: Users },
-    { href: '/admin/assignments', label: 'Plotting Santri', icon: UserPlus },
+    { href: '/admin/santri', label: `Kelola ${t.santri}`, icon: GraduationCap },
+    { href: '/admin/ustadz', label: `Kelola ${t.ustadz}`, icon: Users },
+    { href: '/admin/assignments', label: `Plotting ${t.santri}`, icon: UserPlus },
     { href: '/admin/monitoring', label: 'Monitor Laporan', icon: BookOpen },
     { href: '/admin/treatment-plans', label: 'Rencana Penanganan', icon: Lightbulb },
     { href: '/admin/settings', label: 'Pengaturan Sistem', icon: Settings },

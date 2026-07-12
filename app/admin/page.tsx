@@ -35,6 +35,7 @@ import Link from "next/link";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
+import { useTerminology } from "@/lib/hooks/use-terminology";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 type DayBucket = { label: string; count: number };
@@ -134,6 +135,7 @@ function BarChart({ data }: { data: DayBucket[] }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function AdminOverviewPage() {
   const { activeOrganizationId } = useAuth();
+  const t = useTerminology();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ ustadz: 0, santri: 0, reports: 0, activeSantri: 0 });
   const [weekData, setWeekData] = useState<DayBucket[]>([]);
@@ -152,7 +154,10 @@ export default function AdminOverviewPage() {
         let reportsQ = supabase.from("reports").select("id, created_at, student_id, treatment_plan, students(name)").order("created_at", { ascending: false }).limit(50);
         let students2Q = supabase.from("students").select("id, assigned_ustadz_id, reports(id)").or("is_removed.is.null,is_removed.eq.false");
         let profiles2Q = supabase.from("profiles").select("id, name").eq("role", "ustadz").or("is_removed.is.null,is_removed.eq.false");
-        let allReportsQ = supabase.from("reports").select("student_id, treatment_plan, students(id, name)");
+        // Ordered oldest-first: declined_sub_indicators decrements a running
+        // per-student count floored at 0, which requires replaying each
+        // student's reports in the same chronological order they were created.
+        let allReportsQ = supabase.from("reports").select("student_id, treatment_plan, students(id, name)").order("created_at", { ascending: true });
 
         // ── Filter by active organization ────────────────────────────────────
         profilesQ = profilesQ.eq('organization_id', activeOrganizationId);
@@ -237,7 +242,12 @@ export default function AdminOverviewPage() {
         // count: the pillars have very different sub-indicator totals, so a
         // raw count would just reward whoever has the most Karakter hits
         // (the largest pillar) instead of well-rounded growth across all three.
-        const santriMap: Record<string, { id: string; name: string; fulfilled: Record<string, Set<string>> }> = {};
+        // Fulfillment per sub-indicator is a running COUNT, not just a Set of
+        // "ever fulfilled" — a report can mark a sub-indicator as regressed
+        // (declined_sub_indicators), decrementing the count (floored at 0),
+        // same as the recap/rapor pages. A sub only counts toward the score
+        // while its count is >= 1.
+        const santriMap: Record<string, { id: string; name: string; fulfilled: Record<string, Map<string, number>> }> = {};
         (allReportsForLeader ?? []).forEach((r: any) => {
           const sid = r.student_id as string;
           const sname = (r.students as any)?.name ?? "—";
@@ -245,7 +255,7 @@ export default function AdminOverviewPage() {
             santriMap[sid] = {
               id: sid,
               name: sname,
-              fulfilled: { karakter: new Set(), mental: new Set(), "soft skill": new Set() },
+              fulfilled: { karakter: new Map(), mental: new Map(), "soft skill": new Map() },
             };
           }
           const plan = parsePlan(r.treatment_plan);
@@ -255,16 +265,22 @@ export default function AdminOverviewPage() {
             const bucket = santriMap[sid].fulfilled[cat];
             if (!bucket) return;
             (a.fulfilled_sub_indicators ?? []).forEach((si: string) => {
-              bucket.add(si.trim().toLowerCase());
+              const key = si.trim().toLowerCase();
+              bucket.set(key, (bucket.get(key) ?? 0) + 1);
+            });
+            (a.declined_sub_indicators ?? []).forEach((si: string) => {
+              const key = si.trim().toLowerCase();
+              bucket.set(key, Math.max(0, (bucket.get(key) ?? 0) - 1));
             });
           });
         });
         setSantriLeader(
           Object.values(santriMap)
             .map((s) => {
-              const pillarPercentages = Object.entries(s.fulfilled).map(([cat, fulfilledSet]) => {
+              const pillarPercentages = Object.entries(s.fulfilled).map(([cat, fulfilledCounts]) => {
                 const total = KMS_TOTALS[cat] ?? 0;
-                return total > 0 ? (fulfilledSet.size / total) * 100 : 0;
+                const fulfilledCount = Array.from(fulfilledCounts.values()).filter((c) => c >= 1).length;
+                return total > 0 ? (fulfilledCount / total) * 100 : 0;
               });
               const kmsPercentage =
                 pillarPercentages.reduce((sum, p) => sum + p, 0) / pillarPercentages.length;
@@ -305,10 +321,10 @@ export default function AdminOverviewPage() {
       {/* ── Stat cards ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Ustadz", value: stats.ustadz, icon: Users, bg: "#f0fdf4", icon_color: "#22c55e", shadow: "#a7f3d0" },
-          { label: "Santri", value: stats.santri, icon: GraduationCap, bg: "#eff6ff", icon_color: "#3b82f6", shadow: "#bfdbfe" },
+          { label: t.ustadz, value: stats.ustadz, icon: Users, bg: "#f0fdf4", icon_color: "#22c55e", shadow: "#a7f3d0" },
+          { label: t.santri, value: stats.santri, icon: GraduationCap, bg: "#eff6ff", icon_color: "#3b82f6", shadow: "#bfdbfe" },
           { label: "Total Laporan", value: stats.reports, icon: FileText, bg: "#faf5ff", icon_color: "#a855f7", shadow: "#e9d5ff" },
-          { label: "Santri Aktif", value: stats.activeSantri, icon: TrendingUp, bg: "#fffbeb", icon_color: "#f59e0b", shadow: "#fde68a" },
+          { label: `${t.santri} Aktif`, value: stats.activeSantri, icon: TrendingUp, bg: "#fffbeb", icon_color: "#f59e0b", shadow: "#fde68a" },
         ].map((s) => {
           const Icon = s.icon;
           return (
@@ -357,7 +373,7 @@ export default function AdminOverviewPage() {
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
               <p className="font-black text-slate-800">Cakupan Ketercapaian</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Santri dengan skor CMS keseluruhan tertinggi</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{t.santri} dengan skor CMS keseluruhan tertinggi</p>
             </div>
             <Award size={16} className="text-brand-400" />
           </div>
@@ -455,7 +471,7 @@ export default function AdminOverviewPage() {
         <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
-              <p className="font-black text-slate-800">Aktivitas Ustadz</p>
+              <p className="font-black text-slate-800">Aktivitas {t.ustadz}</p>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Diurutkan berdasarkan laporan</p>
             </div>
             <Award size={16} className="text-amber-400" />
@@ -464,7 +480,7 @@ export default function AdminOverviewPage() {
             {ustadzBoard.length === 0 ? (
               <div className="px-5 py-8 text-center text-slate-300">
                 <Users className="w-7 h-7 mx-auto mb-2" />
-                <p className="text-xs font-black">Belum ada Ustadz</p>
+                <p className="text-xs font-black">Belum ada {t.ustadz}</p>
               </div>
             ) : (
               ustadzBoard.map((u, i) => {
@@ -483,7 +499,7 @@ export default function AdminOverviewPage() {
                       </div>
                       <div>
                         <p className="font-black text-slate-800 text-sm leading-tight">{u.name}</p>
-                        <p className="text-[10px] font-bold text-slate-400">{u.studentCount} santri</p>
+                        <p className="text-[10px] font-bold text-slate-400">{u.studentCount} {t.santriLower}</p>
                       </div>
                     </div>
                     <div className="text-right">

@@ -19,9 +19,11 @@ import { BookOpen, Search, Loader2, Users, FileText, ChevronRight, Calendar, Ale
 import Link from 'next/link';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { useAuth } from '@/lib/context/auth-context';
+import { useTerminology } from '@/lib/hooks/use-terminology';
 
 export default function MonitoringPage() {
   const { activeOrganizationId } = useAuth();
+  const t = useTerminology();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -116,7 +118,7 @@ export default function MonitoringPage() {
     <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
       <div>
         <h2 className="text-2xl font-black text-slate-800">Monitor Laporan</h2>
-        <p className="text-slate-400 text-sm font-bold mt-0.5">Progres laporan santri per Ustadz pembimbing</p>
+        <p className="text-slate-400 text-sm font-bold mt-0.5">Progres laporan {t.santriLower} per {t.ustadzLower} pembimbing</p>
       </div>
 
       {/* Search */}
@@ -124,7 +126,7 @@ export default function MonitoringPage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
-          placeholder="Cari Ustadz atau Santri…"
+          placeholder={`Cari ${t.ustadz} atau ${t.santri}…`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
@@ -157,7 +159,7 @@ export default function MonitoringPage() {
                       <h3 className="font-black text-slate-800 text-sm">{ustadz.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 text-[10px] font-black border border-brand-100">
-                          <Users size={9} /> {totalStudents} Santri
+                          <Users size={9} /> {totalStudents} {t.santri}
                         </span>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black border border-blue-100">
                           <BookOpen size={9} /> {totalReports} Laporan
@@ -216,7 +218,7 @@ export default function MonitoringPage() {
                     ) : (
                       <div className="text-center py-6">
                         <AlertCircle className="w-7 h-7 mx-auto text-amber-300 mb-2" />
-                        <p className="text-sm text-slate-400 font-black">Belum ada santri yang ditugaskan.</p>
+                        <p className="text-sm text-slate-400 font-black">Belum ada {t.santriLower} yang ditugaskan.</p>
                       </div>
                     )}
                   </div>

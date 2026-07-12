@@ -21,10 +21,12 @@ import { useAuth } from "@/lib/context/auth-context";
 import { SettingsDropdown } from "@/components/SettingsDropdown";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { useUserRole } from "@/lib/hooks/use-user-role";
+import { useTerminology } from "@/lib/hooks/use-terminology";
 
 export default function HomePage() {
   const { user, signOut, activeOrganization } = useAuth();
   const { role } = useUserRole();
+  const t = useTerminology();
   const isAdmin = role === "owner" || role === "admin";
   const userName =
     user?.user_metadata?.name || user?.email?.split("@")[0] || "Ustaz Abdullah";
@@ -96,7 +98,7 @@ export default function HomePage() {
             <div>
               <p className="text-brand-100 text-xs font-black uppercase tracking-widest mb-1">Mulai Sekarang</p>
               <span className="text-white text-2xl font-black leading-tight">
-                Input Data Santri
+                Input Data {t.santri}
               </span>
             </div>
           </div>
@@ -114,7 +116,7 @@ export default function HomePage() {
             <div>
               <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Pantau & Analisis</p>
               <span className="text-slate-800 text-xl font-black leading-tight">
-                Profil CMS Santri
+                Profil CMS {t.santri}
               </span>
             </div>
           </div>

@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { StudentAvatar } from "@/components/StudentAvatar";
+import { useTerminology } from "@/lib/hooks/use-terminology";
 
 type StudentWithStats = {
   id: string;
@@ -85,6 +86,7 @@ type RecentReport = {
 export default function StudentsAnalyticsPage() {
   const { user, activeOrganizationId } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
+  const t = useTerminology();
 
   const [students, setStudents] = useState<StudentWithStats[]>([]);
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
@@ -173,8 +175,13 @@ export default function StudentsAnalyticsPage() {
             fulfilledSubIndicators += Array.isArray(a?.fulfilled_sub_indicators)
               ? a.fulfilled_sub_indicators.length
               : 0;
+            // A declined_sub_indicators entry undoes one prior fulfillment.
+            fulfilledSubIndicators -= Array.isArray(a?.declined_sub_indicators)
+              ? a.declined_sub_indicators.length
+              : 0;
           });
         });
+        fulfilledSubIndicators = Math.max(0, fulfilledSubIndicators);
 
         return {
           id: student.id,
@@ -308,7 +315,7 @@ export default function StudentsAnalyticsPage() {
             <LayoutDashboard size={26} className="text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-slate-800 leading-none">Santri</h1>
+            <h1 className="text-3xl font-black text-slate-800 leading-none">{t.santri}</h1>
             <p className="text-brand-600 text-xs font-black uppercase tracking-widest mt-0.5">Analitik & Histori</p>
           </div>
         </div>
@@ -319,7 +326,7 @@ export default function StudentsAnalyticsPage() {
         <section>
           <div className="flex items-center gap-2 mb-4">
             <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
-              <Users size={10} /> {filteredSortedStudents.length} Santri
+              <Users size={10} /> {filteredSortedStudents.length} {t.santri}
             </div>
           </div>
 
@@ -331,7 +338,7 @@ export default function StudentsAnalyticsPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari nama atau NIS santri…"
+                placeholder={`Cari nama atau NIS ${t.santriLower}…`}
                 className="w-full border-2 border-slate-200 bg-white rounded-2xl py-3 pl-11 pr-10 font-bold text-sm text-slate-800 outline-none focus:border-brand-400 transition-all"
                 style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
               />
@@ -387,7 +394,7 @@ export default function StudentsAnalyticsPage() {
             <div className="p-10 text-center bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
               <Users className="w-10 h-10 mx-auto mb-3 text-slate-200" />
               <p className="text-sm font-black text-slate-400">
-                {searchQuery ? "Santri tidak ditemukan" : "Belum ada santri"}
+                {searchQuery ? `${t.santri} tidak ditemukan` : `Belum ada ${t.santriLower}`}
               </p>
             </div>
           ) : (

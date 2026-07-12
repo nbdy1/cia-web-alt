@@ -28,6 +28,7 @@ import Link from "next/link";
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { getModelLabel } from "@/lib/data/models";
 import { StudentAvatar } from "@/components/StudentAvatar";
+import { getTerminology } from "@/lib/data/terminology";
 
 async function getStudentData(id: string) {
   const db = await getServerSupabase();
@@ -80,6 +81,8 @@ export default async function StudentProfile({
       </div>
     );
 
+  const t = getTerminology(student.organization_id);
+
   return (
     <div className="min-h-screen bg-paper pb-20 font-sans">
       {/* Header */}
@@ -103,7 +106,7 @@ export default async function StudentProfile({
             <h1 className="text-2xl font-black text-slate-900 leading-tight">{student.name}</h1>
             <div className="flex items-center gap-1 mt-1">
               <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
-                <User size={9} /> {student.nis ? `NIS: ${student.nis}` : "Santri"}
+                <User size={9} /> {student.nis ? `NIS: ${student.nis}` : t.santri}
               </span>
             </div>
           </div>
@@ -152,7 +155,7 @@ export default async function StudentProfile({
                 <UserCircle2 size={18} className="text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Profil Santri</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Profil {t.santri}</p>
                 <p className="text-[9px] text-amber-500 font-bold">Dihasilkan oleh AI dari riwayat laporan</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">

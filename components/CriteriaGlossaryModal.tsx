@@ -25,6 +25,7 @@ import { X, Search, Heart, Brain, Zap, BookOpen, ChevronDown, ChevronUp } from '
 import { karakterData } from '@/lib/data/karakter';
 import { mentalData } from '@/lib/data/mental';
 import { softSkillData } from '@/lib/data/soft-skill';
+import { useTerminology } from '@/lib/hooks/use-terminology';
 
 interface CriteriaGlossaryModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ interface CriteriaGlossaryModalProps {
 type TabType = 'karakter' | 'mental' | 'softskill';
 
 export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModalProps) {
+  const t = useTerminology();
   const [activeTab, setActiveTab] = useState<TabType>('karakter');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -124,7 +126,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
             </div>
             <div>
               <h2 className="text-base sm:text-2xl font-bold tracking-tight font-serif leading-tight">Panduan Kriteria Asesmen CIA</h2>
-              <p className="text-brand-200/80 text-[10px] sm:text-xs mt-0.5 hidden sm:block">Standar indikator penilaian santri berdasarkan kurikulum Asesmen Character Terintegrasi</p>
+              <p className="text-brand-200/80 text-[10px] sm:text-xs mt-0.5 hidden sm:block">Standar indikator penilaian {t.santriLower} berdasarkan kurikulum Asesmen Character Terintegrasi</p>
             </div>
           </div>
           <button

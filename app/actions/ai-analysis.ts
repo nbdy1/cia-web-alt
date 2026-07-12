@@ -346,9 +346,22 @@ function enrichDetailedAssessments(rawAssessments: any[]): any[] {
     const aiFulfilled = Array.isArray(item?.fulfilled_sub_indicators)
       ? item.fulfilled_sub_indicators.map((s: any) => String(s))
       : [];
+    const aiDeclined = Array.isArray(item?.declined_sub_indicators)
+      ? item.declined_sub_indicators.map((s: any) => String(s))
+      : [];
 
     const canonicalFulfilled = canonical.subIndicators.filter((frameworkSub) =>
       aiFulfilled.some((aiSub: string) => isLikelySameSubIndicator(aiSub, frameworkSub))
+    );
+
+    // A sub-indicator can't be both fulfilled and declined in the same report —
+    // positive evidence in this session wins. Final "ever fulfilled before"
+    // eligibility check happens later in finalizeAssessment(), once we can
+    // query the student's report history.
+    const canonicalDeclined = canonical.subIndicators.filter(
+      (frameworkSub) =>
+        aiDeclined.some((aiSub: string) => isLikelySameSubIndicator(aiSub, frameworkSub)) &&
+        !canonicalFulfilled.some((fulfilledSub) => normalise(fulfilledSub) === normalise(frameworkSub))
     );
 
     const canonicalMissing = canonical.subIndicators.filter(
@@ -361,6 +374,7 @@ function enrichDetailedAssessments(rawAssessments: any[]): any[] {
       theme: canonical.theme,
       indicator: canonical.indicator,
       fulfilled_sub_indicators: canonicalFulfilled,
+      declined_sub_indicators: canonicalDeclined,
       missing_sub_indicators: canonicalMissing,
       fulfillment_fraction: `${canonicalFulfilled.length}/${canonical.subIndicators.length}`,
       reasoning: sanitizeFreeText(String(item?.reasoning ?? "")),
@@ -368,6 +382,57 @@ function enrichDetailedAssessments(rawAssessments: any[]): any[] {
   }
 
   return enriched;
+}
+
+/**
+ * Builds the set of every sub-indicator this student has EVER had fulfilled,
+ * across all their prior reports. Used to gate declined_sub_indicators: a
+ * sub-indicator can only "regress" if it was actually achieved at some point
+ * — you can't decline something that was never gained.
+ */
+async function getEverFulfilledSubIndicators(db: any, studentId: string): Promise<Set<string>> {
+  const { data: priorReports } = await db
+    .from("reports")
+    .select("treatment_plan")
+    .eq("student_id", studentId);
+
+  const everFulfilled = new Set<string>();
+  (priorReports ?? []).forEach((r: any) => {
+    let plan = r.treatment_plan;
+    if (typeof plan === "string") {
+      try { plan = JSON.parse(plan); } catch { return; }
+    }
+    const assessments = Array.isArray(plan?.detailed_assessments) ? plan.detailed_assessments : [];
+    assessments.forEach((a: any) => {
+      (a?.fulfilled_sub_indicators ?? []).forEach((s: any) => everFulfilled.add(normalise(String(s))));
+    });
+  });
+  return everFulfilled;
+}
+
+/**
+ * Deterministically strips any declined_sub_indicators the AI proposed for a
+ * sub-indicator this student has never actually fulfilled before — the AI is
+ * instructed not to do this, but this makes it impossible regardless of
+ * prompt compliance. Doing this here (at finalize/results time) rather than
+ * trusting the AI keeps cumulative fulfillment counts from ever needing a
+ * sub-indicator to be "fulfilled" a negative number of times.
+ */
+async function stripUngroundedDeclines(
+  enrichedAssessments: any[],
+  studentId: string | undefined,
+  db: any,
+): Promise<any[]> {
+  if (!studentId) {
+    return enrichedAssessments.map((a) => ({ ...a, declined_sub_indicators: [] }));
+  }
+  const everFulfilled = await getEverFulfilledSubIndicators(db, studentId);
+  return enrichedAssessments.map((a) => ({
+    ...a,
+    declined_sub_indicators: (a.declined_sub_indicators ?? []).filter((sub: string) =>
+      everFulfilled.has(normalise(sub))
+    ),
+  }));
 }
 
 function enrichTreatment(
@@ -1114,7 +1179,8 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
       temperature
     );
     const parsed = parseModelJson(responseText, "Finalize assessment");
-    const enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? []);
+    let enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? []);
+    enrichedAssessments = await stripUngroundedDeclines(enrichedAssessments, studentId, db);
     parsed.analysis_version = 2;
     parsed.status_summary = sanitizeFreeText(String(parsed?.status_summary ?? ""));
     parsed.report_title = normalizeReportTitle(parsed?.report_title, parsed);

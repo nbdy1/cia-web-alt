@@ -27,6 +27,7 @@ import {
   Heart,
   Zap,
   Cpu,
+  TrendingDown,
 } from "lucide-react";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
@@ -37,6 +38,7 @@ import { TreatmentPlanStatus } from "@/components/TreatmentPlanStatus";
 import { getModelLabel } from "@/lib/data/models";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
+import { getTerminology } from "@/lib/data/terminology";
 
 // ─── Framework lookup helpers ──────────────────────────────────────────────
 // Given a category + theme title + indicator title from the AI output,
@@ -170,6 +172,7 @@ export default async function ReportDetailPage({
       ? JSON.parse(report.treatment_plan)
       : report.treatment_plan;
   const displayOverallStats = computeDisplayOverallStats(analysis);
+  const t = getTerminology((report as any).organization_id);
 
   const categories = ["Karakter", "Mental", "Soft Skill"];
 
@@ -311,7 +314,7 @@ export default async function ReportDetailPage({
                         style={isGuru ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
                       >
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
-                          {isGuru ? "Ustadz" : "Asisten CIA"}
+                          {isGuru ? t.ustadz : "Asisten CIA"}
                         </p>
                         <p className="text-sm leading-relaxed font-bold">
                           {msg.text}
@@ -404,7 +407,11 @@ export default async function ReportDetailPage({
                 analysis.detailed_assessments?.filter(
                   (a: any) => a.category === cat,
                 ) || []
-              ).filter((item: any) => getFulfilledDisplaySubs(item).length > 0);
+              ).filter(
+                (item: any) =>
+                  getFulfilledDisplaySubs(item).length > 0 ||
+                  (Array.isArray(item.declined_sub_indicators) && item.declined_sub_indicators.length > 0),
+              );
               if (items.length === 0) return null;
 
               return (
@@ -470,6 +477,20 @@ export default async function ReportDetailPage({
                               indicator={item.indicator}
                               subs={displaySubs}
                             />
+
+                            {Array.isArray(item.declined_sub_indicators) && item.declined_sub_indicators.length > 0 && (
+                              <div className="pt-2 border-t border-slate-200 space-y-1.5">
+                                <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">
+                                  Kemunduran Terdeteksi
+                                </p>
+                                {item.declined_sub_indicators.map((sub: string, si: number) => (
+                                  <div key={si} className="flex items-start gap-2 text-[11px] text-rose-600 font-medium leading-snug">
+                                    <TrendingDown size={12} className="shrink-0 mt-0.5" />
+                                    <span>{sub}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       );

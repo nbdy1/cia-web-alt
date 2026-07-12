@@ -23,9 +23,11 @@ import { Search, Loader2, Plus, X, AlertCircle, Sparkles, UserX, GraduationCap, 
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { StudentPhotoUpload } from '@/components/StudentPhotoUpload';
 import { useAuth } from '@/lib/context/auth-context';
+import { useTerminology } from '@/lib/hooks/use-terminology';
 
 export default function ManageSantriPage() {
   const { activeOrganizationId } = useAuth();
+  const t = useTerminology();
   const [students, setStudents] = useState<any[]>([]);
   const [removedStudents, setRemovedStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,14 +112,14 @@ export default function ManageSantriPage() {
         }
       }
 
-      setModalSuccess("Santri berhasil ditambahkan!");
+      setModalSuccess(`${t.santri} berhasil ditambahkan!`);
       setFormData({ name: '', nis: '' });
       setPendingPhotoFile(null);
       setPendingPhotoPreview(null);
       fetchStudents();
       setTimeout(() => { setIsAddModalOpen(false); setModalSuccess(null); }, 2000);
     } catch (err: any) {
-      setModalError(err.message || "Gagal menambahkan santri baru");
+      setModalError(err.message || `Gagal menambahkan ${t.santriLower} baru`);
     } finally {
       setIsSubmitting(false);
     }
@@ -158,7 +160,7 @@ export default function ManageSantriPage() {
       setStudentToRemove(null);
       fetchStudents();
     } catch (err: any) {
-      setRemoveError(err.message || "Gagal menonaktifkan santri.");
+      setRemoveError(err.message || `Gagal menonaktifkan ${t.santriLower}.`);
     } finally {
       setIsRemoving(false);
     }
@@ -188,8 +190,8 @@ export default function ManageSantriPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Manajemen Santri</h2>
-          <p className="text-slate-400 text-sm font-bold mt-0.5">Tambah, lihat, atau nonaktifkan data santri</p>
+          <h2 className="text-2xl font-black text-slate-800">Manajemen {t.santri}</h2>
+          <p className="text-slate-400 text-sm font-bold mt-0.5">Tambah, lihat, atau nonaktifkan data {t.santriLower}</p>
         </div>
         {!showRemoved && (
           <button
@@ -197,7 +199,7 @@ export default function ManageSantriPage() {
             className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
             style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
           >
-            <Plus size={15} /> Tambah Santri
+            <Plus size={15} /> Tambah {t.santri}
           </button>
         )}
       </div>
@@ -225,7 +227,7 @@ export default function ManageSantriPage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
-          placeholder={showRemoved ? "Cari santri yang dinonaktifkan…" : "Cari nama atau NIS…"}
+          placeholder={showRemoved ? `Cari ${t.santriLower} yang dinonaktifkan…` : "Cari nama atau NIS…"}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
@@ -283,7 +285,7 @@ export default function ManageSantriPage() {
                 <button
                   onClick={() => openRemoveModal(student)}
                   className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors opacity-0 group-hover:opacity-100 shrink-0"
-                  title="Nonaktifkan santri"
+                  title={`Nonaktifkan ${t.santriLower}`}
                 >
                   <UserX size={15} />
                 </button>
@@ -299,7 +301,7 @@ export default function ManageSantriPage() {
           <p className="text-slate-400 font-black text-sm">
             {searchQuery
               ? "Tidak ada hasil pencarian"
-              : showRemoved ? "Belum ada santri yang dinonaktifkan" : "Belum ada data santri"}
+              : showRemoved ? `Belum ada ${t.santriLower} yang dinonaktifkan` : `Belum ada data ${t.santriLower}`}
           </p>
         </div>
       )}
@@ -315,8 +317,8 @@ export default function ManageSantriPage() {
               <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}>
                 <Plus size={20} className="text-brand-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Tambah Santri</h3>
-              <p className="text-slate-400 text-sm font-bold mt-0.5">Masukkan data santri baru.</p>
+              <h3 className="text-xl font-black text-slate-800">Tambah {t.santri}</h3>
+              <p className="text-slate-400 text-sm font-bold mt-0.5">Masukkan data {t.santriLower} baru.</p>
             </div>
             {modalError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={16} />{modalError}</div>}
             {modalSuccess && <div className="mb-4 p-3 bg-brand-50 border-2 border-brand-200 text-brand-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={16} />{modalSuccess}</div>}
@@ -349,11 +351,11 @@ export default function ManageSantriPage() {
                 <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ahmad Zaid" className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>NIS (Nomor Induk Santri)</label>
+                <label className={labelCls}>NIS (Nomor Induk {t.santri})</label>
                 <input type="text" value={formData.nis} onChange={e => setFormData({...formData, nis: e.target.value})} placeholder="2024001" className={inputCls} />
               </div>
               <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan Santri
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan {t.santri}
               </button>
             </form>
           </div>
@@ -372,7 +374,7 @@ export default function ManageSantriPage() {
               <div className="w-11 h-11 bg-rose-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #fecaca" }}>
                 <UserX size={20} className="text-rose-500" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Nonaktifkan Santri</h3>
+              <h3 className="text-xl font-black text-slate-800">Nonaktifkan {t.santri}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">
                 <strong className="text-slate-700">{studentToRemove.name}</strong> akan disembunyikan dari daftar aktif. Riwayat laporannya tetap tersimpan.
               </p>
@@ -386,7 +388,7 @@ export default function ManageSantriPage() {
                   rows={3}
                   value={removeReason}
                   onChange={e => setRemoveReason(e.target.value)}
-                  placeholder="Contoh: Santri telah lulus dan keluar dari pesantren."
+                  placeholder={`Contoh: ${t.santri} telah lulus dan keluar dari pesantren.`}
                   className={inputCls + " resize-none"}
                 />
               </div>

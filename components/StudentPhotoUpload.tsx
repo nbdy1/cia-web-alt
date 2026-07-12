@@ -17,6 +17,7 @@ import React, { useRef, useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StudentAvatar } from "@/components/StudentAvatar";
+import { useTerminology } from "@/lib/hooks/use-terminology";
 
 type AvatarSize = "sm" | "md" | "lg" | "xl";
 
@@ -53,6 +54,7 @@ export function StudentPhotoUpload({
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const btn = CAM_BTN[size];
+  const t = useTerminology();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,7 +110,7 @@ export function StudentPhotoUpload({
         disabled={uploading}
         className={`absolute ${btn.offset} ${btn.wh} bg-white border-2 border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-brand-600 hover:border-brand-300 active:translate-y-px transition-all disabled:opacity-60`}
         style={{ boxShadow: "0 2px 0 0 #e2e8f0" }}
-        title="Ganti foto santri"
+        title={`Ganti foto ${t.santriLower}`}
       >
         {uploading
           ? <Loader2 className="animate-spin text-brand-500" style={{ width: btn.icon, height: btn.icon }} />

@@ -17,6 +17,7 @@ import { Loader2, Search, Lightbulb, CheckCircle2, XCircle, Clock, FileText, Use
 import Link from 'next/link';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { useAuth } from '@/lib/context/auth-context';
+import { useTerminology } from '@/lib/hooks/use-terminology';
 
 type TreatmentStatus = 'pending' | 'completed' | 'declined';
 
@@ -46,6 +47,7 @@ function parsePlan(raw: any) {
 
 export default function TreatmentPlansPage() {
   const { activeOrganizationId } = useAuth();
+  const t = useTerminology();
   const [rows, setRows] = useState<PlanRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,9 +97,9 @@ export default function TreatmentPlansPage() {
             reportId: r.id,
             createdAt: r.created_at,
             studentId: student?.id,
-            studentName: student?.name ?? 'Santri',
+            studentName: student?.name ?? t.santri,
             studentPhoto: student?.photo_url ?? null,
-            ustadzName: nameById.get(student?.assigned_ustadz_id) ?? 'Belum ada Ustadz yang dipasangkan',
+            ustadzName: nameById.get(student?.assigned_ustadz_id) ?? `Belum ada ${t.ustadz} yang dipasangkan`,
             priorityTheme: treatment.priority_theme ?? '',
             actionPlan: treatment.action_plan ?? '',
             status,
@@ -137,7 +139,7 @@ export default function TreatmentPlansPage() {
       <div>
         <h2 className="text-2xl font-black text-slate-800">Rencana Penanganan</h2>
         <p className="text-slate-400 text-sm font-bold mt-0.5">
-          Semua rencana penanganan yang dibuat ustadz, dan status penyelesaiannya
+          Semua rencana penanganan yang dibuat {t.ustadzLower}, dan status penyelesaiannya
         </p>
       </div>
 
@@ -158,7 +160,7 @@ export default function TreatmentPlansPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Cari santri, ustadz, atau tema…"
+            placeholder={`Cari ${t.santriLower}, ${t.ustadzLower}, atau tema…`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"

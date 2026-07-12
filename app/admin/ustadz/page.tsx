@@ -22,6 +22,7 @@ import { supabase } from '@/lib/supabase';
 import { Users, Search, Loader2, Sparkles, Mail, Calendar, X, Plus, UserPlus, AlertCircle, Eye, EyeOff, UserX, ArchiveX, ShieldCheck, ArrowLeftRight, Crown } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { useUserRole } from '@/lib/hooks/use-user-role';
+import { useTerminology } from '@/lib/hooks/use-terminology';
 
 // "owner" and "admin" are both full admin-tier roles (see AdminLayout's guard:
 // role === 'owner' || role === 'admin') — treat them the same visually here,
@@ -30,6 +31,7 @@ const isAdminTier = (role: string) => role === 'admin' || role === 'owner';
 
 export default function ManageUstadzPage() {
   const { organizationId } = useUserRole();
+  const t = useTerminology();
   const [ustadzList, setUstadzList] = useState<any[]>([]);
   const [removedList, setRemovedList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -243,7 +245,7 @@ export default function ManageUstadzPage() {
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-800">Manajemen Pengguna</h2>
-          <p className="text-slate-400 text-sm font-bold mt-0.5">Kelola daftar Ustadz dan Admin</p>
+          <p className="text-slate-400 text-sm font-bold mt-0.5">Kelola daftar {t.ustadz} dan Admin</p>
         </div>
         {!showRemoved && (
           <button
@@ -341,7 +343,7 @@ export default function ManageUstadzPage() {
                         ? 'text-slate-200 cursor-not-allowed'
                         : 'text-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100'
                     }`}
-                    title={user.role === 'owner' ? 'Pemilik organisasi tidak dapat diubah di sini' : user.role === 'admin' ? 'Jadikan Ustadz' : 'Jadikan Admin'}
+                    title={user.role === 'owner' ? 'Pemilik organisasi tidak dapat diubah di sini' : user.role === 'admin' ? `Jadikan ${t.ustadz}` : 'Jadikan Admin'}
                   >
                     <ArrowLeftRight size={15} />
                   </button>
@@ -382,7 +384,7 @@ export default function ManageUstadzPage() {
                 <UserPlus size={20} className="text-brand-600" />
               </div>
               <h3 className="text-xl font-black text-slate-800">Tambah Pengguna</h3>
-              <p className="text-slate-400 text-sm font-bold mt-0.5">Daftarkan akun Ustadz atau Admin baru.</p>
+              <p className="text-slate-400 text-sm font-bold mt-0.5">Daftarkan akun {t.ustadz} atau Admin baru.</p>
             </div>
             {modalError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={15} />{modalError}</div>}
             {modalSuccess && <div className="mb-4 p-3 bg-brand-50 border-2 border-brand-200 text-brand-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={15} />{modalSuccess}</div>}
@@ -401,7 +403,7 @@ export default function ManageUstadzPage() {
               <div>
                 <label className={labelCls}>Role</label>
                 <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className={inputCls + " appearance-none"}>
-                  <option value="ustadz">Ustadz</option>
+                  <option value="ustadz">{t.ustadz}</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
@@ -429,7 +431,7 @@ export default function ManageUstadzPage() {
               <p className="text-slate-400 text-sm font-bold mt-0.5">
                 <strong className="text-slate-700">{userToChangeRole.name}</strong> saat ini adalah{' '}
                 <span className={`font-black ${userToChangeRole.role === 'admin' ? 'text-slate-900' : 'text-brand-600'}`}>
-                  {userToChangeRole.role === 'admin' ? 'Admin' : 'Ustadz'}
+                  {userToChangeRole.role === 'admin' ? 'Admin' : t.ustadz}
                 </span>.
               </p>
             </div>
@@ -440,7 +442,7 @@ export default function ManageUstadzPage() {
                   {userToChangeRole.name?.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  {userToChangeRole.role === 'admin' ? 'Admin' : 'Ustadz'}
+                  {userToChangeRole.role === 'admin' ? 'Admin' : t.ustadz}
                 </span>
               </div>
               <ArrowLeftRight size={18} className="text-indigo-400 shrink-0" />
@@ -449,7 +451,7 @@ export default function ManageUstadzPage() {
                   {userToChangeRole.name?.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  {userToChangeRole.role === 'admin' ? 'Ustadz' : 'Admin'}
+                  {userToChangeRole.role === 'admin' ? t.ustadz : 'Admin'}
                 </span>
               </div>
             </div>
@@ -497,7 +499,7 @@ export default function ManageUstadzPage() {
                   rows={3}
                   value={removeReason}
                   onChange={e => setRemoveReason(e.target.value)}
-                  placeholder="Contoh: Ustadz telah mengundurkan diri dari pesantren."
+                  placeholder={`Contoh: ${t.ustadz} telah mengundurkan diri dari pesantren.`}
                   className={inputCls + " resize-none"}
                 />
               </div>
