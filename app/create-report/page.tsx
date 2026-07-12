@@ -147,7 +147,8 @@ export default function CreateReport() {
   };
 
   return (
-    <div className="flex flex-col h-full animate-fade-in bg-paper">
+    <div className="flex flex-col h-full bg-paper">
+      <div className="flex flex-col h-full animate-fade-in">
       <header className="px-6 pt-10 pb-6">
         <Link href="/" className="inline-flex items-center gap-2 mb-6 group">
           <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500" style={{ boxShadow: "0 3px 0 0 #e2e8f0", minWidth: 32 }}>
@@ -201,7 +202,7 @@ export default function CreateReport() {
 
 
         {/* Student list */}
-        <div className="mt-6 flex-1 overflow-y-auto pb-6">
+        <div className="mt-6 flex-1 overflow-y-auto pb-28">
           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-3">
             {searchQuery ? "Hasil Pencarian" : "Semua Santri"}
           </p>
@@ -246,23 +247,34 @@ export default function CreateReport() {
           )}
         </div>
 
-        {/* CTA */}
-        <div className="py-5 border-t-2 border-slate-100">
-          <Link href={selectedStudent ? `/create-report/assessment?id=${selectedStudent.id}&name=${encodeURIComponent(selectedStudent.name)}` : "#"}>
-            <button
-              disabled={!selectedStudent}
-              className={`w-full py-5 rounded-2xl font-black text-lg active:translate-y-1 transition-transform ${
-                selectedStudent
-                  ? "bg-brand-500 text-white"
-                  : "bg-slate-100 text-slate-300 cursor-not-allowed"
-              }`}
-              style={selectedStudent ? { boxShadow: "0 4px 0 0 var(--brand-700)" } : {}}
-            >
-              Mulai Input →
-            </button>
-          </Link>
-        </div>
       </main>
+      </div>
+
+      {/* CTA — floating/sticky footer */}
+      <footer
+        className="fixed bottom-0 left-1/2 w-full max-w-[450px] -translate-x-1/2 flex justify-center items-end px-5 pt-16 pb-6 z-40 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(250, 253, 252, 0.88) 0%, rgba(250, 253, 252, 0.58) 46%, rgba(250, 253, 252, 0) 100%)",
+        }}
+      >
+        <Link
+          href={selectedStudent ? `/create-report/assessment?id=${selectedStudent.id}&name=${encodeURIComponent(selectedStudent.name)}` : "#"}
+          className="w-full max-w-sm pointer-events-auto"
+        >
+          <button
+            disabled={!selectedStudent}
+            className={`w-full py-5 rounded-2xl font-black text-lg active:translate-y-1 transition-transform ${
+              selectedStudent
+                ? "bg-brand-500 text-white"
+                : "bg-slate-100 text-slate-300 cursor-not-allowed"
+            }`}
+            style={selectedStudent ? { boxShadow: "0 4px 0 0 var(--brand-700)" } : {}}
+          >
+            Mulai Input →
+          </button>
+        </Link>
+      </footer>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Building2, Server, ChevronLeft, Loader2, BarChart3 } from 'lucide-react';
+import { Building2, ChevronLeft, Loader2, BarChart3 } from 'lucide-react';
 import { useIsPlatformAdmin } from '@/lib/hooks/use-platform-admin';
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
@@ -33,7 +33,6 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const navItems = [
     { href: '/super-admin', label: 'Organizations', icon: Building2 },
     { href: '/super-admin/usage', label: 'Usage & Billing', icon: BarChart3 },
-    { href: '/super-admin/system', label: 'System Metrics', icon: Server },
   ];
 
   return (

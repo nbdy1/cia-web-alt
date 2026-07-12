@@ -19,6 +19,7 @@ import Link from "next/link";
 import React from "react";
 import { useAuth } from "@/lib/context/auth-context";
 import { SettingsDropdown } from "@/components/SettingsDropdown";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 
 export default function HomePage() {
@@ -27,6 +28,7 @@ export default function HomePage() {
   const isAdmin = role === "owner" || role === "admin";
   const userName =
     user?.user_metadata?.name || user?.email?.split("@")[0] || "Ustaz Abdullah";
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
   return (
     <div className="flex flex-col min-h-screen bg-paper">
@@ -47,7 +49,7 @@ export default function HomePage() {
         <div className="flex items-center gap-2">
           <SettingsDropdown />
           <button
-            onClick={signOut}
+            onClick={() => setShowLogoutConfirm(true)}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-black text-rose-500 bg-white border-2 border-rose-100 rounded-2xl hover:bg-rose-50 active:translate-y-px transition-all"
             style={{ boxShadow: "0 3px 0 0 #fecaca" }}
             title="Keluar"
@@ -57,6 +59,19 @@ export default function HomePage() {
           </button>
         </div>
       </header>
+
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        title="Keluar dari akun?"
+        description="Anda perlu masuk kembali untuk mengakses aplikasi."
+        confirmLabel="Keluar"
+        cancelLabel="Batal"
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          signOut();
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
 
       <main className="flex-1 px-6 pt-8 pb-10 flex flex-col gap-8 animate-fade-in">
         {/* Welcome */}

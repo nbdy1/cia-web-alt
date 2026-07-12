@@ -18,10 +18,11 @@
  */
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/context/auth-context";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { supabase } from "@/lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp,
   Users,
@@ -31,6 +32,9 @@ import {
   ChevronLeft,
   LayoutDashboard,
   Loader2,
+  Search,
+  ArrowUpDown,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { StudentAvatar } from "@/components/StudentAvatar";
@@ -44,7 +48,31 @@ type StudentWithStats = {
   reportsCount: number;
   themesExplored: number;
   fulfilledSubIndicators: number;
+  lastReportAt: string | null;
 };
+
+const SORT_STORAGE_KEY = "cia:students-sort";
+const PAGE_SIZE = 10;
+
+type SortOption = "name-asc" | "recent-desc" | "tema-desc" | "subind-desc" | "laporan-desc";
+
+const SORT_OPTIONS: { id: SortOption; label: string }[] = [
+  { id: "name-asc", label: "Nama (A-Z)" },
+  { id: "recent-desc", label: "Terbaru" },
+  { id: "tema-desc", label: "Tema Terbanyak" },
+  { id: "subind-desc", label: "Sub-Indikator Terbanyak" },
+  { id: "laporan-desc", label: "Laporan Terbanyak" },
+];
+
+function getInitialSort(): SortOption {
+  if (typeof window === "undefined") return "name-asc";
+  try {
+    const stored = window.localStorage.getItem(SORT_STORAGE_KEY);
+    return SORT_OPTIONS.some((o) => o.id === stored) ? (stored as SortOption) : "name-asc";
+  } catch {
+    return "name-asc";
+  }
+}
 
 type RecentReport = {
   id: string;
@@ -61,6 +89,28 @@ export default function StudentsAnalyticsPage() {
   const [students, setStudents] = useState<StudentWithStats[]>([]);
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState<SortOption>(getInitialSort);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [dragDirection, setDragDirection] = useState(1);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SORT_STORAGE_KEY, sortOption);
+    } catch {}
+  }, [sortOption]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    if (isSortOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSortOpen]);
 
   useEffect(() => {
     if (roleLoading || !user) return;
@@ -75,7 +125,8 @@ export default function StudentsAnalyticsPage() {
         *,
         reports (
           id,
-          treatment_plan
+          treatment_plan,
+          created_at
         )
       `).or('is_removed.is.null,is_removed.eq.false');
       
@@ -107,8 +158,12 @@ export default function StudentsAnalyticsPage() {
         const themeSet = new Set<string>();
         let fulfilledSubIndicators = 0;
         const reports = student.reports ?? [];
+        let lastReportAt: string | null = null;
 
         reports.forEach((r: any) => {
+          if (r.created_at && (!lastReportAt || r.created_at > lastReportAt)) {
+            lastReportAt = r.created_at;
+          }
           const plan = parsePlan(r.treatment_plan);
           const assessments = Array.isArray(plan?.detailed_assessments)
             ? plan.detailed_assessments
@@ -130,6 +185,7 @@ export default function StudentsAnalyticsPage() {
           reportsCount: reports.length,
           themesExplored: themeSet.size,
           fulfilledSubIndicators,
+          lastReportAt,
         };
       });
       setStudents(processed);
@@ -170,6 +226,54 @@ export default function StudentsAnalyticsPage() {
 
     fetchData();
   }, [user, role, roleLoading, activeOrganizationId]);
+
+  const filteredSortedStudents = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    let list = query
+      ? students.filter(
+          (s) =>
+            s.name.toLowerCase().includes(query) ||
+            (s.nis ?? "").toLowerCase().includes(query)
+        )
+      : students;
+
+    list = [...list];
+    switch (sortOption) {
+      case "recent-desc":
+        list.sort((a, b) => (b.lastReportAt ?? "").localeCompare(a.lastReportAt ?? ""));
+        break;
+      case "tema-desc":
+        list.sort((a, b) => b.themesExplored - a.themesExplored);
+        break;
+      case "subind-desc":
+        list.sort((a, b) => b.fulfilledSubIndicators - a.fulfilledSubIndicators);
+        break;
+      case "laporan-desc":
+        list.sort((a, b) => b.reportsCount - a.reportsCount);
+        break;
+      default:
+        list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return list;
+  }, [students, searchQuery, sortOption]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSortedStudents.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setPage(0);
+  }, [searchQuery, sortOption]);
+
+  useEffect(() => {
+    if (page > totalPages - 1) setPage(Math.max(0, totalPages - 1));
+  }, [totalPages, page]);
+
+  const pagedStudents = filteredSortedStudents.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+
+  const goToPage = (next: number) => {
+    if (next < 0 || next > totalPages - 1) return;
+    setDragDirection(next > page ? 1 : -1);
+    setPage(next);
+  };
 
   // ── Loading state ────────────────────────────────────────────────────────
   if (roleLoading || dataLoading) {
@@ -215,17 +319,102 @@ export default function StudentsAnalyticsPage() {
         <section>
           <div className="flex items-center gap-2 mb-4">
             <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
-              <Users size={10} /> {students.length} Santri
+              <Users size={10} /> {filteredSortedStudents.length} Santri
             </div>
           </div>
-          {students.length === 0 ? (
+
+          {/* Search + Sort */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari nama atau NIS santri…"
+                className="w-full border-2 border-slate-200 bg-white rounded-2xl py-3 pl-11 pr-10 font-bold text-sm text-slate-800 outline-none focus:border-brand-400 transition-all"
+                style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
+                  title="Bersihkan"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="relative" ref={sortDropdownRef}>
+              <button
+                onClick={() => setIsSortOpen((v) => !v)}
+                className={`w-11 h-11 shrink-0 flex items-center justify-center rounded-2xl border-2 transition-all active:translate-y-px ${
+                  isSortOpen ? "bg-brand-500 text-white border-brand-400" : "bg-white text-slate-500 border-slate-200"
+                }`}
+                style={{ boxShadow: isSortOpen ? "0 3px 0 0 var(--brand-700)" : "0 3px 0 0 #e2e8f0" }}
+                title="Urutkan"
+              >
+                <ArrowUpDown className="w-4 h-4" />
+              </button>
+
+              {isSortOpen && (
+                <div
+                  className="absolute right-0 top-[3.25rem] z-30 w-56 bg-white rounded-2xl border-2 border-slate-100 p-1.5 animate-fade-in"
+                  style={{ boxShadow: "0 5px 0 0 #e2e8f0" }}
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => {
+                        setSortOption(option.id);
+                        setIsSortOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between text-left px-3 py-2.5 rounded-xl text-xs font-black transition-colors ${
+                        sortOption === option.id ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {option.label}
+                      {sortOption === option.id && <CheckCircle2 className="w-3.5 h-3.5 text-brand-500" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {filteredSortedStudents.length === 0 ? (
             <div className="p-10 text-center bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
               <Users className="w-10 h-10 mx-auto mb-3 text-slate-200" />
-              <p className="text-sm font-black text-slate-400">Belum ada santri</p>
+              <p className="text-sm font-black text-slate-400">
+                {searchQuery ? "Santri tidak ditemukan" : "Belum ada santri"}
+              </p>
             </div>
           ) : (
-            <div className="grid gap-4">
-              {students.map((student, i) => {
+            <>
+              <div className="overflow-hidden pb-2">
+                <AnimatePresence mode="wait" custom={dragDirection}>
+                  <motion.div
+                    key={page}
+                    custom={dragDirection}
+                    initial={{ x: dragDirection > 0 ? 60 : -60, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: dragDirection > 0 ? -60 : 60, opacity: 0 }}
+                    transition={{ duration: 0.22, ease: "easeOut" }}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={(_, info) => {
+                      const threshold = 60;
+                      if (info.offset.x < -threshold || info.velocity.x < -400) {
+                        goToPage(page + 1);
+                      } else if (info.offset.x > threshold || info.velocity.x > 400) {
+                        goToPage(page - 1);
+                      }
+                    }}
+                    className="grid gap-4"
+                  >
+              {pagedStudents.map((student, i) => {
                 return (
                   <Link
                     key={student.id}
@@ -273,7 +462,43 @@ export default function StudentsAnalyticsPage() {
                   </Link>
                 );
               })}
-            </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-5">
+                  <button
+                    onClick={() => goToPage(page - 1)}
+                    disabled={page === 0}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-white border-2 border-slate-200 text-slate-400 disabled:opacity-30 active:translate-y-px transition-all"
+                    style={{ boxShadow: "0 2px 0 0 #e2e8f0" }}
+                    title="Sebelumnya"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  {Array.from({ length: totalPages }).map((_, dotIdx) => (
+                    <button
+                      key={dotIdx}
+                      onClick={() => goToPage(dotIdx)}
+                      className={`rounded-full transition-all ${
+                        dotIdx === page ? "w-5 h-2 bg-brand-500" : "w-2 h-2 bg-slate-200"
+                      }`}
+                      title={`Halaman ${dotIdx + 1}`}
+                    />
+                  ))}
+                  <button
+                    onClick={() => goToPage(page + 1)}
+                    disabled={page === totalPages - 1}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-white border-2 border-slate-200 text-slate-400 disabled:opacity-30 active:translate-y-px transition-all"
+                    style={{ boxShadow: "0 2px 0 0 #e2e8f0" }}
+                    title="Selanjutnya"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </section>
 
@@ -308,25 +533,32 @@ export default function StudentsAnalyticsPage() {
                   <Link
                     href={`/reports/${report.id}?from=${encodeURIComponent("/students")}`}
                     key={report.id}
-                    className={`flex items-center justify-between px-5 py-4 hover:bg-brand-50 transition-colors ${
+                    className={`flex items-center justify-between gap-3 px-5 py-4 hover:bg-brand-50 transition-colors ${
                       idx !== recentReports.length - 1 ? "border-b-2 border-slate-50" : ""
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <StudentAvatar
                         name={report.students?.name ?? "?"}
                         photoUrl={null}
                         size="sm"
                         colorIndex={0}
                       />
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-black text-slate-800 text-sm leading-tight">{report.students?.name}</p>
+                        {report.title && (
+                          <p className="text-[11px] font-bold text-slate-500 mt-0.5 truncate max-w-[10rem]">
+                            {report.title}
+                          </p>
+                        )}
                         <p className="text-[10px] font-bold text-slate-400 mt-0.5">
                           {new Date(report.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}
+                          {" · "}
+                          {new Date(report.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">{themesCount} tema</span>
                       <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-100 text-sky-700">{fulfilledCount} SI</span>
                     </div>
