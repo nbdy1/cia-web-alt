@@ -17,6 +17,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getServerSupabase } from "@/lib/supabase-server";
+import { assertTenantOrganization } from "@/lib/tenant-server";
 
 const norm = (s: string) => s.trim().toLowerCase();
 const isLikelySame = (a: string, b: string) => {
@@ -44,12 +45,18 @@ export async function removeSubIndicator(
 
   const { data: report, error: fetchError } = await db
     .from("reports")
-    .select("treatment_plan")
+    .select("organization_id, treatment_plan")
     .eq("id", reportId)
     .single();
 
   if (fetchError || !report) {
     return { success: false, error: fetchError?.message ?? "Report not found" };
+  }
+
+  try {
+    await assertTenantOrganization(db, report.organization_id);
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 
   let plan = report.treatment_plan;
@@ -105,12 +112,18 @@ export async function setTreatmentPlanStatus(
 
   const { data: report, error: fetchError } = await db
     .from("reports")
-    .select("treatment_plan")
+    .select("organization_id, treatment_plan")
     .eq("id", reportId)
     .single();
 
   if (fetchError || !report) {
     return { success: false, error: fetchError?.message ?? "Report not found" };
+  }
+
+  try {
+    await assertTenantOrganization(db, report.organization_id);
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 
   let plan = report.treatment_plan;

@@ -8,6 +8,7 @@
  */
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { tenantCookieOptions } from '@/lib/tenant';
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -18,11 +19,7 @@ export async function createClient() {
     {
       // Match the browser client so refreshed cookies stay persistent across
       // browser restarts instead of being downgraded to session cookies.
-      cookieOptions: {
-        maxAge: 60 * 60 * 24 * 365,
-        sameSite: 'lax',
-        path: '/',
-      },
+      cookieOptions: tenantCookieOptions(),
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -30,7 +27,10 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, {
+                ...options,
+                ...tenantCookieOptions(),
+              })
             );
           } catch {
             // setAll is called from Server Components where mutation is not allowed.

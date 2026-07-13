@@ -29,6 +29,7 @@ import { SmartBackButton } from "@/components/SmartBackButton";
 import { getModelLabel } from "@/lib/data/models";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { getTerminology } from "@/lib/data/terminology";
+import { assertTenantOrganization } from "@/lib/tenant-server";
 
 async function getStudentData(id: string) {
   const db = await getServerSupabase();
@@ -38,6 +39,10 @@ async function getStudentData(id: string) {
     .select("*")
     .eq("id", id)
     .single();
+
+  if (student) {
+    await assertTenantOrganization(db, student.organization_id);
+  }
 
   const { data: reports } = await db
     .from("reports")
@@ -51,6 +56,7 @@ async function getStudentData(id: string) {
     `,
     )
     .eq("student_id", id)
+    .eq("organization_id", student?.organization_id ?? "00000000-0000-0000-0000-000000000000")
     .order("created_at", { ascending: false });
 
   return { student, reports };

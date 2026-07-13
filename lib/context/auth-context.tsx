@@ -22,8 +22,15 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { applyBrandScale, generateBrandScale, BRAND_SCALE_STORAGE_KEY } from '@/lib/theme/colors';
+import {
+  ACTIVE_ORG_COOKIE,
+  TENANT_SLUG_COOKIE,
+  getTenantHost,
+  tenantCookieOptions,
+  tenantUrl,
+} from '@/lib/tenant';
 
-export const CIA_ACTIVE_ORG_COOKIE = "cia_active_organization";
+export const CIA_ACTIVE_ORG_COOKIE = ACTIVE_ORG_COOKIE;
 
 interface Organization {
   id: string;
@@ -56,8 +63,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const setActiveOrganizationId = (id: string) => {
+    const nextOrg = organizations.find((o) => o.id === id);
     setActiveOrgId(id);
-    Cookies.set(CIA_ACTIVE_ORG_COOKIE, id, { path: '/', expires: 365, sameSite: 'lax' });
+    Cookies.set(CIA_ACTIVE_ORG_COOKIE, id, tenantCookieOptions());
+
+    if (nextOrg && typeof window !== "undefined") {
+      const tenantHost = getTenantHost(window.location.host);
+      const nextSlug = nextOrg.slug;
+      if (
+        tenantHost.isProductionDomain &&
+        tenantHost.slug !== nextSlug
+      ) {
+        window.location.assign(
+          tenantUrl(nextSlug, window.location.pathname, window.location.href).toString(),
+        );
+        return;
+      }
+    }
+
     // Reload to ensure all data is fetched for the new organization
     window.location.reload();
   };
@@ -103,13 +126,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setOrganizations(mappedOrgs);
 
     if (mappedOrgs.length > 0) {
+      const tenantHost =
+        typeof window !== "undefined" ? getTenantHost(window.location.host) : null;
+      const hostOrg =
+        tenantHost?.slug
+          ? mappedOrgs.find((o: Organization) => o.slug === tenantHost.slug)
+          : null;
+
+      if (tenantHost?.isProductionDomain && tenantHost.slug && !hostOrg) {
+        const fallbackOrg = mappedOrgs[0];
+        window.location.assign(
+          tenantUrl(
+            fallbackOrg.slug,
+            window.location.pathname,
+            window.location.href,
+          ).toString(),
+        );
+        return;
+      }
+
+      if (hostOrg) {
+        setActiveOrgId(hostOrg.id);
+        Cookies.set(CIA_ACTIVE_ORG_COOKIE, hostOrg.id, tenantCookieOptions());
+        Cookies.set(TENANT_SLUG_COOKIE, tenantHost!.slug!, tenantCookieOptions());
+        return;
+      }
+
       const savedOrgId = Cookies.get(CIA_ACTIVE_ORG_COOKIE);
       const isValidSaved = !!savedOrgId && mappedOrgs.some((o: Organization) => o.id === savedOrgId);
       if (isValidSaved) {
         setActiveOrgId(savedOrgId!);
       } else {
         setActiveOrgId(mappedOrgs[0].id);
-        Cookies.set(CIA_ACTIVE_ORG_COOKIE, mappedOrgs[0].id, { path: '/', expires: 365, sameSite: 'lax' });
+        Cookies.set(CIA_ACTIVE_ORG_COOKIE, mappedOrgs[0].id, tenantCookieOptions());
       }
     } else {
       setActiveOrgId(null);

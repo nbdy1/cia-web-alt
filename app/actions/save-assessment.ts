@@ -25,6 +25,7 @@
 import { revalidatePath } from 'next/cache';
 import { generateStudentProfile } from '@/app/actions/ai-analysis';
 import { createClient } from '@/lib/supabase/server';
+import { assertTenantOrganization } from '@/lib/tenant-server';
 
 export async function saveAssessmentAction(data: {
   student_id: string;
@@ -35,6 +36,18 @@ export async function saveAssessmentAction(data: {
   try {
     // Server-side Supabase client reads the session from cookies set by middleware
     const db = await createClient();
+
+    const { data: student, error: studentError } = await db
+      .from('students')
+      .select('organization_id')
+      .eq('id', data.student_id)
+      .single();
+
+    if (studentError || !student) {
+      throw studentError ?? new Error("Student not found");
+    }
+
+    await assertTenantOrganization(db, student.organization_id);
 
     // Step 1: Insert the main Report
     const { data: report, error: reportError } = await db

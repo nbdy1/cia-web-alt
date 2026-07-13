@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Plus, Building2, UserPlus, X, Users, Trash2, Crown } from "lucide-react";
@@ -32,6 +32,27 @@ export default function SuperAdminPage() {
   const [membersError, setMembersError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
+  const loadOrgs = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('organizations')
+      .select(`
+        id,
+        name,
+        slug,
+        created_at,
+        organization_members (count)
+      `)
+      .order('created_at', { ascending: true });
+
+    if (data) {
+      setOrganizations(data);
+    } else {
+      console.error("Error loading orgs", error);
+    }
+    setLoading(false);
+  }, []);
+
   async function openManage(org: { id: string; name: string }) {
     setManageOrg(org);
     setMembers([]);
@@ -59,28 +80,7 @@ export default function SuperAdminPage() {
 
   useEffect(() => {
     loadOrgs();
-  }, []);
-
-  async function loadOrgs() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('organizations')
-      .select(`
-        id,
-        name,
-        slug,
-        created_at,
-        organization_members (count)
-      `)
-      .order('created_at', { ascending: true });
-
-    if (data) {
-      setOrganizations(data);
-    } else {
-      console.error("Error loading orgs", error);
-    }
-    setLoading(false);
-  }
+  }, [loadOrgs]);
 
   const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,7 +157,9 @@ export default function SuperAdminPage() {
                   </div>
                   <div>
                     <p className="font-black text-slate-800 text-base">{org.name}</p>
-                    <p className="text-[11px] font-bold text-slate-400 font-mono mt-0.5">{org.slug}</p>
+                    <p className="text-[11px] font-bold text-slate-400 font-mono mt-0.5">
+                      {org.slug}.characterdev.systems
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-6">
@@ -213,7 +215,8 @@ export default function SuperAdminPage() {
                   onChange={(e) => {
                     setNewOrgName(e.target.value);
                     if (!newOrgSlug) {
-                      setNewOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+                      const generated = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                      setNewOrgSlug(generated);
                     }
                   }}
                   className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-rose-400 transition-colors"
