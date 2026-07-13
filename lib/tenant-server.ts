@@ -62,3 +62,11 @@ export async function assertTenantOrganization(
     throw new Error("Forbidden: organization does not match current tenant");
   }
 }
+
+export async function isTenantOrganization(
+  db: SupabaseClient,
+  organizationId: string | null | undefined,
+) {
+  const tenantOrgId = await getAuthenticatedTenantOrgId(db);
+  return !tenantOrgId || tenantOrgId === organizationId;
+}

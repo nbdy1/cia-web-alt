@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
     "start": "node .next/standalone/server.js",
+    "test": "tsx --test tests/*.test.ts",
     "lint": "eslint"
   },
   "dependencies": {

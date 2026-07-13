@@ -52,5 +52,20 @@ export function tenantUrl(slug: string, pathname = "/", currentUrl?: string) {
   const url = new URL(`${protocol}//${slug}.${APP_DOMAIN}`);
   url.pathname = pathname.startsWith("/") ? pathname : `/${pathname}`;
   if (base) url.search = base.search;
+  if (base) url.hash = base.hash;
   return url;
+}
+
+export function getTenantSwitchUrl(
+  currentHost: string,
+  targetSlug: string,
+  currentPathname = "/",
+  currentUrl?: string,
+) {
+  const tenantHost = getTenantHost(currentHost);
+  if (!tenantHost.isProductionDomain || tenantHost.slug === targetSlug) {
+    return null;
+  }
+
+  return tenantUrl(targetSlug, currentPathname, currentUrl).toString();
 }

@@ -26,6 +26,7 @@ import {
   ACTIVE_ORG_COOKIE,
   TENANT_SLUG_COOKIE,
   getTenantHost,
+  getTenantSwitchUrl,
   tenantCookieOptions,
   tenantUrl,
 } from '@/lib/tenant';
@@ -64,22 +65,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setActiveOrganizationId = (id: string) => {
     const nextOrg = organizations.find((o) => o.id === id);
-    setActiveOrgId(id);
-    Cookies.set(CIA_ACTIVE_ORG_COOKIE, id, tenantCookieOptions());
-
     if (nextOrg && typeof window !== "undefined") {
-      const tenantHost = getTenantHost(window.location.host);
-      const nextSlug = nextOrg.slug;
-      if (
-        tenantHost.isProductionDomain &&
-        tenantHost.slug !== nextSlug
-      ) {
-        window.location.assign(
-          tenantUrl(nextSlug, window.location.pathname, window.location.href).toString(),
-        );
+      const switchUrl = getTenantSwitchUrl(
+        window.location.host,
+        nextOrg.slug,
+        window.location.pathname,
+        window.location.href,
+      );
+
+      if (switchUrl) {
+        Cookies.set(CIA_ACTIVE_ORG_COOKIE, id, tenantCookieOptions());
+        Cookies.set(TENANT_SLUG_COOKIE, nextOrg.slug, tenantCookieOptions());
+        window.location.assign(switchUrl);
         return;
       }
     }
+
+    setActiveOrgId(id);
+    Cookies.set(CIA_ACTIVE_ORG_COOKIE, id, tenantCookieOptions());
 
     // Reload to ensure all data is fetched for the new organization
     window.location.reload();
@@ -207,6 +210,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loading, user, pathname, router]);
 
   const activeOrganization = organizations.find((o) => o.id === activeOrganizationId) ?? null;
+
+  useEffect(() => {
+    if (!activeOrganization || typeof window === "undefined") return;
+
+    const switchUrl = getTenantSwitchUrl(
+      window.location.host,
+      activeOrganization.slug,
+      window.location.pathname,
+      window.location.href,
+    );
+
+    if (switchUrl) {
+      Cookies.set(CIA_ACTIVE_ORG_COOKIE, activeOrganization.id, tenantCookieOptions());
+      Cookies.set(TENANT_SLUG_COOKIE, activeOrganization.slug, tenantCookieOptions());
+      window.location.replace(switchUrl);
+    }
+  }, [activeOrganization]);
 
   // Apply the active organization's brand color as CSS variables so every
   // `*-brand-*` Tailwind utility across the app repaints to match. Also

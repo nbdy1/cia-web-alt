@@ -39,7 +39,7 @@ import { getModelLabel } from "@/lib/data/models";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { getTerminology } from "@/lib/data/terminology";
-import { assertTenantOrganization } from "@/lib/tenant-server";
+import { isTenantOrganization } from "@/lib/tenant-server";
 
 // ─── Framework lookup helpers ──────────────────────────────────────────────
 // Given a category + theme title + indicator title from the AI output,
@@ -145,8 +145,8 @@ async function getReportDetails(id: string) {
     .eq("id", id)
     .single();
 
-  if (report) {
-    await assertTenantOrganization(db, report.organization_id);
+  if (report && !(await isTenantOrganization(db, report.organization_id))) {
+    return { report: null };
   }
 
   return { report };

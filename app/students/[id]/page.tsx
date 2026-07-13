@@ -29,7 +29,7 @@ import { SmartBackButton } from "@/components/SmartBackButton";
 import { getModelLabel } from "@/lib/data/models";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { getTerminology } from "@/lib/data/terminology";
-import { assertTenantOrganization } from "@/lib/tenant-server";
+import { isTenantOrganization } from "@/lib/tenant-server";
 
 async function getStudentData(id: string) {
   const db = await getServerSupabase();
@@ -40,8 +40,8 @@ async function getStudentData(id: string) {
     .eq("id", id)
     .single();
 
-  if (student) {
-    await assertTenantOrganization(db, student.organization_id);
+  if (student && !(await isTenantOrganization(db, student.organization_id))) {
+    return { student: null, reports: null };
   }
 
   const { data: reports } = await db
