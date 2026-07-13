@@ -319,7 +319,7 @@ export default async function ReportDetailPage({
                         style={isGuru ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
                       >
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
-                          {isGuru ? t.ustadz : "Asisten CIA"}
+                          {isGuru ? t.ustadz : "Asisten CDS"}
                         </p>
                         <p className="text-sm leading-relaxed font-bold">
                           {msg.text}

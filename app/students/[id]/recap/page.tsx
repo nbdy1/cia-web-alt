@@ -3,7 +3,7 @@
  *
  * Rekapitulasi (summary) page — aggregates ALL of a student's reports into a
  * single view showing cumulative sub-indicator fulfillment across the full
- * CIA framework.
+ * CDS framework.
  *
  * Key concepts:
  *
@@ -40,7 +40,7 @@ import {
   Zap,
   ShieldCheck,
 } from "lucide-react";
-import { getCIAPhase } from "@/lib/cia-phases";
+import { getCDSPhase } from "@/lib/cia-phases";
 import Link from "next/link";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
@@ -284,7 +284,7 @@ function getSubCount(subIndicator: string, countMap: Map<string, number>): numbe
   return countMap.get(subIndicator.trim().toLowerCase()) ?? 0;
 }
 
-// (Kuat/Lemah replaced by 5-phase system — see getCIAPhase in lib/cia-phases.ts)
+// (Kuat/Lemah replaced by 5-phase system — see getCDSPhase in lib/cia-phases.ts)
 
 export default async function RecapPage({
   params,
@@ -462,7 +462,7 @@ export default async function RecapPage({
                           if (getSubCount(sub, countMap) >= 4) themeFilledSub++;
                         });
                       });
-                      const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);
+                      const themePhase = getCDSPhase(themeFilledSub, themeTotalSub);
 
                       // Only show indicators that have at least one fulfilled sub-indicator.
                       const visibleIndicators = theme.indicators

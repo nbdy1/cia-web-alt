@@ -21,7 +21,7 @@ import { runFullAnalysis } from '@/app/actions/ai-analysis';
 export default function AnalysisPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState("Initializing CIA...");
+  const [status, setStatus] = useState("Initializing CDS...");
 
   useEffect(() => {
     async function performAnalysis() {

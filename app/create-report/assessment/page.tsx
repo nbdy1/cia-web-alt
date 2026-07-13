@@ -5,20 +5,20 @@
  *
  * The ustadz describes their observations about the student in a chat interface.
  * After each message, processInterviewStep() (server action) is called to:
- *   1. Embed the last few messages and retrieve relevant CIA criteria via RAG
+ *   1. Embed the last few messages and retrieve relevant CDS criteria via RAG
  *   2. Ask Gemini to generate a contextual follow-up question in Indonesian
- *   3. Return which CIA themes have been "discovered" so far
+ *   3. Return which CDS themes have been "discovered" so far
  *
  * State:
  *   messages         – chat history (teacher + AI turns)
- *   discoveredPillars – cumulative list of CIA themes surfaced during interview
+ *   discoveredPillars – cumulative list of CDS themes surfaced during interview
  *   discoveredCount  – shown in the header badge
  *
  * Voice input: SpeechRecognition (Chrome-only). The mic button toggles
  * continuous recognition; interim results update the textarea live so the
  * ustadz can see what's being transcribed before sending.
  *
- * Voice output: useCIAVoice hook reads AI responses aloud (native
+ * Voice output: useCDSVoice hook reads AI responses aloud (native
  * SpeechSynthesis by default, ElevenLabs when USE_ELEVENLABS is enabled).
  *
  * When the ustadz clicks "Selesai & Buat Laporan" (requires ≥2 messages),
@@ -31,7 +31,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, Mic, MicOff, Send, Sparkles, User, Brain, Quote, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useCIAVoice } from '@/lib/hooks/use-cia-voice';
+import { useCDSVoice } from '@/lib/hooks/use-cia-voice';
 import { processInterviewStep, finalizeAssessment } from '@/app/actions/ai-analysis';
 import { transcribeAudio } from '@/app/actions/whisper';
 import { useSettings } from '@/lib/context/settings-context';
@@ -50,7 +50,7 @@ interface Message {
 
 const FINALIZE_STEPS = [
   "Menganalisis transkrip…",
-  "Mencocokkan kriteria CIA…",
+  "Mencocokkan kriteria CDS…",
   "Menyusun rencana penanganan…",
   "Merapikan laporan akhir…",
 ];
@@ -74,7 +74,7 @@ export default function AssessmentPage() {
   const [discoveredPillars, setDiscoveredPillars] = useState<string[]>([]);
 
   const { selectedModel, temperature } = useSettings();
-  const { speak, stop: stopVoice, unlock: unlockVoice } = useCIAVoice();
+  const { speak, stop: stopVoice, unlock: unlockVoice } = useCDSVoice();
   const recognitionRef = useRef<any>(null);
   // Tracks user *intent* to record — survives iOS onend auto-fires
   const shouldRecordRef = useRef(false);

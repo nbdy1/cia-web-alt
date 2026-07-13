@@ -25,13 +25,13 @@ import { applyBrandScale, generateBrandScale, BRAND_SCALE_STORAGE_KEY } from '@/
 import {
   ACTIVE_ORG_COOKIE,
   TENANT_SLUG_COOKIE,
+  browserTenantCookieOptions,
   getTenantHost,
   getTenantSwitchUrl,
-  tenantCookieOptions,
   tenantUrl,
 } from '@/lib/tenant';
 
-export const CIA_ACTIVE_ORG_COOKIE = ACTIVE_ORG_COOKIE;
+export const CDS_ACTIVE_ORG_COOKIE = ACTIVE_ORG_COOKIE;
 
 interface Organization {
   id: string;
@@ -74,15 +74,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
 
       if (switchUrl) {
-        Cookies.set(CIA_ACTIVE_ORG_COOKIE, id, tenantCookieOptions());
-        Cookies.set(TENANT_SLUG_COOKIE, nextOrg.slug, tenantCookieOptions());
+        Cookies.set(CDS_ACTIVE_ORG_COOKIE, id, browserTenantCookieOptions());
+        Cookies.set(TENANT_SLUG_COOKIE, nextOrg.slug, browserTenantCookieOptions());
         window.location.assign(switchUrl);
         return;
       }
     }
 
     setActiveOrgId(id);
-    Cookies.set(CIA_ACTIVE_ORG_COOKIE, id, tenantCookieOptions());
+    Cookies.set(CDS_ACTIVE_ORG_COOKIE, id, browserTenantCookieOptions());
 
     // Reload to ensure all data is fetched for the new organization
     window.location.reload();
@@ -150,18 +150,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (hostOrg) {
         setActiveOrgId(hostOrg.id);
-        Cookies.set(CIA_ACTIVE_ORG_COOKIE, hostOrg.id, tenantCookieOptions());
-        Cookies.set(TENANT_SLUG_COOKIE, tenantHost!.slug!, tenantCookieOptions());
+        Cookies.set(CDS_ACTIVE_ORG_COOKIE, hostOrg.id, browserTenantCookieOptions());
+        Cookies.set(TENANT_SLUG_COOKIE, tenantHost!.slug!, browserTenantCookieOptions());
         return;
       }
 
-      const savedOrgId = Cookies.get(CIA_ACTIVE_ORG_COOKIE);
+      const savedOrgId = Cookies.get(CDS_ACTIVE_ORG_COOKIE);
       const isValidSaved = !!savedOrgId && mappedOrgs.some((o: Organization) => o.id === savedOrgId);
       if (isValidSaved) {
         setActiveOrgId(savedOrgId!);
       } else {
         setActiveOrgId(mappedOrgs[0].id);
-        Cookies.set(CIA_ACTIVE_ORG_COOKIE, mappedOrgs[0].id, tenantCookieOptions());
+        Cookies.set(CDS_ACTIVE_ORG_COOKIE, mappedOrgs[0].id, browserTenantCookieOptions());
       }
     } else {
       setActiveOrgId(null);
@@ -222,8 +222,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     if (switchUrl) {
-      Cookies.set(CIA_ACTIVE_ORG_COOKIE, activeOrganization.id, tenantCookieOptions());
-      Cookies.set(TENANT_SLUG_COOKIE, activeOrganization.slug, tenantCookieOptions());
+      Cookies.set(CDS_ACTIVE_ORG_COOKIE, activeOrganization.id, browserTenantCookieOptions());
+      Cookies.set(TENANT_SLUG_COOKIE, activeOrganization.slug, browserTenantCookieOptions());
       window.location.replace(switchUrl);
     }
   }, [activeOrganization]);
@@ -246,7 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    // Deliberately keep CIA_ACTIVE_ORG_COOKIE so the next login on this
+    // Deliberately keep CDS_ACTIVE_ORG_COOKIE so the next login on this
     // browser resumes the same organization instead of falling back to
     // whichever org the membership query happens to return first.
     // loadOrganizations() already validates the saved id against the
@@ -262,7 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen w-full bg-paper flex flex-col items-center justify-center p-6 animate-fade-in">
         <div className="text-center space-y-4">
           <div className="w-20 h-20 bg-brand-50 rounded-3xl border-2 border-brand-100 flex items-center justify-center mx-auto animate-pulse" style={{ boxShadow: "0 4px 0 0 var(--brand-200)" }}>
-            <span className="text-brand-600 font-black text-3xl tracking-tighter">CIA</span>
+            <span className="text-brand-600 font-black text-3xl tracking-tighter">CDS</span>
           </div>
           <div className="flex items-center justify-center gap-2 text-brand-600 text-sm font-bold">
             <Loader2 className="w-4 h-4 animate-spin text-brand-500" />

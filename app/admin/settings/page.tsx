@@ -17,7 +17,7 @@ export default function AdminSettingsPage() {
       <div className="mb-2">
         <h2 className="text-xl font-black text-slate-800">Pengaturan Sistem</h2>
         <p className="text-sm font-semibold text-slate-500 mt-1">
-          Konfigurasi global untuk aplikasi CIA
+          Konfigurasi global untuk aplikasi CDS
         </p>
       </div>
 

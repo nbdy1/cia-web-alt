@@ -45,7 +45,7 @@ export default function HomePage() {
             />
           )}
           <span className="text-brand-700 font-black text-sm tracking-tight">
-            {activeOrganization?.name || "CIA"}
+            {activeOrganization?.name || "CDS"}
           </span>
         </div>
         <div className="flex items-center gap-2">

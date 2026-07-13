@@ -71,8 +71,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CIA Portal",
-  description: "Platform asesmen karakter santri",
+  title: "CDS Portal",
+  description: "Character Development System",
 };
 
 const appearanceScript = `

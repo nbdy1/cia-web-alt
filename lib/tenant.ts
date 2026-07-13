@@ -46,6 +46,17 @@ export function tenantCookieOptions() {
   };
 }
 
+export function browserTenantCookieOptions() {
+  return {
+    expires: 365,
+    sameSite: "lax" as const,
+    path: "/",
+    ...(process.env.NODE_ENV === "production"
+      ? { domain: `.${APP_DOMAIN}` }
+      : {}),
+  };
+}
+
 export function tenantUrl(slug: string, pathname = "/", currentUrl?: string) {
   const base = currentUrl ? new URL(currentUrl) : null;
   const protocol = base?.protocol ?? "https:";

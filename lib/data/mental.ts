@@ -1,7 +1,7 @@
 /**
  * lib/data/mental.ts
  *
- * The "Mental" pillar of the CIA assessment framework.
+ * The "Mental" pillar of the CDS assessment framework.
  * Definition: the ability to manage one's own internal state and circumstances.
  *
  * Structure mirrors karakter.ts — 34 themes grouped into four Islamic virtues:

@@ -82,7 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <h1 className="text-base font-black text-white">Admin Portal</h1>
             </div>
             <p className="text-[10px] text-brand-400 font-black uppercase tracking-wider">
-              {activeOrganization?.name || "CIA Management"}
+              {activeOrganization?.name || "CDS Management"}
             </p>
           </div>
         </div>

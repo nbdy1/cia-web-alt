@@ -4,7 +4,7 @@
  * Rapor (report card) page. Two modes:
  *
  *   SCREEN — Preview card (constrained width, looks nice in the app).
- *             Shows score tables + CIA sub-indicator recap.
+ *             Shows score tables + CDS sub-indicator recap.
  *
  *   PRINT  — When the user clicks "Cetak", we build a self-contained A4 HTML
  *             document and open it in a new window. This bypasses Chrome's
@@ -12,7 +12,7 @@
  *             fills the full paper width regardless of screen viewport.
  *             The popup auto-triggers window.print() after load.
  *             The print document includes both the CMS score tables and a full
- *             CIA sub-indicator fulfillment section (theme bars + category %).
+ *             CDS sub-indicator fulfillment section (theme bars + category %).
  */
 "use client";
 
@@ -25,7 +25,7 @@ import { useParams } from "next/navigation";
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
-import { getCIAPhase } from "@/lib/cia-phases";
+import { getCDSPhase } from "@/lib/cia-phases";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 import type { Terminology } from "@/lib/data/terminology";
@@ -46,9 +46,9 @@ type ScoreCell = { nilai_harian: number | null; nilai_bulanan: number | null; ni
 type ScoreGrid = Record<string, Record<string, ScoreCell>>;
 type Student = { name: string; nis: string | null; photo_url: string | null };
 
-// ─── CIA helpers ──────────────────────────────────────────────────────────────
+// ─── CDS helpers ──────────────────────────────────────────────────────────────
 
-const CIA_CATEGORIES = [
+const CDS_CATEGORIES = [
   {
     label: "Karakter",
     data: karakterData,
@@ -89,7 +89,7 @@ const norm = (s: string) => s.trim().toLowerCase();
 // NOTE: reports must be passed oldest-first — declined_sub_indicators
 // decrements the running count floored at 0, which is only correct when
 // replayed in the same chronological order the reports were created in.
-function buildCIACounts(
+function buildCDSCounts(
   reports: Array<{ treatment_plan: unknown }>
 ): Record<string, Map<string, number>> {
   const countByCategory: Record<string, Map<string, number>> = {
@@ -176,10 +176,10 @@ function buildCIACounts(
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-function buildCIASectionHtml(
+function buildCDSSectionHtml(
   countByCategory: Record<string, Map<string, number>>,
 ): string {
-  const summaryCells = CIA_CATEGORIES.map((cat) => {
+  const summaryCells = CDS_CATEGORIES.map((cat) => {
     const countMap = countByCategory[cat.label] ?? new Map<string, number>();
     let totalSub = 0, fulfilledSub = 0;
     cat.data.themes.forEach((theme) => {
@@ -203,7 +203,7 @@ function buildCIASectionHtml(
       </div>`;
   }).join("");
 
-  const detailBlocks = CIA_CATEGORIES.map((cat) => {
+  const detailBlocks = CDS_CATEGORIES.map((cat) => {
     const countMap = countByCategory[cat.label] ?? new Map<string, number>();
 
     // ── Theme bars ──
@@ -240,7 +240,7 @@ function buildCIASectionHtml(
           if ((countMap.get(norm(sub)) ?? 0) >= 1) themeFilledSub++;
         });
       });
-      const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);
+      const themePhase = getCDSPhase(themeFilledSub, themeTotalSub);
 
       const visibleInds = theme.indicators.map((ind) => {
         const fulfilledSubs = ind.sub_indicators.filter(
@@ -316,7 +316,7 @@ function buildCIASectionHtml(
   return `
     <div style="margin-top:32px;padding-top:24px;border-top:2px solid #e2e8f0">
       <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:16px">
-        Rekapitulasi CIA — Ketercapaian Sub-Indikator
+        Rekapitulasi CDS — Ketercapaian Sub-Indikator
       </p>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
         ${summaryCells}
@@ -372,7 +372,7 @@ function buildPrintHTML(opts: {
       </div>`;
   }).join("");
 
-  const ciaSectionHtml = buildCIASectionHtml(countByCategory);
+  const cdsSectionHtml = buildCDSSectionHtml(countByCategory);
 
   return `<!DOCTYPE html>
 <html lang="id">
@@ -426,7 +426,7 @@ function buildPrintHTML(opts: {
 
   ${scoreTablesHtml}
 
-  ${ciaSectionHtml}
+  ${cdsSectionHtml}
 
   <!-- Signatures -->
   <div style="margin-top:40px;border-top:1px solid #e2e8f0;padding-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:48px">
@@ -480,10 +480,10 @@ export default function RaporPage() {
     init().catch(console.error);
   }, [studentId]);
 
-  // CIA sub-indicator counts — aggregated across all reports (same as recap page)
+  // CDS sub-indicator counts — aggregated across all reports (same as recap page)
   useEffect(() => {
-    const loadCIA = async () => {
-      // Ordered oldest-first — see buildCIACounts() comment on why order matters.
+    const loadCDS = async () => {
+      // Ordered oldest-first — see buildCDSCounts() comment on why order matters.
       const { data: reports } = await supabase
         .from("reports")
         .select("treatment_plan")
@@ -491,10 +491,10 @@ export default function RaporPage() {
         .order("created_at", { ascending: true });
       if (reports) {
         setTotalReports(reports.length);
-        setCountByCategory(buildCIACounts(reports));
+        setCountByCategory(buildCDSCounts(reports));
       }
     };
-    loadCIA().catch(console.error);
+    loadCDS().catch(console.error);
   }, [studentId]);
 
   useEffect(() => {
@@ -672,16 +672,16 @@ export default function RaporPage() {
               })
             )}
 
-            {/* ── CIA Recap Section ───────────────────────────────────────── */}
+            {/* ── CDS Recap Section ───────────────────────────────────────── */}
             {!loading && (
               <div className="border-t-2 border-slate-100 pt-6 space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Rekapitulasi CIA — Ketercapaian Sub-Indikator
+                  Rekapitulasi CDS — Ketercapaian Sub-Indikator
                 </p>
 
                 {/* Category summary cards */}
                 <div className="grid grid-cols-3 gap-3">
-                  {CIA_CATEGORIES.map((cat) => {
+                  {CDS_CATEGORIES.map((cat) => {
                     const countMap = countByCategory[cat.label] ?? new Map<string, number>();
                     let totalSub = 0, fulfilledSub = 0;
                     cat.data.themes.forEach((theme) => {
@@ -719,7 +719,7 @@ export default function RaporPage() {
                 </div>
 
                 {/* Theme bars + sub-indicator details per category */}
-                {CIA_CATEGORIES.map((cat) => {
+                {CDS_CATEGORIES.map((cat) => {
                   const countMap = countByCategory[cat.label] ?? new Map<string, number>();
                   const themeStats = cat.data.themes.map((theme) => {
                     let total = 0, fulfilled = 0;
@@ -775,7 +775,7 @@ export default function RaporPage() {
                                 if ((countMap.get(norm(sub)) ?? 0) >= 1) themeFilledSub++;
                               });
                             });
-                            const themePhase = getCIAPhase(themeFilledSub, themeTotalSub);
+                            const themePhase = getCDSPhase(themeFilledSub, themeTotalSub);
 
                             const visibleInds = theme.indicators.map((ind) => ({
                               title: ind.title,

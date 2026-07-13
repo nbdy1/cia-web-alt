@@ -102,10 +102,10 @@ export default function LoginPage() {
             <span>Portal Evaluasi Ustadz</span>
           </div>
           <h1 className="text-4xl font-black tracking-tight text-slate-900 flex items-center justify-center gap-2 font-serif">
-            <span className="text-brand-600">CIA</span> Portal
+            <span className="text-brand-600">CDS</span> Portal
           </h1>
           <p className="text-slate-400 text-sm mt-2 font-bold">
-           Character Integrated Assessment Platform
+           Character Development System
           </p>
         </div>
 

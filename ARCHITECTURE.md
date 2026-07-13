@@ -1,6 +1,6 @@
-# CIA Portal — Architecture Overview
+# CDS Portal — Architecture Overview
 
-**Character Integrated Assessment (CIA)** is a web portal for Islamic boarding schools (pesantren) to conduct AI-assisted character assessments of students (santri). Ustadz (teachers) conduct conversational interviews; the AI maps observations to a structured 3-pillar framework and generates a structured report.
+**Character Development System (CDS)** is a web portal for Islamic boarding schools (pesantren) to conduct AI-assisted character development assessments of students (santri). Ustadz (teachers) conduct conversational interviews; the AI maps observations to a structured 3-pillar framework and generates a structured report.
 
 ---
 
@@ -67,7 +67,7 @@ cia-web-alt/
 │   ├── hooks/
 │   │   ├── use-cia-voice.ts    # TTS hook (ElevenLabs / native SpeechSynthesis)
 │   │   └── use-user-role.ts    # Fetch user role from profiles table
-│   ├── data/                   # CIA assessment framework (source of truth)
+│   ├── data/                   # CDS assessment framework (source of truth)
 │   │   ├── karakter.ts         # 40 Character themes
 │   │   ├── mental.ts           # 34 Mental resilience themes
 │   │   ├── soft-skill.ts       # 14 Soft skill themes
@@ -105,7 +105,7 @@ cia-web-alt/
 - Streaming chat UI; teacher types or dictates observations about the student
 - Every message calls `processInterviewStep()` (server action):
   1. Embeds the last 4 messages via OpenRouter embeddings API
-  2. Retrieves top-15 relevant CIA criteria from Supabase pgvector (`match_cia_criteria` RPC)
+  2. Retrieves top-15 relevant CDS criteria from Supabase pgvector (`match_cia_criteria` RPC)
   3. Sends the retrieved criteria + transcript to Gemini for a follow-up question
   4. Returns `{ reply, discoveredPillars }` — AI never reveals theme names to teacher
 - `discoveredPillars` accumulates in client state across turns
@@ -135,7 +135,7 @@ The LLM output is never trusted directly. `ai-analysis.ts` applies three passes:
 
 ---
 
-## CIA Framework Data Model
+## CDS Framework Data Model
 
 Three pillars, each with themes → indicators → sub-indicators:
 

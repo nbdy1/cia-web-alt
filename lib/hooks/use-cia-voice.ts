@@ -12,7 +12,7 @@
  *      Web Speech API with lang="id-ID". No API key required.
  *
  * Usage:
- *   const { speak, stop, unlock, isSpeaking } = useCIAVoice();
+ *   const { speak, stop, unlock, isSpeaking } = useCDSVoice();
  *   // Call unlock() inside a user gesture (button tap) once, early:
  *   <button onClick={() => { unlock(); ...record... }} />
  *   speak("Terima kasih, bisa ceritakan lebih lanjut?");
@@ -76,7 +76,7 @@ const SILENT_WAV = (() => {
   return "data:audio/wav;base64," + btoa(binary);
 })();
 
-export function useCIAVoice() {
+export function useCDSVoice() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   // ONE reusable audio element for the whole session. Reusing (instead of
   // `new Audio()` per call) is what keeps playback allowed after mic use.

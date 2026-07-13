@@ -20,7 +20,7 @@ import { cookies } from 'next/headers';
 import { getServerSupabase } from '@/lib/supabase-server';
 import { computeCostIdr, type UsageProvider } from './rates';
 
-// Must match CIA_ACTIVE_ORG_COOKIE in lib/context/auth-context.tsx.
+// Must match CDS_ACTIVE_ORG_COOKIE in lib/context/auth-context.tsx.
 const ACTIVE_ORG_COOKIE = 'cia_active_organization';
 const DEBUG_USAGE = process.env.DEBUG_USAGE === '1';
 

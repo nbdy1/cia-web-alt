@@ -1,7 +1,7 @@
 /**
  * lib/data/soft-skill.ts
  *
- * The "Soft Skill" pillar of the CIA assessment framework.
+ * The "Soft Skill" pillar of the CDS assessment framework.
  * Definition: the ability to handle the attitudes and actions of others.
  *
  * Structure mirrors karakter.ts — 14 themes covering three interpersonal

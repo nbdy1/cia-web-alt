@@ -24,7 +24,7 @@
  *   app/students/[id]/rapor/page.tsx   (screen preview + print HTML)
  */
 
-export interface CIAPhase {
+export interface CDSPhase {
   index: number;          // 1 – 5
   label: string;          // full Indonesian label
   shortLabel: string;     // compact label for badges
@@ -49,7 +49,7 @@ export interface CIAPhase {
   printBadgeText: string;
 }
 
-export const CIA_PHASES: readonly CIAPhase[] = [
+export const CDS_PHASES: readonly CDSPhase[] = [
   {
     index: 1,
     label: "Fase Instingtif / Mentah",
@@ -153,18 +153,18 @@ export const CIA_PHASES: readonly CIAPhase[] = [
 ] as const;
 
 /**
- * Returns the CIAPhase for a given count out of a total, or null if count is 0
+ * Returns the CDSPhase for a given count out of a total, or null if count is 0
  * (meaning this sub-indicator / category has never been fulfilled).
  *
  * @param count  - numerator  (fulfilled count, or fulfilled sub-indicator count)
  * @param total  - denominator (total reports, or total sub-indicators)
  */
-export function getCIAPhase(count: number, total: number): CIAPhase | null {
+export function getCDSPhase(count: number, total: number): CDSPhase | null {
   if (total === 0 || count === 0) return null;
   const pct = (count / total) * 100;
-  if (pct <= 20) return CIA_PHASES[0];
-  if (pct <= 40) return CIA_PHASES[1];
-  if (pct <= 60) return CIA_PHASES[2];
-  if (pct <= 80) return CIA_PHASES[3];
-  return CIA_PHASES[4];
+  if (pct <= 20) return CDS_PHASES[0];
+  if (pct <= 40) return CDS_PHASES[1];
+  if (pct <= 60) return CDS_PHASES[2];
+  if (pct <= 80) return CDS_PHASES[3];
+  return CDS_PHASES[4];
 }

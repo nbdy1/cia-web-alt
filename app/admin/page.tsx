@@ -315,7 +315,7 @@ export default function AdminOverviewPage() {
       {/* ── Page title ───────────────────────────────────────────────────── */}
       <div>
         <h2 className="text-2xl font-black text-slate-800">Overview</h2>
-        <p className="text-slate-400 text-sm font-bold mt-0.5">Ringkasan aktivitas CIA secara global</p>
+        <p className="text-slate-400 text-sm font-bold mt-0.5">Ringkasan aktivitas CDS secara global</p>
       </div>
 
       {/* ── Stat cards ───────────────────────────────────────────────────── */}

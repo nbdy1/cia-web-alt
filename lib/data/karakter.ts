@@ -1,7 +1,7 @@
 /**
  * lib/data/karakter.ts
  *
- * The "Karakter" (Character) pillar of the CIA assessment framework.
+ * The "Karakter" (Character) pillar of the CDS assessment framework.
  * Definition: permanent character traits, manners, and Islamic ethics (akhlak).
  *
  * Structure:

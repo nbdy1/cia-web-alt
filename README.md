@@ -1,6 +1,6 @@
-# CIA Portal
+# CDS Portal
 
-**Character Integrated Assessment** — an AI-assisted character assessment platform for Islamic boarding schools (pesantren). Ustadz (teachers) conduct conversational interviews about their students; the AI maps observations to a structured 3-pillar framework (Karakter, Mental, Soft Skill) and generates structured reports.
+**Character Development System** — an AI-assisted character development platform for Islamic boarding schools (pesantren). Ustadz (teachers) conduct conversational interviews about their students; the AI maps observations to a structured 3-pillar framework (Karakter, Mental, Soft Skill) and generates structured reports.
 
 For a full architectural overview see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
@@ -76,7 +76,7 @@ After signing up through the login page, open the Supabase dashboard → Table E
 app/             Next.js pages (App Router) + server actions
 components/      Shared React components
 lib/
-  data/          CIA framework data (karakter, mental, soft-skill) + AI prompts
+  data/          CDS framework data (karakter, mental, soft-skill) + AI prompts
   context/       Auth context
   hooks/         Custom hooks (voice, user role)
 scripts/         DB migrations, setup scripts, test data
@@ -88,7 +88,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for a full breakdown.
 
 ## Key Features
 
-- **AI Interview** — Gemini (via OpenRouter) asks contextual follow-up questions based on what the teacher describes, using RAG to pull the most relevant CIA criteria
+- **AI Interview** — Gemini (via OpenRouter) asks contextual follow-up questions based on what the teacher describes, using RAG to pull the most relevant CDS criteria
 - **Structured Reports** — AI output is post-processed deterministically to ensure accurate sub-indicator mapping and statistics
 - **Radar Charts** — per-category spider charts showing cumulative fulfillment across all of a student's reports
 - **Kuat / Lemah Classification** — sub-indicators fulfilled in ≥3 reports are "Kuat" (strong); 1–2 reports are "Lemah" (weak)

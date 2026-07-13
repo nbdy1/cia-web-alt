@@ -9,7 +9,7 @@
  *   - "Profil Santri" → expands the AI profile summary inline
  *   - "Input Nilai"   → /students/[id]/scores (manual score entry)
  *   - "Rapor"         → /students/[id]/rapor  (printable report card)
- *   - "Rekapitulasi"  → /students/[id]/recap  (CIA sub-indicator breakdown)
+ *   - "Rekapitulasi"  → /students/[id]/recap  (CDS sub-indicator breakdown)
  */
 import React from "react";
 import { getServerSupabase } from "@/lib/supabase-server";

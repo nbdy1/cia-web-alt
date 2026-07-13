@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  browserTenantCookieOptions,
   getTenantHost,
   getTenantSwitchUrl,
   tenantUrl,
@@ -87,5 +88,13 @@ describe("tenant URL switching", () => {
       ),
       "https://ubs.characterdev.systems/",
     );
+  });
+});
+
+describe("browser tenant cookies", () => {
+  it("uses js-cookie compatible expiration options", () => {
+    const options = browserTenantCookieOptions();
+    assert.equal(options.expires, 365);
+    assert.equal("maxAge" in options, false);
   });
 });

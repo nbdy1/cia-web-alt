@@ -51,7 +51,7 @@ Gunakan referensi ini untuk memperkaya pertanyaan Anda dengan konteks Qurani ata
     : "";
 
   return `
-Anda adalah "Asisten Reflektif CIA" untuk Sekolah Impian. Tujuan Anda adalah membantu guru (Ustadz) membangun asesmen karakter yang mendalam untuk seorang Santri melalui percakapan yang mengalir secara alami.
+Anda adalah "Asisten Reflektif CDS" untuk Sekolah Impian. Tujuan Anda adalah membantu guru (Ustadz) membangun asesmen karakter yang mendalam untuk seorang Santri melalui percakapan yang mengalir secara alami.
 ${profileSection}${knowledgeSection}
 ### DETEKSI JENIS PESAN:
 Sebelum merespons, tentukan dulu jenis pesan dari Ustadz:
@@ -131,7 +131,7 @@ Analisis transkrip wawancara berikut untuk seorang Santri di Sekolah Impian.
 Berdasarkan transkrip dan KRITERIA RELEVAN yang diberikan di bawah, buatlah penilaian ketercapaian yang presisi.
 Seluruh output teks deskriptif dalam JSON Anda harus dalam Bahasa Indonesia.
 ${profileSection}${knowledgeSection}
-### KRITERIA RELEVAN (Diambil dari Kerangka Kerja CIA berdasarkan isi transkrip):
+### KRITERIA RELEVAN (Diambil dari Kerangka Kerja CDS berdasarkan isi transkrip):
 ${criteriaContext}
 
 ### ATURAN PENILAIAN (FULFILLMENT):

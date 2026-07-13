@@ -7,7 +7,7 @@
  *
  * Voice: "Liam" (ID: TX3LPaxmHKxFdv7VOQHJ), model: eleven_multilingual_v2.
  *
- * This action is called by the `useCIAVoice` hook in lib/hooks/use-cia-voice.ts
+ * This action is called by the `useCDSVoice` hook in lib/hooks/use-cia-voice.ts
  * when USE_ELEVENLABS is set to true. By default the app uses browser-native
  * SpeechSynthesis instead (no API key required, lower quality).
  *

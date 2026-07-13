@@ -273,7 +273,7 @@ export function SettingsDropdown() {
                       <span className="block truncate text-sm font-black text-slate-800">
                         {user?.user_metadata?.name ??
                           user?.email?.split("@")[0] ??
-                          "Pengguna CIA"}
+                          "Pengguna CDS"}
                       </span>
                       <span className="block truncate text-[10px] font-bold text-slate-400">
                         {user?.email ?? "Email tidak tersedia"}
@@ -605,7 +605,7 @@ export function SettingsDropdown() {
                   type="button"
                   onClick={() => {
                     alert(
-                      "Pusat Bantuan Ustadz CIA siap melayani. Panduan teknis dapat diunduh di portal santri.",
+                      "Pusat Bantuan Ustadz CDS siap melayani. Panduan teknis dapat diunduh di portal santri.",
                     );
                     setIsOpen(false);
                   }}
@@ -638,7 +638,7 @@ export function SettingsDropdown() {
               >
                 <Shield className="w-2.5 h-2.5 text-white" />
               </div>
-              CIA V0.1
+              CDS V0.1
             </span>
             <span className="text-[10px] text-slate-400 font-black">
               Bahasa Indonesia

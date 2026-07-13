@@ -1,7 +1,7 @@
 /**
  * components/CriteriaGlossaryModal.tsx
  *
- * Full-screen modal that lets ustadz look up the complete CIA assessment
+ * Full-screen modal that lets ustadz look up the complete CDS assessment
  * framework while filling out a report. Opened from SettingsDropdown.
  *
  * Features:
@@ -125,7 +125,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
               <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-brand-300" />
             </div>
             <div>
-              <h2 className="text-base sm:text-2xl font-bold tracking-tight font-serif leading-tight">Panduan Kriteria Asesmen CIA</h2>
+              <h2 className="text-base sm:text-2xl font-bold tracking-tight font-serif leading-tight">Panduan Kriteria Asesmen CDS</h2>
               <p className="text-brand-200/80 text-[10px] sm:text-xs mt-0.5 hidden sm:block">Standar indikator penilaian {t.santriLower} berdasarkan kurikulum Asesmen Character Terintegrasi</p>
             </div>
           </div>

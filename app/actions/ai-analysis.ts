@@ -1,7 +1,7 @@
 /**
  * app/actions/ai-analysis.ts
  *
- * The core AI engine for CIA assessments. All functions here are Next.js
+ * The core AI engine for CDS assessments. All functions here are Next.js
  * Server Actions ("use server") — they run only on the server and are called
  * directly from client components via React's server action mechanism.
  *
@@ -9,7 +9,7 @@
  *
  *  1. Interview  → processInterviewStep()
  *     Called after every teacher message in the chat (assessment/page.tsx).
- *     Uses RAG (Retrieval-Augmented Generation) to find which CIA framework
+ *     Uses RAG (Retrieval-Augmented Generation) to find which CDS framework
  *     criteria are most relevant to the last few messages, then asks Gemini
  *     to formulate a follow-up question in natural Indonesian. Returns JSON:
  *     { reply, discoveredPillars, isFinished }
@@ -22,7 +22,7 @@
  *
  * ── RAG Strategy ─────────────────────────────────────────────────────────────
  *
- *  The full CIA framework has 400+ sub-indicators across 88 themes. Sending
+ *  The full CDS framework has 400+ sub-indicators across 88 themes. Sending
  *  all of them to the LLM every time would cost ~8,000 tokens per call.
  *  Instead, we embed the transcript and retrieve only the top-K most similar
  *  criteria rows from Supabase (using pgvector + the match_cia_criteria RPC).
