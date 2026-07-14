@@ -9,8 +9,9 @@
  *     preserves profile and all associated data)
  *   - Toggle to view removed ustadz, showing reason and removal date
  *
- * Note: Creating an ustadz uses a secondary auth client (persistSession: false)
- * so the currently logged-in admin session is not replaced.
+ * Note: Creating an ustadz uses a service-role route guarded by the current
+ * admin session, so it bypasses Supabase signup email limits and does not
+ * replace the currently logged-in admin session.
  *
  * Requires scripts/add_soft_delete.sql to have been run in Supabase.
  */
@@ -20,7 +21,6 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { Users, Search, Loader2, Sparkles, Mail, Calendar, X, Plus, UserPlus, AlertCircle, Eye, EyeOff, UserX, ArchiveX, ShieldCheck, ArrowLeftRight, Crown } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
 import { useUserRole } from '@/lib/hooks/use-user-role';
 import { useTerminology } from '@/lib/hooks/use-terminology';
 
@@ -116,32 +116,31 @@ export default function ManageUstadzPage() {
     setModalError(null);
     setModalSuccess(null);
     try {
-      // Separate auth client so the admin's own session isn't replaced
-      const authClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
-      );
-      const { data: signUpData, error } = await authClient.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: { data: { name: formData.name, role: formData.role } }
-      });
-      if (error) throw error;
+      if (!organizationId) throw new Error("Organisasi aktif tidak ditemukan.");
 
-      // A DB trigger auto-enrolls every new profile into the hardcoded
-      // "sekolah-impian" org. That's wrong when the admin creating this
-      // account is currently switched into a different org — explicitly
-      // upsert membership into the ACTIVE org so the new ustadz lands where
-      // the admin actually intended.
-      if (signUpData.user?.id && organizationId) {
-        const { error: memberError } = await supabase
-          .from('organization_members')
-          .upsert(
-            { organization_id: organizationId, user_id: signUpData.user.id, role: formData.role },
-            { onConflict: 'organization_id,user_id' }
-          );
-        if (memberError) throw memberError;
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session?.access_token) {
+        throw sessionError ?? new Error("Sesi login tidak valid.");
+      }
+
+      const response = await fetch('/api/admin/create-org-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+          orgIds: [organizationId],
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Gagal mendaftarkan pengguna baru");
       }
 
       setModalSuccess("Pengguna berhasil didaftarkan!");
