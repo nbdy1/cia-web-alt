@@ -8,8 +8,8 @@
  * Voice: "Liam" (ID: TX3LPaxmHKxFdv7VOQHJ), model: eleven_multilingual_v2.
  *
  * This action is called by the `useCDSVoice` hook in lib/hooks/use-cia-voice.ts
- * when USE_ELEVENLABS is set to true. By default the app uses browser-native
- * SpeechSynthesis instead (no API key required, lower quality).
+ * when USE_ELEVENLABS is set to true. The hook falls back to browser-native
+ * SpeechSynthesis if ElevenLabs is unavailable.
  *
  * To enable ElevenLabs:
  *   1. Add ELEVENLABS_API_KEY to .env.local
@@ -30,8 +30,9 @@ export async function generateSpeech(text: string) {
     throw new Error("ELEVENLABS_API_KEY is missing");
   }
 
-  // Voice is gated by plan (feature flag + monthly character quota). When blocked
-  // we throw; the voice hook catches this and falls back to browser speech.
+  // Voice quota checks currently fail open for demo readiness (see
+  // DISABLE_AI_QUOTA_LIMITS in lib/usage/quota.ts). If re-enabled later, the
+  // voice hook catches quota errors and falls back to browser speech.
   const quota = await checkQuota("voice");
   if (!quota.ok) {
     throw new Error(quota.message);

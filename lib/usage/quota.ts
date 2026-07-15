@@ -12,6 +12,7 @@ import { cookies } from 'next/headers';
 import { getServerSupabase } from '@/lib/supabase-server';
 
 const ACTIVE_ORG_COOKIE = 'cia_active_organization';
+const DISABLE_AI_QUOTA_LIMITS = process.env.DISABLE_AI_QUOTA_LIMITS !== 'false';
 
 export type QuotaReason = 'inactive' | 'reports' | 'voice_disabled' | 'voice_quota';
 export type QuotaCheck = { ok: true } | { ok: false; reason: QuotaReason; message: string };
@@ -38,6 +39,10 @@ export async function checkQuota(
   kind: 'report' | 'voice',
   opts: { studentId?: string | null; organizationId?: string | null } = {},
 ): Promise<QuotaCheck> {
+  if (DISABLE_AI_QUOTA_LIMITS) {
+    return { ok: true };
+  }
+
   try {
     const db = await getServerSupabase();
     const orgId = await resolveOrg(db, opts.studentId, opts.organizationId);

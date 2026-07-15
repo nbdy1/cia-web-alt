@@ -37,9 +37,8 @@ import { useCallback, useState, useRef } from "react";
 import { generateSpeech } from "@/app/actions/speech";
 
 // Master kill switch — when false, speak() is a no-op regardless of backend
-// (no ElevenLabs call, no browser SpeechSynthesis fallback). TTS is disabled
-// app-wide for now; flip back to true to re-enable.
-const TTS_ENABLED = false;
+// (no ElevenLabs call, no browser SpeechSynthesis fallback).
+const TTS_ENABLED = true;
 
 const USE_ELEVENLABS = true; // Toggle this to switch between ElevenLabs and Native Browser TTS
 
