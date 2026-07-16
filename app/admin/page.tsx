@@ -148,40 +148,52 @@ export default function AdminOverviewPage() {
       if (!activeOrganizationId) return;
       try {
         setLoading(true);
+
+        // Ustadz membership is scoped via organization_members — the
+        // `profiles.organization_id` column is just each profile's original
+        // default org from signup, not their current memberships, so
+        // filtering profiles by it either leaks every org's ustadz into
+        // whichever org happens to be everyone's default, or shows nothing
+        // for every other org. Same fix already applied in
+        // app/admin/ustadz/page.tsx's fetchUstadz().
+        const { data: ustadzMemberRows } = await supabase
+          .from('organization_members')
+          .select('user_id')
+          .eq('organization_id', activeOrganizationId)
+          .eq('role', 'ustadz');
+        const ustadzMemberIds = (ustadzMemberRows ?? []).map((m: any) => m.user_id);
+
         // ── 1. Counts ───────────────────────────────────────────────────────
-        let profilesQ = supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "ustadz").or("is_removed.is.null,is_removed.eq.false");
         let studentsQ = supabase.from("students").select("*", { count: "exact", head: true }).or("is_removed.is.null,is_removed.eq.false");
         let reportsQ = supabase.from("reports").select("id, created_at, student_id, treatment_plan, students(name)").order("created_at", { ascending: false }).limit(50);
         let students2Q = supabase.from("students").select("id, assigned_ustadz_id, reports(id)").or("is_removed.is.null,is_removed.eq.false");
-        let profiles2Q = supabase.from("profiles").select("id, name").eq("role", "ustadz").or("is_removed.is.null,is_removed.eq.false");
         // Ordered oldest-first: declined_sub_indicators decrements a running
         // per-student count floored at 0, which requires replaying each
         // student's reports in the same chronological order they were created.
         let allReportsQ = supabase.from("reports").select("student_id, treatment_plan, students(id, name)").order("created_at", { ascending: true });
 
         // ── Filter by active organization ────────────────────────────────────
-        profilesQ = profilesQ.eq('organization_id', activeOrganizationId);
         studentsQ = studentsQ.eq('organization_id', activeOrganizationId);
         reportsQ = reportsQ.eq('organization_id', activeOrganizationId);
         students2Q = students2Q.eq('organization_id', activeOrganizationId);
-        profiles2Q = profiles2Q.eq('organization_id', activeOrganizationId);
         allReportsQ = allReportsQ.eq('organization_id', activeOrganizationId);
 
         const [
-          { count: ustadzCount },
           { count: santriCount },
           { data: reportsRaw },
           { data: studentsRaw },
           { data: ustadzRaw },
           { data: allReportsForLeader },
         ] = await Promise.all([
-          profilesQ,
           studentsQ,
           reportsQ,
           students2Q,
-          profiles2Q,
+          ustadzMemberIds.length > 0
+            ? supabase.from("profiles").select("id, name").in('id', ustadzMemberIds).or("is_removed.is.null,is_removed.eq.false")
+            : Promise.resolve({ data: [] as any[] }),
           allReportsQ,
         ]);
+        const ustadzCount = ustadzRaw?.length ?? 0;
 
         const allReports = reportsRaw ?? [];
 
