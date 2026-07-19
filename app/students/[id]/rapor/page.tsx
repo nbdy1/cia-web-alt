@@ -127,7 +127,8 @@ function buildCDSCounts(
       const bucket =
         countByCategory[cat] ??
         countByCategory[Object.keys(countByCategory).find((k) => norm(k) === norm(cat)) ?? ""];
-      if (!bucket || !Array.isArray(assessment.fulfilled_sub_indicators)) return;
+      const fulfilledSubIndicators = assessment.fulfilled_sub_indicators;
+      if (!bucket || !Array.isArray(fulfilledSubIndicators)) return;
 
       const catData =
         dataByLabel[cat] ??
@@ -149,7 +150,7 @@ function buildCDSCounts(
 
       fullSubs.forEach((frameworkSub) => {
         if (
-          assessment.fulfilled_sub_indicators.some((si) =>
+          fulfilledSubIndicators.some((si) =>
             isLikelySame(si, frameworkSub)
           )
         ) {
@@ -161,10 +162,11 @@ function buildCDSCounts(
       // Growth isn't strictly linear — a report can mark a sub-indicator as
       // regressed (declined_sub_indicators), undoing one prior fulfillment.
       // Floored at 0: it can never go negative.
-      if (Array.isArray(assessment.declined_sub_indicators)) {
+      const declinedSubIndicators = assessment.declined_sub_indicators;
+      if (Array.isArray(declinedSubIndicators)) {
         fullSubs.forEach((frameworkSub) => {
           if (
-            assessment.declined_sub_indicators.some((si) =>
+            declinedSubIndicators.some((si) =>
               isLikelySame(si, frameworkSub)
             )
           ) {
