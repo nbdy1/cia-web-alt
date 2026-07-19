@@ -19,7 +19,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getStudentScores, getStudentPeriods } from "@/app/actions/scores";
-import { ChevronLeft, Printer, Loader2, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, Printer, Loader2, CheckCircle2, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { karakterData } from "@/lib/data/karakter";
@@ -45,6 +45,14 @@ const SCORE_TYPE_DEFS = [
 type ScoreCell = { nilai_harian: number | null; nilai_bulanan: number | null; nilai_akhir: number | null };
 type ScoreGrid = Record<string, Record<string, ScoreCell>>;
 type Student = { name: string; nis: string | null; photo_url: string | null };
+type DetailedAssessment = {
+  category: string;
+  theme: string;
+  indicator: string;
+  fulfilled_sub_indicators?: string[];
+  declined_sub_indicators?: string[];
+};
+type TreatmentPlan = { detailed_assessments?: DetailedAssessment[] };
 
 // ─── CDS helpers ──────────────────────────────────────────────────────────────
 
@@ -112,10 +120,10 @@ function buildCDSCounts(
     if (typeof plan === "string") {
       try { plan = JSON.parse(plan); } catch { return; }
     }
-    if (!plan || !Array.isArray((plan as any).detailed_assessments)) return;
+    if (!plan || !Array.isArray((plan as TreatmentPlan).detailed_assessments)) return;
 
-    (plan as any).detailed_assessments.forEach((assessment: any) => {
-      const cat = assessment.category as string;
+    (plan as TreatmentPlan).detailed_assessments?.forEach((assessment) => {
+      const cat = assessment.category;
       const bucket =
         countByCategory[cat] ??
         countByCategory[Object.keys(countByCategory).find((k) => norm(k) === norm(cat)) ?? ""];
@@ -128,9 +136,9 @@ function buildCDSCounts(
 
       let fullSubs: string[] | null = null;
       for (const theme of catData.themes) {
-        if (norm(theme.title) !== norm(assessment.theme as string)) continue;
+        if (norm(theme.title) !== norm(assessment.theme)) continue;
         for (const ind of theme.indicators) {
-          if (norm(ind.title) === norm(assessment.indicator as string)) {
+          if (norm(ind.title) === norm(assessment.indicator)) {
             fullSubs = ind.sub_indicators;
             break;
           }
@@ -141,7 +149,7 @@ function buildCDSCounts(
 
       fullSubs.forEach((frameworkSub) => {
         if (
-          assessment.fulfilled_sub_indicators.some((si: string) =>
+          assessment.fulfilled_sub_indicators.some((si) =>
             isLikelySame(si, frameworkSub)
           )
         ) {
@@ -156,7 +164,7 @@ function buildCDSCounts(
       if (Array.isArray(assessment.declined_sub_indicators)) {
         fullSubs.forEach((frameworkSub) => {
           if (
-            assessment.declined_sub_indicators.some((si: string) =>
+            assessment.declined_sub_indicators.some((si) =>
               isLikelySame(si, frameworkSub)
             )
           ) {
@@ -460,7 +468,6 @@ export default function RaporPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [scoreGrid, setScoreGrid] = useState<ScoreGrid>({});
   const [loading, setLoading] = useState(true);
-  const [totalReports, setTotalReports] = useState(0);
   const [countByCategory, setCountByCategory] = useState<Record<string, Map<string, number>>>({
     Karakter: new Map(),
     Mental: new Map(),
@@ -476,8 +483,12 @@ export default function RaporPage() {
       setStudent(s);
       setPeriods(p);
       if (p.length > 0) setSelectedPeriod(p[0]);
+      else setLoading(false);
     };
-    init().catch(console.error);
+    init().catch((error) => {
+      console.error(error);
+      setLoading(false);
+    });
   }, [studentId]);
 
   // CDS sub-indicator counts — aggregated across all reports (same as recap page)
@@ -490,7 +501,6 @@ export default function RaporPage() {
         .eq("student_id", studentId)
         .order("created_at", { ascending: true });
       if (reports) {
-        setTotalReports(reports.length);
         setCountByCategory(buildCDSCounts(reports));
       }
     };
@@ -541,6 +551,7 @@ export default function RaporPage() {
   };
 
   const displayName = student?.name ?? "…";
+  const hasNoScorePeriods = !loading && periods.length === 0 && !selectedPeriod;
 
   if (!student && loading) {
     return (
@@ -625,7 +636,26 @@ export default function RaporPage() {
             </p>
 
             {/* Score tables */}
-            {loading ? (
+            {hasNoScorePeriods ? (
+              <div className="rounded-2xl border-2 border-dashed border-violet-100 bg-violet-50/60 px-5 py-8 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-violet-600 border-2 border-violet-100">
+                  <ClipboardList size={22} />
+                </div>
+                <h2 className="text-base font-black text-slate-900">
+                  Nilai CMS belum diisi
+                </h2>
+                <p className="mt-2 text-sm font-bold leading-relaxed text-slate-500">
+                  Isi nilai terlebih dahulu agar preview rapor siap ditampilkan dan dicetak.
+                </p>
+                <Link
+                  href={`/students/${studentId}/scores`}
+                  className="mt-5 inline-flex items-center justify-center rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-black text-white"
+                  style={{ boxShadow: "0 3px 0 0 #5b21b6" }}
+                >
+                  Input Nilai CMS
+                </Link>
+              </div>
+            ) : loading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
               </div>
@@ -673,7 +703,7 @@ export default function RaporPage() {
             )}
 
             {/* ── CDS Recap Section ───────────────────────────────────────── */}
-            {!loading && (
+            {!loading && !hasNoScorePeriods && (
               <div className="border-t-2 border-slate-100 pt-6 space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                   Rekapitulasi CDS — Ketercapaian Sub-Indikator
@@ -854,21 +884,6 @@ export default function RaporPage() {
           </div>
         </div>
 
-        {/* Empty state hint */}
-        {!selectedPeriod && periods.length === 0 && (
-          <div className="text-center py-6">
-            <p className="text-sm text-slate-400 font-bold">
-              Belum ada nilai —{" "}
-              <Link
-                href={`/students/${studentId}/scores`}
-                className="text-violet-600 underline"
-              >
-                Input Nilai CMS dulu
-              </Link>{" "}
-              untuk melengkapi rapor.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
