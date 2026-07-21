@@ -10,6 +10,10 @@
  *   - Role-based filtering: admin sees all students; ustadz sees only students
  *     where assigned_ustadz_id matches their own user ID
  *   - Status badges: recap availability indicator, report count
+ *   - Collapsed "Laporan <santri> Lain" section: reports a non-admin ustadz
+ *     created for students NOT assigned to them (via reports.created_by),
+ *     so they can follow up on treatment status without it cluttering the
+ *     default view. See scripts/migrations/20260721_cross_assignment_reports.sql.
  *   - Click any student to navigate to /students/[id]
  *
  * Data is fetched once on mount from Supabase, with the full `reports` and
@@ -30,10 +34,12 @@ import {
   CheckCircle2,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   LayoutDashboard,
   Loader2,
   Search,
   ArrowUpDown,
+  UserSearch,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -83,6 +89,14 @@ type RecentReport = {
   treatment_plan: any;
 };
 
+type OtherReport = {
+  id: string;
+  title: string | null;
+  created_at: string;
+  students: { name: string; assigned_ustadz_id: string | null } | null;
+  treatment_plan: any;
+};
+
 export default function StudentsAnalyticsPage() {
   const { user, activeOrganizationId } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
@@ -90,6 +104,8 @@ export default function StudentsAnalyticsPage() {
 
   const [students, setStudents] = useState<StudentWithStats[]>([]);
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
+  const [otherReports, setOtherReports] = useState<OtherReport[]>([]);
+  const [otherReportsOpen, setOtherReportsOpen] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>(getInitialSort);
@@ -227,6 +243,31 @@ export default function StudentsAnalyticsPage() {
 
       const { data: recentRaw } = await recentQuery;
       setRecentReports((recentRaw ?? []) as any);
+
+      // ── 3. Reports this ustadz made for students NOT assigned to them ────
+      // Scoped to reports they personally authored (not every report on that
+      // student) so following up doesn't leak the rest of the student's file.
+      if (!isAdmin && user) {
+        const { data: otherRaw } = await supabase
+          .from("reports")
+          .select(`
+            id,
+            title,
+            created_at,
+            students (name, assigned_ustadz_id),
+            treatment_plan
+          `)
+          .eq("created_by", user.id)
+          .eq("organization_id", activeOrganizationId ?? "")
+          .order("created_at", { ascending: false });
+
+        const filtered = ((otherRaw ?? []) as any[]).filter(
+          (r) => r.students && r.students.assigned_ustadz_id !== user.id
+        );
+        setOtherReports(filtered as OtherReport[]);
+      } else {
+        setOtherReports([]);
+      }
 
       setDataLoading(false);
     };
@@ -575,6 +616,75 @@ export default function StudentsAnalyticsPage() {
             )}
           </div>
         </section>
+
+        {/* 3. REPORTS FOR STUDENTS NOT ASSIGNED TO ME — collapsed by default
+            so ustadz who never use this aren't shown an empty/irrelevant
+            section, but it's a single tap away when they need to follow up. */}
+        {otherReports.length > 0 && (
+          <section>
+            <button
+              onClick={() => setOtherReportsOpen((v) => !v)}
+              className="w-full flex items-center justify-between gap-2 mb-4"
+            >
+              <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
+                <UserSearch size={10} /> Laporan {t.santriLower} Lain ({otherReports.length})
+              </div>
+              <ChevronDown
+                size={16}
+                className={`text-slate-400 transition-transform ${otherReportsOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            <AnimatePresence initial={false}>
+              {otherReportsOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-white rounded-[2rem] overflow-hidden border-2 border-slate-100" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
+                    {otherReports.map((report, idx) => (
+                      <Link
+                        href={`/reports/${report.id}?from=${encodeURIComponent("/students")}`}
+                        key={report.id}
+                        className={`flex items-center justify-between gap-3 px-5 py-4 hover:bg-amber-50 transition-colors ${
+                          idx !== otherReports.length - 1 ? "border-b-2 border-slate-50" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <StudentAvatar
+                            name={report.students?.name ?? "?"}
+                            photoUrl={null}
+                            size="sm"
+                            colorIndex={0}
+                          />
+                          <div className="min-w-0">
+                            <p className="font-black text-slate-800 text-sm leading-tight">{report.students?.name}</p>
+                            {report.title && (
+                              <p className="text-[11px] font-bold text-slate-500 mt-0.5 truncate max-w-[10rem]">
+                                {report.title}
+                              </p>
+                            )}
+                            <p className="text-[10px] font-bold text-slate-400 mt-0.5">
+                              {new Date(report.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}
+                              {" · "}
+                              {new Date(report.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 shrink-0">
+                          Bukan bimbingan Anda
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
+        )}
       </main>
     </div>
   );

@@ -37,6 +37,8 @@ export async function saveAssessmentAction(data: {
     // Server-side Supabase client reads the session from cookies set by middleware
     const db = await createClient();
 
+    const { data: { user } } = await db.auth.getUser();
+
     const { data: student, error: studentError } = await db
       .from('students')
       .select('organization_id')
@@ -57,7 +59,8 @@ export async function saveAssessmentAction(data: {
         narrative: data.narrative,
         title: data.analysis?.report_title || "Laporan Perkembangan",
         treatment_plan: data.analysis, // JSONB
-        model_used: data.model_used || "google/gemini-3-flash-preview"
+        model_used: data.model_used || "google/gemini-3-flash-preview",
+        created_by: user?.id ?? null
       }])
       .select()
       .single();
