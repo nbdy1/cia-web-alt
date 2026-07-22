@@ -47,6 +47,7 @@ import { supabase } from "@/lib/supabase";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { useTerminology } from "@/lib/hooks/use-terminology";
+import { isSupplementaryTheme } from "@/lib/data/framework";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
@@ -63,6 +64,7 @@ export default function ResultsPage() {
   const studentId = searchParams.get("id");
   const studentName = searchParams.get("name") || t.santri;
   const [studentPhotoUrl, setStudentPhotoUrl] = useState<string | null>(null);
+  const [studentOrganizationId, setStudentOrganizationId] = useState<string | null>(null);
   const [narrative, setNarrative] = useState("");
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [modelUsed, setModelUsed] = useState<string>(
@@ -73,10 +75,13 @@ export default function ResultsPage() {
     if (!studentId) return;
     supabase
       .from("students")
-      .select("photo_url")
+      .select("photo_url, organization_id")
       .eq("id", studentId)
       .single()
-      .then(({ data }) => setStudentPhotoUrl(data?.photo_url ?? null));
+      .then(({ data }) => {
+        setStudentPhotoUrl(data?.photo_url ?? null);
+        setStudentOrganizationId(data?.organization_id ?? null);
+      });
   }, [studentId]);
 
   useEffect(() => {
@@ -418,6 +423,15 @@ export default function ResultsPage() {
                               <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400 block w-fit mb-1">
                                 {item.theme}
                               </span>
+                              {isSupplementaryTheme(
+                                studentOrganizationId,
+                                item.category as "Karakter" | "Mental" | "Soft Skill",
+                                item.theme,
+                              ) && (
+                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 mb-1">
+                                  BM400 · Tiga Pilar
+                                </span>
+                              )}
                               <span className="font-black text-xs text-slate-800 leading-snug">
                                 {item.indicator}
                               </span>

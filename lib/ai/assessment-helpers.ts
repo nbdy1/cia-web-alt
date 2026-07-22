@@ -20,6 +20,7 @@
 import { karakterData } from "@/lib/data/karakter";
 import { mentalData } from "@/lib/data/mental";
 import { softSkillData } from "@/lib/data/soft-skill";
+import { getFrameworkForOrganization } from "@/lib/data/framework";
 
 export function normalise(s: string) {
   return s.trim().toLowerCase();
@@ -132,12 +133,23 @@ export const ALL_DATA_BY_CATEGORY: Record<
   "Soft Skill": softSkillData,
 };
 
+// organizationId-aware variant of ALL_DATA_BY_CATEGORY — falls back to the
+// global framework (identical to the map above) when the org has no
+// registered supplement. See lib/data/framework.ts.
+function dataByCategoryFor(organizationId?: string | null) {
+  return getFrameworkForOrganization(organizationId) as unknown as Record<
+    string,
+    { themes: { title: string; indicators: { title: string; sub_indicators: string[] }[] }[] }
+  >;
+}
+
 export function lookupFullIndicatorSubIndicators(
   category: string,
   themeTitle: string,
-  indicatorTitle: string
+  indicatorTitle: string,
+  organizationId?: string | null
 ): string[] | null {
-  const catData = ALL_DATA_BY_CATEGORY[category];
+  const catData = dataByCategoryFor(organizationId)[category];
   if (!catData) return null;
 
   for (const theme of catData.themes) {
@@ -151,8 +163,8 @@ export function lookupFullIndicatorSubIndicators(
   return null;
 }
 
-export function canonicalCategory(category: string): string | null {
-  return Object.keys(ALL_DATA_BY_CATEGORY).find(
+export function canonicalCategory(category: string, organizationId?: string | null): string | null {
+  return Object.keys(dataByCategoryFor(organizationId)).find(
     (k) => normalise(k) === normalise(category)
   ) ?? null;
 }
@@ -160,11 +172,12 @@ export function canonicalCategory(category: string): string | null {
 export function lookupCanonicalIndicator(
   category: string,
   themeTitle: string,
-  indicatorTitle: string
+  indicatorTitle: string,
+  organizationId?: string | null
 ): { category: string; theme: string; indicator: string; subIndicators: string[] } | null {
-  const canonicalCat = canonicalCategory(category);
+  const canonicalCat = canonicalCategory(category, organizationId);
   if (!canonicalCat) return null;
-  const catData = ALL_DATA_BY_CATEGORY[canonicalCat];
+  const catData = dataByCategoryFor(organizationId)[canonicalCat];
   for (const theme of catData.themes) {
     if (normalise(theme.title) !== normalise(themeTitle)) continue;
     for (const ind of theme.indicators) {
@@ -187,7 +200,7 @@ export function isLikelySameSubIndicator(candidate: string, target: string): boo
   return c === t || c.includes(t) || t.includes(c);
 }
 
-export function enrichDetailedAssessments(rawAssessments: any[]): any[] {
+export function enrichDetailedAssessments(rawAssessments: any[], organizationId?: string | null): any[] {
   const enriched: any[] = [];
   const seen = new Set<string>();
 
@@ -195,7 +208,8 @@ export function enrichDetailedAssessments(rawAssessments: any[]): any[] {
     const canonical = lookupCanonicalIndicator(
       String(item?.category ?? ""),
       String(item?.theme ?? ""),
-      String(item?.indicator ?? "")
+      String(item?.indicator ?? ""),
+      organizationId
     );
     if (!canonical) continue;
 
@@ -292,7 +306,7 @@ export function enrichTreatment(
   };
 }
 
-export function computeOverallStats(aiJson: any): {
+export function computeOverallStats(aiJson: any, organizationId?: string | null): {
   karakter: OverallStats;
   mental: OverallStats;
   soft_skill: OverallStats;
@@ -318,7 +332,8 @@ export function computeOverallStats(aiJson: any): {
       const fullSubs = lookupFullIndicatorSubIndicators(
         cat,
         assessment.theme as string,
-        assessment.indicator as string
+        assessment.indicator as string,
+        organizationId
       );
 
       if (!fullSubs || !Array.isArray(assessment.fulfilled_sub_indicators)) continue;
@@ -352,10 +367,11 @@ export function computeOverallStats(aiJson: any): {
     return { total, fulfilled, percentage: total > 0 ? Math.round((fulfilled / total) * 10000) / 100 : 0 };
   };
 
+  const framework = getFrameworkForOrganization(organizationId);
   return {
-    karakter: count(karakterData, fulfilledByCategory["Karakter"]),
-    mental: count(mentalData, fulfilledByCategory["Mental"]),
-    soft_skill: count(softSkillData, fulfilledByCategory["Soft Skill"]),
+    karakter: count(framework.Karakter, fulfilledByCategory["Karakter"]),
+    mental: count(framework.Mental, fulfilledByCategory["Mental"]),
+    soft_skill: count(framework["Soft Skill"], fulfilledByCategory["Soft Skill"]),
   };
 }
 
@@ -367,6 +383,7 @@ export interface CriteriaRow {
   indicator: string;
   sub_indicator: string;
   similarity: number;
+  organization_id?: string | null;
 }
 
 export interface KnowledgeRow {
@@ -375,6 +392,7 @@ export interface KnowledgeRow {
   section: string;
   page_start: number;
   similarity: number;
+  organization_id?: string | null;
 }
 
 // If the query looks like a direct knowledge question ("Apa itu X?", "Jelaskan Y"),
@@ -400,7 +418,8 @@ export function formatKnowledgeContext(rows: KnowledgeRow[]): string {
       // Strip the "[Section Name]" prefix that was prepended during ingest
       // so the AI sees clean prose, not the metadata tag
       const cleanContent = row.content.replace(/^\[[^\]]+\]\n/, "").trim();
-      return `— ${row.section}:\n${cleanContent}`;
+      const tag = row.organization_id ? "[PRIORITAS TINGGI] " : "";
+      return `— ${tag}${row.section}:\n${cleanContent}`;
     })
     .join("\n\n");
 }
@@ -408,8 +427,8 @@ export function formatKnowledgeContext(rows: KnowledgeRow[]): string {
 // ─── Format retrieved rows into a compact, structured string ──────────────────
 
 export function formatCriteriaContext(rows: CriteriaRow[]): string {
-  // Group: category -> theme -> indicator -> [sub_indicators]
-  const grouped: Record<string, Record<string, Record<string, string[]>>> = {};
+  // Group: category -> theme -> indicator -> [{ sub_indicator, orgSpecific }]
+  const grouped: Record<string, Record<string, Record<string, { text: string; orgSpecific: boolean }[]>>> = {};
 
   for (const row of rows) {
     if (!grouped[row.category]) grouped[row.category] = {};
@@ -417,7 +436,10 @@ export function formatCriteriaContext(rows: CriteriaRow[]): string {
     if (!grouped[row.category][row.theme][row.indicator]) {
       grouped[row.category][row.theme][row.indicator] = [];
     }
-    grouped[row.category][row.theme][row.indicator].push(row.sub_indicator);
+    grouped[row.category][row.theme][row.indicator].push({
+      text: row.sub_indicator,
+      orgSpecific: Boolean(row.organization_id),
+    });
   }
 
   const lines: string[] = [];
@@ -426,9 +448,10 @@ export function formatCriteriaContext(rows: CriteriaRow[]): string {
     for (const [theme, indicators] of Object.entries(themes)) {
       lines.push(`  ### Tema: ${theme}`);
       for (const [indicator, subs] of Object.entries(indicators)) {
-        lines.push(`    Indikator: ${indicator}`);
+        const indicatorTag = subs.some((s) => s.orgSpecific) ? " [PRIORITAS TINGGI]" : "";
+        lines.push(`    Indikator: ${indicator}${indicatorTag}`);
         for (const sub of subs) {
-          lines.push(`      - ${sub}`);
+          lines.push(`      - ${sub.text}`);
         }
       }
     }
@@ -445,14 +468,20 @@ export function getRecentTranscriptWindow(transcript: string, maxLines = 4): str
   return lines.slice(-maxLines).join("\n");
 }
 
-export function buildUnexploredThemesContext(frontierRows: CriteriaRow[], discoveredThemes: string[], limit = 4): string {
+export function buildUnexploredThemesContext(
+  frontierRows: CriteriaRow[],
+  discoveredThemes: string[],
+  limit = 4,
+  organizationId?: string | null
+): string {
   const frontierThemes = new Set(frontierRows.map((row) => normalise(row.theme)));
   const discovered = new Set(discoveredThemes.map((t) => normalise(t)));
 
+  const framework = getFrameworkForOrganization(organizationId);
   const allThemes = [
-    ...karakterData.themes.map((theme) => ({ category: "Karakter", title: theme.title })),
-    ...mentalData.themes.map((theme) => ({ category: "Mental", title: theme.title })),
-    ...softSkillData.themes.map((theme) => ({ category: "Soft Skill", title: theme.title })),
+    ...framework.Karakter.themes.map((theme) => ({ category: "Karakter", title: theme.title })),
+    ...framework.Mental.themes.map((theme) => ({ category: "Mental", title: theme.title })),
+    ...framework["Soft Skill"].themes.map((theme) => ({ category: "Soft Skill", title: theme.title })),
   ];
 
   const unexplored = allThemes

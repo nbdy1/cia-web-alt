@@ -32,9 +32,7 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
-import { karakterData } from "@/lib/data/karakter";
-import { mentalData } from "@/lib/data/mental";
-import { softSkillData } from "@/lib/data/soft-skill";
+import { getFrameworkForOrganization } from "@/lib/data/framework";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -57,11 +55,16 @@ function countSubIndicators(data: { themes: { indicators: { sub_indicators: stri
   return total;
 }
 
-const KMS_TOTALS: Record<string, number> = {
-  [normaliseCategory("Karakter")]: countSubIndicators(karakterData),
-  [normaliseCategory("Mental")]: countSubIndicators(mentalData),
-  [normaliseCategory("Soft Skill")]: countSubIndicators(softSkillData),
-};
+// organizationId-aware — an org with a supplementary framework (e.g. BM400)
+// gets a higher denominator so its progress percentages stay accurate.
+function getKmsTotals(organizationId?: string | null): Record<string, number> {
+  const framework = getFrameworkForOrganization(organizationId);
+  return {
+    [normaliseCategory("Karakter")]: countSubIndicators(framework.Karakter),
+    [normaliseCategory("Mental")]: countSubIndicators(framework.Mental),
+    [normaliseCategory("Soft Skill")]: countSubIndicators(framework["Soft Skill"]),
+  };
+}
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 function parsePlan(raw: any) {
@@ -286,11 +289,12 @@ export default function AdminOverviewPage() {
             });
           });
         });
+        const kmsTotals = getKmsTotals(activeOrganizationId);
         setSantriLeader(
           Object.values(santriMap)
             .map((s) => {
               const pillarPercentages = Object.entries(s.fulfilled).map(([cat, fulfilledCounts]) => {
-                const total = KMS_TOTALS[cat] ?? 0;
+                const total = kmsTotals[cat] ?? 0;
                 const fulfilledCount = Array.from(fulfilledCounts.values()).filter((c) => c >= 1).length;
                 return total > 0 ? (fulfilledCount / total) * 100 : 0;
               });

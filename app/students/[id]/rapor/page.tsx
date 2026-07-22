@@ -22,9 +22,7 @@ import { getStudentScores, getStudentPeriods } from "@/app/actions/scores";
 import { ChevronLeft, Printer, Loader2, CheckCircle2, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { karakterData } from "@/lib/data/karakter";
-import { mentalData } from "@/lib/data/mental";
-import { softSkillData } from "@/lib/data/soft-skill";
+import { getFrameworkForOrganization, type Framework } from "@/lib/data/framework";
 import { getCDSPhase } from "@/lib/cia-phases";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { useTerminology } from "@/lib/hooks/use-terminology";
@@ -44,7 +42,7 @@ const SCORE_TYPE_DEFS = [
 
 type ScoreCell = { nilai_harian: number | null; nilai_bulanan: number | null; nilai_akhir: number | null };
 type ScoreGrid = Record<string, Record<string, ScoreCell>>;
-type Student = { name: string; nis: string | null; photo_url: string | null };
+type Student = { name: string; nis: string | null; photo_url: string | null; organization_id: string | null };
 type DetailedAssessment = {
   category: string;
   theme: string;
@@ -56,41 +54,48 @@ type TreatmentPlan = { detailed_assessments?: DetailedAssessment[] };
 
 // ─── CDS helpers ──────────────────────────────────────────────────────────────
 
-const CDS_CATEGORIES = [
-  {
-    label: "Karakter",
-    data: karakterData,
-    color: "#f43f5e",
-    lightBg: "#fff1f2",
-    borderColor: "#fecdd3",
-    twColor: "text-rose-500",
-    twBg: "bg-rose-50",
-    twBorder: "border-rose-100",
-    twProg: "bg-rose-400",
-  },
-  {
-    label: "Mental",
-    data: mentalData,
-    color: "#3b82f6",
-    lightBg: "#eff6ff",
-    borderColor: "#bfdbfe",
-    twColor: "text-blue-500",
-    twBg: "bg-blue-50",
-    twBorder: "border-blue-100",
-    twProg: "bg-blue-400",
-  },
-  {
-    label: "Soft Skill",
-    data: softSkillData,
-    color: "#a855f7",
-    lightBg: "#faf5ff",
-    borderColor: "#e9d5ff",
-    twColor: "text-purple-500",
-    twBg: "bg-purple-50",
-    twBorder: "border-purple-100",
-    twProg: "bg-purple-400",
-  },
-];
+// organizationId-aware — an org with a supplementary framework (e.g. BM400)
+// gets its extra themes included in every summary/detail block below.
+function getCdsCategories(organizationId?: string | null) {
+  const framework = getFrameworkForOrganization(organizationId);
+  return [
+    {
+      label: "Karakter",
+      data: framework.Karakter,
+      color: "#f43f5e",
+      lightBg: "#fff1f2",
+      borderColor: "#fecdd3",
+      twColor: "text-rose-500",
+      twBg: "bg-rose-50",
+      twBorder: "border-rose-100",
+      twProg: "bg-rose-400",
+    },
+    {
+      label: "Mental",
+      data: framework.Mental,
+      color: "#3b82f6",
+      lightBg: "#eff6ff",
+      borderColor: "#bfdbfe",
+      twColor: "text-blue-500",
+      twBg: "bg-blue-50",
+      twBorder: "border-blue-100",
+      twProg: "bg-blue-400",
+    },
+    {
+      label: "Soft Skill",
+      data: framework["Soft Skill"],
+      color: "#a855f7",
+      lightBg: "#faf5ff",
+      borderColor: "#e9d5ff",
+      twColor: "text-purple-500",
+      twBg: "bg-purple-50",
+      twBorder: "border-purple-100",
+      twProg: "bg-purple-400",
+    },
+  ];
+}
+
+type CdsCategories = ReturnType<typeof getCdsCategories>;
 
 const norm = (s: string) => s.trim().toLowerCase();
 
@@ -98,17 +103,19 @@ const norm = (s: string) => s.trim().toLowerCase();
 // decrements the running count floored at 0, which is only correct when
 // replayed in the same chronological order the reports were created in.
 function buildCDSCounts(
-  reports: Array<{ treatment_plan: unknown }>
+  reports: Array<{ treatment_plan: unknown }>,
+  organizationId?: string | null
 ): Record<string, Map<string, number>> {
   const countByCategory: Record<string, Map<string, number>> = {
     Karakter: new Map(),
     Mental: new Map(),
     "Soft Skill": new Map(),
   };
-  const dataByLabel: Record<string, typeof karakterData> = {
-    Karakter: karakterData,
-    Mental: mentalData,
-    "Soft Skill": softSkillData,
+  const framework = getFrameworkForOrganization(organizationId);
+  const dataByLabel: Record<string, Framework["Karakter"]> = {
+    Karakter: framework.Karakter,
+    Mental: framework.Mental,
+    "Soft Skill": framework["Soft Skill"],
   };
   const isLikelySame = (a: string, b: string) => {
     const na = norm(a), nb = norm(b);
@@ -188,8 +195,9 @@ const esc = (s: string) =>
 
 function buildCDSSectionHtml(
   countByCategory: Record<string, Map<string, number>>,
+  cdsCategories: CdsCategories,
 ): string {
-  const summaryCells = CDS_CATEGORIES.map((cat) => {
+  const summaryCells = cdsCategories.map((cat) => {
     const countMap = countByCategory[cat.label] ?? new Map<string, number>();
     let totalSub = 0, fulfilledSub = 0;
     cat.data.themes.forEach((theme) => {
@@ -213,7 +221,7 @@ function buildCDSSectionHtml(
       </div>`;
   }).join("");
 
-  const detailBlocks = CDS_CATEGORIES.map((cat) => {
+  const detailBlocks = cdsCategories.map((cat) => {
     const countMap = countByCategory[cat.label] ?? new Map<string, number>();
 
     // ── Theme bars ──
@@ -343,9 +351,10 @@ function buildPrintHTML(opts: {
   printDate: string;
   scoreGrid: ScoreGrid;
   countByCategory: Record<string, Map<string, number>>;
+  cdsCategories: CdsCategories;
   t: Terminology;
 }) {
-  const { name, nis, photoUrl, period, printDate, scoreGrid, countByCategory, t } = opts;
+  const { name, nis, photoUrl, period, printDate, scoreGrid, countByCategory, cdsCategories, t } = opts;
 
   const scoreTablesHtml = SUBJECTS.map((subj) => {
     const grid = scoreGrid[subj] ?? {};
@@ -382,7 +391,7 @@ function buildPrintHTML(opts: {
       </div>`;
   }).join("");
 
-  const cdsSectionHtml = buildCDSSectionHtml(countByCategory);
+  const cdsSectionHtml = buildCDSSectionHtml(countByCategory, cdsCategories);
 
   return `<!DOCTYPE html>
 <html lang="id">
@@ -476,10 +485,15 @@ export default function RaporPage() {
     "Soft Skill": new Map(),
   });
 
+  const cdsCategories = React.useMemo(
+    () => getCdsCategories(student?.organization_id ?? null),
+    [student?.organization_id]
+  );
+
   useEffect(() => {
     const init = async () => {
       const [{ data: s }, p] = await Promise.all([
-        supabase.from("students").select("name, nis, photo_url").eq("id", studentId).single(),
+        supabase.from("students").select("name, nis, photo_url, organization_id").eq("id", studentId).single(),
         getStudentPeriods(studentId),
       ]);
       setStudent(s);
@@ -493,8 +507,10 @@ export default function RaporPage() {
     });
   }, [studentId]);
 
-  // CDS sub-indicator counts — aggregated across all reports (same as recap page)
+  // CDS sub-indicator counts — aggregated across all reports (same as recap page).
+  // Waits for `student` so the org-specific framework (if any) is known.
   useEffect(() => {
+    if (!student) return;
     const loadCDS = async () => {
       // Ordered oldest-first — see buildCDSCounts() comment on why order matters.
       const { data: reports } = await supabase
@@ -503,11 +519,11 @@ export default function RaporPage() {
         .eq("student_id", studentId)
         .order("created_at", { ascending: true });
       if (reports) {
-        setCountByCategory(buildCDSCounts(reports));
+        setCountByCategory(buildCDSCounts(reports, student.organization_id));
       }
     };
     loadCDS().catch(console.error);
-  }, [studentId]);
+  }, [studentId, student]);
 
   useEffect(() => {
     if (!selectedPeriod) return;
@@ -544,6 +560,7 @@ export default function RaporPage() {
       printDate,
       scoreGrid,
       countByCategory,
+      cdsCategories,
       t,
     });
     const win = window.open("", "_blank", "width=900,height=700");
@@ -713,7 +730,7 @@ export default function RaporPage() {
 
                 {/* Category summary cards */}
                 <div className="grid grid-cols-3 gap-3">
-                  {CDS_CATEGORIES.map((cat) => {
+                  {cdsCategories.map((cat) => {
                     const countMap = countByCategory[cat.label] ?? new Map<string, number>();
                     let totalSub = 0, fulfilledSub = 0;
                     cat.data.themes.forEach((theme) => {
@@ -751,7 +768,7 @@ export default function RaporPage() {
                 </div>
 
                 {/* Theme bars + sub-indicator details per category */}
-                {CDS_CATEGORIES.map((cat) => {
+                {cdsCategories.map((cat) => {
                   const countMap = countByCategory[cat.label] ?? new Map<string, number>();
                   const themeStats = cat.data.themes.map((theme) => {
                     let total = 0, fulfilled = 0;

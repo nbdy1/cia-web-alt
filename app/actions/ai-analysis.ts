@@ -123,7 +123,13 @@ function tokenize(text: string): string[] {
  * a few dozen candidates. `label` is just for the console logs below, to
  * make it easy to see whether this is actually changing anything.
  */
-function hybridRescore<T extends { similarity: number }>(
+// Added to the combined score of a row that belongs to an org-specific
+// supplementary framework (organization_id set), so it consistently outranks
+// equally-similar global rows and actually surfaces in conversation instead
+// of only doing so when it happens to also win on similarity/lexical overlap.
+const ORG_PRIORITY_BOOST = 0.12;
+
+function hybridRescore<T extends { similarity: number; organization_id?: string | null }>(
   query: string,
   candidates: T[],
   toText: (item: T) => string,
@@ -141,7 +147,8 @@ function hybridRescore<T extends { similarity: number }>(
     const lexicalScore = queryTokens.size > 0 ? overlap / queryTokens.size : 0;
     // Embedding similarity stays the dominant signal; lexical overlap is a
     // boost for candidates that share exact domain terms with the query.
-    const combinedScore = row.similarity + lexicalScore * 0.25;
+    const orgBoost = row.organization_id ? ORG_PRIORITY_BOOST : 0;
+    const combinedScore = row.similarity + lexicalScore * 0.25 + orgBoost;
     return { row, combinedScore, lexicalScore };
   });
 
@@ -302,7 +309,11 @@ async function embedText(text: string): Promise<number[]> {
 
 // ─── RAG: Retrieve the top-N most relevant criteria from Supabase ─────────────
 
-async function retrieveRelevantCriteria(transcript: string, topK = 25): Promise<CriteriaRow[]> {
+async function retrieveRelevantCriteria(
+  transcript: string,
+  topK = 25,
+  organizationId?: string | null
+): Promise<CriteriaRow[]> {
   const startedAt = Date.now();
   const embedding = await embedText(transcript);
   const embedMs = Date.now() - startedAt;
@@ -314,6 +325,7 @@ async function retrieveRelevantCriteria(transcript: string, topK = 25): Promise<
     query_embedding: embedding,
     match_threshold: 0.15,
     match_count: candidateCount,
+    target_organization_id: organizationId ?? null,
   });
 
   if (error) throw new Error(`Supabase RPC Error: ${error.message}`);
@@ -341,7 +353,8 @@ async function retrieveRelevantCriteria(transcript: string, topK = 25): Promise<
 
 async function retrieveRelevantKnowledge(
   query: string,
-  topK = 5
+  topK = 5,
+  organizationId?: string | null
 ): Promise<KnowledgeRow[]> {
   try {
     const startedAt = Date.now();
@@ -356,6 +369,7 @@ async function retrieveRelevantKnowledge(
       query_embedding: embedding,
       match_threshold: 0.15,  // same as criteria — let the prompt handle relevance
       match_count: candidateCount,
+      target_organization_id: organizationId ?? null,
     });
 
     if (error) {
@@ -548,25 +562,27 @@ export async function processInterviewStep(
     // Fetch the student's historical profile if a studentId was provided.
     // This is a single indexed read and adds ~250 tokens to the prompt.
     let studentProfile: string | undefined;
+    let organizationId: string | null = null;
     if (studentId) {
       const { data: studentData } = await db
         .from("students")
-        .select("profile_summary")
+        .select("profile_summary, organization_id")
         .eq("id", studentId)
         .single();
       studentProfile = studentData?.profile_summary ?? undefined;
+      organizationId = studentData?.organization_id ?? null;
     }
 
     const recentWindow = getRecentTranscriptWindow(transcript, 4);
 
     // Run criteria RAG and knowledge RAG in parallel to save latency
     const [frontierRows, knowledgeRows] = await Promise.all([
-      retrieveRelevantCriteria(recentWindow || transcript, 15),
-      retrieveRelevantKnowledge(recentWindow || transcript, 3),
+      retrieveRelevantCriteria(recentWindow || transcript, 15, organizationId),
+      retrieveRelevantKnowledge(recentWindow || transcript, 3, organizationId),
     ]);
 
     const frontierCriteriaContext = formatCriteriaContext(frontierRows);
-    const unexploredThemesContext = buildUnexploredThemesContext(frontierRows, discoveredThemes, 4);
+    const unexploredThemesContext = buildUnexploredThemesContext(frontierRows, discoveredThemes, 4, organizationId);
     const knowledgeContext = formatKnowledgeContext(knowledgeRows);
 
     const _kqRaw = recentWindow || transcript;
@@ -636,13 +652,14 @@ export async function finalizeAssessment(
       "Belum ada data asesmen sebelumnya. Mulai dari awal kerangka kerja.";
     let studentProfile: string | undefined;
     let previousTitlesContext = "";
+    let organizationId: string | null = null;
 
     if (studentId) {
       // Fetch profile and latest report in parallel to keep latency down
       const [profileResult, latestReportResult] = await Promise.all([
         db
           .from("students")
-          .select("profile_summary")
+          .select("profile_summary, organization_id")
           .eq("id", studentId)
           .single(),
         db
@@ -659,6 +676,7 @@ export async function finalizeAssessment(
       // keeps re-poisoning every future report via the injected context.
       const rawProfile = profileResult.data?.profile_summary ?? undefined;
       studentProfile = rawProfile ? sanitizeFreeText(rawProfile) : undefined;
+      organizationId = profileResult.data?.organization_id ?? null;
       const latestReport = latestReportResult.data;
 
       if (studentProfile) {
@@ -713,8 +731,8 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     // 2. RAG: run criteria and knowledge retrieval in parallel
     console.log("[RAG] Embedding transcript and retrieving relevant criteria + knowledge...");
     const [relevantRows, knowledgeRows] = await Promise.all([
-      retrieveRelevantCriteria(transcript, 30),
-      retrieveRelevantKnowledge(transcript, 4),
+      retrieveRelevantCriteria(transcript, 30, organizationId),
+      retrieveRelevantKnowledge(transcript, 4, organizationId),
     ]);
 
     const discoveredThemesContext = discoveredThemes.length
@@ -752,7 +770,7 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
       temperature
     );
     const parsed = parseModelJson(responseText, "Finalize assessment");
-    let enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? []);
+    let enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? [], organizationId);
     enrichedAssessments = await stripUngroundedDeclines(enrichedAssessments, studentId, db);
     parsed.analysis_version = 2;
     parsed.status_summary = sanitizeFreeText(String(parsed?.status_summary ?? ""));
@@ -776,7 +794,7 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     });
 
     // 5. Deterministically compute numeric fields (never trust AI arithmetic).
-    parsed.overall_stats = computeOverallStats(parsed);
+    parsed.overall_stats = computeOverallStats(parsed, organizationId);
     console.log("[Stats] Computed overall_stats:", parsed.overall_stats);
 
     return parsed;

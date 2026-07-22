@@ -46,7 +46,7 @@ Gunakan profil ini untuk menginformasikan pertanyaan Anda — misalnya, gali leb
     ? `
 ### REFERENSI PENGETAHUAN CMS (dari buku panduan — bukan rubrik penilaian):
 ${knowledgeContext}
-Gunakan referensi ini untuk memperkaya pertanyaan Anda dengan konteks Qurani atau panduan situasional yang relevan. JANGAN gunakan ini untuk menentukan kriteria penilaian.
+Gunakan referensi ini untuk memperkaya pertanyaan Anda dengan konteks Qurani atau panduan situasional yang relevan. JANGAN gunakan ini untuk menentukan kriteria penilaian. Referensi bertanda [PRIORITAS TINGGI] harus lebih diutamakan untuk memperkaya pertanyaan dibanding referensi lain.
 `
     : "";
 
@@ -80,6 +80,7 @@ ${unexploredThemesContext || "(tidak ada tema unexplored yang tersisa)"}
 ### BATASAN KRITERIA:
 - Anda WAJIB hanya menggunakan Tema/Indikator/Sub-indikator yang muncul di konteks FRONTIER atau UNEXPLORED TERRITORY.
 - DILARANG mengarang nama tema/indikator baru di luar konteks tersebut.
+- Tema/Indikator/referensi bertanda [PRIORITAS TINGGI] harus diutamakan dan digali lebih dulu ketika relevan dengan konteks yang dibahas.
 
 ### STRATEGI WAWANCARA:
 - Awali dengan mengapresiasi atau merespons apa yang baru saja disampaikan oleh Ustadz.
@@ -122,7 +123,7 @@ Gunakan profil ini untuk mempersonalisasi action_plan pada bagian treatment — 
     ? `
 ### REFERENSI PANDUAN CMS (dari buku panduan — hanya untuk memperkaya action_plan):
 ${knowledgeContext}
-Gunakan referensi ini HANYA untuk menulis action_plan yang lebih kaya dan berbasis panduan Qurani. JANGAN gunakan ini untuk menentukan kriteria atau sub-indikator yang terpenuhi.
+Gunakan referensi ini HANYA untuk menulis action_plan yang lebih kaya dan berbasis panduan Qurani. JANGAN gunakan ini untuk menentukan kriteria atau sub-indikator yang terpenuhi. Referensi bertanda [PRIORITAS TINGGI] harus lebih diutamakan dibanding referensi lain.
 `
     : "";
 
@@ -138,6 +139,7 @@ ${criteriaContext}
 1. **Pemetaan Spesifik**: Hanya gunakan Tema, Indikator, dan Sub-indikator yang PERSIS seperti yang tertulis di dalam KRITERIA RELEVAN di atas. DILARANG KERAS mengarang atau mengubah nama kriteria.
 2. **Berbasis Bukti**: Hanya tandai Sub-indikator sebagai terpenuhi jika ada bukti yang JELAS di dalam transkrip.
 3. **Hemat Token**: Jangan hitung total, persentase, atau pecahan numerik. Server akan menghitung semuanya secara deterministik.
+4. **Prioritas**: Indikator bertanda [PRIORITAS TINGGI] mewakili kriteria yang harus diutamakan — jika bukti dalam transkrip cocok dengan kriteria ini maupun kriteria umum lain secara setara, pilih kriteria [PRIORITAS TINGGI].
 
 ### ATURAN KEMUNDURAN (DECLINED_SUB_INDICATORS):
 Karakter, mental, dan soft skill bisa naik maupun turun — seperti iman, sifatnya tidak selalu linear. Jika transkrip menunjukkan bukti KEMUNDURAN yang JELAS dan SPESIFIK pada sebuah sub-indikator (perilaku yang secara aktif BERTENTANGAN dengan sub-indikator yang sebelumnya pernah tercapai — bukan sekadar tidak disebutkan), masukkan sub-indikator tersebut ke dalam declined_sub_indicators pada item detailed_assessments yang sesuai.

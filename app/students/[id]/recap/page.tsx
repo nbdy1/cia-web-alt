@@ -42,9 +42,7 @@ import {
 } from "lucide-react";
 import { getCDSPhase } from "@/lib/cia-phases";
 import Link from "next/link";
-import { karakterData } from "@/lib/data/karakter";
-import { mentalData } from "@/lib/data/mental";
-import { softSkillData } from "@/lib/data/soft-skill";
+import { getFrameworkForOrganization, isSupplementaryTheme } from "@/lib/data/framework";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 
 // ─── Theme Fulfillment Bar Chart ─────────────────────────────────────────────
@@ -193,13 +191,14 @@ async function getStudentRecap(id: string) {
     "Soft Skill": new Map(),
   };
 
+  const framework = getFrameworkForOrganization(student?.organization_id ?? null);
   const allDataByCategory: Record<
     string,
     { themes: { title: string; indicators: { title: string; sub_indicators: string[] }[] }[] }
   > = {
-    Karakter: karakterData,
-    Mental: mentalData,
-    "Soft Skill": softSkillData,
+    Karakter: framework.Karakter,
+    Mental: framework.Mental,
+    "Soft Skill": framework["Soft Skill"],
   };
 
   const norm = (s: string) => s.trim().toLowerCase();
@@ -297,6 +296,7 @@ export default async function RecapPage({
   if (!student)
     return <div className="p-10 text-center">Santri tidak ditemukan.</div>;
 
+  const framework = getFrameworkForOrganization(student.organization_id ?? null);
   const categories = [
     {
       key: "karakter",
@@ -305,7 +305,7 @@ export default async function RecapPage({
       color: "text-rose-500",
       bg: "bg-rose-50",
       progressBg: "bg-rose-400",
-      data: karakterData,
+      data: framework.Karakter,
       accentColor: "#f43f5e",
     },
     {
@@ -315,7 +315,7 @@ export default async function RecapPage({
       color: "text-blue-500",
       bg: "bg-blue-50",
       progressBg: "bg-blue-400",
-      data: mentalData,
+      data: framework.Mental,
       accentColor: "#3b82f6",
     },
     {
@@ -325,7 +325,7 @@ export default async function RecapPage({
       color: "text-purple-500",
       bg: "bg-purple-50",
       progressBg: "bg-purple-400",
-      data: softSkillData,
+      data: framework["Soft Skill"],
       accentColor: "#a855f7",
     },
   ];
@@ -493,6 +493,15 @@ export default async function RecapPage({
                             <h3 className="text-[15px] font-bold text-slate-900 font-serif leading-tight">
                               {theme.title}
                             </h3>
+                            {isSupplementaryTheme(
+                              student.organization_id,
+                              cat.label as "Karakter" | "Mental" | "Soft Skill",
+                              theme.title,
+                            ) && (
+                              <span className="inline-flex w-fit items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
+                                BM400 · Tiga Pilar
+                              </span>
+                            )}
                             {themePhase && (
                               <div className={`mt-3 px-3.5 py-2.5 rounded-xl border ${themePhase.bg} ${themePhase.border}`}>
                                 <p className={`text-[11px] font-bold ${themePhase.text}`}>

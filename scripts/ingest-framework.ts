@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { karakterData } from '../lib/data/karakter';
 import { mentalData } from '../lib/data/mental';
 import { softSkillData } from '../lib/data/soft-skill';
+import { ORG_FRAMEWORK_EXTENSIONS } from '../lib/data/framework';
 
 // Load environment variables from .env.local
 dotenv.config({ path: '.env.local' });
@@ -27,9 +28,10 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function ingestCategory(categoryName: string, categoryData: any) {
-  console.log(`\n🚀 Starting ingestion for category: ${categoryName}`);
-  
+async function ingestCategory(categoryName: string, categoryData: any, organizationId: string | null = null): Promise<number> {
+  console.log(`\n🚀 Starting ingestion for category: ${categoryName}${organizationId ? ` (org ${organizationId})` : ""}`);
+  let failures = 0;
+
   for (const theme of categoryData.themes) {
     for (const indicator of theme.indicators) {
       for (const subIndicator of indicator.sub_indicators) {
@@ -40,6 +42,23 @@ async function ingestCategory(categoryName: string, categoryData: any) {
         console.log(`Processing: ${subIndicator}`);
         
         try {
+          let existingQuery = supabase
+            .from('cia_criteria')
+            .select('id')
+            .eq('category', categoryName)
+            .eq('theme', theme.title)
+            .eq('indicator', indicator.title)
+            .eq('sub_indicator', subIndicator);
+          existingQuery = organizationId
+            ? existingQuery.eq('organization_id', organizationId)
+            : existingQuery.is('organization_id', null);
+          const { data: existing, error: lookupError } = await existingQuery.maybeSingle();
+          if (lookupError) throw lookupError;
+          if (existing) {
+            console.log(`Skipping existing criteria row ${existing.id}`);
+            continue;
+          }
+
           // 2. Generate the embedding vector using OpenAI via OpenRouter
           const embeddingResponse = await openai.embeddings.create({
             model: "openai/text-embedding-3-small",
@@ -57,14 +76,17 @@ async function ingestCategory(categoryName: string, categoryData: any) {
               indicator: indicator.title,
               sub_indicator: subIndicator,
               search_text: searchText,
-              embedding: embedding
+              embedding: embedding,
+              organization_id: organizationId,
             });
 
           if (error) {
             console.error(`❌ Error inserting to Supabase: ${error.message}`);
+            failures++;
           }
         } catch (err: any) {
           console.error(`❌ Error generating embedding: ${err.message}`);
+          failures++;
         }
         
         // Small delay to avoid hitting rate limits if you're on a free tier
@@ -72,6 +94,17 @@ async function ingestCategory(categoryName: string, categoryData: any) {
       }
     }
   }
+  return failures;
+}
+
+// --org <uuid>: ingest only that organization's supplementary themes
+// (lib/data/framework.ts's ORG_FRAMEWORK_EXTENSIONS), tagged with
+// organization_id so they're only visible when querying as that org. Without
+// this flag, behavior is unchanged — the base 88-theme global framework,
+// tagged organization_id: null (visible to every org).
+function parseOrgFlag(): string | null {
+  const idx = process.argv.indexOf('--org');
+  return idx !== -1 ? process.argv[idx + 1] ?? null : null;
 }
 
 async function main() {
@@ -81,15 +114,37 @@ async function main() {
     return;
   }
 
+  const orgId = parseOrgFlag();
+
+  if (orgId) {
+    const extension = ORG_FRAMEWORK_EXTENSIONS[orgId];
+    if (!extension) {
+      console.error(`❌ No supplementary framework registered for organization_id ${orgId} in lib/data/framework.ts`);
+      return;
+    }
+    console.log(`Starting supplementary framework ingestion for org ${orgId}...`);
+    const failures = [
+      extension.Karakter ? await ingestCategory("Karakter", extension.Karakter, orgId) : 0,
+      extension.Mental ? await ingestCategory("Mental", extension.Mental, orgId) : 0,
+      extension["Soft Skill"] ? await ingestCategory("Soft Skill", extension["Soft Skill"], orgId) : 0,
+    ].reduce((total, count) => total + count, 0);
+    if (failures > 0) throw new Error(`Supplementary ingestion failed for ${failures} row(s)`);
+    console.log("\n✅ Org supplementary ingestion complete!");
+    return;
+  }
+
   console.log("Starting CIA Framework Ingestion...");
-  
+
   // Clear the table first if you want a fresh start (uncomment if needed)
   // await supabase.from('cia_criteria').delete().neq('id', 0);
-  
-  await ingestCategory("Karakter", karakterData);
-  await ingestCategory("Mental", mentalData);
-  await ingestCategory("Soft Skill", softSkillData);
-  
+
+  const failures = [
+    await ingestCategory("Karakter", karakterData),
+    await ingestCategory("Mental", mentalData),
+    await ingestCategory("Soft Skill", softSkillData),
+  ].reduce((total, count) => total + count, 0);
+  if (failures > 0) throw new Error(`Framework ingestion failed for ${failures} row(s)`);
+
   console.log("\n✅ Ingestion Complete!");
 }
 

@@ -29,9 +29,6 @@ import {
   Cpu,
   TrendingDown,
 } from "lucide-react";
-import { karakterData } from "@/lib/data/karakter";
-import { mentalData } from "@/lib/data/mental";
-import { softSkillData } from "@/lib/data/soft-skill";
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { FulfilledSubsList } from "@/components/FulfilledSubsList";
 import { TreatmentPlanStatus } from "@/components/TreatmentPlanStatus";
@@ -40,18 +37,15 @@ import { StudentAvatar } from "@/components/StudentAvatar";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { getTerminology } from "@/lib/data/terminology";
 import { isTenantOrganization } from "@/lib/tenant-server";
+import { getFrameworkForOrganization, isSupplementaryTheme } from "@/lib/data/framework";
 
 // ─── Framework lookup helpers ──────────────────────────────────────────────
 // Given a category + theme title + indicator title from the AI output,
 // return the FULL sub_indicators array from the local framework.
 // This ensures the report always shows all sub-indicators, not just those
-// the AI happened to see via RAG.
-
-const ALL_DATA: Record<string, { themes: { title: string; indicators: { title: string; sub_indicators: string[] }[] }[] }> = {
-  Karakter: karakterData,
-  Mental: mentalData,
-  "Soft Skill": softSkillData,
-};
+// the AI happened to see via RAG. organizationId is threaded through so an
+// org with a supplementary framework (e.g. BM400) resolves its own extra
+// themes instead of losing them — see lib/data/framework.ts.
 
 function normaliseStr(s: string) {
   return s.trim().toLowerCase();
@@ -60,9 +54,10 @@ function normaliseStr(s: string) {
 function lookupFullIndicator(
   category: string,
   themeTitle: string,
-  indicatorTitle: string
+  indicatorTitle: string,
+  organizationId?: string | null
 ): string[] | null {
-  const catData = ALL_DATA[category];
+  const catData = getFrameworkForOrganization(organizationId)[category as "Karakter" | "Mental" | "Soft Skill"];
   if (!catData) return null;
 
   for (const theme of catData.themes) {
@@ -86,28 +81,29 @@ function isSubFulfilled(sub: string, fulfilledList: string[]): boolean {
   return false;
 }
 
-function getFulfilledDisplaySubs(item: any): string[] {
+function getFulfilledDisplaySubs(item: any, organizationId?: string | null): string[] {
   const fulfilledSubs: string[] = item.fulfilled_sub_indicators ?? [];
-  const fullSubs = lookupFullIndicator(item.category, item.theme, item.indicator);
+  const fullSubs = lookupFullIndicator(item.category, item.theme, item.indicator, organizationId);
 
   if (!fullSubs) return fulfilledSubs;
 
   return fullSubs.filter((sub) => isSubFulfilled(sub, fulfilledSubs));
 }
 
-function computeDisplayOverallStats(analysis: any) {
+function computeDisplayOverallStats(analysis: any, organizationId?: string | null) {
   const categories = ["Karakter", "Mental", "Soft Skill"] as const;
   const result: Record<string, { fulfilled: number; total: number; percentage: number }> = {};
+  const framework = getFrameworkForOrganization(organizationId);
 
   categories.forEach((cat) => {
-    const data = ALL_DATA[cat];
+    const data = framework[cat];
     const canonicalFulfilled = new Set<string>();
     const assessments = Array.isArray(analysis?.detailed_assessments)
       ? analysis.detailed_assessments.filter((a: any) => a.category === cat)
       : [];
 
     assessments.forEach((item: any) => {
-      const fullSubs = lookupFullIndicator(item.category, item.theme, item.indicator);
+      const fullSubs = lookupFullIndicator(item.category, item.theme, item.indicator, organizationId);
       if (!fullSubs) return;
       const aiFulfilled: string[] = item.fulfilled_sub_indicators ?? [];
       fullSubs.forEach((sub) => {
@@ -176,8 +172,9 @@ export default async function ReportDetailPage({
     typeof report.treatment_plan === "string"
       ? JSON.parse(report.treatment_plan)
       : report.treatment_plan;
-  const displayOverallStats = computeDisplayOverallStats(analysis);
-  const t = getTerminology((report as any).organization_id);
+  const reportOrganizationId = (report as any).organization_id as string | null;
+  const displayOverallStats = computeDisplayOverallStats(analysis, reportOrganizationId);
+  const t = getTerminology(reportOrganizationId);
 
   const categories = ["Karakter", "Mental", "Soft Skill"];
 
@@ -414,7 +411,7 @@ export default async function ReportDetailPage({
                 ) || []
               ).filter(
                 (item: any) =>
-                  getFulfilledDisplaySubs(item).length > 0 ||
+                  getFulfilledDisplaySubs(item, reportOrganizationId).length > 0 ||
                   (Array.isArray(item.declined_sub_indicators) && item.declined_sub_indicators.length > 0),
               );
               if (items.length === 0) return null;
@@ -446,13 +443,19 @@ export default async function ReportDetailPage({
                       const fullSubs = lookupFullIndicator(
                         item.category,
                         item.theme,
-                        item.indicator
+                        item.indicator,
+                        reportOrganizationId
                       );
 
-                      const displaySubs = getFulfilledDisplaySubs(item);
+                      const displaySubs = getFulfilledDisplaySubs(item, reportOrganizationId);
                       const totalCount = fullSubs?.length ?? displaySubs.length;
                       const fulfilledCount = displaySubs.length;
                       const fraction = `${fulfilledCount}/${totalCount}`;
+                      const isBm400Theme = isSupplementaryTheme(
+                        reportOrganizationId,
+                        item.category as "Karakter" | "Mental" | "Soft Skill",
+                        item.theme,
+                      );
 
                       return (
                         <div key={i} className="space-y-3">
@@ -461,6 +464,11 @@ export default async function ReportDetailPage({
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
                                 {item.theme}
                               </span>
+                              {isBm400Theme && (
+                                <span className="mt-1 inline-flex w-fit items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
+                                  BM400 · Tiga Pilar
+                                </span>
+                              )}
                               <span className="font-bold text-xs text-slate-800 font-serif leading-tight">
                                 {item.indicator}
                               </span>

@@ -5,7 +5,9 @@
  * framework while filling out a report. Opened from SettingsDropdown.
  *
  * Features:
- *   - Three tabs: Karakter (40 themes), Mental (34 themes), Soft Skill (14 themes)
+ *   - Three tabs: Karakter (40 base themes), Mental (34), Soft Skill (14) — plus
+ *     the active organization's supplementary themes, if it has any (see
+ *     lib/data/framework.ts / lib/data/orgs/)
  *   - Live search across theme titles, explanations, indicator names, and
  *     sub-indicator strings (case-insensitive substring match)
  *   - Expandable rows showing per-indicator sub-indicator lists
@@ -22,10 +24,9 @@
 
 import React, { useState, useMemo } from 'react';
 import { X, Search, Heart, Brain, Zap, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
-import { karakterData } from '@/lib/data/karakter';
-import { mentalData } from '@/lib/data/mental';
-import { softSkillData } from '@/lib/data/soft-skill';
+import { getFrameworkForOrganization } from '@/lib/data/framework';
 import { useTerminology } from '@/lib/hooks/use-terminology';
+import { useAuth } from '@/lib/context/auth-context';
 
 interface CriteriaGlossaryModalProps {
   isOpen: boolean;
@@ -36,9 +37,17 @@ type TabType = 'karakter' | 'mental' | 'softskill';
 
 export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModalProps) {
   const t = useTerminology();
+  const { activeOrganizationId } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('karakter');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+  // Includes the active org's supplementary themes (if any) — e.g. BM400 sees
+  // its extra Karakter/Mental/Soft Skill themes alongside the base framework.
+  const framework = useMemo(() => getFrameworkForOrganization(activeOrganizationId), [activeOrganizationId]);
+  const karakterData = framework.Karakter;
+  const mentalData = framework.Mental;
+  const softSkillData = framework["Soft Skill"];
 
   const currentData = useMemo(() => {
     switch (activeTab) {
@@ -79,7 +88,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
           })),
         };
     }
-  }, [activeTab]);
+  }, [activeTab, framework]);
 
   const filteredThemes = useMemo(() => {
     if (!searchQuery.trim()) return currentData.themes;
