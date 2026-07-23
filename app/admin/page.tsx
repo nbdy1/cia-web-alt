@@ -32,13 +32,14 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
+import { StudentAvatar } from "@/components/StudentAvatar";
 import { getFrameworkForOrganization } from "@/lib/data/framework";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 type DayBucket = { label: string; count: number };
 type UstadzRow = { id: string; name: string; reportCount: number; studentCount: number };
-type RecentReport = { id: string; studentName: string; date: string; themesCount: number; siCount: number };
+type RecentReport = { id: string; studentName: string; studentPhotoUrl: string | null; title: string | null; date: string; themesCount: number; siCount: number };
 type SantriLeaderRow = { id: string; name: string; kmsPercentage: number };
 
 // Total sub-indicator count per KMS pillar, from the local framework source —
@@ -168,7 +169,7 @@ export default function AdminOverviewPage() {
 
         // ── 1. Counts ───────────────────────────────────────────────────────
         let studentsQ = supabase.from("students").select("*", { count: "exact", head: true }).or("is_removed.is.null,is_removed.eq.false");
-        let reportsQ = supabase.from("reports").select("id, created_at, student_id, treatment_plan, students(name)").order("created_at", { ascending: false }).limit(50);
+        let reportsQ = supabase.from("reports").select("id, created_at, student_id, title, treatment_plan, students(name, photo_url)").order("created_at", { ascending: false }).limit(50);
         let students2Q = supabase.from("students").select("id, assigned_ustadz_id, reports(id)").or("is_removed.is.null,is_removed.eq.false");
         // Ordered oldest-first: declined_sub_indicators decrements a running
         // per-student count floored at 0, which requires replaying each
@@ -214,7 +215,7 @@ export default function AdminOverviewPage() {
 
         // ── 4. Recent reports ───────────────────────────────────────────────
         setRecentReports(
-          allReports.slice(0, 6).map((r: any) => {
+          allReports.slice(0, 8).map((r: any) => {
             const plan = parsePlan(r.treatment_plan);
             const assessments: any[] = plan?.detailed_assessments ?? [];
             const themes = new Set(assessments.map((a: any) => String(a?.theme ?? "").trim().toLowerCase()).filter(Boolean)).size;
@@ -222,6 +223,8 @@ export default function AdminOverviewPage() {
             return {
               id: r.id,
               studentName: (r.students as any)?.name ?? "—",
+              studentPhotoUrl: (r.students as any)?.photo_url ?? null,
+              title: r.title ?? null,
               date: new Date(r.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
               themesCount: themes,
               siCount: si,
@@ -442,7 +445,7 @@ export default function AdminOverviewPage() {
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
               <p className="font-black text-slate-800">Laporan Terbaru</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">6 laporan terakhir</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">8 laporan terakhir</p>
             </div>
             <Link href="/admin/monitoring" className="text-[10px] font-black text-brand-600 uppercase tracking-wider hover:underline">
               Lihat semua →
@@ -462,11 +465,16 @@ export default function AdminOverviewPage() {
                   className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-brand-100 rounded-xl flex items-center justify-center font-black text-brand-700 text-sm flex-shrink-0">
-                      {r.studentName.charAt(0)}
-                    </div>
+                    <StudentAvatar
+                      name={r.studentName}
+                      photoUrl={r.studentPhotoUrl}
+                      size="sm"
+                      colorIndex={0}
+                      className="w-9 h-9 rounded-xl"
+                    />
                     <div>
                       <p className="font-black text-slate-800 text-sm leading-tight">{r.studentName}</p>
+                      {r.title && <p className="text-xs font-bold text-slate-600 truncate max-w-[180px] mt-0.5">{r.title}</p>}
                       <div className="flex items-center gap-1 mt-0.5">
                         <Calendar size={9} className="text-slate-400" />
                         <span className="text-[10px] font-bold text-slate-400">{r.date}</span>
@@ -488,9 +496,11 @@ export default function AdminOverviewPage() {
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
               <p className="font-black text-slate-800">Aktivitas {t.ustadz}</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Diurutkan berdasarkan laporan</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Top 10 berdasarkan laporan</p>
             </div>
-            <Award size={16} className="text-amber-400" />
+            <Link href="/admin/monitoring" className="text-[10px] font-black text-brand-600 uppercase tracking-wider hover:underline">
+              Lihat semua →
+            </Link>
           </div>
           <div className="divide-y-2 divide-slate-50">
             {ustadzBoard.length === 0 ? (
@@ -499,7 +509,7 @@ export default function AdminOverviewPage() {
                 <p className="text-xs font-black">Belum ada {t.ustadz}</p>
               </div>
             ) : (
-              ustadzBoard.map((u, i) => {
+              ustadzBoard.slice(0, 10).map((u, i) => {
                 const medalColors = ["#f59e0b", "#94a3b8", "#b45309"];
                 const topThree = i < 3;
                 return (
