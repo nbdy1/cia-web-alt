@@ -13,10 +13,10 @@
  */
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap, Loader2, Settings, Lightbulb } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, ChevronLeft, BookOpen, GraduationCap, Loader2, Settings, Lightbulb, MoreHorizontal, X } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth-context';
 import { useUserRole } from '@/lib/hooks/use-user-role';
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher';
@@ -28,6 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { role, loading: roleLoading } = useUserRole();
   const t = useTerminology();
   const router = useRouter();
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const isAdmin = role === 'owner' || role === 'admin';
 
   // Redirect non-admin users away from /admin
@@ -58,6 +59,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/treatment-plans', label: 'Rencana Penanganan', icon: Lightbulb },
     { href: '/admin/settings', label: 'Pengaturan Sistem', icon: Settings },
   ];
+  const mobilePrimaryItems = navItems.filter((item) => ['/admin', '/admin/santri', '/admin/ustadz', '/admin/monitoring', '/admin/settings'].includes(item.href));
+  const mobileMoreItems = navItems.filter((item) => ['/admin/assignments', '/admin/treatment-plans'].includes(item.href));
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
@@ -122,34 +125,62 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </aside>
 
-        {/* Mobile tab bar — sits above content in the column, scrollable if needed */}
+        {/* Mobile bottom navigation keeps the primary destinations reachable
+            without forcing seven long labels into one cramped row. */}
         <nav
-          className="md:hidden flex shrink-0 bg-white border-b-2 border-slate-100 overflow-x-auto"
-          style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t-2 border-slate-100"
+          style={{ boxShadow: "0 -5px 18px rgba(15, 23, 42, 0.08)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
-          {navItems.map((item) => {
+          <div className="max-w-xl mx-auto grid grid-cols-6 items-stretch px-2 pt-2">
+          {mobilePrimaryItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-2 min-w-[60px] transition-all border-b-2 ${
+                className={`min-w-0 flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl transition-all ${
                   isActive
-                    ? 'border-brand-500 text-brand-600'
-                    : 'border-transparent text-slate-400'
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-slate-400 hover:bg-slate-50'
                 }`}
               >
-                <Icon size={15} className={isActive ? "text-brand-600" : "text-slate-400"} />
-                <span className="text-[8px] font-black uppercase tracking-tight leading-tight text-center whitespace-nowrap">
+                <Icon size={19} strokeWidth={isActive ? 2.5 : 2} className={isActive ? "text-brand-600" : "text-slate-400"} />
+                <span className="text-[8px] font-black uppercase tracking-tight leading-tight text-center truncate max-w-full">
                   {item.label}
                 </span>
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={() => setIsMoreOpen((open) => !open)}
+            className={`min-w-0 flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl transition-all ${isMoreOpen || mobileMoreItems.some((item) => pathname === item.href) ? 'bg-brand-50 text-brand-700' : 'text-slate-400 hover:bg-slate-50'}`}
+            aria-label="Buka menu lainnya"
+          >
+            {isMoreOpen ? <X size={19} /> : <MoreHorizontal size={19} />}
+            <span className="text-[8px] font-black uppercase tracking-tight leading-tight">Lainnya</span>
+          </button>
+          </div>
+          {isMoreOpen && (
+            <div className="absolute bottom-full left-3 right-3 mb-2 bg-white border-2 border-slate-100 rounded-2xl p-2 shadow-[0_6px_20px_rgba(15,23,42,0.14)] animate-fade-in">
+              <div className="grid grid-cols-2 gap-2">
+                {mobileMoreItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link key={item.href} href={item.href} onClick={() => setIsMoreOpen(false)} className={`flex items-center gap-2.5 p-3 rounded-xl text-xs font-black ${isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                      <Icon size={18} className={isActive ? 'text-brand-600' : 'text-slate-400'} />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </nav>
 
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 pb-24 md:p-6">
           {children}
         </main>
       </div>

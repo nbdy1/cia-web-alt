@@ -154,6 +154,7 @@ export default function MonitoringPage() {
               id,
               created_at,
               title,
+              created_by,
               narrative
             )
           `)
@@ -166,10 +167,23 @@ export default function MonitoringPage() {
         // Map students to their Ustadz
         const formattedData = (ustadzList || []).map(ustadz => {
           const assignedStudents = (studentsList || []).filter(s => s.assigned_ustadz_id === ustadz.id);
+          const assignedStudentIds = new Set(assignedStudents.map((student) => student.id));
+          const crossAssignmentStudents = (studentsList || [])
+            .filter((student) => !assignedStudentIds.has(student.id))
+            .map((student) => ({
+              ...student,
+              // A report belongs in the maker's monitoring section when they
+              // authored it for a student outside their assigned roster.
+              reports: (student.reports || []).filter((report: any) => report.created_by === ustadz.id),
+            }))
+            .filter((student) => student.reports.length > 0);
           
           return {
             ...ustadz,
-            students: assignedStudents.map(student => ({
+            students: [
+              ...assignedStudents.map((student) => ({ ...student, isCrossAssignment: false })),
+              ...crossAssignmentStudents.map((student) => ({ ...student, isCrossAssignment: true })),
+            ].map(student => ({
               ...student,
               // Sort reports by newest first
               reports: (student.reports || []).sort((a: any, b: any) => 
@@ -341,7 +355,7 @@ export default function MonitoringPage() {
               )}
               {group.items.map((ustadz) => {
             const isExpanded = expandedUstadz === ustadz.id;
-            const totalStudents = ustadz.students.length;
+            const totalStudents = ustadz.students.filter((student: any) => !student.isCrossAssignment).length;
             const showInactive = !!range && !ustadz.isActive;
 
             return (
@@ -381,8 +395,18 @@ export default function MonitoringPage() {
                 {isExpanded && (
                   <div className="px-5 pb-5 border-t-2 border-slate-50 pt-4 space-y-5">
                     {ustadz.students.length > 0 ? (
-                      ustadz.students.map((student: any) => (
-                        <div key={student.id}>
+                      ustadz.students.map((student: any, studentIndex: number) => (
+                        <React.Fragment key={`${student.id}-${student.isCrossAssignment ? 'cross' : 'assigned'}`}>
+                        {student.isCrossAssignment && (studentIndex === 0 || !ustadz.students[studentIndex - 1].isCrossAssignment) && (
+                          <div className="flex items-center gap-2 pt-1 pb-0">
+                            <div className="h-px flex-1 bg-amber-100" />
+                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 whitespace-nowrap">
+                              Laporan dari luar bimbingan Anda
+                            </span>
+                            <div className="h-px flex-1 bg-amber-100" />
+                          </div>
+                        )}
+                        <div className={student.isCrossAssignment ? "rounded-2xl bg-amber-50/50 p-2 -mx-2" : ""}>
                           <div className="flex items-center gap-2 mb-2">
                             <StudentAvatar
                               name={student.name}
@@ -392,6 +416,11 @@ export default function MonitoringPage() {
                               className="w-7 h-7 rounded-xl"
                             />
                             <span className="font-black text-slate-700 text-sm">{student.name}</span>
+                            {student.isCrossAssignment && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-black">
+                                Bukan bimbingan Anda
+                              </span>
+                            )}
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black">
                               {student.periodReports.length} laporan
                             </span>
@@ -425,6 +454,7 @@ export default function MonitoringPage() {
                             </p>
                           )}
                         </div>
+                        </React.Fragment>
                       ))
                     ) : (
                       <div className="text-center py-6">

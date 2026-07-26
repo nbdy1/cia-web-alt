@@ -204,7 +204,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadOrganizations, router]);
 
   useEffect(() => {
-    if (!loading && !user && pathname !== '/login') {
+    const isApexLanding =
+      typeof window !== 'undefined' &&
+      getTenantHost(window.location.host).isApex &&
+      pathname === '/';
+    if (!loading && !user && pathname !== '/login' && !isApexLanding) {
       router.push('/login');
     }
   }, [loading, user, pathname, router]);

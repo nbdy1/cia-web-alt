@@ -137,7 +137,7 @@ async function getReportDetails(id: string) {
 
   const { data: report } = await db
     .from("reports")
-    .select(`*, students(name, photo_url)`)
+    .select(`*`)
     .eq("id", id)
     .single();
 
@@ -145,7 +145,29 @@ async function getReportDetails(id: string) {
     return { report: null };
   }
 
-  return { report };
+  if (!report) return { report: null, authorName: null };
+
+  const { data: studentDisplay, error: studentDisplayError } = await db.rpc(
+    "get_report_student_for_view",
+    { target_report_id: id },
+  ).maybeSingle();
+
+  if (studentDisplayError || !studentDisplay) {
+    console.error("Failed to load report student display:", studentDisplayError);
+    return { report: null, authorName: null };
+  }
+
+  let authorName: string | null = null;
+  if (report?.created_by) {
+    const { data: author } = await db
+      .from("profiles")
+      .select("name")
+      .eq("id", report.created_by)
+      .maybeSingle();
+    authorName = author?.name ?? null;
+  }
+
+  return { report: { ...report, students: studentDisplay }, authorName };
 }
 
 export default async function ReportDetailPage({
@@ -157,7 +179,7 @@ export default async function ReportDetailPage({
 }) {
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
-  const { report } = await getReportDetails(id);
+  const { report, authorName } = await getReportDetails(id);
   const rawFrom = resolvedSearchParams?.from;
   const from = Array.isArray(rawFrom) ? rawFrom[0] : rawFrom;
 
@@ -196,6 +218,9 @@ export default async function ReportDetailPage({
               <Cpu size={8} /> {getModelLabel(report.model_used)}
             </span>
           </div>
+          {authorName && (
+            <p className="text-[9px] font-bold text-slate-400 mt-1">Dibuat oleh {authorName}</p>
+          )}
         </div>
         <div className="w-9" />
       </header>

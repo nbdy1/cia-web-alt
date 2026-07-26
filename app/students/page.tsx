@@ -86,6 +86,7 @@ type RecentReport = {
   title: string | null;
   created_at: string;
   students: { name: string } | null;
+  studentPhotoUrl?: string | null;
   treatment_plan: any;
 };
 
@@ -105,7 +106,7 @@ export default function StudentsAnalyticsPage() {
   const [students, setStudents] = useState<StudentWithStats[]>([]);
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
   const [otherReports, setOtherReports] = useState<OtherReport[]>([]);
-  const [otherReportsOpen, setOtherReportsOpen] = useState(false);
+  const [otherReportsOpen, setOtherReportsOpen] = useState(true);
   const [dataLoading, setDataLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>(getInitialSort);
@@ -214,18 +215,16 @@ export default function StudentsAnalyticsPage() {
       setStudents(processed);
 
       // ── 2. Recent reports (filtered by student IDs) ───────────────────────
-      if (!isAdmin && studentIds.length === 0) {
-        setRecentReports([]);
-        setDataLoading(false);
-        return;
-      }
+      // Do not return early when an ustadz has no assigned students. They may
+      // still have authored reports for students outside their roster, which
+      // are loaded separately below.
       let recentQuery = supabase
         .from("reports")
         .select(`
           id,
           title,
           created_at,
-          students (name),
+          students (name, photo_url),
           treatment_plan
         `)
         .order("created_at", { ascending: false })
@@ -239,31 +238,46 @@ export default function StudentsAnalyticsPage() {
 
       if (!isAdmin && studentIds.length > 0) {
         recentQuery = recentQuery.in("student_id", studentIds);
+      } else if (!isAdmin) {
+        setRecentReports([]);
+        // Skip the broad recent-activity query for an ustadz with no roster;
+        // the author-owned cross-assignment query below remains available.
+        recentQuery = null as any;
       }
 
-      const { data: recentRaw } = await recentQuery;
-      setRecentReports((recentRaw ?? []) as any);
+      if (recentQuery) {
+        const { data: recentRaw } = await recentQuery;
+      setRecentReports(
+        ((recentRaw ?? []) as any[]).map((report) => ({
+          ...report,
+          studentPhotoUrl: report.students?.photo_url ?? null,
+        })) as RecentReport[],
+      );
+      }
 
       // ── 3. Reports this ustadz made for students NOT assigned to them ────
       // Scoped to reports they personally authored (not every report on that
       // student) so following up doesn't leak the rest of the student's file.
       if (!isAdmin && user) {
-        const { data: otherRaw } = await supabase
-          .from("reports")
-          .select(`
-            id,
-            title,
-            created_at,
-            students (name, assigned_ustadz_id),
-            treatment_plan
-          `)
-          .eq("created_by", user.id)
-          .eq("organization_id", activeOrganizationId ?? "")
-          .order("created_at", { ascending: false });
-
-        const filtered = ((otherRaw ?? []) as any[]).filter(
-          (r) => r.students && r.students.assigned_ustadz_id !== user.id
+        const { data: crossAssignmentRaw, error: otherReportsError } = await supabase.rpc(
+          "get_my_cross_assignment_reports",
+          { target_organization_id: activeOrganizationId ?? "" },
         );
+
+        if (otherReportsError) {
+          console.error("Failed to load cross-assignment reports:", otherReportsError);
+        }
+
+        const filtered = ((crossAssignmentRaw ?? []) as any[]).map((r) => ({
+          id: r.id,
+          title: r.title,
+          created_at: r.created_at,
+          students: {
+            name: r.student_name,
+            assigned_ustadz_id: r.assigned_ustadz_id,
+          },
+          treatment_plan: null,
+        }));
         setOtherReports(filtered as OtherReport[]);
       } else {
         setOtherReports([]);
@@ -588,7 +602,7 @@ export default function StudentsAnalyticsPage() {
                     <div className="flex items-center gap-3 min-w-0">
                       <StudentAvatar
                         name={report.students?.name ?? "?"}
-                        photoUrl={null}
+                        photoUrl={report.studentPhotoUrl ?? null}
                         size="sm"
                         colorIndex={0}
                       />

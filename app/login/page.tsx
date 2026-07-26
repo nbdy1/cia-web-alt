@@ -1,31 +1,24 @@
 /**
  * app/login/page.tsx
  *
- * Authentication page — handles both login and new-account registration for
+ * Authentication page — handles login and password recovery for
  * ustadz (teachers). Accessed directly at /login and redirected to by
  * AuthProvider whenever a user attempts to access a protected route without
  * an active session.
  *
  * Auth flow:
  *   Login  → supabase.auth.signInWithPassword() → redirect to /
- *   Signup → supabase.auth.signUp() with { data: { name } } stored in user
- *            metadata. If Supabase email confirmation is enabled, the user sees
- *            a success message without being redirected; otherwise they are
- *            logged in immediately.
- *
- * Note: New accounts default to "ustadz" role. Admin accounts must be
- * created manually via scripts/create_admin_profile.sql.
+ *   Password recovery → supabase.auth.resetPasswordForEmail() → /reset-password
  */
 "use client";
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Mail, Lock, User, Eye, EyeOff, ShieldCheck, Loader2, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [name, setName] = useState('');
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -41,7 +34,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (resetError) throw resetError;
+        setSuccess("Jika email terdaftar, tautan untuk mengatur ulang kata sandi telah dikirim.");
+      } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -51,30 +50,6 @@ export default function LoginPage() {
         
         setSuccess("Login berhasil! Mengalihkan ke dashboard...");
         router.push('/');
-      } else {
-        if (!name.trim()) {
-          throw new Error("Nama lengkap Ustadz wajib diisi");
-        }
-
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name: name.trim()
-            }
-          }
-        });
-
-        if (signUpError) throw signUpError;
-
-        if (!data.session) {
-          // Supabase Email Confirmation is required
-          setSuccess("Akun berhasil didaftarkan!");
-        } else {
-          setSuccess("Akun berhasil dibuat! Mengalihkan ke dashboard...");
-          router.push('/');
-        }
       }
     } catch (err: any) {
       console.error("Auth error:", err);
@@ -112,35 +87,6 @@ export default function LoginPage() {
         {/* Auth Card */}
         <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] p-8 relative" style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}>
 
-          {/* Tab Switcher */}
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-8">
-            <button
-              type="button"
-              onClick={() => { setIsLogin(true); setError(null); setSuccess(null); }}
-              className={`flex-1 py-3 text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
-                isLogin
-                  ? 'bg-brand-500 text-white'
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
-              style={isLogin ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
-            >
-              Masuk
-            </button>
-            <button
-              type="button"
-              onClick={() => { setIsLogin(false); setError(null); setSuccess(null); }}
-              className={`flex-1 py-3 text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
-                !isLogin
-                  ? 'bg-brand-500 text-white'
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
-              style={!isLogin ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
-            >
-              <Sparkles className="w-4 h-4" />
-              Daftar Ustadz
-            </button>
-          </div>
-
           {/* Feedback Messages */}
           {error && (
             <div className="mb-6 p-4 bg-rose-50 border-2 border-rose-100 text-rose-600 text-xs rounded-2xl flex items-center gap-3 animate-fade-in font-bold">
@@ -157,26 +103,6 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {!isLogin && (
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
-                  Nama Lengkap & Gelar
-                </label>
-                <div className="relative flex items-center">
-                  <User className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Contoh: Ustaz Abdullah Fauzi"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-800 font-bold text-sm placeholder:text-slate-300 placeholder:font-normal focus:outline-none focus:border-brand-400 transition-colors"
-                    style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
-                  />
-                </div>
-              </div>
-            )}
-
             <div>
               <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                 Alamat Email
@@ -195,7 +121,19 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div>
+            {!isForgotPassword && (
+              <div className="text-right -mt-2">
+                <button
+                  type="button"
+                  onClick={() => { setIsForgotPassword(true); setError(null); setSuccess(null); }}
+                  className="text-xs font-black text-brand-600 hover:text-brand-700 hover:underline"
+                >
+                  Lupa kata sandi?
+                </button>
+              </div>
+            )}
+
+            {!isForgotPassword && <div>
               <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                 Kata Sandi
               </label>
@@ -218,7 +156,7 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-            </div>
+            </div>}
 
             <button
               type="submit"
@@ -235,12 +173,22 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  <span>{isLogin ? 'Masuk Portal' : 'Daftar & Masuk'}</span>
+                  <span>{isForgotPassword ? 'Kirim Tautan Reset' : 'Masuk Portal'}</span>
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>
           </form>
+
+          {isForgotPassword && (
+            <button
+              type="button"
+              onClick={() => { setIsForgotPassword(false); setError(null); setSuccess(null); }}
+              className="w-full mt-4 text-xs font-black text-slate-500 hover:text-slate-700"
+            >
+              Kembali ke halaman masuk
+            </button>
+          )}
 
           {/* Quick Info */}
           <div className="mt-8 pt-6 border-t-2 border-slate-100 text-center">

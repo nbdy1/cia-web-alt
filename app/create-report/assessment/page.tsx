@@ -38,6 +38,7 @@ import { useSettings } from '@/lib/context/settings-context';
 import { supabase } from '@/lib/supabase';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { useTerminology } from '@/lib/hooks/use-terminology';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 // Set to true to use OpenRouter Whisper instead of the browser Web Speech API.
 // Flip this during testing; the UI toggle is intentionally removed.
@@ -47,6 +48,12 @@ interface Message {
   role: 'teacher' | 'ai';
   text: string;
 }
+
+type AssessmentDraft = {
+  messages: Message[];
+  currentInput: string;
+  discoveredPillars: string[];
+};
 
 const FINALIZE_STEPS = [
   "Menganalisis transkrip…",
@@ -87,6 +94,46 @@ export default function AssessmentPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [micError, setMicError] = useState<string | null>(null);
   const [studentPhotoUrl, setStudentPhotoUrl] = useState<string | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<'leave' | 'finalize' | null>(null);
+  const restoredDraftRef = useRef(false);
+  const draftKey = studentId ? `assessment_draft_${studentId}` : null;
+
+  // Restore the conversation before any persistence effect can overwrite it.
+  useEffect(() => {
+    if (!draftKey || restoredDraftRef.current) return;
+    restoredDraftRef.current = true;
+    try {
+      const stored = sessionStorage.getItem(draftKey);
+      if (!stored) return;
+      const draft = JSON.parse(stored) as AssessmentDraft;
+      if (Array.isArray(draft.messages)) setMessages(draft.messages);
+      if (typeof draft.currentInput === 'string') setCurrentInput(draft.currentInput);
+      if (Array.isArray(draft.discoveredPillars)) {
+        setDiscoveredPillars(draft.discoveredPillars);
+        setDiscoveredCount(draft.discoveredPillars.length);
+      }
+    } catch (error) {
+      console.error('Failed to restore assessment draft:', error);
+    }
+  }, [draftKey]);
+
+  useEffect(() => {
+    if (!draftKey || !restoredDraftRef.current || messages.length === 0) return;
+    sessionStorage.setItem(draftKey, JSON.stringify({ messages, currentInput, discoveredPillars } satisfies AssessmentDraft));
+  }, [draftKey, messages, currentInput, discoveredPillars]);
+
+  // Trap browser back / iOS swipe-back while this conversation is still active.
+  useEffect(() => {
+    if (!messages.length || isFinalizing) return;
+    const guardState = { assessmentNavigationGuard: true };
+    window.history.pushState(guardState, '', window.location.href);
+    const onPopState = () => {
+      window.history.pushState(guardState, '', window.location.href);
+      setPendingNavigation('leave');
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [messages.length, isFinalizing]);
 
   // Drives the rotating status text + fake progress bar while the AI report is being generated
   useEffect(() => {
@@ -372,6 +419,7 @@ export default function AssessmentPage() {
       sessionStorage.setItem('current_analysis', JSON.stringify(analysis));
       sessionStorage.setItem('current_narrative', fullTranscript);
       sessionStorage.setItem('current_model', selectedModel);
+      sessionStorage.setItem('assessment_return_url', `/create-report/assessment?id=${encodeURIComponent(studentId || '')}&name=${encodeURIComponent(studentName)}`);
 
       const params = new URLSearchParams({
         id: studentId || "",
@@ -383,6 +431,15 @@ export default function AssessmentPage() {
       setIsFinalizing(false);
       setIsProcessing(false);
     }
+  };
+
+  const leaveAssessment = () => {
+    if (isRecording) {
+      shouldRecordRef.current = false;
+      recognitionRef.current?.stop();
+      mediaRecorderRef.current?.stop();
+    }
+    router.push('/create-report');
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -397,13 +454,13 @@ export default function AssessmentPage() {
       {/* Header */}
       <header className="px-5 py-4 bg-white border-b-2 border-slate-100 flex items-center justify-between sticky top-0 z-20" style={{ boxShadow: "0 3px 0 0 #f1f5f9" }}>
         <div className="flex items-center gap-3">
-          <Link
-            href="/create-report"
+          <button
+            onClick={() => messages.length ? setPendingNavigation('leave') : router.push('/create-report')}
             className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 active:translate-y-px transition-transform"
             style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
           >
             <ChevronLeft size={18} />
-          </Link>
+          </button>
           <StudentAvatar
             name={studentName}
             photoUrl={studentPhotoUrl}
@@ -586,7 +643,7 @@ export default function AssessmentPage() {
 
         {messages.length >= 2 && (
           <button
-            onClick={handleFinalize}
+            onClick={() => setPendingNavigation('finalize')}
             disabled={isProcessing || isFinalizing}
             className={`w-full mt-4 py-4 rounded-[1.4rem] text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
               isFinalizing
@@ -623,6 +680,24 @@ export default function AssessmentPage() {
           </div>
         )}
       </footer>
+
+      <ConfirmModal
+        isOpen={pendingNavigation !== null}
+        title={pendingNavigation === 'finalize' ? 'Buat laporan sekarang?' : 'Keluar dari percakapan?'}
+        description={pendingNavigation === 'finalize'
+          ? 'Pastikan percakapan sudah cukup. Setelah laporan dibuat, Anda masih bisa kembali untuk melanjutkan percakapan.'
+          : 'Percakapan Anda akan disimpan agar bisa dilanjutkan nanti.'}
+        confirmLabel={pendingNavigation === 'finalize' ? 'Buat laporan' : 'Keluar'}
+        confirmVariant={pendingNavigation === 'finalize' ? 'success' : 'danger'}
+        cancelLabel="Tetap di sini"
+        onCancel={() => setPendingNavigation(null)}
+        onConfirm={() => {
+          const action = pendingNavigation;
+          setPendingNavigation(null);
+          if (action === 'finalize') handleFinalize();
+          else leaveAssessment();
+        }}
+      />
     </div>
   );
 }

@@ -39,11 +39,14 @@ export async function saveAssessmentAction(data: {
 
     const { data: { user } } = await db.auth.getUser();
 
-    const { data: student, error: studentError } = await db
-      .from('students')
-      .select('organization_id')
-      .eq('id', data.student_id)
-      .single();
+    // Cross-assignment search intentionally does not expose the full student
+    // row to a non-admin. Resolve only the organization through the tenant-
+    // checked RPC before inserting the report.
+    const { data: studentRaw, error: studentError } = await db.rpc(
+      'get_student_organization_for_report',
+      { target_student_id: data.student_id },
+    ).maybeSingle();
+    const student = studentRaw as { organization_id: string } | null;
 
     if (studentError || !student) {
       throw studentError ?? new Error("Student not found");
@@ -56,6 +59,7 @@ export async function saveAssessmentAction(data: {
       .from('reports')
       .insert([{
         student_id: data.student_id,
+        organization_id: student.organization_id,
         narrative: data.narrative,
         title: data.analysis?.report_title || "Laporan Perkembangan",
         treatment_plan: data.analysis, // JSONB

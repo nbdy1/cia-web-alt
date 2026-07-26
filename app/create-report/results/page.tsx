@@ -48,6 +48,7 @@ import { StudentAvatar } from "@/components/StudentAvatar";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 import { isSupplementaryTheme } from "@/lib/data/framework";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
@@ -70,6 +71,21 @@ export default function ResultsPage() {
   const [modelUsed, setModelUsed] = useState<string>(
     "google/gemini-3-flash-preview",
   );
+  const [pendingNavigation, setPendingNavigation] = useState<'back' | 'save' | null>(null);
+  const returnUrl = `/create-report/assessment?id=${encodeURIComponent(studentId || "")}&name=${encodeURIComponent(studentName)}`;
+
+  // Keep browser back/swipe-back on the review screen behind the same
+  // confirmation as the visible back button.
+  useEffect(() => {
+    const guardState = { resultsNavigationGuard: true };
+    window.history.pushState(guardState, "", window.location.href);
+    const onPopState = () => {
+      window.history.pushState(guardState, "", window.location.href);
+      setPendingNavigation("back");
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   useEffect(() => {
     if (!studentId) return;
@@ -131,6 +147,8 @@ export default function ResultsPage() {
       sessionStorage.removeItem("current_analysis");
       sessionStorage.removeItem("current_narrative");
       sessionStorage.removeItem("current_model");
+      if (studentId) sessionStorage.removeItem(`assessment_draft_${studentId}`);
+      sessionStorage.removeItem("assessment_return_url");
       router.push("/students");
     } else {
       alert("Gagal menyimpan: " + result.error);
@@ -165,7 +183,7 @@ export default function ResultsPage() {
         style={{ boxShadow: "0 3px 0 0 #f1f5f9" }}
       >
         <button
-          onClick={() => router.back()}
+          onClick={() => setPendingNavigation("back")}
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 flex-shrink-0 active:translate-y-px transition-transform"
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         >
@@ -512,8 +530,8 @@ export default function ResultsPage() {
 
       {/* FOOTER */}
       <footer className="fixed bottom-0 left-0 right-0 flex justify-center items-end p-5 pb-6 bg-gradient-to-t from-[#f0fdf7] via-[#f0fdf7]/90 to-transparent z-40 pointer-events-none">
-        <button
-          onClick={handleSave}
+          <button
+            onClick={() => setPendingNavigation("save")}
           disabled={isSaving}
           className={`w-full max-w-sm rounded-2xl font-black text-base flex items-center justify-center gap-3 py-5 pointer-events-auto active:translate-y-1 transition-transform ${
             isSaving
@@ -530,6 +548,23 @@ export default function ResultsPage() {
           {isSaving ? "Menyimpan…" : "Simpan Input"}
         </button>
       </footer>
+
+      <ConfirmModal
+        isOpen={pendingNavigation !== null}
+        title={pendingNavigation === "save" ? "Simpan laporan ini?" : "Kembali ke percakapan?"}
+        description={pendingNavigation === "save"
+          ? "Laporan akan disimpan dan percakapan ini akan ditutup."
+          : "Percakapan sebelumnya akan dipulihkan agar Anda dapat melanjutkan atau membuat laporan ulang."}
+        confirmLabel={pendingNavigation === "save" ? "Simpan laporan" : "Lanjutkan percakapan"}
+        cancelLabel="Tetap di sini"
+        onCancel={() => setPendingNavigation(null)}
+        onConfirm={() => {
+          const action = pendingNavigation;
+          setPendingNavigation(null);
+          if (action === "save") handleSave();
+          else router.push(returnUrl);
+        }}
+      />
     </div>
   );
 }

@@ -19,11 +19,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
-import { Search, Loader2, Plus, X, AlertCircle, Sparkles, UserX, GraduationCap, ArchiveX, Camera } from 'lucide-react';
+import { Search, Loader2, Plus, X, AlertCircle, Sparkles, UserX, GraduationCap, ArchiveX, Camera, ArrowUpDown, Pencil, Check, ExternalLink, FileText } from 'lucide-react';
+import Link from 'next/link';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { StudentPhotoUpload } from '@/components/StudentPhotoUpload';
 import { useAuth } from '@/lib/context/auth-context';
 import { useTerminology } from '@/lib/hooks/use-terminology';
+import { getFrameworkForOrganization } from '@/lib/data/framework';
 
 export default function ManageSantriPage() {
   const { activeOrganizationId } = useAuth();
@@ -33,6 +35,10 @@ export default function ManageSantriPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showRemoved, setShowRemoved] = useState(false);
+  const [sortOption, setSortOption] = useState<'name' | 'score' | 'reports'>('name');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState({ name: '', nis: '' });
+  const [isEditing, setIsEditing] = useState(false);
 
   // Add Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -59,19 +65,39 @@ export default function ManageSantriPage() {
       const [activeRes, removedRes] = await Promise.all([
         supabase
           .from('students')
-          .select('*, profiles:assigned_ustadz_id (name)')
+          .select('*, profiles:assigned_ustadz_id (name), reports(id, treatment_plan)')
           .eq('organization_id', activeOrganizationId)
           .or('is_removed.is.null,is_removed.eq.false')
           .order('name'),
         supabase
           .from('students')
-          .select('*, profiles:assigned_ustadz_id (name)')
+          .select('*, profiles:assigned_ustadz_id (name), reports(id, treatment_plan)')
           .eq('organization_id', activeOrganizationId)
           .eq('is_removed', true)
           .order('removed_at', { ascending: false }),
       ]);
-      if (activeRes.data) setStudents(activeRes.data);
-      if (removedRes.data) setRemovedStudents(removedRes.data);
+      const framework = getFrameworkForOrganization(activeOrganizationId);
+      const totals: Record<string, number> = {
+        karakter: framework.Karakter.themes.reduce((n, theme) => n + theme.indicators.reduce((m, indicator) => m + indicator.sub_indicators.length, 0), 0),
+        mental: framework.Mental.themes.reduce((n, theme) => n + theme.indicators.reduce((m, indicator) => m + indicator.sub_indicators.length, 0), 0),
+        'soft skill': framework['Soft Skill'].themes.reduce((n, theme) => n + theme.indicators.reduce((m, indicator) => m + indicator.sub_indicators.length, 0), 0),
+      };
+      const enrich = (rows: any[]) => rows.map((student) => {
+        const fulfilled: Record<string, Set<string>> = { karakter: new Set(), mental: new Set(), 'soft skill': new Set() };
+        (student.reports ?? []).forEach((report: any) => {
+          const plan = typeof report.treatment_plan === 'string' ? (() => { try { return JSON.parse(report.treatment_plan); } catch { return null; } })() : report.treatment_plan;
+          (plan?.detailed_assessments ?? []).forEach((assessment: any) => {
+            const category = String(assessment?.category ?? '').trim().toLowerCase();
+            if (!fulfilled[category]) return;
+            (assessment.fulfilled_sub_indicators ?? []).forEach((si: string) => fulfilled[category].add(si.trim().toLowerCase()));
+            (assessment.declined_sub_indicators ?? []).forEach((si: string) => fulfilled[category].delete(si.trim().toLowerCase()));
+          });
+        });
+        const percentages = Object.entries(fulfilled).map(([category, items]) => totals[category] ? (items.size / totals[category]) * 100 : 0);
+        return { ...student, reportCount: (student.reports ?? []).length, cmsScore: Math.round((percentages.reduce((a, b) => a + b, 0) / percentages.length) * 10) / 10 };
+      });
+      if (activeRes.data) setStudents(enrich(activeRes.data));
+      if (removedRes.data) setRemovedStudents(enrich(removedRes.data));
     } catch (err) {
       console.error("Error fetching students:", err);
     } finally {
@@ -184,6 +210,27 @@ export default function ManageSantriPage() {
   const labelCls = "block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5";
 
   const displayList = showRemoved ? removedList : activeList;
+  const sortedDisplayList = [...displayList].sort((a, b) => {
+    if (sortOption === 'score') return (b.cmsScore ?? 0) - (a.cmsScore ?? 0) || a.name.localeCompare(b.name);
+    if (sortOption === 'reports') return (b.reportCount ?? 0) - (a.reportCount ?? 0) || a.name.localeCompare(b.name);
+    return a.name.localeCompare(b.name);
+  });
+
+  const startEditing = (student: any) => {
+    setEditingId(student.id);
+    setEditValues({ name: student.name ?? '', nis: student.nis ?? '' });
+  };
+
+  const saveStudentDetails = async (studentId: string) => {
+    if (!editValues.name.trim()) return;
+    setIsEditing(true);
+    const { error } = await supabase.from('students').update({ name: editValues.name.trim(), nis: editValues.nis.trim() || null }).eq('id', studentId);
+    setIsEditing(false);
+    if (error) { alert(`Gagal menyimpan: ${error.message}`); return; }
+    setStudents((rows) => rows.map((row) => row.id === studentId ? { ...row, name: editValues.name.trim(), nis: editValues.nis.trim() || null } : row));
+    setRemovedStudents((rows) => rows.map((row) => row.id === studentId ? { ...row, name: editValues.name.trim(), nis: editValues.nis.trim() || null } : row));
+    setEditingId(null);
+  };
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
@@ -235,12 +282,23 @@ export default function ManageSantriPage() {
         />
       </div>
 
+      {!showRemoved && (
+        <div className="flex items-center justify-between gap-3 bg-white border-2 border-slate-200 rounded-2xl p-3" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
+          <div className="flex items-center gap-2 text-xs font-black text-slate-600"><ArrowUpDown size={14} className="text-brand-500" /> Urutkan</div>
+          <select value={sortOption} onChange={(e) => setSortOption(e.target.value as typeof sortOption)} className="bg-transparent text-xs font-black text-slate-700 outline-none">
+            <option value="name">Nama A-Z</option>
+            <option value="score">Skor CMS tertinggi</option>
+            <option value="reports">Laporan terbanyak</option>
+          </select>
+        </div>
+      )}
+
       {/* List */}
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-brand-500" /></div>
       ) : displayList.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {displayList.map((student, i) => (
+        <div className="grid grid-cols-1 gap-4">
+          {sortedDisplayList.map((student, i) => (
             <div
               key={student.id}
               className={`bg-white rounded-[1.5rem] border-2 p-4 flex items-start gap-3 group ${showRemoved ? 'border-rose-100 opacity-80' : 'border-slate-100'}`}
@@ -264,14 +322,26 @@ export default function ManageSantriPage() {
                   onUploaded={(url) => handlePhotoUploaded(student.id, url)}
                 />
               )}
-              <div className="flex-1 overflow-hidden">
-                <p className="font-black text-slate-800 text-sm truncate">{student.name}</p>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                {editingId === student.id ? (
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    <input value={editValues.name} onChange={(e) => setEditValues({ ...editValues, name: e.target.value })} className={inputCls} aria-label="Nama santri" />
+                    <input value={editValues.nis} onChange={(e) => setEditValues({ ...editValues, nis: e.target.value })} className={inputCls} placeholder="NIS" aria-label="NIS santri" />
+                  </div>
+                ) : <p className="font-black text-slate-800 text-sm truncate">{student.name}</p>}
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.nis ? `NIS: ${student.nis}` : "—"}</span>
+                  {editingId !== student.id && <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.nis ? `NIS: ${student.nis}` : "—"}</span>}
                   {student.profiles?.name && (
                     <span className="text-[10px] font-black text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">{student.profiles.name}</span>
                   )}
                 </div>
+                {!showRemoved && (
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-black">CMS {student.cmsScore?.toFixed(1).replace('.', ',')}%</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 text-[10px] font-black"><FileText size={10} /> {student.reportCount ?? 0} laporan</span>
+                    <Link href={`/students/${student.id}?from=${encodeURIComponent('/admin/santri')}`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black hover:bg-slate-200"><ExternalLink size={10} /> Profil</Link>
+                  </div>
+                )}
                 {showRemoved && (
                   <div className="mt-2 p-2.5 bg-rose-50 border border-rose-100 rounded-xl">
                     <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider mb-0.5">
@@ -282,6 +352,12 @@ export default function ManageSantriPage() {
                 )}
               </div>
               {!showRemoved && (
+                <div className="flex items-center gap-1 shrink-0">
+                {editingId === student.id ? (
+                  <button onClick={() => saveStudentDetails(student.id)} disabled={isEditing} className="p-2 text-brand-600 hover:bg-brand-50 rounded-xl" title="Simpan perubahan"><Check size={16} /></button>
+                ) : (
+                  <button onClick={() => startEditing(student)} className="p-2 text-slate-300 hover:text-brand-600 hover:bg-brand-50 rounded-xl" title="Edit nama dan NIS"><Pencil size={15} /></button>
+                )}
                 <button
                   onClick={() => openRemoveModal(student)}
                   className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors opacity-0 group-hover:opacity-100 shrink-0"
@@ -289,6 +365,7 @@ export default function ManageSantriPage() {
                 >
                   <UserX size={15} />
                 </button>
+                </div>
               )}
             </div>
           ))}
