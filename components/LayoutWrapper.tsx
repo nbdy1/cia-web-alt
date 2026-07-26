@@ -18,10 +18,16 @@
 
 import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { getTenantHost, isLocalHostname } from '@/lib/tenant';
+import { useAuth } from '@/lib/context/auth-context';
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const isAdmin = pathname?.startsWith('/admin') || pathname?.startsWith('/super-admin');
+  const isMarketingLanding = !user && pathname === '/' && typeof window !== 'undefined' && (
+    getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host)
+  );
 
   useEffect(() => {
     if (typeof window === "undefined" || !pathname) return;
@@ -36,7 +42,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     window.sessionStorage.setItem("cia:last-path", currentPath);
   }, [pathname]);
 
-  if (isAdmin) {
+  if (isAdmin || isMarketingLanding) {
     return (
       <div className="w-full bg-white min-h-screen flex flex-col relative">
         {children}

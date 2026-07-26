@@ -19,6 +19,7 @@
  *   4. Metadata — sets the browser tab title and page description.
  */
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Atkinson_Hyperlegible, Geist_Mono, Nunito, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import { AuthProvider } from "@/lib/context/auth-context";
@@ -138,14 +139,16 @@ export default function RootLayout({
       className={`${dinRounded.variable} ${nunito.variable} ${plusJakarta.variable} ${atkinson.variable} ${geistMono.variable} antialiased min-h-screen`}
     >
       <body className={`${dinRounded.className} w-full bg-white min-h-screen flex flex-col relative m-0 p-0`}>
-        <script dangerouslySetInnerHTML={{ __html: appearanceScript }} />
+        <Script id="appearance-script" strategy="beforeInteractive">
+          {appearanceScript}
+        </Script>
         <ClickSoundProvider />
         <SettingsProvider>
-          <LayoutWrapper>
-            <AuthProvider>
+          <AuthProvider>
+            <LayoutWrapper>
               {children}
-            </AuthProvider>
-          </LayoutWrapper>
+            </LayoutWrapper>
+          </AuthProvider>
         </SettingsProvider>
       </body>
     </html>

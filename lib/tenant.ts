@@ -21,9 +21,14 @@ export function normalizeHostname(host: string | null | undefined) {
     .toLowerCase();
 }
 
+export function isLocalHostname(host: string | null | undefined) {
+  const hostname = normalizeHostname(host);
+  return LOCAL_HOSTS.has(hostname) || hostname.endsWith(".local");
+}
+
 export function getTenantHost(host: string | null | undefined): TenantHost {
   const hostname = normalizeHostname(host);
-  const isLocal = LOCAL_HOSTS.has(hostname) || hostname.endsWith(".local");
+  const isLocal = isLocalHostname(hostname);
   const isApex = hostname === APP_DOMAIN || hostname === `www.${APP_DOMAIN}`;
   const isProductionDomain =
     !isLocal && (isApex || hostname.endsWith(`.${APP_DOMAIN}`));

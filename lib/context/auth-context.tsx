@@ -27,6 +27,7 @@ import {
   TENANT_SLUG_COOKIE,
   browserTenantCookieOptions,
   getTenantHost,
+  isLocalHostname,
   getTenantSwitchUrl,
   tenantUrl,
 } from '@/lib/tenant';
@@ -206,8 +207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const isApexLanding =
       typeof window !== 'undefined' &&
-      getTenantHost(window.location.host).isApex &&
-      pathname === '/';
+      pathname === '/' &&
+      (getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host));
     if (!loading && !user && pathname !== '/login' && !isApexLanding) {
       router.push('/login');
     }
@@ -261,7 +262,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
-  if (loading || (!user && pathname !== '/login')) {
+  const isPublicMarketingHost =
+    typeof window !== 'undefined' &&
+    pathname === '/' &&
+    (getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host));
+
+  // The apex/local root is public marketing. Render it immediately while the
+  // auth client resolves so an anonymous visitor never gets stuck on the app's
+  // credential-verification screen.
+  if (!isPublicMarketingHost && (loading || (!user && pathname !== '/login'))) {
     return (
       <div className="min-h-screen w-full bg-paper flex flex-col items-center justify-center p-6 animate-fade-in">
         <div className="text-center space-y-4">

@@ -556,6 +556,7 @@ export default function ResultsPage() {
           ? "Laporan akan disimpan dan percakapan ini akan ditutup."
           : "Percakapan sebelumnya akan dipulihkan agar Anda dapat melanjutkan atau membuat laporan ulang."}
         confirmLabel={pendingNavigation === "save" ? "Simpan laporan" : "Lanjutkan percakapan"}
+        confirmVariant={pendingNavigation === "save" ? "success" : "danger"}
         cancelLabel="Tetap di sini"
         onCancel={() => setPendingNavigation(null)}
         onConfirm={() => {

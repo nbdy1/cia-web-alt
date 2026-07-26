@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotLink, setShowForgotLink] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -56,8 +57,9 @@ export default function LoginPage() {
       const msg = err?.message || "Terjadi kesalahan saat autentikasi";
       if (msg.toLowerCase().includes("email not confirmed")) {
         setError("Email belum diverifikasi.");
-      } else if (msg.toLowerCase().includes("invalid login credentials")) {
-        setError("Email atau kata sandi tidak valid.");
+        } else if (msg.toLowerCase().includes("invalid login credentials")) {
+          setError("Email atau kata sandi tidak valid.");
+          setShowForgotLink(true);
       } else {
         setError(msg);
       }
@@ -121,18 +123,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {!isForgotPassword && (
-              <div className="text-right -mt-2">
-                <button
-                  type="button"
-                  onClick={() => { setIsForgotPassword(true); setError(null); setSuccess(null); }}
-                  className="text-xs font-black text-brand-600 hover:text-brand-700 hover:underline"
-                >
-                  Lupa kata sandi?
-                </button>
-              </div>
-            )}
-
             {!isForgotPassword && <div>
               <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                 Kata Sandi
@@ -156,6 +146,17 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {!isForgotPassword && showForgotLink && (
+                <div className="text-right mt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgotPassword(true); setError(null); setSuccess(null); }}
+                    className="text-xs font-black text-brand-600 hover:text-brand-700 hover:underline"
+                  >
+                    Lupa kata sandi?
+                  </button>
+                </div>
+              )}
             </div>}
 
             <button

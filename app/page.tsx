@@ -22,7 +22,7 @@ import { SettingsDropdown } from "@/components/SettingsDropdown";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { useTerminology } from "@/lib/hooks/use-terminology";
-import { getTenantHost } from "@/lib/tenant";
+import { getTenantHost, isLocalHostname } from "@/lib/tenant";
 
 function MarketingPage() {
   return (
@@ -63,7 +63,7 @@ function MarketingPage() {
               <div className="w-11 h-11 rounded-2xl bg-brand-100 text-brand-700 flex items-center justify-center font-black">AR</div>
             </div>
             <div className="grid grid-cols-3 gap-3 mb-7">
-              {[['Karakter','72%','bg-brand-500'],['Mental','64%','bg-sky-500'],['Relasi','81%','bg-amber-400']].map(([label, value, color]) => <div key={label} className="p-3 rounded-2xl bg-slate-50"><p className="text-[10px] font-black text-slate-400">{label}</p><p className="text-xl font-black mt-2">{value}</p><div className="h-1.5 bg-slate-200 rounded-full mt-2"><div className={`h-full rounded-full ${color}`} style={{width:value}} /></div></div>)}
+              {[['Karakter','72%','bg-rose-500'],['Mental','64%','bg-sky-500'],['Soft Skill','81%','bg-purple-400']].map(([label, value, color]) => <div key={label} className="p-3 rounded-2xl bg-slate-50"><p className="text-[10px] font-black text-slate-400">{label}</p><p className="text-xl font-black mt-2">{value}</p><div className="h-1.5 bg-slate-200 rounded-full mt-2"><div className={`h-full rounded-full ${color}`} style={{width:value}} /></div></div>)}
             </div>
             <div className="border-t-2 border-slate-100 pt-5 space-y-4">
               <div className="flex gap-3"><span className="w-8 h-8 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0"><MessageCircle size={15}/></span><div><p className="text-xs font-black">Catatan percakapan</p><p className="text-xs text-slate-500 font-bold mt-1 leading-relaxed">Mulai berani menyampaikan pendapat saat diskusi kelompok.</p></div></div>
@@ -106,7 +106,9 @@ export default function HomePage() {
     user?.user_metadata?.name || user?.email?.split("@")[0] || "Ustaz Abdullah";
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
-  if (!user && typeof window !== "undefined" && getTenantHost(window.location.host).isApex) {
+  if (!user && typeof window !== "undefined" && (
+    getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host)
+  )) {
     return <MarketingPage />;
   }
 
