@@ -50,14 +50,26 @@ async function getStudentData(id: string) {
       title,
       created_at,
       narrative,
-      model_used
+      created_by
     `,
     )
     .eq("student_id", id)
     .eq("organization_id", student?.organization_id ?? "00000000-0000-0000-0000-000000000000")
     .order("created_at", { ascending: false });
 
-  return { student, reports };
+  const authorIds = Array.from(new Set((reports ?? []).map((report: any) => report.created_by).filter(Boolean)));
+  const { data: authors } = authorIds.length > 0
+    ? await db.from("profiles").select("id, name").in("id", authorIds)
+    : { data: [] as any[] };
+  const authorNames = new Map((authors ?? []).map((author: any) => [author.id, author.name]));
+
+  return {
+    student,
+    reports: (reports ?? []).map((report: any) => ({
+      ...report,
+      created_by_name: report.created_by ? (authorNames.get(report.created_by) ?? null) : null,
+    })),
+  };
 }
 
 export default async function StudentProfile({
@@ -253,15 +265,20 @@ export default async function StudentProfile({
                     >
                       <FileText className="w-5 h-5 text-brand-600" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-black text-slate-900 text-sm leading-tight">
                         {report.title || "Laporan Perkembangan"}
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400">
+                      <div className="flex items-center gap-2 mt-1 min-w-0 flex-nowrap overflow-hidden">
+                        <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400">
                           <Calendar size={8} />
                           {new Date(report.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
                         </span>
+                        {report.created_by_name && (
+                          <span className="block min-w-0 max-w-[12rem] overflow-hidden text-ellipsis whitespace-nowrap text-[10px] font-black text-brand-600">
+                            Dibuat oleh {report.created_by_name}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

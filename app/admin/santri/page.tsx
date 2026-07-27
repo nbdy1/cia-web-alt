@@ -19,7 +19,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
-import { Search, Loader2, Plus, X, AlertCircle, Sparkles, UserX, GraduationCap, ArchiveX, Camera, ArrowUpDown, Pencil, Check, ExternalLink, FileText } from 'lucide-react';
+import { Search, Loader2, Plus, X, AlertCircle, Sparkles, UserX, GraduationCap, ArchiveX, Camera, ArrowUpDown, Pencil, Check, ExternalLink, FileText, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { StudentPhotoUpload } from '@/components/StudentPhotoUpload';
@@ -39,6 +39,9 @@ export default function ManageSantriPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState({ name: '', nis: '' });
   const [isEditing, setIsEditing] = useState(false);
+  const [ustadzList, setUstadzList] = useState<any[]>([]);
+  const [savingAssignmentId, setSavingAssignmentId] = useState<string | null>(null);
+  const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
 
   // Add Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -76,6 +79,16 @@ export default function ManageSantriPage() {
           .eq('is_removed', true)
           .order('removed_at', { ascending: false }),
       ]);
+      const { data: members } = await supabase
+        .from('organization_members')
+        .select('user_id')
+        .eq('organization_id', activeOrganizationId)
+        .eq('role', 'ustadz');
+      const ustadzIds = (members ?? []).map((member: any) => member.user_id);
+      const { data: ustadzRows } = ustadzIds.length > 0
+        ? await supabase.from('profiles').select('id, name').in('id', ustadzIds).or('is_removed.is.null,is_removed.eq.false').order('name')
+        : { data: [] as any[] };
+      setUstadzList(ustadzRows ?? []);
       const framework = getFrameworkForOrganization(activeOrganizationId);
       const totals: Record<string, number> = {
         karakter: framework.Karakter.themes.reduce((n, theme) => n + theme.indicators.reduce((m, indicator) => m + indicator.sub_indicators.length, 0), 0),
@@ -232,6 +245,25 @@ export default function ManageSantriPage() {
     setEditingId(null);
   };
 
+  const changeAssignment = async (studentId: string, ustadzId: string) => {
+    setSavingAssignmentId(studentId);
+    setAssignmentMessage(null);
+    const { error } = await supabase
+      .from('students')
+      .update({ assigned_ustadz_id: ustadzId || null })
+      .eq('id', studentId);
+    setSavingAssignmentId(null);
+    if (error) {
+      setAssignmentMessage(`Gagal menyimpan penugasan: ${error.message}`);
+      return;
+    }
+    const update = (rows: any[]) => rows.map((row) => row.id === studentId ? { ...row, assigned_ustadz_id: ustadzId || null, profiles: ustadzList.find((u) => u.id === ustadzId) ?? null } : row);
+    setStudents(update);
+    setRemovedStudents(update);
+    setAssignmentMessage('Penugasan tersimpan');
+    window.setTimeout(() => setAssignmentMessage(null), 1800);
+  };
+
   return (
     <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
       {/* Header */}
@@ -293,6 +325,12 @@ export default function ManageSantriPage() {
         </div>
       )}
 
+      {!showRemoved && assignmentMessage && (
+        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-black">
+          <UserCheck size={14} /> {assignmentMessage}
+        </div>
+      )}
+
       {/* List */}
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-brand-500" /></div>
@@ -335,6 +373,21 @@ export default function ManageSantriPage() {
                     <span className="text-[10px] font-black text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">{student.profiles.name}</span>
                   )}
                 </div>
+                {!showRemoved && (
+                  <div className="flex items-center gap-2 mt-3">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 whitespace-nowrap">Pembimbing</span>
+                    <select
+                      value={student.assigned_ustadz_id ?? ''}
+                      disabled={savingAssignmentId === student.id}
+                      onChange={(event) => changeAssignment(student.id, event.target.value)}
+                      className="min-w-0 flex-1 max-w-xs bg-white border-2 border-brand-100 rounded-xl px-3 py-2 text-xs font-black text-brand-700 outline-none focus:border-brand-400 disabled:opacity-60"
+                    >
+                      <option value="">Belum ditugaskan</option>
+                      {ustadzList.map((ustadz) => <option key={ustadz.id} value={ustadz.id}>{ustadz.name}</option>)}
+                    </select>
+                    {savingAssignmentId === student.id && <Loader2 size={14} className="animate-spin text-brand-500" />}
+                  </div>
+                )}
                 {!showRemoved && (
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-black">CMS {student.cmsScore?.toFixed(1).replace('.', ',')}%</span>
