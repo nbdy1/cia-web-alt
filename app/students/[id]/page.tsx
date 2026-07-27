@@ -22,11 +22,9 @@ import {
   ClipboardList,
   Printer,
   UserCircle2,
-  Cpu,
 } from "lucide-react";
 import Link from "next/link";
 import { SmartBackButton } from "@/components/SmartBackButton";
-import { getModelLabel } from "@/lib/data/models";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { getTerminology } from "@/lib/data/terminology";
 import { isTenantOrganization } from "@/lib/tenant-server";
@@ -263,9 +261,6 @@ export default async function StudentProfile({
                         <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400">
                           <Calendar size={8} />
                           {new Date(report.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-100 text-purple-700">
-                          <Cpu size={8} /> {getModelLabel(report.model_used)}
                         </span>
                       </div>
                     </div>

@@ -26,13 +26,11 @@ import {
   Brain,
   Heart,
   Zap,
-  Cpu,
   TrendingDown,
 } from "lucide-react";
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { FulfilledSubsList } from "@/components/FulfilledSubsList";
 import { TreatmentPlanStatus } from "@/components/TreatmentPlanStatus";
-import { getModelLabel } from "@/lib/data/models";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { getTerminology } from "@/lib/data/terminology";
@@ -213,11 +211,6 @@ export default async function ReportDetailPage({
         <div className="text-center">
           <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest">Laporan</p>
           <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
-          <div className="flex items-center justify-center gap-1 mt-1">
-            <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
-              <Cpu size={8} /> {getModelLabel(report.model_used)}
-            </span>
-          </div>
           {authorName && (
             <p className="text-[9px] font-bold text-slate-400 mt-1">Dibuat oleh {authorName}</p>
           )}
