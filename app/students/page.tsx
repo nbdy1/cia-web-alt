@@ -87,6 +87,7 @@ type RecentReport = {
   created_at: string;
   students: { name: string } | null;
   studentPhotoUrl?: string | null;
+  createdByName?: string | null;
   treatment_plan: any;
 };
 
@@ -224,6 +225,7 @@ export default function StudentsAnalyticsPage() {
           id,
           title,
           created_at,
+          created_by,
           students (name, photo_url),
           treatment_plan
         `)
@@ -247,10 +249,16 @@ export default function StudentsAnalyticsPage() {
 
       if (recentQuery) {
         const { data: recentRaw } = await recentQuery;
+      const authorIds = Array.from(new Set(((recentRaw ?? []) as any[]).map((report) => report.created_by).filter(Boolean)));
+      const { data: authors } = authorIds.length > 0
+        ? await supabase.from("profiles").select("id, name").in("id", authorIds)
+        : { data: [] as any[] };
+      const authorNames = new Map((authors ?? []).map((author: any) => [author.id, author.name]));
       setRecentReports(
         ((recentRaw ?? []) as any[]).map((report) => ({
           ...report,
           studentPhotoUrl: report.students?.photo_url ?? null,
+          createdByName: report.created_by ? (authorNames.get(report.created_by) ?? null) : null,
         })) as RecentReport[],
       );
       }
@@ -613,6 +621,7 @@ export default function StudentsAnalyticsPage() {
                             {report.title}
                           </p>
                         )}
+                        {report.createdByName && <p className="text-[10px] font-black text-brand-600 mt-0.5">Dibuat oleh {report.createdByName}</p>}
                         <p className="text-[10px] font-bold text-slate-400 mt-0.5">
                           {new Date(report.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}
                           {" · "}

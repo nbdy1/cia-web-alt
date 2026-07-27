@@ -39,7 +39,7 @@ import { useTerminology } from "@/lib/hooks/use-terminology";
 // ─── types ────────────────────────────────────────────────────────────────────
 type DayBucket = { label: string; count: number };
 type UstadzRow = { id: string; name: string; reportCount: number; studentCount: number };
-type RecentReport = { id: string; studentName: string; studentPhotoUrl: string | null; title: string | null; date: string; themesCount: number; siCount: number };
+type RecentReport = { id: string; studentName: string; studentPhotoUrl: string | null; title: string | null; createdByName: string | null; date: string; themesCount: number; siCount: number };
 type SantriLeaderRow = { id: string; name: string; kmsPercentage: number };
 
 // Total sub-indicator count per KMS pillar, from the local framework source —
@@ -169,7 +169,7 @@ export default function AdminOverviewPage() {
 
         // ── 1. Counts ───────────────────────────────────────────────────────
         let studentsQ = supabase.from("students").select("*", { count: "exact", head: true }).or("is_removed.is.null,is_removed.eq.false");
-        let reportsQ = supabase.from("reports").select("id, created_at, student_id, title, treatment_plan, students(name, photo_url)").order("created_at", { ascending: false }).limit(50);
+        let reportsQ = supabase.from("reports").select("id, created_at, student_id, title, created_by, treatment_plan, students(name, photo_url)").order("created_at", { ascending: false }).limit(50);
         let students2Q = supabase.from("students").select("id, assigned_ustadz_id, reports(id)").or("is_removed.is.null,is_removed.eq.false");
         // Ordered oldest-first: declined_sub_indicators decrements a running
         // per-student count floored at 0, which requires replaying each
@@ -200,6 +200,11 @@ export default function AdminOverviewPage() {
         const ustadzCount = ustadzRaw?.length ?? 0;
 
         const allReports = reportsRaw ?? [];
+        const authorIds = Array.from(new Set(allReports.map((report: any) => report.created_by).filter(Boolean)));
+        const { data: authors } = authorIds.length > 0
+          ? await supabase.from("profiles").select("id, name").in("id", authorIds)
+          : { data: [] as any[] };
+        const authorNames = new Map((authors ?? []).map((author: any) => [author.id, author.name]));
 
         // ── 2. Stats ────────────────────────────────────────────────────────
         const activeSantriIds = new Set(allReports.map((r: any) => r.student_id));
@@ -225,6 +230,7 @@ export default function AdminOverviewPage() {
               studentName: (r.students as any)?.name ?? "—",
               studentPhotoUrl: (r.students as any)?.photo_url ?? null,
               title: r.title ?? null,
+              createdByName: r.created_by ? (authorNames.get(r.created_by) ?? null) : null,
               date: new Date(r.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
               themesCount: themes,
               siCount: si,
@@ -475,6 +481,7 @@ export default function AdminOverviewPage() {
                     <div>
                       <p className="font-black text-slate-800 text-sm leading-tight">{r.studentName}</p>
                       {r.title && <p className="text-xs font-bold text-slate-600 truncate max-w-[180px] mt-0.5">{r.title}</p>}
+                      {r.createdByName && <p className="text-[10px] font-black text-brand-600 mt-0.5">Dibuat oleh {r.createdByName}</p>}
                       <div className="flex items-center gap-1 mt-0.5">
                         <Calendar size={9} className="text-slate-400" />
                         <span className="text-[10px] font-bold text-slate-400">{r.date}</span>
@@ -496,7 +503,7 @@ export default function AdminOverviewPage() {
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
               <p className="font-black text-slate-800">Aktivitas {t.ustadz}</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Top 10 berdasarkan laporan</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Top 12 berdasarkan laporan</p>
             </div>
             <Link href="/admin/monitoring" className="text-[10px] font-black text-brand-600 uppercase tracking-wider hover:underline">
               Lihat semua →
@@ -509,7 +516,7 @@ export default function AdminOverviewPage() {
                 <p className="text-xs font-black">Belum ada {t.ustadz}</p>
               </div>
             ) : (
-              ustadzBoard.slice(0, 10).map((u, i) => {
+              ustadzBoard.slice(0, 12).map((u, i) => {
                 const medalColors = ["#f59e0b", "#94a3b8", "#b45309"];
                 const topThree = i < 3;
                 return (
