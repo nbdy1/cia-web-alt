@@ -231,7 +231,7 @@ export default function AdminOverviewPage() {
               studentPhotoUrl: (r.students as any)?.photo_url ?? null,
               title: r.title ?? null,
               createdByName: r.created_by ? (authorNames.get(r.created_by) ?? null) : null,
-              date: new Date(r.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
+              date: `${new Date(r.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })} · ${new Date(r.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`,
               themesCount: themes,
               siCount: si,
             };

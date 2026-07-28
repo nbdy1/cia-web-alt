@@ -32,6 +32,7 @@ import { SmartBackButton } from "@/components/SmartBackButton";
 import { FulfilledSubsList } from "@/components/FulfilledSubsList";
 import { TreatmentPlanStatus } from "@/components/TreatmentPlanStatus";
 import { StudentAvatar } from "@/components/StudentAvatar";
+import { MarkdownText } from "@/components/MarkdownText";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { getTerminology } from "@/lib/data/terminology";
 import { isTenantOrganization } from "@/lib/tenant-server";
@@ -336,9 +337,7 @@ export default async function ReportDetailPage({
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
                           {isGuru ? t.ustadz : "Asisten CDS"}
                         </p>
-                        <p className="text-sm leading-relaxed font-bold">
-                          {msg.text}
-                        </p>
+                        <MarkdownText className="text-sm leading-relaxed font-bold" children={msg.text} />
                       </div>
                     </div>
                   );
@@ -400,9 +399,7 @@ export default async function ReportDetailPage({
               </div>
 
               <div className="bg-white p-5 rounded-2xl border border-brand-100 shadow-sm">
-                <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                  {analysis.treatment.action_plan}
-                </p>
+                <MarkdownText className="text-xs text-slate-700 leading-relaxed font-medium" children={analysis.treatment.action_plan} />
               </div>
 
               <TreatmentPlanStatus
@@ -497,9 +494,7 @@ export default async function ReportDetailPage({
                           </div>
 
                           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
-                            <p className="text-[11px] text-slate-500 leading-relaxed italic">
-                              &ldquo;{item.reasoning}&rdquo;
-                            </p>
+                            <MarkdownText className="text-[11px] text-slate-500 leading-relaxed italic" children={`“${item.reasoning}”`} />
 
                             <FulfilledSubsList
                               reportId={report.id}

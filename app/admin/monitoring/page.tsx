@@ -433,6 +433,8 @@ export default function MonitoringPage() {
                                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
                                       <Calendar size={11} className="text-brand-500" />
                                       {new Date(report.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                      <span className="text-slate-300">·</span>
+                                      {new Date(report.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                       <Link href={`/students/${student.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-black text-slate-600 bg-white px-2.5 py-1 rounded-lg border-2 border-slate-200 hover:border-slate-300 transition-colors flex items-center gap-1">

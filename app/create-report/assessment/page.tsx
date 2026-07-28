@@ -37,6 +37,7 @@ import { transcribeAudio } from '@/app/actions/whisper';
 import { useSettings } from '@/lib/context/settings-context';
 import { supabase } from '@/lib/supabase';
 import { StudentAvatar } from '@/components/StudentAvatar';
+import { MarkdownText } from '@/components/MarkdownText';
 import { useTerminology } from '@/lib/hooks/use-terminology';
 import { ConfirmModal } from '@/components/ConfirmModal';
 
@@ -570,7 +571,7 @@ export default function AssessmentPage() {
               </div>
             )}
             <div
-              className={`max-w-[82%] px-4 py-3 ${
+                className={`${msg.role === "ai" ? "w-full" : "max-w-[82%]"} px-4 py-3 ${
                 msg.role === "teacher"
                   ? "bg-brand-500 text-white rounded-[1.4rem] rounded-br-md"
                   : "bg-white border-2 border-slate-100 text-slate-800 rounded-[1.4rem] rounded-bl-md"
@@ -581,7 +582,7 @@ export default function AssessmentPage() {
                   : { boxShadow: "0 3px 0 0 #e2e8f0" }
               }
             >
-              <p className="text-sm leading-relaxed font-bold">{msg.text}</p>
+              <MarkdownText className="text-sm leading-relaxed font-bold" children={msg.text} />
             </div>
             {msg.role === "teacher" && (
               <div className="ml-2 flex-shrink-0 self-end mb-1">
