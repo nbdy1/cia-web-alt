@@ -62,6 +62,31 @@ const FINALIZE_STEPS = [
   "Merapikan laporan akhir…",
 ];
 
+// Mobile Chrome can emit a new final result that repeats the tail of the
+// previous result (for example, "aku melihat" followed by "aku melihat Ahmad").
+// Merge by token overlap so repeated interim/final segments are not appended
+// to the textarea as new speech.
+function mergeTranscript(existing: string, incoming: string): string {
+  const current = existing.trim();
+  const next = incoming.trim();
+  if (!next) return current;
+  if (!current) return next;
+
+  const currentTokens = current.split(/\s+/);
+  const nextTokens = next.split(/\s+/);
+  const maxOverlap = Math.min(currentTokens.length, nextTokens.length, 32);
+
+  for (let size = maxOverlap; size > 0; size--) {
+    const currentTail = currentTokens.slice(-size).join(' ').toLocaleLowerCase('id-ID');
+    const nextHead = nextTokens.slice(0, size).join(' ').toLocaleLowerCase('id-ID');
+    if (currentTail === nextHead) {
+      return [...currentTokens, ...nextTokens.slice(size)].join(' ');
+    }
+  }
+
+  return `${current} ${next}`.replace(/\s+/g, ' ').trim();
+}
+
 export default function AssessmentPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -87,6 +112,8 @@ export default function AssessmentPage() {
   const shouldRecordRef = useRef(false);
   // Accumulates final transcript text across iOS recognition restarts
   const transcriptAccumulatorRef = useRef('');
+  const interimTranscriptRef = useRef('');
+  const recognitionRestartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Whisper MediaRecorder refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -199,23 +226,33 @@ export default function AssessmentPage() {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          transcriptAccumulatorRef.current += result[0].transcript + ' ';
+          transcriptAccumulatorRef.current = mergeTranscript(
+            transcriptAccumulatorRef.current,
+            result[0].transcript,
+          );
         } else {
           interim += result[0].transcript;
         }
       }
-      setCurrentInput((transcriptAccumulatorRef.current + interim).trim());
+      interimTranscriptRef.current = interim;
+      setCurrentInput(mergeTranscript(transcriptAccumulatorRef.current, interim));
     };
 
     recognition.onend = () => {
       if (shouldRecordRef.current) {
-        // User still wants to record — restart (handles iOS auto-stop)
-        try {
-          recognition.start();
-        } catch {
-          shouldRecordRef.current = false;
-          setIsRecording(false);
-        }
+        // Give Chrome time to settle the previous result before restarting;
+        // immediate restarts can cause overlapping duplicate result batches on
+        // Android devices.
+        if (recognitionRestartTimerRef.current) clearTimeout(recognitionRestartTimerRef.current);
+        recognitionRestartTimerRef.current = setTimeout(() => {
+          if (!shouldRecordRef.current) return;
+          try {
+            recognition.start();
+          } catch {
+            shouldRecordRef.current = false;
+            setIsRecording(false);
+          }
+        }, 250);
       } else {
         setIsRecording(false);
       }
@@ -236,6 +273,11 @@ export default function AssessmentPage() {
     };
 
     recognitionRef.current = recognition;
+    return () => {
+      if (recognitionRestartTimerRef.current) clearTimeout(recognitionRestartTimerRef.current);
+      shouldRecordRef.current = false;
+      recognition.abort?.();
+    };
   }, []);
 
   // Converts a Blob to a base64 string (strips the data-URL prefix)
@@ -305,6 +347,7 @@ export default function AssessmentPage() {
     if (isRecording) {
       shouldRecordRef.current = false;
       transcriptAccumulatorRef.current = '';
+      interimTranscriptRef.current = '';
       recognitionRef.current?.stop();
     } else {
       setMicError(null);
@@ -312,6 +355,7 @@ export default function AssessmentPage() {
       // so new speech appends to existing text instead of overwriting it.
       const existing = currentInput.trim();
       transcriptAccumulatorRef.current = existing ? existing + ' ' : '';
+      interimTranscriptRef.current = '';
       shouldRecordRef.current = true;
       stopVoice();
       try {
@@ -340,6 +384,7 @@ export default function AssessmentPage() {
     if (isRecording) {
       shouldRecordRef.current = false;
       transcriptAccumulatorRef.current = '';
+      interimTranscriptRef.current = '';
       recognitionRef.current?.stop();
       mediaRecorderRef.current?.stop();
       setIsRecording(false);
