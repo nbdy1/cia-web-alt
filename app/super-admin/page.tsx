@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Loader2, Plus, Building2, UserPlus, X, Users, Trash2, Crown } from "lucide-react";
 import {
   createOrganization,
-  assignUserToOrganization,
+  createOrganizationUser,
   getOrganizationMembers,
   removeOrganizationMember,
   type OrgMember,
@@ -23,6 +23,8 @@ export default function SuperAdminPage() {
 
   const [assignOrgId, setAssignOrgId] = useState<string | null>(null);
   const [assignEmail, setAssignEmail] = useState("");
+  const [assignName, setAssignName] = useState("");
+  const [assignPassword, setAssignPassword] = useState("");
   const [assignRole, setAssignRole] = useState("owner");
   const [assignLoading, setAssignLoading] = useState(false);
 
@@ -102,13 +104,15 @@ export default function SuperAdminPage() {
     e.preventDefault();
     if (!assignOrgId) return;
     setAssignLoading(true);
-    const result = await assignUserToOrganization(assignEmail, assignOrgId, assignRole);
+    const result = await createOrganizationUser(assignName, assignEmail, assignPassword, assignOrgId, assignRole);
     setAssignLoading(false);
 
     if (result.success) {
       alert("User assigned successfully!");
       setAssignOrgId(null);
+      setAssignName("");
       setAssignEmail("");
+      setAssignPassword("");
       loadOrgs(); // refresh counts
     } else {
       alert("Failed to assign user: " + result.error);
@@ -179,7 +183,7 @@ export default function SuperAdminPage() {
                     className="flex items-center gap-2 text-rose-600 hover:text-rose-700 font-black text-xs bg-rose-50 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition-colors"
                   >
                     <UserPlus size={14} />
-                    Assign User
+                    Create Account
                   </button>
                 </div>
               </div>
@@ -262,12 +266,16 @@ export default function SuperAdminPage() {
               <div className="w-11 h-11 bg-rose-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #fecaca" }}>
                 <UserPlus size={20} className="text-rose-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Assign User to Organization</h3>
-              <p className="text-slate-400 text-sm font-bold mt-0.5">Add an existing user account to this pesantren.</p>
+              <h3 className="text-xl font-black text-slate-800">Create Organization Account</h3>
+              <p className="text-slate-400 text-sm font-bold mt-0.5">Create an owner, admin, or ustadz account for this organization.</p>
             </div>
             <form onSubmit={handleAssignUser} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">User Email *</label>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Full Name *</label>
+                <input type="text" required value={assignName} onChange={(e) => setAssignName(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-rose-400 transition-colors" placeholder="e.g. Ahmad Fauzi" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Email *</label>
                 <input
                   type="email"
                   required
@@ -276,6 +284,11 @@ export default function SuperAdminPage() {
                   className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-rose-400 transition-colors"
                   placeholder="e.g. admin@pesantren.com"
                 />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Initial Password *</label>
+                <input type="password" required minLength={6} value={assignPassword} onChange={(e) => setAssignPassword(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-rose-400 transition-colors" placeholder="Minimum 6 characters" />
+                <p className="text-[10px] text-slate-400 font-bold mt-1">They can change this later in Settings.</p>
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Role</label>
@@ -295,7 +308,7 @@ export default function SuperAdminPage() {
                 className="w-full mt-2 bg-rose-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
                 style={{ boxShadow: "0 3px 0 0 #be123c" }}
               >
-                {assignLoading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" /> Assigning…</> : "Assign User"}
+                {assignLoading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" /> Creating…</> : "Create Account"}
               </button>
             </form>
           </div>

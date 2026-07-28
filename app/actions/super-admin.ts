@@ -95,6 +95,78 @@ export async function assignUserToOrganization(email: string, organizationId: st
   return { success: true };
 }
 
+/** Create a fresh auth account and attach it to one organization. */
+export async function createOrganizationUser(
+  name: string,
+  email: string,
+  password: string,
+  organizationId: string,
+  role: string,
+) {
+  try {
+    await assertPlatformAdmin();
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!name.trim() || !normalizedEmail || password.length < 6 || !organizationId || !['owner', 'admin', 'ustadz'].includes(role)) {
+    return { success: false, error: 'Nama, email, password minimal 6 karakter, organisasi, dan role wajib diisi.' };
+  }
+
+  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    email: normalizedEmail,
+    password,
+    email_confirm: true,
+    user_metadata: { name: name.trim(), role },
+  });
+  if (authError || !authData.user) {
+    return { success: false, error: authError?.message ?? 'Gagal membuat akun.' };
+  }
+
+  const userId = authData.user.id;
+  const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
+    id: userId,
+    name: name.trim(),
+    email: normalizedEmail,
+    role,
+    organization_id: organizationId,
+    is_removed: false,
+    removed_at: null,
+    removed_reason: null,
+  }, { onConflict: 'id' });
+  if (profileError) {
+    await supabaseAdmin.auth.admin.deleteUser(userId);
+    return { success: false, error: profileError.message };
+  }
+
+  const { error: memberError } = await supabaseAdmin.from('organization_members').insert({
+    organization_id: organizationId,
+    user_id: userId,
+    role,
+  });
+  if (memberError) {
+    await supabaseAdmin.auth.admin.deleteUser(userId);
+    return { success: false, error: memberError.message };
+  }
+
+  // A legacy profile trigger may have created a membership in the default
+  // organization while the profile was inserted. Keep this newly created
+  // account scoped to the organization selected by the super admin.
+  const { error: extraMembershipError } = await supabaseAdmin
+    .from('organization_members')
+    .delete()
+    .eq('user_id', userId)
+    .neq('organization_id', organizationId);
+  if (extraMembershipError) {
+    await supabaseAdmin.auth.admin.deleteUser(userId);
+    return { success: false, error: extraMembershipError.message };
+  }
+
+  await logAudit('create_org_user', 'organization', organizationId, { user_id: userId, email: normalizedEmail, role });
+  return { success: true, userId };
+}
+
 export type OrgMember = {
   user_id: string;
   role: string;

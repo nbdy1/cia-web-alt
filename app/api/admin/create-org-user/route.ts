@@ -159,6 +159,16 @@ export async function POST(req: NextRequest) {
       );
     if (memberError) throw memberError;
 
+    // Older database deployments may still have a profile trigger that adds
+    // the default organization during profile insertion. Remove any such
+    // membership so this flow remains scoped to the requested organizations.
+    const { error: staleMembershipError } = await adminClient
+      .from("organization_members")
+      .delete()
+      .eq("user_id", userId)
+      .not("organization_id", "in", `(${orgIds.join(",")})`);
+    if (staleMembershipError) throw staleMembershipError;
+
     return NextResponse.json({
       success: true,
       userId,
