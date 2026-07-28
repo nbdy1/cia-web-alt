@@ -18,6 +18,7 @@ import { Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { useTerminology } from "@/lib/hooks/use-terminology";
+import { compressImage } from "@/lib/compress-image";
 
 type AvatarSize = "sm" | "md" | "lg" | "xl";
 
@@ -67,12 +68,12 @@ export function StudentPhotoUpload({
     setError(null);
 
     try {
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `${studentId}.${ext}`;
+      const compressedFile = await compressImage(file);
+      const path = `${studentId}.webp`;
 
       const { error: uploadError } = await supabase.storage
         .from("student-photos")
-        .upload(path, file, { upsert: true, contentType: file.type });
+        .upload(path, compressedFile, { upsert: true, contentType: "image/webp" });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from("student-photos").getPublicUrl(path);

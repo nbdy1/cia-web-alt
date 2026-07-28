@@ -26,6 +26,7 @@ import { StudentPhotoUpload } from '@/components/StudentPhotoUpload';
 import { useAuth } from '@/lib/context/auth-context';
 import { useTerminology } from '@/lib/hooks/use-terminology';
 import { getFrameworkForOrganization } from '@/lib/data/framework';
+import { compressImage } from '@/lib/compress-image';
 
 export default function ManageSantriPage() {
   const { activeOrganizationId } = useAuth();
@@ -140,11 +141,11 @@ export default function ManageSantriPage() {
 
       // 2. Upload photo if one was picked
       if (pendingPhotoFile && inserted?.id) {
-        const ext = pendingPhotoFile.name.split('.').pop() ?? 'jpg';
-        const path = `${inserted.id}.${ext}`;
+        const compressedFile = await compressImage(pendingPhotoFile);
+        const path = `${inserted.id}.webp`;
         const { error: uploadErr } = await supabase.storage
           .from('student-photos')
-          .upload(path, pendingPhotoFile, { upsert: true, contentType: pendingPhotoFile.type });
+          .upload(path, compressedFile, { upsert: true, contentType: 'image/webp' });
         if (!uploadErr) {
           const { data: urlData } = supabase.storage.from('student-photos').getPublicUrl(path);
           await supabase.from('students').update({ photo_url: urlData.publicUrl }).eq('id', inserted.id);
