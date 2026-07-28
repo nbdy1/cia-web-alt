@@ -31,7 +31,7 @@ BEGIN
     ELSE 'ustadz'
   END;
 
-  INSERT INTO public.organization_members (organization_id, user_id, role)
+  INSERT INTO opublic.organization_members (organization_id, user_id, role)
   VALUES (default_org_id, NEW.id, member_role)
   ON CONFLICT (organization_id, user_id) DO NOTHING;
 
