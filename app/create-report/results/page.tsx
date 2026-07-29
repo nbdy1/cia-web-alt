@@ -49,6 +49,7 @@ import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 import { isSupplementaryTheme } from "@/lib/data/framework";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { MarkdownText } from "@/components/MarkdownText";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
@@ -270,9 +271,7 @@ export default function ResultsPage() {
                 autoFocus
               />
             ) : (
-              <p className="text-xl font-black leading-snug mb-5">
-                {analysisData.status_summary}
-              </p>
+              <MarkdownText className="text-xl font-black leading-snug mb-5" children={analysisData.status_summary} />
             )}
             <div className="grid grid-cols-3 gap-2">
               {Object.entries(analysisData.overall_stats || {}).map(
@@ -335,9 +334,7 @@ export default function ResultsPage() {
                 )}
               </div>
               <div className="bg-white p-3 rounded-xl border-2 border-brand-100">
-                <p className="text-xs text-slate-600 leading-relaxed italic font-bold">
-                  {analysisData.treatment.action_plan}
-                </p>
+                <MarkdownText className="text-xs text-slate-600 leading-relaxed italic font-bold" children={analysisData.treatment.action_plan} />
               </div>
             </div>
           </section>
@@ -459,9 +456,7 @@ export default function ResultsPage() {
                             </span>
                           </div>
                           <div className="bg-slate-50 p-3 rounded-xl border-2 border-slate-100 space-y-2">
-                            <p className="text-[11px] text-slate-500 leading-relaxed italic font-bold">
-                              "{item.reasoning}"
-                            </p>
+                            <MarkdownText className="text-[11px] text-slate-500 leading-relaxed italic font-bold" children={`"${item.reasoning}"`} />
                             <div className="space-y-1">
                               {item.fulfilled_sub_indicators?.map(
                                 (si: string, idx: number) => (

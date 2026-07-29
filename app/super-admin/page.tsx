@@ -7,6 +7,7 @@ import { Loader2, Plus, Building2, UserPlus, X, Users, Trash2, Crown } from "luc
 import {
   createOrganization,
   createOrganizationUser,
+  assignUserToOrganization,
   getOrganizationMembers,
   removeOrganizationMember,
   type OrgMember,
@@ -27,6 +28,7 @@ export default function SuperAdminPage() {
   const [assignPassword, setAssignPassword] = useState("");
   const [assignRole, setAssignRole] = useState("owner");
   const [assignLoading, setAssignLoading] = useState(false);
+  const [assignMode, setAssignMode] = useState<"new" | "existing">("new");
 
   const [manageOrg, setManageOrg] = useState<{ id: string; name: string } | null>(null);
   const [members, setMembers] = useState<OrgMember[]>([]);
@@ -104,7 +106,9 @@ export default function SuperAdminPage() {
     e.preventDefault();
     if (!assignOrgId) return;
     setAssignLoading(true);
-    const result = await createOrganizationUser(assignName, assignEmail, assignPassword, assignOrgId, assignRole);
+    const result = assignMode === "new"
+      ? await createOrganizationUser(assignName, assignEmail, assignPassword, assignOrgId, assignRole)
+      : await assignUserToOrganization(assignEmail, assignOrgId, assignRole);
     setAssignLoading(false);
 
     if (result.success) {
@@ -113,6 +117,7 @@ export default function SuperAdminPage() {
       setAssignName("");
       setAssignEmail("");
       setAssignPassword("");
+      setAssignMode("new");
       loadOrgs(); // refresh counts
     } else {
       alert("Failed to assign user: " + result.error);
@@ -266,14 +271,18 @@ export default function SuperAdminPage() {
               <div className="w-11 h-11 bg-rose-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #fecaca" }}>
                 <UserPlus size={20} className="text-rose-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Create Organization Account</h3>
-              <p className="text-slate-400 text-sm font-bold mt-0.5">Create an owner, admin, or ustadz account for this organization.</p>
+              <h3 className="text-xl font-black text-slate-800">Add Organization Account</h3>
+              <p className="text-slate-400 text-sm font-bold mt-0.5">Create a new account or add an existing account.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-1 p-1 mb-5 bg-slate-100 rounded-xl">
+              <button type="button" onClick={() => setAssignMode("new")} className={`rounded-lg py-2 text-xs font-black transition-colors ${assignMode === "new" ? "bg-white text-rose-600 shadow-sm" : "text-slate-400"}`}>Akun Baru</button>
+              <button type="button" onClick={() => setAssignMode("existing")} className={`rounded-lg py-2 text-xs font-black transition-colors ${assignMode === "existing" ? "bg-white text-rose-600 shadow-sm" : "text-slate-400"}`}>Akun Sudah Ada</button>
             </div>
             <form onSubmit={handleAssignUser} className="space-y-4">
-              <div>
+              {assignMode === "new" && <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Full Name *</label>
                 <input type="text" required value={assignName} onChange={(e) => setAssignName(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-rose-400 transition-colors" placeholder="e.g. Ahmad Fauzi" />
-              </div>
+              </div>}
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Email *</label>
                 <input
@@ -285,11 +294,11 @@ export default function SuperAdminPage() {
                   placeholder="e.g. admin@pesantren.com"
                 />
               </div>
-              <div>
+              {assignMode === "new" && <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Initial Password *</label>
                 <input type="password" required minLength={6} value={assignPassword} onChange={(e) => setAssignPassword(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-rose-400 transition-colors" placeholder="Minimum 6 characters" />
                 <p className="text-[10px] text-slate-400 font-bold mt-1">They can change this later in Settings.</p>
-              </div>
+              </div>}
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Role</label>
                 <select
@@ -308,7 +317,7 @@ export default function SuperAdminPage() {
                 className="w-full mt-2 bg-rose-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
                 style={{ boxShadow: "0 3px 0 0 #be123c" }}
               >
-                {assignLoading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" /> Creating…</> : "Create Account"}
+                {assignLoading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" /> Saving…</> : assignMode === "new" ? "Create Account" : "Assign Account"}
               </button>
             </form>
           </div>

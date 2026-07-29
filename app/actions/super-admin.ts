@@ -74,10 +74,17 @@ export async function assignUserToOrganization(email: string, organizationId: st
     return { success: false, error: e.message };
   }
 
-  const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-  if (listError) return { success: false, error: listError.message };
-
-  const user = users.find((u) => u.email === email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const perPage = 1000;
+  let page = 1;
+  let user: { id: string; email?: string } | undefined;
+  while (!user) {
+    const { data, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+    if (listError) return { success: false, error: listError.message };
+    user = data.users.find((u) => u.email?.trim().toLowerCase() === normalizedEmail);
+    if (data.users.length < perPage) break;
+    page += 1;
+  }
   if (!user) return { success: false, error: "User not found with that email." };
 
   const { error: insertError } = await supabaseAdmin

@@ -327,7 +327,7 @@ export default async function ReportDetailPage({
                       className={`flex ${isGuru ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[90%] px-4 py-3 ${
+                        className={`${isAI ? "w-full" : "max-w-[90%]"} px-4 py-3 ${
                           isGuru
                             ? "bg-brand-500 text-white rounded-[1.4rem] rounded-br-md"
                             : "bg-slate-100 text-slate-700 rounded-[1.4rem] rounded-bl-md"
