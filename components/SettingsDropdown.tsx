@@ -17,9 +17,9 @@ import React, { FormEvent, useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   Building2,
+  CheckCircle2,
   Eye,
   EyeOff,
-  ChevronDown,
   HelpCircle,
   LockKeyhole,
   RotateCcw,
@@ -129,6 +129,8 @@ function getInitialFontScale() {
 export function SettingsDropdown() {
   const { user, organizations, activeOrganizationId, setActiveOrganizationId } =
     useAuth();
+  const canSwitchOrg = organizations.length > 1;
+  const activeOrg = organizations.find((org) => org.id === activeOrganizationId) ?? null;
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
   const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
@@ -292,23 +294,67 @@ export function SettingsDropdown() {
                     </div>
                   </div>
 
-                  <div className="relative">
-                    <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-600" />
-                    <select
-                      aria-label="Pilih institusi pengguna"
-                      value={activeOrganizationId ?? ""}
-                      onChange={(event) => setActiveOrganizationId(event.target.value)}
-                      disabled={organizations.length <= 1}
-                      className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 py-3 pl-10 pr-3 text-sm font-black text-slate-700 outline-none transition-colors focus:border-brand-300 disabled:cursor-default disabled:opacity-80"
-                    >
-                      {organizations.map((org) => (
-                        <option key={org.id} value={org.id}>{org.name} · {org.role}</option>
-                      ))}
-                    </select>
-                    {organizations.length > 1 && (
-                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-600" />
-                    )}
-                  </div>
+                  {canSwitchOrg ? (
+                    <div className="space-y-1">
+                      {organizations.map((org) => {
+                        const isSelected = org.id === activeOrganizationId;
+
+                        return (
+                          <button
+                            key={org.id}
+                            type="button"
+                            onClick={() => setActiveOrganizationId(org.id)}
+                            className={`flex w-full items-center justify-between rounded-2xl p-3 text-left transition-colors ${
+                              isSelected
+                                ? "bg-brand-50"
+                                : "hover:bg-slate-50"
+                            }`}
+                          >
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
+                                  isSelected
+                                    ? "bg-brand-500 text-white"
+                                    : "bg-slate-100 text-slate-500"
+                                }`}
+                              >
+                                <Building2 className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="min-w-0">
+                                <p
+                                  className={`truncate text-sm font-black ${
+                                    isSelected
+                                      ? "text-brand-800"
+                                      : "text-slate-700"
+                                  }`}
+                                >
+                                  {org.name}
+                                </p>
+                                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                                  {org.role}
+                                </p>
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <CheckCircle2 className="ml-2 h-4 w-4 shrink-0 text-brand-500" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black text-slate-700">
+                          {activeOrg?.name ?? "Belum ada organisasi"}
+                        </p>
+                        <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                          {activeOrg?.role ?? "Tidak ada role"}
+                        </p>
+                      </div>
+                      <CheckCircle2 className="ml-2 h-4 w-4 shrink-0 text-brand-500" />
+                    </div>
+                  )}
                 </div>
 
                 <form
