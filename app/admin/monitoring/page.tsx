@@ -15,12 +15,25 @@
  * without having to scroll every ustadz's full history. Filtering happens
  * client-side over the already-fetched data (no extra query per preset).
  *
+ * Persistence (added so an admin auditing many reports in a row doesn't lose
+ * their place every time they open one — see the "kurang satset" complaint
+ * this was built for):
+ *   - Search/filter/sort choices persist in localStorage (cia:monitoring-filters),
+ *     same convention as the sort dropdown on app/students/page.tsx.
+ *   - The fetched data + scroll position are cached in sessionStorage
+ *     (cia:monitoring-cache / cia:monitoring-scroll) so navigating to a report
+ *     and back restores instantly instead of re-fetching + re-scrolling.
+ *   - A background refresh runs every REFRESH_INTERVAL_MS while the tab is
+ *     visible; it only replaces state (and thus re-renders/re-sorts) when the
+ *     fetched data actually differs from what's cached, so an admin sitting on
+ *     this page doesn't get jolted by a re-render for no reason.
+ *
  * Also serves as the fallback destination for ReportBackButton / SmartBackButton
  * when the admin navigates from a report detail page.
  */
 "use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BookOpen, Search, Loader2, Users, FileText, ChevronRight, Calendar, AlertCircle, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
@@ -92,17 +105,145 @@ function resolveRange(preset: PresetKey, customFrom: string, customTo: string): 
   }
 }
 
+// ─── Persistence ──────────────────────────────────────────────────────────────
+
+const FILTERS_STORAGE_KEY = 'cia:monitoring-filters';
+const SCROLL_STORAGE_KEY = 'cia:monitoring-scroll';
+const CACHE_STORAGE_KEY = 'cia:monitoring-cache';
+const REFRESH_INTERVAL_MS = 60_000;
+
+type FilterState = {
+  searchQuery: string;
+  preset: PresetKey;
+  customFrom: string;
+  customTo: string;
+  sortKey: SortKey;
+  expandedUstadz: string | null;
+};
+
+const DEFAULT_FILTERS: FilterState = {
+  searchQuery: '',
+  preset: 'all',
+  customFrom: '',
+  customTo: '',
+  sortKey: 'most_reports',
+  expandedUstadz: null,
+};
+
+function getInitialFilters(): FilterState {
+  if (typeof window === 'undefined') return DEFAULT_FILTERS;
+  try {
+    const stored = window.localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!stored) return DEFAULT_FILTERS;
+    return { ...DEFAULT_FILTERS, ...JSON.parse(stored) };
+  } catch {
+    return DEFAULT_FILTERS;
+  }
+}
+
+// A cheap fingerprint of "everything that could change the rendered list" —
+// used to skip a state update (and the re-render/re-sort it triggers) when a
+// background refresh comes back with data identical to what's already shown.
+function fingerprint(formattedData: any[]): string {
+  return formattedData
+    .map((u) => `${u.id}:${u.students.map((s: any) => `${s.id}[${s.reports.map((r: any) => r.id).join(',')}]`).join('|')}`)
+    .join(';');
+}
+
 export default function MonitoringPage() {
   const { activeOrganizationId } = useAuth();
   const t = useTerminology();
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [expandedUstadz, setExpandedUstadz] = useState<string | null>(null);
-  const [preset, setPreset] = useState<PresetKey>('all');
-  const [customFrom, setCustomFrom] = useState('');
-  const [customTo, setCustomTo] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>('most_reports');
+
+  // Lazily seeded from sessionStorage so navigating back from a report shows
+  // the list instantly instead of a loading spinner + re-fetch.
+  const [data, setData] = useState<any[]>(() => {
+    if (typeof window === 'undefined' || !activeOrganizationId) return [];
+    try {
+      const cached = window.sessionStorage.getItem(`${CACHE_STORAGE_KEY}:${activeOrganizationId}`);
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(data.length === 0);
+
+  const initialFilters = useMemo(getInitialFilters, []);
+  const [searchQuery, setSearchQuery] = useState(initialFilters.searchQuery);
+  const [expandedUstadz, setExpandedUstadz] = useState<string | null>(initialFilters.expandedUstadz);
+  const [preset, setPreset] = useState<PresetKey>(initialFilters.preset);
+  const [customFrom, setCustomFrom] = useState(initialFilters.customFrom);
+  const [customTo, setCustomTo] = useState(initialFilters.customTo);
+  const [sortKey, setSortKey] = useState<SortKey>(initialFilters.sortKey);
+
+  // Persist filter/search/sort choices so they survive navigating away and back.
+  useEffect(() => {
+    const state: FilterState = { searchQuery, preset, customFrom, customTo, sortKey, expandedUstadz };
+    try {
+      window.localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // localStorage unavailable (private browsing) — safe to skip persisting.
+    }
+  }, [searchQuery, preset, customFrom, customTo, sortKey, expandedUstadz]);
+
+  // Restore scroll position once data is showing, then keep saving it as the
+  // admin scrolls so it's there whenever they come back from a report.
+  //
+  // A single scrollTo() on mount isn't enough: Next.js's App Router disables
+  // native browser scroll restoration and does its own (to-top) handling on
+  // back/forward navigation (popstate), which can run AFTER this effect and
+  // silently undo a single restore attempt — hence the browser-back/swipe-
+  // back case landing at the top despite this code running. Re-asserting the
+  // saved position across a few animation frames, and re-running on every
+  // popstate (back/forward) and pageshow (bfcache restore), wins that race.
+  useEffect(() => {
+    if (loading) return;
+    let cancelled = false;
+    const restoreScroll = () => {
+      let savedY: string | null;
+      try {
+        savedY = window.sessionStorage.getItem(SCROLL_STORAGE_KEY);
+      } catch {
+        return;
+      }
+      if (!savedY) return;
+      const y = parseInt(savedY, 10);
+      let attempts = 0;
+      const tryScroll = () => {
+        if (cancelled) return;
+        window.scrollTo(0, y);
+        attempts++;
+        if (attempts < 8) requestAnimationFrame(tryScroll);
+      };
+      tryScroll();
+    };
+
+    restoreScroll();
+    window.addEventListener('popstate', restoreScroll);
+    window.addEventListener('pageshow', restoreScroll);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('popstate', restoreScroll);
+      window.removeEventListener('pageshow', restoreScroll);
+    };
+  }, [loading]);
+
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        try {
+          window.sessionStorage.setItem(SCROLL_STORAGE_KEY, String(window.scrollY));
+        } catch {
+          // ignore
+        }
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const range = useMemo(() => resolveRange(preset, customFrom, customTo), [preset, customFrom, customTo]);
 
@@ -115,94 +256,122 @@ export default function MonitoringPage() {
     [range]
   );
 
-  useEffect(() => {
-    async function fetchMonitoringData() {
-      if (!activeOrganizationId) return;
-      try {
-        // Ustadz membership is scoped via organization_members — querying
-        // `profiles` directly would (per RLS) return ustadz from every org
-        // this admin belongs to, not just the active one.
-        const { data: memberRows, error: membersError } = await supabase
-          .from('organization_members')
-          .select('user_id')
-          .eq('organization_id', activeOrganizationId)
-          .eq('role', 'ustadz');
+  // Seeded from the cached data (if any) so a background refresh that comes
+  // back identical to the cache doesn't trigger a redundant re-render.
+  const lastFingerprint = useRef<string | null>(data.length > 0 ? fingerprint(data) : null);
 
-        if (membersError) throw membersError;
-        const ustadzIds = (memberRows ?? []).map((m: any) => m.user_id);
+  const fetchMonitoringData = useCallback(async (showSpinner: boolean) => {
+    if (!activeOrganizationId) return;
+    if (showSpinner) setLoading(true);
+    try {
+      // Ustadz membership is scoped via organization_members — querying
+      // `profiles` directly would (per RLS) return ustadz from every org
+      // this admin belongs to, not just the active one.
+      const { data: memberRows, error: membersError } = await supabase
+        .from('organization_members')
+        .select('user_id')
+        .eq('organization_id', activeOrganizationId)
+        .eq('role', 'ustadz');
 
-        const { data: ustadzList, error: ustadzError } = ustadzIds.length > 0
-          ? await supabase
-              .from('profiles')
-              .select('id, name')
-              .in('id', ustadzIds)
-              .or('is_removed.is.null,is_removed.eq.false')
-              .order('name')
-          : { data: [] as any[], error: null };
+      if (membersError) throw membersError;
+      const ustadzIds = (memberRows ?? []).map((m: any) => m.user_id);
 
-        if (ustadzError) throw ustadzError;
+      const { data: ustadzList, error: ustadzError } = ustadzIds.length > 0
+        ? await supabase
+            .from('profiles')
+            .select('id, name')
+            .in('id', ustadzIds)
+            .or('is_removed.is.null,is_removed.eq.false')
+            .order('name')
+        : { data: [] as any[], error: null };
 
-        // Fetch all students (in this org) with their reports
-        const { data: studentsList, error: studentsError } = await supabase
-          .from('students')
-          .select(`
+      if (ustadzError) throw ustadzError;
+
+      // Fetch all students (in this org) with their reports
+      const { data: studentsList, error: studentsError } = await supabase
+        .from('students')
+        .select(`
+          id,
+          name,
+          photo_url,
+          assigned_ustadz_id,
+          reports (
             id,
-            name,
-            photo_url,
-            assigned_ustadz_id,
-            reports (
-              id,
-              created_at,
-              title,
-              created_by,
-              narrative
+            created_at,
+            title,
+            created_by,
+            narrative
+          )
+        `)
+        .eq('organization_id', activeOrganizationId)
+        .or('is_removed.is.null,is_removed.eq.false')
+        .order('name');
+
+      if (studentsError) throw studentsError;
+
+      // Map students to their Ustadz
+      const formattedData = (ustadzList || []).map(ustadz => {
+        const assignedStudents = (studentsList || []).filter(s => s.assigned_ustadz_id === ustadz.id);
+        const assignedStudentIds = new Set(assignedStudents.map((student) => student.id));
+        const crossAssignmentStudents = (studentsList || [])
+          .filter((student) => !assignedStudentIds.has(student.id))
+          .map((student) => ({
+            ...student,
+            // A report belongs in the maker's monitoring section when they
+            // authored it for a student outside their assigned roster.
+            reports: (student.reports || []).filter((report: any) => report.created_by === ustadz.id),
+          }))
+          .filter((student) => student.reports.length > 0);
+
+        return {
+          ...ustadz,
+          students: [
+            ...assignedStudents.map((student) => ({ ...student, isCrossAssignment: false })),
+            ...crossAssignmentStudents.map((student) => ({ ...student, isCrossAssignment: true })),
+          ].map(student => ({
+            ...student,
+            // Sort reports by newest first
+            reports: (student.reports || []).sort((a: any, b: any) =>
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             )
-          `)
-          .eq('organization_id', activeOrganizationId)
-          .or('is_removed.is.null,is_removed.eq.false')
-          .order('name');
+          }))
+        };
+      });
 
-        if (studentsError) throw studentsError;
-
-        // Map students to their Ustadz
-        const formattedData = (ustadzList || []).map(ustadz => {
-          const assignedStudents = (studentsList || []).filter(s => s.assigned_ustadz_id === ustadz.id);
-          const assignedStudentIds = new Set(assignedStudents.map((student) => student.id));
-          const crossAssignmentStudents = (studentsList || [])
-            .filter((student) => !assignedStudentIds.has(student.id))
-            .map((student) => ({
-              ...student,
-              // A report belongs in the maker's monitoring section when they
-              // authored it for a student outside their assigned roster.
-              reports: (student.reports || []).filter((report: any) => report.created_by === ustadz.id),
-            }))
-            .filter((student) => student.reports.length > 0);
-          
-          return {
-            ...ustadz,
-            students: [
-              ...assignedStudents.map((student) => ({ ...student, isCrossAssignment: false })),
-              ...crossAssignmentStudents.map((student) => ({ ...student, isCrossAssignment: true })),
-            ].map(student => ({
-              ...student,
-              // Sort reports by newest first
-              reports: (student.reports || []).sort((a: any, b: any) => 
-                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-              )
-            }))
-          };
-        });
-
+      // Skip the state update (and the re-render/re-sort it triggers) when a
+      // background refresh comes back identical to what's already on screen.
+      const fp = fingerprint(formattedData);
+      if (fp !== lastFingerprint.current) {
+        lastFingerprint.current = fp;
         setData(formattedData);
-      } catch (err) {
-        console.error("Error fetching monitoring data:", err);
-      } finally {
-        setLoading(false);
+        try {
+          window.sessionStorage.setItem(`${CACHE_STORAGE_KEY}:${activeOrganizationId}`, JSON.stringify(formattedData));
+        } catch {
+          // sessionStorage unavailable/full — safe to skip caching.
+        }
       }
+    } catch (err) {
+      console.error("Error fetching monitoring data:", err);
+    } finally {
+      setLoading(false);
     }
-
-    fetchMonitoringData();
   }, [activeOrganizationId]);
+
+  useEffect(() => {
+    // Show the spinner only when there's nothing cached to show meanwhile.
+    fetchMonitoringData(data.length === 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeOrganizationId]);
+
+  // Background revalidation — quietly re-fetches on an interval so the admin
+  // sees new reports without a manual refresh, but only while the tab is
+  // actually visible (no point burning requests on a backgrounded tab).
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchMonitoringData(false);
+    }, REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [fetchMonitoringData]);
 
   // Scope each ustadz's students/reports to the selected date range, and flag
   // whether they had any activity in it — this is what actually answers

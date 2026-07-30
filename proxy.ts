@@ -128,7 +128,15 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  const defaultOrg = chooseDefaultOrg(rows);
+  // Honor the user's last-selected org (set client-side in auth-context.tsx
+  // whenever they switch orgs) before falling back to role-priority — otherwise
+  // this redirect always wins the race against the client-side cookie-restore
+  // logic and every returning multi-org user gets bounced back to whichever
+  // org ranks highest by role, ignoring what they actually had selected.
+  const savedOrgId = request.cookies.get(ACTIVE_ORG_COOKIE)?.value ?? null;
+  const savedOrg = savedOrgId ? rows.find((row) => getOrgId(row) === savedOrgId) : null;
+
+  const defaultOrg = savedOrg ?? chooseDefaultOrg(rows);
   const defaultSlug = defaultOrg ? getOrgSlug(defaultOrg) : null;
 
   if (defaultSlug && request.nextUrl.pathname !== "/login") {
