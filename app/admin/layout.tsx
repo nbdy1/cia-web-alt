@@ -88,9 +88,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         <div className="flex items-center gap-3">
           <OrganizationSwitcher />
-          <div className="text-[10px] font-black bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-slate-300">
+          {/* <div className="text-[10px] font-black bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-slate-300">
             {user?.user_metadata?.name || 'Admin'}
-          </div>
+          </div> */}
         </div>
       </header>
 
