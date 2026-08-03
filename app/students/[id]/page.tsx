@@ -22,6 +22,9 @@ import {
   ClipboardList,
   Printer,
   UserCircle2,
+  CheckCircle2,
+  XCircle,
+  Clock3,
 } from "lucide-react";
 import Link from "next/link";
 import { SmartBackButton } from "@/components/SmartBackButton";
@@ -51,6 +54,7 @@ async function getStudentData(id: string) {
       created_at,
       narrative,
       created_by
+      ,treatment_plan
     `,
     )
     .eq("student_id", id)
@@ -70,6 +74,15 @@ async function getStudentData(id: string) {
       created_by_name: report.created_by ? (authorNames.get(report.created_by) ?? null) : null,
     })),
   };
+}
+
+function getTreatmentStatus(treatmentPlan: unknown): "pending" | "completed" | "declined" {
+  const plan = typeof treatmentPlan === "string"
+    ? (() => { try { return JSON.parse(treatmentPlan); } catch { return null; } })()
+    : treatmentPlan;
+  const status = plan?.treatment?.status;
+  if (status === "completed" || status === "declined") return status;
+  return "pending";
 }
 
 export default async function StudentProfile({
@@ -256,9 +269,40 @@ export default async function StudentProfile({
               <Link
                 key={report.id}
                 href={`/reports/${report.id}?from=${encodeURIComponent(reportBackHref)}`}
-                className="card-3d-link block"
+                className="card-3d-link block overflow-visible"
               >
-                <div className="card-3d p-5 flex items-center justify-between">
+                <div className="card-3d relative overflow-visible p-5 flex items-center justify-between">
+                  {(() => {
+                    const status = getTreatmentStatus(report.treatment_plan);
+                    const statusConfig = {
+                      pending: {
+                        label: "Belum selesai",
+                        className: "bg-slate-100 text-slate-500 border-slate-200",
+                        shadow: "#cbd5e1",
+                        icon: <Clock3 size={10} />,
+                      },
+                      completed: {
+                        label: "Selesai",
+                        className: "bg-brand-100 text-brand-700 border-brand-200",
+                        shadow: "var(--brand-300)",
+                        icon: <CheckCircle2 size={10} />,
+                      },
+                      declined: {
+                        label: "Ditolak",
+                        className: "bg-rose-100 text-rose-700 border-rose-200",
+                        shadow: "#fda4af",
+                        icon: <XCircle size={10} />,
+                      },
+                    }[status];
+                    return (
+                      <span
+                        className={`absolute right-3 -top-3 z-10 inline-flex items-center gap-1 rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${statusConfig.className}`}
+                        style={{ boxShadow: `0 2px 0 0 ${statusConfig.shadow}` }}
+                      >
+                        {statusConfig.icon} {statusConfig.label}
+                      </span>
+                    );
+                  })()}
                   <div className="flex items-center gap-4">
                     <div
                       className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center border-2 border-brand-100"
