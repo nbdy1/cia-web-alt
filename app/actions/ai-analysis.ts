@@ -51,6 +51,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { recordUsage, withUsageContext } from "@/lib/usage/usage-tracker";
 import { checkQuota } from "@/lib/usage/quota";
 import { buildFinalAnalysisPrompt, buildInterviewPrompt } from "@/lib/data/prompts";
@@ -73,6 +74,10 @@ import {
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const CHAT_MODEL = "google/gemini-3-flash-preview";
+const supabaseAdmin = createServiceClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
 const EMBEDDING_MODEL = "openai/text-embedding-3-small";
 // Experimental: lets the admin settings page sweep temperature per-model to
 // find the best fit. Not a permanent feature — expected to be removed once
@@ -416,15 +421,18 @@ export async function generateStudentProfile(
 ): Promise<void> {
   return withUsageContext({ purpose: "profile_summary", studentId }, async () => {
     try {
-    const db = await createClient();
-
-    // Fetch last 5 reports — enough history without blowing token budget
-    const { data: reports } = await db
+    // Profile generation runs after a report has already been authorized and
+    // saved. Use the service-role client for this internal derived-data job:
+    // normal ustadz users may create reports, but student UPDATE RLS is
+    // intentionally restricted to organization admins.
+    const { data: reports, error: reportsError } = await supabaseAdmin
       .from("reports")
       .select("title, created_at, treatment_plan")
       .eq("student_id", studentId)
       .order("created_at", { ascending: false })
       .limit(5);
+
+    if (reportsError) throw reportsError;
 
     if (!reports || reports.length === 0) return;
 
@@ -519,10 +527,12 @@ PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak bol
 
     cleanProfile = sanitizeFreeText(cleanProfile);
 
-    await db
+    const { error: updateError } = await supabaseAdmin
       .from("students")
       .update({ profile_summary: cleanProfile })
       .eq("id", studentId);
+
+    if (updateError) throw updateError;
 
     console.log(`[Profile] Updated profile for student ${studentId} (${cleanProfile.length} chars)`);
   } catch (err) {

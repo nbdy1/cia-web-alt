@@ -303,9 +303,9 @@ export default async function StudentProfile({
                       </span>
                     );
                   })()}
-                  <div className="flex items-center gap-4">
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
                     <div
-                      className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center border-2 border-brand-100"
+                      className="w-12 h-12 shrink-0 bg-brand-50 rounded-2xl flex items-center justify-center border-2 border-brand-100"
                     >
                       <FileText className="w-5 h-5 text-brand-600" />
                     </div>
@@ -319,14 +319,14 @@ export default async function StudentProfile({
                           {new Date(report.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
                         </span>
                         {report.created_by_name && (
-                          <span className="block min-w-0 max-w-[12rem] overflow-hidden text-ellipsis whitespace-nowrap text-[10px] font-black text-brand-600">
+                          <span className="block min-w-0 max-w-[min(12rem,45vw)] overflow-hidden text-ellipsis whitespace-nowrap text-[10px] font-black text-brand-600">
                             Dibuat oleh {report.created_by_name}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <div className="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100">
+                  <div className="ml-2 w-8 h-8 shrink-0 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100">
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   </div>
                 </div>
