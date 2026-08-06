@@ -29,7 +29,7 @@ describe("computeCostIdr", () => {
       computeCostIdr("elevenlabs", "flash-v2.5", {
         charCount: 1_500,
       }),
-      1_347,
+      1_822.5,
     );
   });
 

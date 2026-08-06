@@ -18,6 +18,8 @@
  */
 "use server";
 
+import { logSingleUsage } from "@/lib/usage/usage-tracker";
+
 const MIME_TO_EXT: Record<string, string> = {
   "audio/webm": "webm",
   "audio/webm;codecs=opus": "webm",
@@ -28,7 +30,7 @@ const MIME_TO_EXT: Record<string, string> = {
   "audio/flac": "flac",
 };
 
-export async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
+export async function transcribeAudio(audioBase64: string, mimeType: string, studentId?: string | null): Promise<string> {
   const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
   if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is missing");
 
@@ -58,5 +60,17 @@ export async function transcribeAudio(audioBase64: string, mimeType: string): Pr
   }
 
   const result = await response.json();
+
+  // Previously untracked entirely — this is a real, billed OpenRouter call
+  // that was invisible to ai_usage_events. logSingleUsage() is internally
+  // non-fatal (never throws), so this can't break transcription.
+  await logSingleUsage({
+    purpose: "whisper",
+    provider: "openrouter",
+    model: "openai/whisper-large-v3-turbo",
+    studentId: studentId ?? null,
+    realCostUsd: typeof result.usage?.cost === "number" ? result.usage.cost : null,
+  });
+
   return (result.text as string).trim();
 }

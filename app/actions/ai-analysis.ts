@@ -276,6 +276,12 @@ async function callOpenRouter(
     model,
     inputTokens: data.usage?.prompt_tokens ?? 0,
     outputTokens: data.usage?.completion_tokens ?? 0,
+    // OpenRouter reports the real per-call USD cost in usage.cost — verified
+    // present for google/gemini-3-flash-preview. Prefer it over our own rate
+    // table (see resolveCost() in lib/usage/usage-tracker.ts): it can't drift,
+    // and it correctly captures things our token-based estimate can't, like
+    // reasoning tokens billed outside completion_tokens.
+    realCostUsd: typeof data.usage?.cost === "number" ? data.usage.cost : null,
   });
   return data.choices[0].message.content as string;
 }
@@ -308,6 +314,7 @@ async function embedText(text: string): Promise<number[]> {
     model: EMBEDDING_MODEL,
     purpose: "embedding",
     inputTokens: data.usage?.prompt_tokens ?? data.usage?.total_tokens ?? 0,
+    realCostUsd: typeof data.usage?.cost === "number" ? data.usage.cost : null,
   });
   return data.data[0].embedding as number[];
 }

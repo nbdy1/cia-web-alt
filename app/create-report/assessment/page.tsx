@@ -311,7 +311,7 @@ export default function AssessmentPage() {
         setIsTranscribing(true);
         try {
           const base64 = await blobToBase64(audioBlob);
-          const text = await transcribeAudio(base64, mimeType);
+          const text = await transcribeAudio(base64, mimeType, studentId);
           if (text) setCurrentInput((prev) => (prev ? prev + ' ' + text : text).trim());
         } catch {
           setMicError('Transkripsi gagal. Coba lagi.');

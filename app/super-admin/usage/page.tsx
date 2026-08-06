@@ -2,24 +2,53 @@
  * app/super-admin/usage/page.tsx
  *
  * Platform usage & margin dashboard. Reads the metering tables (usage_counters,
- * ai_usage_events), subscriptions and plans — all readable by platform admins
- * via RLS — and shows, for the current calendar month:
+ * ai_usage_events via the usage_breakdown() RPC), subscriptions and plans —
+ * all readable by platform admins via RLS — and shows:
  *   - global KPIs (orgs, active subs, MRR, AI cost, gross margin)
- *   - a 6-month cost trend
- *   - cost split by purpose
- *   - a per-org table (usage vs quota, cost vs revenue, margin) with a drill-down
+ *   - a cost trend (bulan ini / 6 bulan / semua waktu, one toggle drives both
+ *     the trend chart AND the purpose/provider breakdown below it)
+ *   - cost split by purpose, and token/character totals per provider
+ *     (OpenRouter input/output tokens, ElevenLabs characters), with an
+ *     approximate USD conversion alongside the IDR figures
+ *   - an always-on "sepanjang waktu" strip for reconciling total spend
+ *     against externally-purchased credits (e.g. ElevenLabs)
+ *   - a daily bar chart (last 30 days, per provider) of our own tracked
+ *     cost, for spotting a day tracking silently broke or a spend spike
+ *   - a "live check" panel that asks OpenRouter/ElevenLabs directly what
+ *     they've billed (via app/actions/usage-live-check.ts) and puts it next
+ *     to our own tracked totals for the same window — the two independent
+ *     views this page relies on to catch tracking drift like the ElevenLabs
+ *     rate bug fixed in 20260805_correct_elevenlabs_rate.sql
+ *   - a per-org table (usage vs quota, cost vs revenue, margin) with a
+ *     drill-down that also shows that org's own purpose/provider breakdown
+ *
+ * USD figures now come from cost_usd (OpenRouter's own reported per-call
+ * cost when available — see resolveCost() in lib/usage/usage-tracker.ts —
+ * with a derived fallback for providers that don't report one), NOT from
+ * dividing cost_idr by an assumed exchange rate at display time. That
+ * reverse-conversion is what let a stale ElevenLabs rate go unnoticed.
+ *
+ * IMPORTANT: the trend chart and the purpose/provider breakdown used to read
+ * from two different places (usage_counters vs. a client-side re-sum of
+ * ai_usage_events capped at .limit(10000), further silently capped by
+ * PostgREST's project "Max Rows" setting with no ORDER BY) and could show
+ * different totals for the same month. Both now go through the same
+ * {from, to} range and the usage_breakdown() RPC (server-side GROUP BY, no
+ * row cap) — see scripts/migrations/20260731_usage_breakdown_rpc.sql.
  */
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
-import { formatIDR, formatIDRShort, formatNum, formatPct } from "@/lib/format";
+import { formatIDR, formatIDRShort, formatNum, formatPct, formatUSD } from "@/lib/format";
+import { idrToUsd, IDR_PER_USD } from "@/lib/usage/rates";
+import { getOpenRouterLiveUsage, getElevenLabsLiveUsage, type LiveUsageResult, type ElevenLabsLiveUsageResult } from "@/app/actions/usage-live-check";
 import {
-  Loader2, Building2, TrendingUp, Wallet, Coins, Percent, X, Activity,
+  Loader2, Building2, TrendingUp, Wallet, Coins, Percent, X, Activity, Mic, Cpu, History, SatelliteDish, RefreshCw, AlertTriangle,
 } from "lucide-react";
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell,
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, Legend,
 } from "recharts";
 
 const PURPOSE_LABELS: Record<string, string> = {
@@ -29,6 +58,7 @@ const PURPOSE_LABELS: Record<string, string> = {
   rapor: "Rapor",
   embedding: "Embedding",
   tts: "Suara (TTS)",
+  whisper: "Transkripsi Suara",
 };
 
 type OrgRow = {
@@ -46,34 +76,171 @@ type OrgRow = {
   marginPct: number | null;
 };
 
+type BreakdownRow = {
+  purpose: string;
+  provider: string;
+  cost_idr: number;
+  cost_usd: number;
+  input_tokens: number;
+  output_tokens: number;
+  char_count: number;
+  event_count: number;
+};
+
+type RangeKey = "month" | "6m" | "all";
+const RANGE_OPTIONS: { key: RangeKey; label: string }[] = [
+  { key: "month", label: "Bulan Ini" },
+  { key: "6m", label: "6 Bulan" },
+  { key: "all", label: "Semua Waktu" },
+];
+
 function monthStart(d = new Date()) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
 function toDateStr(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
+// Exclusive upper bound covering "through today" regardless of local timezone.
+function tomorrow() {
+  return new Date(Date.now() + 24 * 3600 * 1000);
+}
+function rangeToDates(range: RangeKey): { from: Date; to: Date } {
+  const to = tomorrow();
+  if (range === "month") return { from: monthStart(), to };
+  if (range === "6m") return { from: monthStart(new Date(new Date().setMonth(new Date().getMonth() - 5))), to };
+  return { from: new Date(2000, 0, 1), to };
+}
+
+// Rolls up purpose/provider breakdown rows into per-provider totals for the
+// "Token & Karakter" panel — OpenRouter is token-metered, ElevenLabs is
+// character-metered, so they're shown as two distinct stat blocks.
+function summarizeByProvider(rows: BreakdownRow[]) {
+  const totals: Record<string, { cost: number; costUsd: number; inputTokens: number; outputTokens: number; chars: number; events: number }> = {};
+  for (const r of rows) {
+    const bucket = totals[r.provider] ?? { cost: 0, costUsd: 0, inputTokens: 0, outputTokens: 0, chars: 0, events: 0 };
+    bucket.cost += Number(r.cost_idr ?? 0);
+    bucket.costUsd += Number(r.cost_usd ?? 0);
+    bucket.inputTokens += Number(r.input_tokens ?? 0);
+    bucket.outputTokens += Number(r.output_tokens ?? 0);
+    bucket.chars += Number(r.char_count ?? 0);
+    bucket.events += Number(r.event_count ?? 0);
+    totals[r.provider] = bucket;
+  }
+  return totals;
+}
+
+async function fetchBreakdown(from: Date, to: Date, orgId?: string): Promise<BreakdownRow[]> {
+  const { data, error } = await supabase.rpc("usage_breakdown", {
+    p_from: from.toISOString(),
+    p_to: to.toISOString(),
+    p_org: orgId ?? null,
+  });
+  if (error) {
+    console.error("[usage_breakdown]", error);
+    return [];
+  }
+  return (data ?? []) as BreakdownRow[];
+}
+
+type DailyRow = { day: string; provider: string; cost_idr: number; cost_usd: number; event_count: number };
+
+const DAILY_WINDOW_DAYS = 30;
+
+async function fetchDaily(from: Date, to: Date): Promise<DailyRow[]> {
+  const { data, error } = await supabase.rpc("usage_daily", {
+    p_from: from.toISOString(),
+    p_to: to.toISOString(),
+    p_org: null,
+  });
+  if (error) {
+    console.error("[usage_daily]", error);
+    return [];
+  }
+  return (data ?? []) as DailyRow[];
+}
+
+// Pivots {day, provider, cost} rows into one chart-friendly row per day with
+// a column per provider, so recharts can render grouped bars side by side.
+function pivotDailyByProvider(rows: DailyRow[]) {
+  const byDay = new Map<string, { day: string; openrouter: number; elevenlabs: number }>();
+  for (const r of rows) {
+    const bucket = byDay.get(r.day) ?? { day: r.day, openrouter: 0, elevenlabs: 0 };
+    if (r.provider === "openrouter") bucket.openrouter += Number(r.cost_idr ?? 0);
+    else if (r.provider === "elevenlabs") bucket.elevenlabs += Number(r.cost_idr ?? 0);
+    byDay.set(r.day, bucket);
+  }
+  return Array.from(byDay.values())
+    .sort((a, b) => a.day.localeCompare(b.day))
+    .map((r) => ({ ...r, label: new Date(r.day).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }) }));
+}
+
+// Sums the app's own tracked cost for "today" / "this week" / "this month" so
+// they can sit next to the provider's own live-reported figures for the same
+// windows — the whole point of the live-check panel is spotting drift.
+function summarizeAppWindow(rows: DailyRow[], provider: string) {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const weekAgoKey = new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const monthStartKey = toDateStr(monthStart());
+  let today = 0, week = 0, month = 0;
+  for (const r of rows) {
+    if (r.provider !== provider) continue;
+    const usd = Number(r.cost_usd ?? 0);
+    if (r.day >= monthStartKey) month += usd;
+    if (r.day >= weekAgoKey) week += usd;
+    if (r.day === todayKey) today += usd;
+  }
+  return { today, week, month };
+}
 
 export default function SuperAdminUsagePage() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<OrgRow[]>([]);
+  const [range, setRange] = useState<RangeKey>("month");
   const [trend, setTrend] = useState<{ label: string; cost: number }[]>([]);
-  const [byPurpose, setByPurpose] = useState<{ purpose: string; cost: number }[]>([]);
+  const [breakdown, setBreakdown] = useState<BreakdownRow[]>([]);
+  const [breakdownLoading, setBreakdownLoading] = useState(true);
+  const [allTime, setAllTime] = useState<BreakdownRow[]>([]);
   const [detailOrg, setDetailOrg] = useState<OrgRow | null>(null);
+  const [daily, setDaily] = useState<DailyRow[]>([]);
+  const [dailyLoading, setDailyLoading] = useState(true);
+  const [orLive, setOrLive] = useState<LiveUsageResult | null>(null);
+  const [elLive, setElLive] = useState<ElevenLabsLiveUsageResult | null>(null);
+  const [liveLoading, setLiveLoading] = useState(true);
 
+  // Daily breakdown (last 30 days) for the day-by-day comparison chart, plus
+  // a live check against what OpenRouter/ElevenLabs themselves report — two
+  // independent ways to catch tracking drift, fetched once on mount.
+  useEffect(() => {
+    (async () => {
+      setDailyLoading(true);
+      const from = new Date(Date.now() - DAILY_WINDOW_DAYS * 24 * 3600 * 1000);
+      const rows = await fetchDaily(from, tomorrow());
+      setDaily(rows);
+      setDailyLoading(false);
+    })().catch((e) => { console.error("[usage dashboard daily]", e); setDailyLoading(false); });
+
+    (async () => {
+      setLiveLoading(true);
+      const [or, el] = await Promise.all([getOpenRouterLiveUsage(), getElevenLabsLiveUsage()]);
+      setOrLive(or);
+      setElLive(el);
+      setLiveLoading(false);
+    })().catch((e) => { console.error("[usage dashboard live check]", e); setLiveLoading(false); });
+  }, []);
+
+  // KPI cards + per-org table are always scoped to the current month,
+  // independent of the range toggle below (which explores history).
   useEffect(() => {
     (async () => {
       setLoading(true);
       const nowMonth = toDateStr(monthStart());
-      const sixAgo = toDateStr(monthStart(new Date(new Date().setMonth(new Date().getMonth() - 5))));
-      const monthStartISO = monthStart().toISOString();
 
-      const [orgsRes, subsRes, plansRes, countersRes, trendRes, eventsRes] = await Promise.all([
+      const [orgsRes, subsRes, plansRes, countersRes, allTimeRows] = await Promise.all([
         supabase.from("organizations").select("id, name").order("name"),
         supabase.from("subscriptions").select("organization_id, plan_id, status, custom_price_idr"),
         supabase.from("plans").select("id, name, price_idr, max_reports_per_period, max_voice_chars_per_period"),
         supabase.from("usage_counters").select("organization_id, reports_used, voice_chars, cost_idr").eq("period_start", nowMonth),
-        supabase.from("usage_counters").select("period_start, cost_idr").gte("period_start", sixAgo),
-        supabase.from("ai_usage_events").select("purpose, cost_idr").gte("created_at", monthStartISO).limit(10000),
+        fetchBreakdown(new Date(2000, 0, 1), tomorrow()),
       ]);
 
       const orgs = orgsRes.data ?? [];
@@ -106,8 +273,25 @@ export default function SuperAdminUsagePage() {
         };
       });
       setRows(orgRows);
+      setAllTime(allTimeRows);
+      setLoading(false);
+    })().catch((e) => { console.error("[usage dashboard]", e); setLoading(false); });
+  }, []);
 
-      // 6-month cost trend
+  // Trend chart + purpose/provider breakdown — both driven by the same
+  // {from, to} range, so their totals always agree with each other.
+  useEffect(() => {
+    (async () => {
+      setBreakdownLoading(true);
+      const { from, to } = rangeToDates(range);
+
+      const [trendRes, breakdownRows] = await Promise.all([
+        range === "all"
+          ? supabase.from("usage_counters").select("period_start, cost_idr")
+          : supabase.from("usage_counters").select("period_start, cost_idr").gte("period_start", toDateStr(from)),
+        fetchBreakdown(from, to),
+      ]);
+
       const trendMap = new Map<string, number>();
       (trendRes.data ?? []).forEach((r: any) => {
         trendMap.set(r.period_start, (trendMap.get(r.period_start) ?? 0) + Number(r.cost_idr ?? 0));
@@ -119,21 +303,10 @@ export default function SuperAdminUsagePage() {
           cost,
         }));
       setTrend(trendArr);
-
-      // cost by purpose (this month)
-      const purposeMap = new Map<string, number>();
-      (eventsRes.data ?? []).forEach((e: any) => {
-        purposeMap.set(e.purpose, (purposeMap.get(e.purpose) ?? 0) + Number(e.cost_idr ?? 0));
-      });
-      setByPurpose(
-        Array.from(purposeMap.entries())
-          .map(([purpose, cost]) => ({ purpose, cost }))
-          .sort((a, b) => b.cost - a.cost),
-      );
-
-      setLoading(false);
-    })().catch((e) => { console.error("[usage dashboard]", e); setLoading(false); });
-  }, []);
+      setBreakdown(breakdownRows);
+      setBreakdownLoading(false);
+    })().catch((e) => { console.error("[usage dashboard range]", e); setBreakdownLoading(false); });
+  }, [range]);
 
   const totals = useMemo(() => {
     const revenue = rows.reduce((s, r) => s + r.revenue, 0);
@@ -141,6 +314,22 @@ export default function SuperAdminUsagePage() {
     const active = rows.filter((r) => r.status === "active").length;
     return { revenue, cost, margin: revenue - cost, active, orgs: rows.length };
   }, [rows]);
+
+  const byPurpose = useMemo(() => {
+    const map = new Map<string, number>();
+    breakdown.forEach((r) => map.set(r.purpose, (map.get(r.purpose) ?? 0) + Number(r.cost_idr ?? 0)));
+    return Array.from(map.entries()).map(([purpose, cost]) => ({ purpose, cost })).sort((a, b) => b.cost - a.cost);
+  }, [breakdown]);
+
+  const byProvider = useMemo(() => summarizeByProvider(breakdown), [breakdown]);
+  const allTimeByProvider = useMemo(() => summarizeByProvider(allTime), [allTime]);
+  const allTimeCost = useMemo(() => allTime.reduce((s, r) => s + Number(r.cost_idr ?? 0), 0), [allTime]);
+  const allTimeCostUsd = useMemo(() => allTime.reduce((s, r) => s + Number(r.cost_usd ?? 0), 0), [allTime]);
+  const breakdownTotalCost = useMemo(() => breakdown.reduce((s, r) => s + Number(r.cost_idr ?? 0), 0), [breakdown]);
+
+  const dailyChartData = useMemo(() => pivotDailyByProvider(daily), [daily]);
+  const appOpenRouterWindow = useMemo(() => summarizeAppWindow(daily, "openrouter"), [daily]);
+  const appElevenLabsWindow = useMemo(() => summarizeAppWindow(daily, "elevenlabs"), [daily]);
 
   if (loading) {
     return (
@@ -152,6 +341,7 @@ export default function SuperAdminUsagePage() {
   }
 
   const monthLabel = new Date().toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+  const rangeLabel = RANGE_OPTIONS.find((r) => r.key === range)?.label ?? "";
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto animate-fade-in">
@@ -165,7 +355,7 @@ export default function SuperAdminUsagePage() {
         <Kpi icon={<Building2 size={16} />} label="Organizations" value={formatNum(totals.orgs)} tone="slate" />
         <Kpi icon={<Activity size={16} />} label="Active subs" value={formatNum(totals.active)} tone="emerald" />
         <Kpi icon={<Wallet size={16} />} label="MRR (revenue)" value={formatIDR(totals.revenue)} tone="emerald" />
-        <Kpi icon={<Coins size={16} />} label="AI cost (bln ini)" value={formatIDR(totals.cost)} tone="amber" />
+        <Kpi icon={<Coins size={16} />} label="AI cost (bln ini)" value={formatIDR(totals.cost)} sub={`≈ ${formatUSD(idrToUsd(totals.cost))}`} tone="amber" />
         <Kpi
           icon={<Percent size={16} />}
           label="Gross margin"
@@ -175,9 +365,61 @@ export default function SuperAdminUsagePage() {
         />
       </div>
 
+      {/* All-time reconciliation strip — always visible regardless of the
+          range toggle below, so "does the total add up to what we bought"
+          questions (e.g. ElevenLabs credits) have one stable answer. */}
+      <div className="bg-slate-900 rounded-[1.5rem] p-5" style={{ boxShadow: "0 4px 0 0 #0f172a" }}>
+        <div className="flex items-center gap-2 mb-4 text-slate-300"><History size={15} /><h3 className="font-black text-sm text-white">Sepanjang Waktu (sejak awal tercatat)</h3></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total biaya AI</p>
+            <p className="text-xl font-black text-white mt-1">{formatIDR(allTimeCost)}</p>
+            <p className="text-[11px] font-bold text-slate-400">≈ {formatUSD(allTimeCostUsd)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1"><Cpu size={11} /> OpenRouter token</p>
+            <p className="text-sm font-black text-white mt-1">{formatNum(allTimeByProvider.openrouter?.inputTokens)} in / {formatNum(allTimeByProvider.openrouter?.outputTokens)} out</p>
+            <p className="text-[11px] font-bold text-slate-400">{formatIDR(allTimeByProvider.openrouter?.cost)} · ≈ {formatUSD(allTimeByProvider.openrouter?.costUsd ?? 0)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1"><Mic size={11} /> ElevenLabs karakter</p>
+            <p className="text-sm font-black text-white mt-1">{formatNum(allTimeByProvider.elevenlabs?.chars)} karakter</p>
+            <p className="text-[11px] font-bold text-slate-400">{formatIDR(allTimeByProvider.elevenlabs?.cost)} · ≈ {formatUSD(allTimeByProvider.elevenlabs?.costUsd ?? 0)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total events tercatat</p>
+            <p className="text-xl font-black text-white mt-1">{formatNum(allTime.reduce((s, r) => s + Number(r.event_count ?? 0), 0))}</p>
+          </div>
+        </div>
+        <p className="text-[11px] font-bold text-slate-500 mt-4 leading-relaxed">
+          Karakter ElevenLabs di atas adalah jumlah karakter TTS yang diproses aplikasi ini, dikonversi ke IDR/USD
+          memakai tarif internal dengan kurs asumsi Rp{formatNum(IDR_PER_USD)}/US$ (bukan satuan "credits" resmi
+          ElevenLabs, yang bisa berbeda per model/voice) — cocokkan dengan dashboard ElevenLabs Anda untuk saldo
+          credits yang sebenarnya.
+        </p>
+      </div>
+
+      {/* Range toggle — drives the trend chart and the breakdown panels below
+          it together, so they always describe the same period. */}
+      <div className="flex items-center gap-2">
+        {RANGE_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            onClick={() => setRange(opt.key)}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border-2 ${
+              range === opt.key
+                ? "bg-rose-500 text-white border-rose-400"
+                : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       {/* Charts */}
       <div className="grid md:grid-cols-2 gap-4">
-        <Panel title="AI cost — 6 bulan terakhir" icon={<TrendingUp size={15} />}>
+        <Panel title={`AI cost — ${rangeLabel}`} icon={<TrendingUp size={15} />}>
           {trend.length === 0 ? <Empty /> : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={trend} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
@@ -190,24 +432,132 @@ export default function SuperAdminUsagePage() {
           )}
         </Panel>
 
-        <Panel title="Biaya per fungsi (bln ini)" icon={<Coins size={15} />}>
-          {byPurpose.length === 0 ? <Empty /> : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart layout="vertical" data={byPurpose} margin={{ top: 4, right: 12, left: 8, bottom: 0 }}>
-                <XAxis type="number" tickFormatter={(v) => formatIDRShort(v)} tick={{ fontSize: 10 }} stroke="#94a3b8" />
-                <YAxis
-                  type="category" dataKey="purpose" width={90} stroke="#94a3b8"
-                  tick={{ fontSize: 11, fontWeight: 700 }}
-                  tickFormatter={(p) => PURPOSE_LABELS[p] ?? p}
-                />
-                <Tooltip formatter={(v: any) => formatIDR(v)} labelFormatter={(p) => PURPOSE_LABELS[p as string] ?? p} />
-                <Bar dataKey="cost" radius={[0, 6, 6, 0]}>
-                  {byPurpose.map((_, i) => <Cell key={i} fill={i === 0 ? "#f43f5e" : "#fb7185"} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+        <Panel title={`Biaya per fungsi — ${rangeLabel}`} icon={<Coins size={15} />}>
+          {breakdownLoading ? (
+            <div className="h-[200px] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
+          ) : byPurpose.length === 0 ? <Empty /> : (
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart layout="vertical" data={byPurpose} margin={{ top: 4, right: 12, left: 8, bottom: 0 }}>
+                  <XAxis type="number" tickFormatter={(v) => formatIDRShort(v)} tick={{ fontSize: 10 }} stroke="#94a3b8" />
+                  <YAxis
+                    type="category" dataKey="purpose" width={90} stroke="#94a3b8"
+                    tick={{ fontSize: 11, fontWeight: 700 }}
+                    tickFormatter={(p) => PURPOSE_LABELS[p] ?? p}
+                  />
+                  <Tooltip formatter={(v: any) => formatIDR(v)} labelFormatter={(p) => PURPOSE_LABELS[p as string] ?? p} />
+                  <Bar dataKey="cost" radius={[0, 6, 6, 0]}>
+                    {byPurpose.map((_, i) => <Cell key={i} fill={i === 0 ? "#f43f5e" : "#fb7185"} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider text-right mt-1">
+                Total: {formatIDR(breakdownTotalCost)}
+              </p>
+            </>
           )}
         </Panel>
+      </div>
+
+      {/* Token & character totals per provider — the OpenRouter side is
+          token-metered, ElevenLabs is character-metered, so these are kept
+          as two distinct stat blocks rather than one merged unit. */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <Panel title={`OpenRouter — ${rangeLabel}`} icon={<Cpu size={15} />}>
+          {breakdownLoading ? (
+            <div className="h-24 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-slate-300" /></div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Input tokens</p>
+                <p className="text-lg font-black text-slate-800 mt-1">{formatNum(byProvider.openrouter?.inputTokens)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Output tokens</p>
+                <p className="text-lg font-black text-slate-800 mt-1">{formatNum(byProvider.openrouter?.outputTokens)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Biaya</p>
+                <p className="text-lg font-black text-amber-700 mt-1">{formatIDR(byProvider.openrouter?.cost)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">≈ USD</p>
+                <p className="text-lg font-black text-slate-600 mt-1">{formatUSD(byProvider.openrouter?.costUsd ?? 0)}</p>
+              </div>
+            </div>
+          )}
+        </Panel>
+
+        <Panel title={`ElevenLabs — ${rangeLabel}`} icon={<Mic size={15} />}>
+          {breakdownLoading ? (
+            <div className="h-24 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-slate-300" /></div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Karakter (TTS)</p>
+                <p className="text-lg font-black text-slate-800 mt-1">{formatNum(byProvider.elevenlabs?.chars)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Biaya</p>
+                <p className="text-lg font-black text-amber-700 mt-1">{formatIDR(byProvider.elevenlabs?.cost)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">≈ USD</p>
+                <p className="text-lg font-black text-slate-600 mt-1">{formatUSD(byProvider.elevenlabs?.costUsd ?? 0)}</p>
+              </div>
+            </div>
+          )}
+        </Panel>
+      </div>
+
+      {/* Daily comparison chart — our own tracked cost per day, split by
+          provider. Useful for spotting a day where tracking silently broke
+          (a suspicious drop to zero) or lines up a spike with a real
+          incident, ahead of reconciling against the provider's own totals
+          in the live-check panel below. */}
+      <Panel title={`Perbandingan Harian — ${DAILY_WINDOW_DAYS} Hari Terakhir`} icon={<TrendingUp size={15} />}>
+        {dailyLoading ? (
+          <div className="h-[220px] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
+        ) : dailyChartData.length === 0 ? <Empty /> : (
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={dailyChartData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+              <XAxis dataKey="label" tick={{ fontSize: 10, fontWeight: 700 }} stroke="#94a3b8" interval="preserveStartEnd" />
+              <YAxis tickFormatter={(v) => formatIDRShort(v)} tick={{ fontSize: 10 }} stroke="#94a3b8" width={55} />
+              <Tooltip formatter={(v: any, name: any) => [formatIDR(v), name === "openrouter" ? "OpenRouter" : "ElevenLabs"]} labelFormatter={(l) => l} />
+              <Legend
+                formatter={(value) => (value === "openrouter" ? "OpenRouter" : "ElevenLabs")}
+                wrapperStyle={{ fontSize: 11, fontWeight: 700 }}
+              />
+              <Bar dataKey="openrouter" name="openrouter" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="elevenlabs" name="elevenlabs" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </Panel>
+
+      {/* Live check — asks OpenRouter/ElevenLabs directly what they've
+          billed, and puts it next to what our own tracking recorded for the
+          same window. A gap here means a real tracking bug, not just an
+          approximation — this is the fastest way to catch the next one. */}
+      <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 p-5" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
+        <div className="flex items-center gap-2 mb-4 text-slate-600">
+          <SatelliteDish size={15} className="text-rose-500" />
+          <h3 className="font-black text-sm text-slate-800">Live Check — Dibanding Dashboard Provider</h3>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <LiveCheckCard
+            title="OpenRouter"
+            icon={<Cpu size={14} />}
+            loading={liveLoading}
+            live={orLive}
+            appWindow={appOpenRouterWindow}
+          />
+          <ElevenLabsLiveCheckCard
+            loading={liveLoading}
+            live={elLive}
+            appCostUsd={appElevenLabsWindow.month}
+          />
+        </div>
       </div>
 
       {/* Per-org table */}
@@ -288,6 +638,103 @@ function Empty() {
   return <div className="h-[200px] flex items-center justify-center text-slate-300 font-black text-xs">Belum ada data</div>;
 }
 
+// Flags a drift between our tracking and the provider's own number once it's
+// large enough to matter — small gaps are expected (different snapshot
+// times, in-flight requests), big ones point at a real bug like the
+// ElevenLabs rate error fixed in 20260805_correct_elevenlabs_rate.sql.
+function driftBadge(appUsd: number, liveUsd: number) {
+  if (liveUsd <= 0) return null;
+  const diffPct = Math.abs(appUsd - liveUsd) / liveUsd;
+  if (diffPct < 0.05) {
+    return <span className="text-[10px] font-black text-emerald-600">✓ selaras</span>;
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600">
+      <AlertTriangle size={10} /> beda {formatPct(diffPct)}
+    </span>
+  );
+}
+
+function LiveCheckCard({
+  title,
+  icon,
+  loading,
+  live,
+  appWindow,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  loading: boolean;
+  live: LiveUsageResult | null;
+  appWindow: { today: number; week: number; month: number };
+}) {
+  return (
+    <div className="rounded-2xl border-2 border-slate-100 p-4">
+      <div className="flex items-center gap-2 mb-3 text-slate-600">{icon}<h4 className="font-black text-xs uppercase tracking-wider">{title}</h4></div>
+      {loading ? (
+        <div className="h-20 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-slate-300" /></div>
+      ) : !live || !live.ok ? (
+        <p className="text-[11px] font-bold text-slate-400 flex items-start gap-1.5"><AlertTriangle size={12} className="shrink-0 mt-0.5" /> Tidak tersedia{!live ? "" : `: ${live.error}`}</p>
+      ) : (
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Hari ini</p>
+            <p className="text-sm font-black text-slate-800 mt-1">{formatUSD(live.usageDaily)}</p>
+            <p className="text-[10px] font-bold text-slate-400">app: {formatUSD(appWindow.today)}</p>
+            {driftBadge(appWindow.today, live.usageDaily)}
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Minggu ini</p>
+            <p className="text-sm font-black text-slate-800 mt-1">{formatUSD(live.usageWeekly)}</p>
+            <p className="text-[10px] font-bold text-slate-400">app: {formatUSD(appWindow.week)}</p>
+            {driftBadge(appWindow.week, live.usageWeekly)}
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Bulan ini</p>
+            <p className="text-sm font-black text-slate-800 mt-1">{formatUSD(live.usageMonthly)}</p>
+            <p className="text-[10px] font-bold text-slate-400">app: {formatUSD(appWindow.month)}</p>
+            {driftBadge(appWindow.month, live.usageMonthly)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ElevenLabsLiveCheckCard({
+  loading,
+  live,
+  appCostUsd,
+}: {
+  loading: boolean;
+  live: ElevenLabsLiveUsageResult | null;
+  appCostUsd: number;
+}) {
+  return (
+    <div className="rounded-2xl border-2 border-slate-100 p-4">
+      <div className="flex items-center gap-2 mb-3 text-slate-600"><Mic size={14} /><h4 className="font-black text-xs uppercase tracking-wider">ElevenLabs</h4></div>
+      {loading ? (
+        <div className="h-20 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-slate-300" /></div>
+      ) : !live || !live.ok ? (
+        <div className="text-[11px] font-bold text-slate-400 leading-relaxed">
+          <p className="flex items-start gap-1.5"><AlertTriangle size={12} className="shrink-0 mt-0.5" /> Tidak tersedia{!live ? "" : `: ${live.error}`}</p>
+          <p className="mt-1.5">API key ElevenLabs kemungkinan belum punya izin <code className="bg-slate-100 px-1 rounded">user_read</code> — tambahkan izin itu di dashboard ElevenLabs untuk mengaktifkan perbandingan ini.</p>
+        </div>
+      ) : (
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Karakter terpakai (siklus billing berjalan)</p>
+          <p className="text-lg font-black text-slate-800 mt-1">
+            {formatNum(live.charactersUsed)}
+            {live.charactersLimit != null && <span className="text-slate-300 font-bold text-sm"> / {formatNum(live.charactersLimit)}</span>}
+          </p>
+          <p className="text-[10px] font-bold text-slate-400 mt-2">Biaya tercatat aplikasi (bulan ini): {formatUSD(appCostUsd)}</p>
+          <p className="text-[10px] text-slate-400 mt-1">Karakter di sini bukan "credits" resmi ElevenLabs (bisa beda per model), tapi cara tercepat memastikan aplikasi memantau dari periode billing yang sama.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     active: "bg-emerald-100 text-emerald-700",
@@ -320,20 +767,29 @@ function QuotaBar({ used, limit, unit }: { used: number; limit: number | null; u
 function OrgDetailModal({ org, onClose }: { org: OrgRow; onClose: () => void }) {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<any[]>([]);
+  const [orgAllTime, setOrgAllTime] = useState<BreakdownRow[]>([]);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("ai_usage_events")
-        .select("created_at, purpose, model, input_tokens, output_tokens, char_count, cost_idr, status")
-        .eq("organization_id", org.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      setEvents(data ?? []);
+      const [eventsRes, breakdownRows] = await Promise.all([
+        supabase
+          .from("ai_usage_events")
+          .select("created_at, purpose, model, input_tokens, output_tokens, char_count, cost_idr, status")
+          .eq("organization_id", org.id)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        fetchBreakdown(new Date(2000, 0, 1), tomorrow(), org.id),
+      ]);
+      setEvents(eventsRes.data ?? []);
+      setOrgAllTime(breakdownRows);
       setLoading(false);
     })();
   }, [org.id]);
+
+  const orgAllTimeCost = orgAllTime.reduce((s, r) => s + Number(r.cost_idr ?? 0), 0);
+  const orgAllTimeCostUsd = orgAllTime.reduce((s, r) => s + Number(r.cost_usd ?? 0), 0);
+  const orgAllTimeByProvider = summarizeByProvider(orgAllTime);
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -341,9 +797,29 @@ function OrgDetailModal({ org, onClose }: { org: OrgRow; onClose: () => void }) 
         <button onClick={onClose} className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 transition-colors"><X size={16} /></button>
         <div className="mb-4">
           <h3 className="text-xl font-black text-slate-800">{org.name}</h3>
-          <p className="text-slate-400 text-sm font-bold mt-0.5">{org.plan} · cost {formatIDR(org.cost)} · margin {formatIDR(org.margin)} {org.marginPct == null ? "" : `(${formatPct(org.marginPct)})`}</p>
+          <p className="text-slate-400 text-sm font-bold mt-0.5">{org.plan} · cost bulan ini {formatIDR(org.cost)} · margin {formatIDR(org.margin)} {org.marginPct == null ? "" : `(${formatPct(org.marginPct)})`}</p>
         </div>
-        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Recent AI events</p>
+
+        {!loading && (
+          <div className="grid grid-cols-3 gap-3 mb-5 shrink-0">
+            <div className="bg-slate-50 rounded-xl p-3">
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Total sepanjang waktu</p>
+              <p className="text-sm font-black text-slate-800 mt-1">{formatIDR(orgAllTimeCost)}</p>
+              <p className="text-[10px] font-bold text-slate-400">≈ {formatUSD(orgAllTimeCostUsd)}</p>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-3">
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">OpenRouter token</p>
+              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(orgAllTimeByProvider.openrouter?.inputTokens)} in</p>
+              <p className="text-[10px] font-bold text-slate-400">{formatNum(orgAllTimeByProvider.openrouter?.outputTokens)} out</p>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-3">
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">ElevenLabs karakter</p>
+              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(orgAllTimeByProvider.elevenlabs?.chars)}</p>
+            </div>
+          </div>
+        )}
+
+        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">50 event AI terbaru</p>
         {loading ? (
           <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
         ) : events.length === 0 ? (

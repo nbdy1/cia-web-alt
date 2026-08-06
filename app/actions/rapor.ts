@@ -54,6 +54,9 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
     purpose: "rapor",
     inputTokens: data.usage?.prompt_tokens ?? 0,
     outputTokens: data.usage?.completion_tokens ?? 0,
+    // Real provider-reported cost — see the comment in ai-analysis.ts's
+    // callOpenRouter() for why this is preferred over our own rate table.
+    realCostUsd: typeof data.usage?.cost === "number" ? data.usage.cost : null,
   });
   return data.choices[0].message.content as string;
 }

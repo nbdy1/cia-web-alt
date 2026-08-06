@@ -1,10 +1,13 @@
 /**
  * lib/usage/rates.ts
  *
- * Provider cost rates in IDR, mirroring the seeded `ai_usage_rates` table.
- * Used to compute `cost_idr` at log time so usage rows carry an actual cost.
- * Keep these in sync with scripts/migrations/20260711_saas_billing_usage.sql
- * (the DB table remains the canonical reference if you re-price).
+ * Provider cost rates in IDR. Used to compute `cost_idr` at log time so usage
+ * rows carry an actual cost — this is the ONLY rate table the app actually
+ * reads at runtime. There's also a seeded `ai_usage_rates` DB table
+ * (scripts/migrations/20260711_saas_billing_usage.sql) intended as a rate
+ * history/audit trail, but no code path queries it — it's not a live source
+ * of truth, just documentation. Keep both in sync when re-pricing so the DB
+ * table doesn't silently go stale and mislead anyone reading it directly.
  */
 
 export type UsageProvider = 'openrouter' | 'elevenlabs';
@@ -16,11 +19,36 @@ interface Rate {
 }
 
 // Keyed by model string.
+//
+// google/gemini-3-flash-preview and openai/text-embedding-3-small are
+// verified against OpenRouter's published per-token USD pricing ($0.50/M
+// input + $3.00/M output, and $0.02/M respectively) converted at ~Rp17,950/US$
+// — matches IDR_PER_USD below to within 0.1%, so these don't drift.
+//
+// flash-v2.5 (ElevenLabs) was originally priced far too low (898/1k chars) —
+// reconciled 2026-08 against actual ElevenLabs billing (all-time cost was
+// undercounted by ~35%, i.e. showing ~$34 against a real ~$46 spend) to
+// 1215/1k chars. See scripts/migrations/20260805_correct_elevenlabs_rate.sql
+// for the one-time historical backfill this required. If it drifts again,
+// re-derive from your actual ElevenLabs invoice total rather than guessing —
+// ElevenLabs bills in "credits" (~0.5-1 credit/char for Flash models) at a
+// $/credit rate that depends on your plan tier, not a flat published rate.
 const RATES: Record<string, Rate> = {
   'google/gemini-3-flash-preview': { inputPerMTokIdr: 8975, outputPerMTokIdr: 53850 },
   'openai/text-embedding-3-small': { inputPerMTokIdr: 359 },
-  'flash-v2.5': { per1kCharsIdr: 898 },
+  'flash-v2.5': { per1kCharsIdr: 1215 },
 };
+
+// Approximate conversion used only for the platform-admin usage dashboard's
+// "≈ $X.XX" display — the app never bills or stores costs in USD, this just
+// converts the already-computed cost_idr for readability against OpenRouter/
+// ElevenLabs' own USD-denominated pricing pages. Update if it drifts far
+// from the real rate; it doesn't affect any stored cost figure.
+export const IDR_PER_USD = 17_927;
+
+export function idrToUsd(idr: number | null | undefined): number {
+  return (idr ?? 0) / IDR_PER_USD;
+}
 
 export function computeCostIdr(
   _provider: UsageProvider,

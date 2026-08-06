@@ -18,7 +18,30 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { cookies } from 'next/headers';
 import { getServerSupabase } from '@/lib/supabase-server';
-import { computeCostIdr, type UsageProvider } from './rates';
+import { computeCostIdr, idrToUsd, IDR_PER_USD, type UsageProvider } from './rates';
+
+// OpenRouter's chat/completions and /embeddings responses both include a
+// `usage.cost` field — the REAL, provider-reported USD cost of that exact
+// call (verified live 2026-08; see git history for the raw response dumps).
+// When a caller has it, use it as the authoritative cost instead of our own
+// static per-token rate table — this sidesteps every class of rate-table
+// drift (stale $/token, reasoning-token undercounts, wrong model in RATES)
+// for OpenRouter entirely. Falls back to computeCostIdr() for providers/
+// calls that don't report a real cost (ElevenLabs, or if OpenRouter ever
+// omits the field).
+function resolveCost(
+  provider: UsageProvider,
+  model: string | null,
+  usage: { inputTokens?: number; outputTokens?: number; charCount?: number },
+  realCostUsd?: number | null,
+): { costIdr: number; costUsd: number } {
+  if (typeof realCostUsd === 'number' && Number.isFinite(realCostUsd)) {
+    const costIdr = Math.round(realCostUsd * IDR_PER_USD * 10_000) / 10_000;
+    return { costIdr, costUsd: realCostUsd };
+  }
+  const costIdr = computeCostIdr(provider, model, usage);
+  return { costIdr, costUsd: idrToUsd(costIdr) };
+}
 
 // Must match CDS_ACTIVE_ORG_COOKIE in lib/context/auth-context.tsx.
 const ACTIVE_ORG_COOKIE = 'cia_active_organization';
@@ -30,7 +53,8 @@ export type UsagePurpose =
   | 'profile_summary'
   | 'rapor'
   | 'embedding'
-  | 'tts';
+  | 'tts'
+  | 'whisper';
 
 interface BufferedEvent {
   provider: UsageProvider;
@@ -39,6 +63,7 @@ interface BufferedEvent {
   inputTokens: number;
   outputTokens: number;
   charCount: number;
+  realCostUsd: number | null;
 }
 
 interface UsageContext {
@@ -152,6 +177,9 @@ export function recordUsage(event: {
   inputTokens?: number;
   outputTokens?: number;
   charCount?: number;
+  /** Real provider-reported USD cost for this call, if available (e.g.
+   * OpenRouter's `usage.cost`) — preferred over our own rate table. */
+  realCostUsd?: number | null;
 }): void {
   const ctx = storage.getStore();
   if (!ctx) {
@@ -169,6 +197,7 @@ export function recordUsage(event: {
     inputTokens: event.inputTokens ?? 0,
     outputTokens: event.outputTokens ?? 0,
     charCount: event.charCount ?? 0,
+    realCostUsd: event.realCostUsd ?? null,
   });
   usageDebug('event buffered', {
     provider: event.provider,
@@ -204,19 +233,23 @@ export async function flushUsage(): Promise<void> {
     return;
   }
 
-  const rows = ctx.events.map((e) => ({
-    organization_id: ctx.organizationId,
-    user_id: ctx.userId,
-    student_id: ctx.studentId,
-    report_id: ctx.reportId,
-    purpose: e.purpose,
-    provider: e.provider,
-    model: e.model,
-    input_tokens: e.inputTokens,
-    output_tokens: e.outputTokens,
-    char_count: e.charCount,
-    cost_idr: computeCostIdr(e.provider, e.model, e),
-  }));
+  const rows = ctx.events.map((e) => {
+    const { costIdr, costUsd } = resolveCost(e.provider, e.model, e, e.realCostUsd);
+    return {
+      organization_id: ctx.organizationId,
+      user_id: ctx.userId,
+      student_id: ctx.studentId,
+      report_id: ctx.reportId,
+      purpose: e.purpose,
+      provider: e.provider,
+      model: e.model,
+      input_tokens: e.inputTokens,
+      output_tokens: e.outputTokens,
+      char_count: e.charCount,
+      cost_idr: costIdr,
+      cost_usd: costUsd,
+    };
+  });
   ctx.events = [];
 
   try {
@@ -248,6 +281,7 @@ export async function logSingleUsage(event: {
   charCount?: number;
   studentId?: string | null;
   reportId?: string | null;
+  realCostUsd?: number | null;
 }): Promise<void> {
   try {
     const db = await getServerSupabase();
@@ -268,6 +302,7 @@ export async function logSingleUsage(event: {
     }
     if (!organizationId) return;
 
+    const { costIdr, costUsd } = resolveCost(event.provider, event.model ?? null, event, event.realCostUsd);
     const { error } = await db.from('ai_usage_events').insert({
       organization_id: organizationId,
       user_id: user?.id ?? null,
@@ -279,7 +314,8 @@ export async function logSingleUsage(event: {
       input_tokens: event.inputTokens ?? 0,
       output_tokens: event.outputTokens ?? 0,
       char_count: event.charCount ?? 0,
-      cost_idr: computeCostIdr(event.provider, event.model, event),
+      cost_idr: costIdr,
+      cost_usd: costUsd,
     });
     if (error) console.error('[usage] single insert failed:', error.message);
   } catch (err) {

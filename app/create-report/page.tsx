@@ -36,8 +36,25 @@ import { supabase } from '@/lib/supabase';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { useTerminology } from '@/lib/hooks/use-terminology';
 
+// Relative-time label for each student card's "terakhir input" badge — e.g. "3 jam lalu",
+// "Kemarin", "5 hari lalu", or "Belum ada laporan" if never inputted.
+function formatRelativeTime(dateStr: string): string {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const minute = 60_000, hour = 3_600_000, day = 86_400_000;
+  if (diffMs < minute) return "Baru saja";
+  if (diffMs < hour) return `${Math.floor(diffMs / minute)}m lalu`;
+  if (diffMs < day) return `${Math.floor(diffMs / hour)}j lalu`;
+  const days = Math.floor(diffMs / day);
+  if (days === 1) return "Kemarin";
+  if (days < 30) return `${days}hr lalu`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}bln lalu`;
+  return `${Math.floor(months / 12)}thn lalu`;
+}
+
 export default function CreateReport() {
   const [students, setStudents] = useState<any[]>([]);
+  const [lastReportMap, setLastReportMap] = useState<Record<string, string>>({});
   const [otherStudents, setOtherStudents] = useState<any[]>([]);
   const [otherStudentsLoading, setOtherStudentsLoading] = useState(false);
   const [otherStudentsLoaded, setOtherStudentsLoaded] = useState(false);
@@ -55,21 +72,43 @@ export default function CreateReport() {
 
   const isAdmin = role === 'admin' || role === 'owner';
 
-  // FETCH REAL STUDENTS FROM DB
+  // FETCH REAL STUDENTS FROM DB + THEIR LATEST REPORT TIMESTAMPS
   useEffect(() => {
-    async function fetchStudents() {
+    async function fetchStudentsAndReports() {
       if (!activeOrganizationId) return;
-      const { data, error } = await supabase
-        .from('students')
-        .select('*, user:profiles(id)')
-        .eq('organization_id', activeOrganizationId)
-        .or('is_removed.is.null,is_removed.eq.false')
-        .order('name', { ascending: true });
+      
+      const [studentsRes, reportsRes] = await Promise.all([
+        supabase
+          .from('students')
+          .select('*, user:profiles(id)')
+          .eq('organization_id', activeOrganizationId)
+          .or('is_removed.is.null,is_removed.eq.false')
+          .order('name', { ascending: true }),
+        supabase
+          .from('reports')
+          .select('student_id, created_at')
+          .eq('organization_id', activeOrganizationId)
+          .order('created_at', { ascending: false })
+      ]);
 
-      if (!error && data) setStudents(data);
+      if (!studentsRes.error && studentsRes.data) {
+        setStudents(studentsRes.data);
+      }
+
+      if (!reportsRes.error && reportsRes.data) {
+        // Build map of student_id -> latest created_at
+        const reportMap: Record<string, string> = {};
+        for (const r of reportsRes.data) {
+          if (r.student_id && !reportMap[r.student_id]) {
+            reportMap[r.student_id] = r.created_at;
+          }
+        }
+        setLastReportMap(reportMap);
+      }
+
       setLoading(false);
     }
-    fetchStudents();
+    fetchStudentsAndReports();
   }, [activeOrganizationId]);
 
   // Only fetched when a non-admin ustadz explicitly asks to search students
@@ -183,12 +222,14 @@ export default function CreateReport() {
     <div className="flex flex-col h-full bg-paper">
       <div className="flex flex-col h-full animate-fade-in">
       <header className="px-6 pt-10 pb-6">
-        <Link href="/" className="inline-flex items-center gap-2 mb-6 group">
-          <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500" style={{ boxShadow: "0 3px 0 0 #e2e8f0", minWidth: 32 }}>
-            <ChevronLeft className="w-4 h-4" />
-          </div>
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">Beranda</span>
-        </Link>
+        <div className="flex items-center justify-between mb-6">
+          <Link href="/" className="inline-flex items-center gap-2 group">
+            <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500" style={{ boxShadow: "0 3px 0 0 #e2e8f0", minWidth: 32 }}>
+              <ChevronLeft className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">Beranda</span>
+          </Link>
+        </div>
         <h1 className="text-3xl font-black text-slate-800">Pilih {t.santri}</h1>
         <p className="text-slate-400 text-sm font-bold mt-1">
           {searchingOthers ? `Mencari di luar ${t.santriLower} bimbingan Anda` : "Siapa yang akan dinilai hari ini?"}
@@ -286,17 +327,21 @@ export default function CreateReport() {
               {filteredStudents.map((student) => {
                 const isSelected = selectedStudent?.id === student.id;
                 const isOther = searchingOthers && student.assigned_ustadz_id !== user?.id;
+                const studentLastReport = lastReportMap[student.id];
+                const diffDays = studentLastReport ? (Date.now() - new Date(studentLastReport).getTime()) / (1000 * 60 * 60 * 24) : 0;
+                const isOverAWeek = studentLastReport ? diffDays >= 7 : false;
+
                 return (
                   <button
                     key={student.id}
                     onClick={() => setSelectedStudent(student)}
-                    className={`w-full flex items-center justify-between p-4 rounded-2xl font-black text-left transition-all ${
+                    className={`w-full flex items-start justify-between p-4 rounded-2xl font-black text-left transition-all ${
                       isSelected
                         ? "card-3d-selected"
                         : "card-3d"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 pr-2 min-w-0">
                       {isSelected ? (
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black bg-brand-500 text-white flex-shrink-0">
                           {student.name.charAt(0)}
@@ -309,8 +354,8 @@ export default function CreateReport() {
                           colorIndex={filteredStudents.indexOf(student)}
                         />
                       )}
-                      <div className="flex flex-col">
-                        <span className={isSelected ? "text-brand-800" : "text-slate-700"}>{student.name}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className={`truncate ${isSelected ? "text-brand-800" : "text-slate-700"}`}>{student.name}</span>
                         {isOther && (
                           <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 mt-0.5">
                             Bukan bimbingan Anda
@@ -318,7 +363,21 @@ export default function CreateReport() {
                         )}
                       </div>
                     </div>
-                    {isSelected && <CheckCircle2 className="w-5 h-5 text-brand-500" />}
+
+                    <div className="flex flex-col items-end gap-1.5 shrink-0 ml-2">
+                      <span className={`text-[10px] font-black tracking-wide px-2 py-0.5 rounded-lg border ${
+                        studentLastReport 
+                          ? isOverAWeek
+                            ? "bg-amber-100 text-amber-800 border-amber-300"
+                            : isSelected
+                              ? "bg-brand-100/80 text-brand-700 border-brand-300"
+                              : "bg-slate-100 text-slate-500 border-slate-200"
+                          : "bg-slate-50 text-slate-400 border-slate-200/60"
+                      }`}>
+                        {studentLastReport ? `Input ${formatRelativeTime(studentLastReport)}` : "Belum ada laporan"}
+                      </span>
+                      {isSelected && <CheckCircle2 className="w-5 h-5 text-brand-500" />}
+                    </div>
                   </button>
                 );
               })}

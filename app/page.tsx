@@ -44,6 +44,26 @@ import { useUserRole } from "@/lib/hooks/use-user-role";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 import { getTenantHost, isLocalHostname } from "@/lib/tenant";
 
+// lucide-react in this project doesn't ship brand/logo icons (Instagram,
+// YouTube, etc.) — minimal inline glyphs for the footer's social links.
+function InstagramIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+function YoutubeIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
+      <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+    </svg>
+  );
+}
+
 // A bento-grid feature card: a screenshot fills the entire card (cropped via
 // object-cover, never stretched) with a dark gradient scrim so the icon/title/
 // description stay readable overlaid at the bottom. `imagePosition` controls
@@ -134,16 +154,14 @@ function MarketingPage() {
             <span className="text-brand-600">bukan sekadar nilai.</span>
           </h1>
           <p className="mt-7 text-lg sm:text-xl leading-relaxed text-slate-600 max-w-xl font-bold">
-            characterdev membantu sekolah mendengar cerita peserta didik,
-            membaca pertumbuhannya, dan mendampingi langkah berikutnya dengan
-            lebih utuh.
+           Character Development System adalah aplikasi yang membantu guru untuk menginstal karakter islami dalam diri anak didik dan menilai persentase pertumbuhan mental dan softskill nya.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <a
-              href="mailto:hello@characterdev.systems?subject=Permintaan%20Demo%20characterdev"
+              href="https://wa.me/6285770661868?text=Assalamualaikum%20Admin%20Characterdev.%20Saya%20ingin%20bertanya%20tentang%20"
               className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-brand-500 text-white font-black shadow-[0_4px_0_var(--brand-700)] hover:translate-y-px transition-transform"
             >
-              Jadwalkan percakapan <ArrowUpRight size={17} />
+              Hubungi Kami <ArrowUpRight size={17} />
             </a>
             <a
               href="#tentang"
@@ -221,7 +239,7 @@ function MarketingPage() {
 
             <div className="space-y-4 text-slate-600 font-bold leading-relaxed text-base sm:text-lg">
               <p>
-                characterdev adalah aplikasi untuk menanamkan karakter, mental,
+                Character Development System (CDS) adalah aplikasi untuk menanamkan karakter, mental,
                 dan soft skill Qurani ke dalam diri peserta didik, berdasarkan
                 hasil observasi guru terhadap pikiran, perkataan, dan perbuatan
                 mereka sehari-hari.
@@ -471,7 +489,7 @@ function MarketingPage() {
           <div className="grid grid-flow-col max-lg:grid-cols-[1fr_1fr] gap-5 place-items-center">
             <div className="space-y-4 text-slate-600 font-bold leading-relaxed text-base sm:text-lg">
               <p>
-                characterdev membantu sekolah membangun kebiasaan refleksi yang
+                Character Development System membantu sekolah membangun kebiasaan refleksi yang
                 konsisten, supaya setiap catatan menjadi undangan untuk
                 mendampingi, bukan label yang menutup kemungkinan.
               </p>
@@ -589,12 +607,34 @@ function MarketingPage() {
               Mendampingi pertumbuhan, satu cerita pada satu waktu.
             </p>
           </div>
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 text-sm font-black text-brand-300 hover:text-white"
-          >
-            Masuk ke portal <ArrowUpRight size={15} />
-          </Link>
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-3">
+              <a
+                href="https://www.instagram.com/datasikap/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram datasikap"
+                className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <InstagramIcon size={16} />
+              </a>
+              <a
+                href="https://www.youtube.com/@datasikap"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="YouTube datasikap"
+                className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <YoutubeIcon size={16} />
+              </a>
+            </div>
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 text-sm font-black text-brand-300 hover:text-white"
+            >
+              Masuk ke portal <ArrowUpRight size={15} />
+            </Link>
+          </div>
         </div>
       </footer>
     </main>

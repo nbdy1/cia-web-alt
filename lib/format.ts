@@ -21,3 +21,10 @@ export const formatIDRShort = (n: number | null | undefined): string => {
 /** 0.42 -> "42%" (null-safe; returns "—" when base is 0). */
 export const formatPct = (fraction: number | null | undefined): string =>
   fraction == null ? '—' : `${Math.round(fraction * 100)}%`;
+
+/** $12.34 (2dp; $0.0012 style for very small amounts under a cent) */
+export const formatUSD = (n: number | null | undefined): string => {
+  const v = n ?? 0;
+  if (v > 0 && v < 0.01) return `$${v.toFixed(4)}`;
+  return `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
