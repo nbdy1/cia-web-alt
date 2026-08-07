@@ -42,7 +42,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
 import { formatIDR, formatIDRShort, formatNum, formatPct, formatUSD } from "@/lib/format";
-import { idrToUsd, IDR_PER_USD } from "@/lib/usage/rates";
+import { idrToUsd, IDR_PER_USD, ELEVENLABS_FLASH_V25_BILLED_CHAR_DIVISOR } from "@/lib/usage/rates";
 import { getOpenRouterLiveUsage, getElevenLabsLiveUsage, type LiveUsageResult, type ElevenLabsLiveUsageResult } from "@/app/actions/usage-live-check";
 import {
   Loader2, Building2, TrendingUp, Wallet, Coins, Percent, X, Activity, Mic, Cpu, History, SatelliteDish, RefreshCw, AlertTriangle,
@@ -142,9 +142,9 @@ async function fetchBreakdown(from: Date, to: Date, orgId?: string): Promise<Bre
   return (data ?? []) as BreakdownRow[];
 }
 
-type DailyRow = { day: string; provider: string; cost_idr: number; cost_usd: number; event_count: number };
+type DailyRow = { day: string; provider: string; cost_idr: number; cost_usd: number; char_count: number; event_count: number };
 
-const DAILY_WINDOW_DAYS = 30;
+const DAILY_WINDOW_DAYS = 31; // >= max month length, so month-to-date is always fully covered
 
 async function fetchDaily(from: Date, to: Date): Promise<DailyRow[]> {
   const { data, error } = await supabase.rpc("usage_daily", {
@@ -160,13 +160,20 @@ async function fetchDaily(from: Date, to: Date): Promise<DailyRow[]> {
 }
 
 // Pivots {day, provider, cost} rows into one chart-friendly row per day with
-// a column per provider, so recharts can render grouped bars side by side.
+// an IDR and a USD column per provider, so recharts can render grouped bars
+// side by side and the IDR/USD toggle can just switch which dataKeys it
+// reads without re-fetching or re-pivoting.
 function pivotDailyByProvider(rows: DailyRow[]) {
-  const byDay = new Map<string, { day: string; openrouter: number; elevenlabs: number }>();
+  const byDay = new Map<string, { day: string; openrouter: number; elevenlabs: number; openrouterUsd: number; elevenlabsUsd: number }>();
   for (const r of rows) {
-    const bucket = byDay.get(r.day) ?? { day: r.day, openrouter: 0, elevenlabs: 0 };
-    if (r.provider === "openrouter") bucket.openrouter += Number(r.cost_idr ?? 0);
-    else if (r.provider === "elevenlabs") bucket.elevenlabs += Number(r.cost_idr ?? 0);
+    const bucket = byDay.get(r.day) ?? { day: r.day, openrouter: 0, elevenlabs: 0, openrouterUsd: 0, elevenlabsUsd: 0 };
+    if (r.provider === "openrouter") {
+      bucket.openrouter += Number(r.cost_idr ?? 0);
+      bucket.openrouterUsd += Number(r.cost_usd ?? 0);
+    } else if (r.provider === "elevenlabs") {
+      bucket.elevenlabs += Number(r.cost_idr ?? 0);
+      bucket.elevenlabsUsd += Number(r.cost_usd ?? 0);
+    }
     byDay.set(r.day, bucket);
   }
   return Array.from(byDay.values())
@@ -174,22 +181,39 @@ function pivotDailyByProvider(rows: DailyRow[]) {
     .map((r) => ({ ...r, label: new Date(r.day).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }) }));
 }
 
+// UTC Monday of the current week. OpenRouter's `usage_weekly` (see
+// app/actions/usage-live-check.ts) turned out to be week-to-date — it resets
+// every week rather than being a rolling trailing-7-days sum — so a rolling
+// window here made the app total look ~30-40% inflated against it even
+// though nothing was actually wrong (the two just meant different things by
+// "this week"). Matching week-to-date here mirrors monthStartKey below,
+// which already uses month-to-date and consistently shows "✓ selaras".
+function weekStartKeyUTC(): string {
+  const now = new Date();
+  const utcDay = now.getUTCDay(); // 0=Sun..6=Sat
+  const diff = utcDay === 0 ? -6 : 1 - utcDay;
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + diff));
+  return monday.toISOString().slice(0, 10);
+}
+
 // Sums the app's own tracked cost for "today" / "this week" / "this month" so
 // they can sit next to the provider's own live-reported figures for the same
 // windows — the whole point of the live-check panel is spotting drift.
 function summarizeAppWindow(rows: DailyRow[], provider: string) {
   const todayKey = new Date().toISOString().slice(0, 10);
-  const weekAgoKey = new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const weekStartKey = weekStartKeyUTC();
   const monthStartKey = toDateStr(monthStart());
   let today = 0, week = 0, month = 0;
+  let charsToday = 0, charsWeek = 0, charsMonth = 0;
   for (const r of rows) {
     if (r.provider !== provider) continue;
     const usd = Number(r.cost_usd ?? 0);
-    if (r.day >= monthStartKey) month += usd;
-    if (r.day >= weekAgoKey) week += usd;
-    if (r.day === todayKey) today += usd;
+    const chars = Number(r.char_count ?? 0);
+    if (r.day >= monthStartKey) { month += usd; charsMonth += chars; }
+    if (r.day >= weekStartKey) { week += usd; charsWeek += chars; }
+    if (r.day === todayKey) { today += usd; charsToday += chars; }
   }
-  return { today, week, month };
+  return { today, week, month, charsToday, charsWeek, charsMonth };
 }
 
 export default function SuperAdminUsagePage() {
@@ -202,6 +226,7 @@ export default function SuperAdminUsagePage() {
   const [allTime, setAllTime] = useState<BreakdownRow[]>([]);
   const [detailOrg, setDetailOrg] = useState<OrgRow | null>(null);
   const [daily, setDaily] = useState<DailyRow[]>([]);
+  const [dailyCurrency, setDailyCurrency] = useState<"idr" | "usd">("idr");
   const [dailyLoading, setDailyLoading] = useState(true);
   const [orLive, setOrLive] = useState<LiveUsageResult | null>(null);
   const [elLive, setElLive] = useState<ElevenLabsLiveUsageResult | null>(null);
@@ -494,8 +519,9 @@ export default function SuperAdminUsagePage() {
           ) : (
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Karakter (TTS)</p>
-                <p className="text-lg font-black text-slate-800 mt-1">{formatNum(byProvider.elevenlabs?.chars)}</p>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Karakter teks terkirim (TTS, mentah)</p>
+                <p className="text-lg font-black text-slate-800 mt-1">{formatNum(byProvider.elevenlabs?.chars)} <span className="text-xs font-bold text-slate-400">karakter</span></p>
+                <p className="text-[10px] font-bold text-slate-400 mt-1">≈ {formatNum(Math.round((byProvider.elevenlabs?.chars ?? 0) / ELEVENLABS_FLASH_V25_BILLED_CHAR_DIVISOR))} karakter tertagih ElevenLabs (flash-v2.5 menagih 1:4 dari teks mentah)</p>
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Biaya</p>
@@ -515,21 +541,50 @@ export default function SuperAdminUsagePage() {
           (a suspicious drop to zero) or lines up a spike with a real
           incident, ahead of reconciling against the provider's own totals
           in the live-check panel below. */}
-      <Panel title={`Perbandingan Harian — ${DAILY_WINDOW_DAYS} Hari Terakhir`} icon={<TrendingUp size={15} />}>
+      <Panel
+        title={`Perbandingan Harian — ${DAILY_WINDOW_DAYS} Hari Terakhir`}
+        icon={<TrendingUp size={15} />}
+        headerRight={
+          <div className="flex items-center rounded-xl border-2 border-slate-200 p-0.5 shrink-0">
+            {(["idr", "usd"] as const).map((c) => (
+              <button
+                key={c}
+                onClick={() => setDailyCurrency(c)}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${
+                  dailyCurrency === c ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        }
+      >
         {dailyLoading ? (
           <div className="h-[220px] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
         ) : dailyChartData.length === 0 ? <Empty /> : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={dailyChartData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
               <XAxis dataKey="label" tick={{ fontSize: 10, fontWeight: 700 }} stroke="#94a3b8" interval="preserveStartEnd" />
-              <YAxis tickFormatter={(v) => formatIDRShort(v)} tick={{ fontSize: 10 }} stroke="#94a3b8" width={55} />
-              <Tooltip formatter={(v: any, name: any) => [formatIDR(v), name === "openrouter" ? "OpenRouter" : "ElevenLabs"]} labelFormatter={(l) => l} />
+              <YAxis
+                tickFormatter={(v) => (dailyCurrency === "usd" ? formatUSD(v) : formatIDRShort(v))}
+                tick={{ fontSize: 10 }}
+                stroke="#94a3b8"
+                width={dailyCurrency === "usd" ? 65 : 55}
+              />
+              <Tooltip
+                formatter={(v: any, name: any) => [
+                  dailyCurrency === "usd" ? formatUSD(v) : formatIDR(v),
+                  name.startsWith("openrouter") ? "OpenRouter" : "ElevenLabs",
+                ]}
+                labelFormatter={(l) => l}
+              />
               <Legend
-                formatter={(value) => (value === "openrouter" ? "OpenRouter" : "ElevenLabs")}
+                formatter={(value) => (value.startsWith("openrouter") ? "OpenRouter" : "ElevenLabs")}
                 wrapperStyle={{ fontSize: 11, fontWeight: 700 }}
               />
-              <Bar dataKey="openrouter" name="openrouter" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="elevenlabs" name="elevenlabs" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+              <Bar dataKey={dailyCurrency === "usd" ? "openrouterUsd" : "openrouter"} name={dailyCurrency === "usd" ? "openrouterUsd" : "openrouter"} fill="#f43f5e" radius={[4, 4, 0, 0]} />
+              <Bar dataKey={dailyCurrency === "usd" ? "elevenlabsUsd" : "elevenlabs"} name={dailyCurrency === "usd" ? "elevenlabsUsd" : "elevenlabs"} fill="#7c3aed" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -555,7 +610,15 @@ export default function SuperAdminUsagePage() {
           <ElevenLabsLiveCheckCard
             loading={liveLoading}
             live={elLive}
-            appCostUsd={appElevenLabsWindow.month}
+            appWindow={{
+              // Our char_count is raw text.length; ElevenLabs' live numbers are
+              // billed characters (flash-v2.5 bills 1 per 4 raw chars — see
+              // ELEVENLABS_FLASH_V25_BILLED_CHAR_DIVISOR). Convert so this is an
+              // apples-to-apples comparison instead of a permanent ~4x "drift".
+              charsToday: appElevenLabsWindow.charsToday / ELEVENLABS_FLASH_V25_BILLED_CHAR_DIVISOR,
+              charsWeek: appElevenLabsWindow.charsWeek / ELEVENLABS_FLASH_V25_BILLED_CHAR_DIVISOR,
+              charsMonth: appElevenLabsWindow.charsMonth / ELEVENLABS_FLASH_V25_BILLED_CHAR_DIVISOR,
+            }}
           />
         </div>
       </div>
@@ -625,10 +688,13 @@ function Kpi({ icon, label, value, sub, tone }: { icon: React.ReactNode; label: 
   );
 }
 
-function Panel({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Panel({ title, icon, headerRight, children }: { title: string; icon: React.ReactNode; headerRight?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-2xl border-2 border-slate-100 p-4" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
-      <div className="flex items-center gap-2 mb-3 text-slate-600"><span className="text-rose-500">{icon}</span><h3 className="font-black text-sm text-slate-800">{title}</h3></div>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 text-slate-600"><span className="text-rose-500">{icon}</span><h3 className="font-black text-sm text-slate-800">{title}</h3></div>
+        {headerRight}
+      </div>
       {children}
     </div>
   );
@@ -642,9 +708,11 @@ function Empty() {
 // large enough to matter — small gaps are expected (different snapshot
 // times, in-flight requests), big ones point at a real bug like the
 // ElevenLabs rate error fixed in 20260805_correct_elevenlabs_rate.sql.
-function driftBadge(appUsd: number, liveUsd: number) {
-  if (liveUsd <= 0) return null;
-  const diffPct = Math.abs(appUsd - liveUsd) / liveUsd;
+// Unit-agnostic — used for both USD (OpenRouter) and raw character counts
+// (ElevenLabs) drift comparisons.
+function driftBadge(appValue: number, liveValue: number) {
+  if (liveValue <= 0) return null;
+  const diffPct = Math.abs(appValue - liveValue) / liveValue;
   if (diffPct < 0.05) {
     return <span className="text-[10px] font-black text-emerald-600">✓ selaras</span>;
   }
@@ -704,11 +772,11 @@ function LiveCheckCard({
 function ElevenLabsLiveCheckCard({
   loading,
   live,
-  appCostUsd,
+  appWindow,
 }: {
   loading: boolean;
   live: ElevenLabsLiveUsageResult | null;
-  appCostUsd: number;
+  appWindow: { charsToday: number; charsWeek: number; charsMonth: number };
 }) {
   return (
     <div className="rounded-2xl border-2 border-slate-100 p-4">
@@ -718,18 +786,31 @@ function ElevenLabsLiveCheckCard({
       ) : !live || !live.ok ? (
         <div className="text-[11px] font-bold text-slate-400 leading-relaxed">
           <p className="flex items-start gap-1.5"><AlertTriangle size={12} className="shrink-0 mt-0.5" /> Tidak tersedia{!live ? "" : `: ${live.error}`}</p>
-          <p className="mt-1.5">API key ElevenLabs kemungkinan belum punya izin <code className="bg-slate-100 px-1 rounded">user_read</code> — tambahkan izin itu di dashboard ElevenLabs untuk mengaktifkan perbandingan ini.</p>
         </div>
       ) : (
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Karakter terpakai (siklus billing berjalan)</p>
-          <p className="text-lg font-black text-slate-800 mt-1">
-            {formatNum(live.charactersUsed)}
-            {live.charactersLimit != null && <span className="text-slate-300 font-bold text-sm"> / {formatNum(live.charactersLimit)}</span>}
-          </p>
-          <p className="text-[10px] font-bold text-slate-400 mt-2">Biaya tercatat aplikasi (bulan ini): {formatUSD(appCostUsd)}</p>
-          <p className="text-[10px] text-slate-400 mt-1">Karakter di sini bukan "credits" resmi ElevenLabs (bisa beda per model), tapi cara tercepat memastikan aplikasi memantau dari periode billing yang sama.</p>
-        </div>
+        <>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Hari ini</p>
+              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(live.charsDaily)} <span className="text-[10px] font-bold text-slate-400">karakter</span></p>
+              <p className="text-[10px] font-bold text-slate-400">app: {formatNum(Math.round(appWindow.charsToday))} karakter</p>
+              {driftBadge(appWindow.charsToday, live.charsDaily)}
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Minggu ini</p>
+              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(live.charsWeekly)} <span className="text-[10px] font-bold text-slate-400">karakter</span></p>
+              <p className="text-[10px] font-bold text-slate-400">app: {formatNum(Math.round(appWindow.charsWeek))} karakter</p>
+              {driftBadge(appWindow.charsWeek, live.charsWeekly)}
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Bulan ini</p>
+              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(live.charsMonthly)} <span className="text-[10px] font-bold text-slate-400">karakter</span></p>
+              <p className="text-[10px] font-bold text-slate-400">app: {formatNum(Math.round(appWindow.charsMonth))} karakter</p>
+              {driftBadge(appWindow.charsMonth, live.charsMonthly)}
+            </div>
+          </div>
+          <p className="text-[10px] text-slate-400 mt-3 leading-relaxed">Karakter tertagih dari ElevenLabs (/v1/usage/character-stats). Model flash-v2.5 menagih 1 karakter per 4 karakter teks mentah, jadi angka "app" di atas sudah dibagi 4 dari teks yang benar-benar dikirim supaya bisa dibandingkan apples-to-apples dengan angka ElevenLabs.</p>
+        </>
       )}
     </div>
   );

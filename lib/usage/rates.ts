@@ -50,6 +50,18 @@ export function idrToUsd(idr: number | null | undefined): number {
   return (idr ?? 0) / IDR_PER_USD;
 }
 
+// eleven_flash_v2_5 bills exactly 1 character for every 4 raw text characters
+// sent — verified 2026-08 by pulling 100 real /v1/history items and comparing
+// each entry's text.length against its character_count_change_to/from delta
+// (the account's actual billed-character counter): the ratio was 4.00-4.03x
+// across every sample, and summing character-stats over the same time window
+// matched the billed total, not the raw text total. Our own char_count column
+// stores raw text.length (what we send, matching how per1kCharsIdr above was
+// fit against real invoice totals — cost tracking is unaffected), so this
+// divisor exists only to convert that into an ElevenLabs-comparable "billed
+// characters" figure for the live-check reconciliation panel.
+export const ELEVENLABS_FLASH_V25_BILLED_CHAR_DIVISOR = 4;
+
 export function computeCostIdr(
   _provider: UsageProvider,
   model: string | null | undefined,

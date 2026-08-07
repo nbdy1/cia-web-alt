@@ -174,7 +174,11 @@ export default function AdminOverviewPage() {
         // Ordered oldest-first: declined_sub_indicators decrements a running
         // per-student count floored at 0, which requires replaying each
         // student's reports in the same chronological order they were created.
-        let allReportsQ = supabase.from("reports").select("student_id, treatment_plan, students(id, name)").order("created_at", { ascending: true });
+        // Unlimited (unlike reportsQ above, which is capped for the "Laporan
+        // Terbaru" widget) — also doubles as the source for the total report
+        // count, active-santri count, and the week-activity chart below, so
+        // none of those silently truncate once an org passes 50 reports.
+        let allReportsQ = supabase.from("reports").select("student_id, created_at, treatment_plan, students(id, name)").order("created_at", { ascending: true });
 
         // ── Filter by active organization ────────────────────────────────────
         studentsQ = studentsQ.eq('organization_id', activeOrganizationId);
@@ -207,16 +211,22 @@ export default function AdminOverviewPage() {
         const authorNames = new Map((authors ?? []).map((author: any) => [author.id, author.name]));
 
         // ── 2. Stats ────────────────────────────────────────────────────────
-        const activeSantriIds = new Set(allReports.map((r: any) => r.student_id));
+        // Sourced from allReportsForLeader (unlimited), NOT the capped
+        // `allReports` (limit 50, ordered newest-first) — otherwise once an
+        // org passes 50 reports, these silently only reflect the most recent
+        // 50, undercounting totals and truncating the week chart to whatever
+        // days those 50 happen to span (e.g. "starts on Wednesday").
+        const allReportsUnlimited = allReportsForLeader ?? [];
+        const activeSantriIds = new Set(allReportsUnlimited.map((r: any) => r.student_id));
         setStats({
           ustadz: ustadzCount ?? 0,
           santri: santriCount ?? 0,
-          reports: allReports.length,
+          reports: allReportsUnlimited.length,
           activeSantri: activeSantriIds.size,
         });
 
         // ── 3. Week chart ───────────────────────────────────────────────────
-        setWeekData(buildWeekBuckets(allReports));
+        setWeekData(buildWeekBuckets(allReportsUnlimited as any));
 
         // ── 4. Recent reports ───────────────────────────────────────────────
         setRecentReports(

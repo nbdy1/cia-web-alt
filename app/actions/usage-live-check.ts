@@ -11,10 +11,16 @@
  * today/this-week/this-month/all-time, in USD — with no special permissions
  * needed beyond the key itself.
  *
- * ElevenLabs requires the `user_read` permission on the API key to read
- * subscription/usage info (`/v1/user/subscription`); the key this app uses
- * for TTS may not have that scope, so this gracefully reports "unavailable"
- * rather than failing — see the `ok: false` branch.
+ * ElevenLabs: `/v1/user/subscription` (and `/v1/user`) need the `user_read`
+ * permission, which our key doesn't have and getting it granted didn't
+ * change anything — those endpoints kept 403ing even after a permissions
+ * update, because `user_read` is a distinct scope from "workspace
+ * analytics"/usage reporting. `/v1/usage/character-stats` is a DIFFERENT
+ * endpoint that works with our existing key (verified live) and returns
+ * real daily character counts — which is actually a *better* fit here than
+ * the subscription endpoint's cycle total: it's a rate-independent check
+ * (raw characters, not cost) directly comparable day-by-day against our own
+ * tracked char_count, the same way the OpenRouter panel compares $.
  */
 "use server";
 
@@ -49,31 +55,64 @@ export async function getOpenRouterLiveUsage(): Promise<LiveUsageResult> {
 }
 
 export type ElevenLabsLiveUsageResult =
-  | { ok: true; charactersUsed: number; charactersLimit: number | null }
+  | { ok: true; charsDaily: number; charsWeekly: number; charsMonthly: number }
   | { ok: false; error: string };
+
+// UTC-midnight day boundaries, matching how usage_daily() buckets our own
+// ai_usage_events (date_trunc('day', created_at)) and how ElevenLabs itself
+// timestamps character-stats buckets (verified live — both land on UTC
+// midnight), so summing by day-string equality lines up exactly.
+function utcDayStart(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
+function utcWeekStart(d: Date): Date {
+  const day = d.getUTCDay(); // 0=Sun..6=Sat
+  const diff = day === 0 ? -6 : 1 - day;
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + diff));
+}
+function utcMonthStart(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+}
 
 export async function getElevenLabsLiveUsage(): Promise<ElevenLabsLiveUsageResult> {
   const key = process.env.ELEVENLABS_API_KEY;
   if (!key) return { ok: false, error: "ELEVENLABS_API_KEY tidak diset di server." };
 
+  const now = new Date();
+  // 35 days comfortably covers "this week" even when it spans into the
+  // previous month (e.g. week starts on the last Monday of last month) —
+  // days before whatever boundary we actually need are just ignored below.
+  const startUnix = now.getTime() - 35 * 24 * 3600 * 1000;
+  const endUnix = now.getTime();
+
   try {
-    const res = await fetch("https://api.elevenlabs.io/v1/user/subscription", {
-      headers: { "xi-api-key": key },
-      cache: "no-store",
-    });
+    const res = await fetch(
+      `https://api.elevenlabs.io/v1/usage/character-stats?start_unix=${startUnix}&end_unix=${endUnix}&breakdown_type=none`,
+      { headers: { "xi-api-key": key }, cache: "no-store" },
+    );
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const message = body?.detail?.message ?? `ElevenLabs API error ${res.status}`;
-      // Most common case: the key lacks the `user_read` permission needed to
-      // read subscription/usage info (it may be scoped TTS-only).
       return { ok: false, error: message };
     }
     const json = await res.json();
-    return {
-      ok: true,
-      charactersUsed: Number(json.character_count ?? 0),
-      charactersLimit: json.character_limit != null ? Number(json.character_limit) : null,
-    };
+    const time: number[] = json?.time ?? [];
+    const all: number[] = json?.usage?.All ?? [];
+
+    const todayMs = utcDayStart(now).getTime();
+    const weekStartMs = utcWeekStart(now).getTime();
+    const monthStartMs = utcMonthStart(now).getTime();
+
+    let charsDaily = 0, charsWeekly = 0, charsMonthly = 0;
+    for (let i = 0; i < time.length; i++) {
+      const bucketMs = time[i];
+      const chars = Number(all[i] ?? 0);
+      if (bucketMs >= monthStartMs) charsMonthly += chars;
+      if (bucketMs >= weekStartMs) charsWeekly += chars;
+      if (bucketMs === todayMs) charsDaily += chars;
+    }
+
+    return { ok: true, charsDaily, charsWeekly, charsMonthly };
   } catch (err: any) {
     return { ok: false, error: err?.message ?? "Gagal menghubungi ElevenLabs." };
   }
