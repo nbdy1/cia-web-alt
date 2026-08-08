@@ -45,6 +45,12 @@ import { formatIDR, formatIDRShort, formatNum, formatPct, formatUSD } from "@/li
 import { idrToUsd, IDR_PER_USD, ELEVENLABS_FLASH_V25_BILLED_CHAR_DIVISOR } from "@/lib/usage/rates";
 import { getOpenRouterLiveUsage, getElevenLabsLiveUsage, type LiveUsageResult, type ElevenLabsLiveUsageResult } from "@/app/actions/usage-live-check";
 import {
+  buildOrgRow, monthStart, toDateStr, tomorrow, rangeToDates, summarizeByProvider,
+  pivotDailyByProvider, weekStartKeyUTC, summarizeAppWindow, computeDrift,
+  summarizeCostByOrg, topOrgIdsByCost, pivotDailyByOrg, orgSeriesKey,
+  type OrgRow, type BreakdownRow, type DailyRow, type DailyOrgRow, type RangeKey,
+} from "@/lib/super-admin/usage-helpers";
+import {
   Loader2, Building2, TrendingUp, Wallet, Coins, Percent, X, Activity, Mic, Cpu, History, SatelliteDish, RefreshCw, AlertTriangle,
 } from "lucide-react";
 import {
@@ -61,73 +67,11 @@ const PURPOSE_LABELS: Record<string, string> = {
   whisper: "Transkripsi Suara",
 };
 
-type OrgRow = {
-  id: string;
-  name: string;
-  plan: string;
-  status: string;
-  reportsUsed: number;
-  reportsLimit: number | null;
-  voiceUsed: number;
-  voiceLimit: number | null;
-  cost: number;
-  revenue: number;
-  margin: number;
-  marginPct: number | null;
-};
-
-type BreakdownRow = {
-  purpose: string;
-  provider: string;
-  cost_idr: number;
-  cost_usd: number;
-  input_tokens: number;
-  output_tokens: number;
-  char_count: number;
-  event_count: number;
-};
-
-type RangeKey = "month" | "6m" | "all";
 const RANGE_OPTIONS: { key: RangeKey; label: string }[] = [
   { key: "month", label: "Bulan Ini" },
   { key: "6m", label: "6 Bulan" },
   { key: "all", label: "Semua Waktu" },
 ];
-
-function monthStart(d = new Date()) {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
-}
-function toDateStr(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-}
-// Exclusive upper bound covering "through today" regardless of local timezone.
-function tomorrow() {
-  return new Date(Date.now() + 24 * 3600 * 1000);
-}
-function rangeToDates(range: RangeKey): { from: Date; to: Date } {
-  const to = tomorrow();
-  if (range === "month") return { from: monthStart(), to };
-  if (range === "6m") return { from: monthStart(new Date(new Date().setMonth(new Date().getMonth() - 5))), to };
-  return { from: new Date(2000, 0, 1), to };
-}
-
-// Rolls up purpose/provider breakdown rows into per-provider totals for the
-// "Token & Karakter" panel — OpenRouter is token-metered, ElevenLabs is
-// character-metered, so they're shown as two distinct stat blocks.
-function summarizeByProvider(rows: BreakdownRow[]) {
-  const totals: Record<string, { cost: number; costUsd: number; inputTokens: number; outputTokens: number; chars: number; events: number }> = {};
-  for (const r of rows) {
-    const bucket = totals[r.provider] ?? { cost: 0, costUsd: 0, inputTokens: 0, outputTokens: 0, chars: 0, events: 0 };
-    bucket.cost += Number(r.cost_idr ?? 0);
-    bucket.costUsd += Number(r.cost_usd ?? 0);
-    bucket.inputTokens += Number(r.input_tokens ?? 0);
-    bucket.outputTokens += Number(r.output_tokens ?? 0);
-    bucket.chars += Number(r.char_count ?? 0);
-    bucket.events += Number(r.event_count ?? 0);
-    totals[r.provider] = bucket;
-  }
-  return totals;
-}
 
 async function fetchBreakdown(from: Date, to: Date, orgId?: string): Promise<BreakdownRow[]> {
   const { data, error } = await supabase.rpc("usage_breakdown", {
@@ -141,8 +85,6 @@ async function fetchBreakdown(from: Date, to: Date, orgId?: string): Promise<Bre
   }
   return (data ?? []) as BreakdownRow[];
 }
-
-type DailyRow = { day: string; provider: string; cost_idr: number; cost_usd: number; char_count: number; event_count: number };
 
 const DAILY_WINDOW_DAYS = 31; // >= max month length, so month-to-date is always fully covered
 
@@ -159,62 +101,24 @@ async function fetchDaily(from: Date, to: Date): Promise<DailyRow[]> {
   return (data ?? []) as DailyRow[];
 }
 
-// Pivots {day, provider, cost} rows into one chart-friendly row per day with
-// an IDR and a USD column per provider, so recharts can render grouped bars
-// side by side and the IDR/USD toggle can just switch which dataKeys it
-// reads without re-fetching or re-pivoting.
-function pivotDailyByProvider(rows: DailyRow[]) {
-  const byDay = new Map<string, { day: string; openrouter: number; elevenlabs: number; openrouterUsd: number; elevenlabsUsd: number }>();
-  for (const r of rows) {
-    const bucket = byDay.get(r.day) ?? { day: r.day, openrouter: 0, elevenlabs: 0, openrouterUsd: 0, elevenlabsUsd: 0 };
-    if (r.provider === "openrouter") {
-      bucket.openrouter += Number(r.cost_idr ?? 0);
-      bucket.openrouterUsd += Number(r.cost_usd ?? 0);
-    } else if (r.provider === "elevenlabs") {
-      bucket.elevenlabs += Number(r.cost_idr ?? 0);
-      bucket.elevenlabsUsd += Number(r.cost_usd ?? 0);
-    }
-    byDay.set(r.day, bucket);
+// Same window as fetchDaily, but grouped by organization_id too (see
+// scripts/migrations/20260808_usage_daily_by_org_rpc.sql) — powers the
+// "per organisasi" chart below the platform-wide daily comparison.
+async function fetchDailyByOrg(from: Date, to: Date): Promise<DailyOrgRow[]> {
+  const { data, error } = await supabase.rpc("usage_daily_by_org", {
+    p_from: from.toISOString(),
+    p_to: to.toISOString(),
+  });
+  if (error) {
+    console.error("[usage_daily_by_org]", error);
+    return [];
   }
-  return Array.from(byDay.values())
-    .sort((a, b) => a.day.localeCompare(b.day))
-    .map((r) => ({ ...r, label: new Date(r.day).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }) }));
+  return (data ?? []) as DailyOrgRow[];
 }
 
-// UTC Monday of the current week. OpenRouter's `usage_weekly` (see
-// app/actions/usage-live-check.ts) turned out to be week-to-date — it resets
-// every week rather than being a rolling trailing-7-days sum — so a rolling
-// window here made the app total look ~30-40% inflated against it even
-// though nothing was actually wrong (the two just meant different things by
-// "this week"). Matching week-to-date here mirrors monthStartKey below,
-// which already uses month-to-date and consistently shows "✓ selaras".
-function weekStartKeyUTC(): string {
-  const now = new Date();
-  const utcDay = now.getUTCDay(); // 0=Sun..6=Sat
-  const diff = utcDay === 0 ? -6 : 1 - utcDay;
-  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + diff));
-  return monday.toISOString().slice(0, 10);
-}
-
-// Sums the app's own tracked cost for "today" / "this week" / "this month" so
-// they can sit next to the provider's own live-reported figures for the same
-// windows — the whole point of the live-check panel is spotting drift.
-function summarizeAppWindow(rows: DailyRow[], provider: string) {
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const weekStartKey = weekStartKeyUTC();
-  const monthStartKey = toDateStr(monthStart());
-  let today = 0, week = 0, month = 0;
-  let charsToday = 0, charsWeek = 0, charsMonth = 0;
-  for (const r of rows) {
-    if (r.provider !== provider) continue;
-    const usd = Number(r.cost_usd ?? 0);
-    const chars = Number(r.char_count ?? 0);
-    if (r.day >= monthStartKey) { month += usd; charsMonth += chars; }
-    if (r.day >= weekStartKey) { week += usd; charsWeek += chars; }
-    if (r.day === todayKey) { today += usd; charsToday += chars; }
-  }
-  return { today, week, month, charsToday, charsWeek, charsMonth };
-}
+const TOP_ORGS_IN_CHART = 6;
+const ORG_CHART_COLORS = ["#e11d48", "#0ea5e9", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899"];
+const OTHER_ORG_COLOR = "#94a3b8";
 
 export default function SuperAdminUsagePage() {
   const [loading, setLoading] = useState(true);
@@ -228,6 +132,9 @@ export default function SuperAdminUsagePage() {
   const [daily, setDaily] = useState<DailyRow[]>([]);
   const [dailyCurrency, setDailyCurrency] = useState<"idr" | "usd">("idr");
   const [dailyLoading, setDailyLoading] = useState(true);
+  const [dailyByOrg, setDailyByOrg] = useState<DailyOrgRow[]>([]);
+  const [orgChartCurrency, setOrgChartCurrency] = useState<"idr" | "usd">("idr");
+  const [dailyByOrgLoading, setDailyByOrgLoading] = useState(true);
   const [orLive, setOrLive] = useState<LiveUsageResult | null>(null);
   const [elLive, setElLive] = useState<ElevenLabsLiveUsageResult | null>(null);
   const [liveLoading, setLiveLoading] = useState(true);
@@ -243,6 +150,14 @@ export default function SuperAdminUsagePage() {
       setDaily(rows);
       setDailyLoading(false);
     })().catch((e) => { console.error("[usage dashboard daily]", e); setDailyLoading(false); });
+
+    (async () => {
+      setDailyByOrgLoading(true);
+      const from = new Date(Date.now() - DAILY_WINDOW_DAYS * 24 * 3600 * 1000);
+      const rows = await fetchDailyByOrg(from, tomorrow());
+      setDailyByOrg(rows);
+      setDailyByOrgLoading(false);
+    })().catch((e) => { console.error("[usage dashboard daily by org]", e); setDailyByOrgLoading(false); });
 
     (async () => {
       setLiveLoading(true);
@@ -276,26 +191,7 @@ export default function SuperAdminUsagePage() {
       const orgRows: OrgRow[] = orgs.map((o: any) => {
         const sub: any = subs.get(o.id);
         const plan: any = sub ? plans.get(sub.plan_id) : null;
-        const counter: any = counters.get(o.id);
-        const status = sub?.status ?? "none";
-        const isPaying = status === "active";
-        const revenue = isPaying ? (sub?.custom_price_idr ?? plan?.price_idr ?? 0) : 0;
-        const cost = Number(counter?.cost_idr ?? 0);
-        const margin = revenue - cost;
-        return {
-          id: o.id,
-          name: o.name,
-          plan: plan?.name ?? "—",
-          status,
-          reportsUsed: counter?.reports_used ?? 0,
-          reportsLimit: plan?.max_reports_per_period ?? null,
-          voiceUsed: Number(counter?.voice_chars ?? 0),
-          voiceLimit: plan?.max_voice_chars_per_period ?? null,
-          cost,
-          revenue,
-          margin,
-          marginPct: revenue > 0 ? margin / revenue : null,
-        };
+        return buildOrgRow(o, sub, plan, counters.get(o.id));
       });
       setRows(orgRows);
       setAllTime(allTimeRows);
@@ -355,6 +251,41 @@ export default function SuperAdminUsagePage() {
   const dailyChartData = useMemo(() => pivotDailyByProvider(daily), [daily]);
   const appOpenRouterWindow = useMemo(() => summarizeAppWindow(daily, "openrouter"), [daily]);
   const appElevenLabsWindow = useMemo(() => summarizeAppWindow(daily, "elevenlabs"), [daily]);
+
+  const orgNameById = useMemo(() => new Map(rows.map((r) => [r.id, r.name])), [rows]);
+  const orgCostTotals = useMemo(() => summarizeCostByOrg(dailyByOrg), [dailyByOrg]);
+  const topOrgIds = useMemo(
+    () => topOrgIdsByCost(orgCostTotals, TOP_ORGS_IN_CHART, orgChartCurrency),
+    [orgCostTotals, orgChartCurrency],
+  );
+  const orgDailyChartData = useMemo(() => pivotDailyByOrg(dailyByOrg, topOrgIds), [dailyByOrg, topOrgIds]);
+  const orgChartLegend = useMemo(
+    () => [
+      ...topOrgIds.map((id, i) => ({
+        key: orgSeriesKey(id) + (orgChartCurrency === "usd" ? "Usd" : ""),
+        label: orgNameById.get(id) ?? "Organisasi terhapus",
+        color: ORG_CHART_COLORS[i % ORG_CHART_COLORS.length],
+      })),
+      ...(Object.keys(orgCostTotals).length > topOrgIds.length
+        ? [{ key: "other" + (orgChartCurrency === "usd" ? "Usd" : ""), label: "Lainnya", color: OTHER_ORG_COLOR }]
+        : []),
+    ],
+    [topOrgIds, orgNameById, orgCostTotals, orgChartCurrency],
+  );
+  // Ranked "who's spending the most" bar — same window/currency as the
+  // stacked daily chart above it, sorted highest cost first.
+  const topOrgsRanked = useMemo(
+    () =>
+      Object.entries(orgCostTotals)
+        .map(([id, t]) => ({
+          id,
+          name: orgNameById.get(id) ?? "Organisasi terhapus",
+          cost: orgChartCurrency === "usd" ? t.costUsd : t.costIdr,
+        }))
+        .sort((a, b) => b.cost - a.cost)
+        .slice(0, 10),
+    [orgCostTotals, orgNameById, orgChartCurrency],
+  );
 
   if (loading) {
     return (
@@ -590,6 +521,95 @@ export default function SuperAdminUsagePage() {
         )}
       </Panel>
 
+      {/* Per-organization breakdown — the platform-wide charts above answer
+          "how much are we spending", but not "which tenant is driving it".
+          A stacked daily bar (top spenders + "Lainnya" so the chart stays
+          legible no matter how many orgs exist) plus a ranked list, both
+          sourced from usage_daily_by_org() (see
+          scripts/migrations/20260808_usage_daily_by_org_rpc.sql). */}
+      <div className="grid lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3">
+          <Panel
+            title={`Pemakaian Harian per Organisasi — ${DAILY_WINDOW_DAYS} Hari Terakhir`}
+            icon={<Building2 size={15} />}
+            headerRight={
+              <div className="flex items-center rounded-xl border-2 border-slate-200 p-0.5 shrink-0">
+                {(["idr", "usd"] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setOrgChartCurrency(c)}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${
+                      orgChartCurrency === c ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-600"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            }
+          >
+            {dailyByOrgLoading ? (
+              <div className="h-[220px] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
+            ) : orgDailyChartData.length === 0 ? <Empty /> : (
+              <>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={orgDailyChartData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+                    <XAxis dataKey="label" tick={{ fontSize: 10, fontWeight: 700 }} stroke="#94a3b8" interval="preserveStartEnd" />
+                    <YAxis
+                      tickFormatter={(v) => (orgChartCurrency === "usd" ? formatUSD(v) : formatIDRShort(v))}
+                      tick={{ fontSize: 10 }}
+                      stroke="#94a3b8"
+                      width={orgChartCurrency === "usd" ? 65 : 55}
+                    />
+                    <Tooltip
+                      formatter={(v: any, _name: any, item: any) => [
+                        orgChartCurrency === "usd" ? formatUSD(v) : formatIDR(v),
+                        orgChartLegend.find((l) => l.key === item?.dataKey)?.label ?? item?.dataKey,
+                      ]}
+                      labelFormatter={(l) => l}
+                    />
+                    {orgChartLegend.map((series) => (
+                      <Bar key={series.key} dataKey={series.key} name={series.key} stackId="org" fill={series.color} radius={[0, 0, 0, 0]} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
+                  {orgChartLegend.map((series) => (
+                    <div key={series.key} className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: series.color }} />
+                      <span className="text-[10px] font-black text-slate-500 truncate max-w-[140px]">{series.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </Panel>
+        </div>
+
+        <div className="lg:col-span-2">
+          <Panel title={`Top Organisasi — ${DAILY_WINDOW_DAYS} Hari Terakhir`} icon={<TrendingUp size={15} />}>
+            {dailyByOrgLoading ? (
+              <div className="h-[220px] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
+            ) : topOrgsRanked.length === 0 ? <Empty /> : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart layout="vertical" data={topOrgsRanked} margin={{ top: 4, right: 12, left: 8, bottom: 0 }}>
+                  <XAxis type="number" tickFormatter={(v) => (orgChartCurrency === "usd" ? formatUSD(v) : formatIDRShort(v))} tick={{ fontSize: 10 }} stroke="#94a3b8" />
+                  <YAxis
+                    type="category" dataKey="name" width={100} stroke="#94a3b8"
+                    tick={{ fontSize: 10, fontWeight: 700 }}
+                    tickFormatter={(n) => (n.length > 14 ? `${n.slice(0, 13)}…` : n)}
+                  />
+                  <Tooltip formatter={(v: any) => (orgChartCurrency === "usd" ? formatUSD(v) : formatIDR(v))} labelFormatter={(n) => n} />
+                  <Bar dataKey="cost" radius={[0, 6, 6, 0]}>
+                    {topOrgsRanked.map((_, i) => <Cell key={i} fill={ORG_CHART_COLORS[i % ORG_CHART_COLORS.length]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </Panel>
+        </div>
+      </div>
+
       {/* Live check — asks OpenRouter/ElevenLabs directly what they've
           billed, and puts it next to what our own tracking recorded for the
           same window. A gap here means a real tracking bug, not just an
@@ -704,21 +724,20 @@ function Empty() {
   return <div className="h-[200px] flex items-center justify-center text-slate-300 font-black text-xs">Belum ada data</div>;
 }
 
-// Flags a drift between our tracking and the provider's own number once it's
-// large enough to matter — small gaps are expected (different snapshot
-// times, in-flight requests), big ones point at a real bug like the
-// ElevenLabs rate error fixed in 20260805_correct_elevenlabs_rate.sql.
-// Unit-agnostic — used for both USD (OpenRouter) and raw character counts
-// (ElevenLabs) drift comparisons.
+// Turns a computeDrift() verdict (see lib/super-admin/usage-helpers.ts) into
+// a badge — small gaps are expected (different snapshot times, in-flight
+// requests), big ones point at a real bug like the ElevenLabs rate error
+// fixed in 20260805_correct_elevenlabs_rate.sql. Unit-agnostic — used for
+// both USD (OpenRouter) and raw character counts (ElevenLabs).
 function driftBadge(appValue: number, liveValue: number) {
-  if (liveValue <= 0) return null;
-  const diffPct = Math.abs(appValue - liveValue) / liveValue;
-  if (diffPct < 0.05) {
+  const drift = computeDrift(appValue, liveValue);
+  if (drift.status === "no-baseline") return null;
+  if (drift.status === "aligned") {
     return <span className="text-[10px] font-black text-emerald-600">✓ selaras</span>;
   }
   return (
     <span className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600">
-      <AlertTriangle size={10} /> beda {formatPct(diffPct)}
+      <AlertTriangle size={10} /> beda {formatPct(drift.diffPct!)}
     </span>
   );
 }

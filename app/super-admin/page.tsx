@@ -12,6 +12,7 @@ import {
   removeOrganizationMember,
   type OrgMember,
 } from "@/app/actions/super-admin";
+import { slugify } from "@/lib/slug";
 
 export default function SuperAdminPage() {
   const [organizations, setOrganizations] = useState<any[]>([]);
@@ -224,8 +225,7 @@ export default function SuperAdminPage() {
                   onChange={(e) => {
                     setNewOrgName(e.target.value);
                     if (!newOrgSlug) {
-                      const generated = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-                      setNewOrgSlug(generated);
+                      setNewOrgSlug(slugify(e.target.value));
                     }
                   }}
                   className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-rose-400 transition-colors"

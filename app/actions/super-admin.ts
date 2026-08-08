@@ -2,6 +2,12 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { getServerSupabase } from "@/lib/supabase-server";
+import {
+  validateCreateOrgUserInput,
+  canRemoveOwner,
+  mergeMembersWithProfiles,
+  type OrgMember,
+} from "@/lib/org-members";
 
 // Service-role client bypasses RLS. Every action below is gated behind
 // assertPlatformAdmin() so only company super-admins can use it.
@@ -116,10 +122,11 @@ export async function createOrganizationUser(
     return { success: false, error: e.message };
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!name.trim() || !normalizedEmail || password.length < 6 || !organizationId || !['owner', 'admin', 'ustadz'].includes(role)) {
-    return { success: false, error: 'Nama, email, password minimal 6 karakter, organisasi, dan role wajib diisi.' };
+  const validation = validateCreateOrgUserInput({ name, email, password, organizationId, role });
+  if (!validation.valid) {
+    return { success: false, error: validation.error };
   }
+  const { normalizedEmail } = validation;
 
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email: normalizedEmail,
@@ -174,13 +181,7 @@ export async function createOrganizationUser(
   return { success: true, userId };
 }
 
-export type OrgMember = {
-  user_id: string;
-  role: string;
-  name: string | null;
-  email: string | null;
-  created_at: string;
-};
+export type { OrgMember };
 
 /** List all members of an organization with their profile name/email. */
 export async function getOrganizationMembers(
@@ -205,18 +206,7 @@ export async function getOrganizationMembers(
     ? await supabaseAdmin.from("profiles").select("id, name, email").in("id", ids)
     : { data: [] as any[] };
 
-  const byId = new Map((profiles ?? []).map((p: any) => [p.id, p]));
-  const roleRank: Record<string, number> = { owner: 0, admin: 1, ustadz: 2 };
-
-  const merged: OrgMember[] = (members ?? [])
-    .map((m) => ({
-      user_id: m.user_id,
-      role: m.role,
-      created_at: m.created_at,
-      name: byId.get(m.user_id)?.name ?? null,
-      email: byId.get(m.user_id)?.email ?? null,
-    }))
-    .sort((a, b) => (roleRank[a.role] ?? 9) - (roleRank[b.role] ?? 9));
+  const merged = mergeMembersWithProfiles(members ?? [], profiles ?? []);
 
   return { success: true, members: merged };
 }
@@ -244,7 +234,7 @@ export async function removeOrganizationMember(organizationId: string, userId: s
       .select("*", { count: "exact", head: true })
       .eq("organization_id", organizationId)
       .eq("role", "owner");
-    if ((count ?? 0) <= 1) {
+    if (!canRemoveOwner(count ?? 0)) {
       return { success: false, error: "Cannot remove the only owner. Assign another owner first." };
     }
   }
