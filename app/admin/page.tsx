@@ -75,13 +75,25 @@ function parsePlan(raw: any) {
 }
 
 function buildWeekBuckets(reports: { created_at: string }[]): DayBucket[] {
+  const timeZone = "Asia/Jakarta";
+  const getJakartaDate = (date: Date) => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+    return new Date(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day)));
+  };
+  const getJakartaKey = (date: Date) => getJakartaDate(date).toISOString().slice(0, 10);
   const days: DayBucket[] = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+    const d = getJakartaDate(new Date());
+    d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().slice(0, 10);
-    const label = d.toLocaleDateString("id-ID", { weekday: "short" });
-    const count = reports.filter((r) => r.created_at.slice(0, 10) === key).length;
+    const label = d.toLocaleDateString("id-ID", { weekday: "short", timeZone: "UTC" });
+    const count = reports.filter((r) => getJakartaKey(new Date(r.created_at)) === key).length;
     days.push({ label, count });
   }
   return days;
