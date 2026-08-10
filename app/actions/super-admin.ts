@@ -181,8 +181,6 @@ export async function createOrganizationUser(
   return { success: true, userId };
 }
 
-export type { OrgMember };
-
 /** List all members of an organization with their profile name/email. */
 export async function getOrganizationMembers(
   organizationId: string,

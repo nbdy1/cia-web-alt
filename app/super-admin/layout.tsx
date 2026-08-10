@@ -31,8 +31,8 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   if (!isPlatformAdmin) return null;
 
   const navItems = [
-    { href: '/super-admin', label: 'Organizations', icon: Building2 },
-    { href: '/super-admin/usage', label: 'Usage & Billing', icon: BarChart3 },
+    { href: '/super-admin', label: 'Usage & Billing', icon: BarChart3 },
+    { href: '/super-admin/orgs', label: 'Organizations', icon: Building2 },
   ];
 
   return (

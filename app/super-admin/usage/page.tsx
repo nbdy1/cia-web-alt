@@ -303,9 +303,14 @@ export default function SuperAdminUsagePage() {
     <div className="space-y-6 max-w-6xl mx-auto animate-fade-in">
       <div>
         <h2 className="text-2xl font-black text-slate-800">Usage &amp; Billing</h2>
-        <p className="text-slate-400 text-sm font-bold mt-0.5">AI cost, revenue and margin across all tenants — {monthLabel}</p>
+        <p className="text-slate-400 text-sm font-bold mt-0.5">Pantau kesehatan pemakaian, biaya, kuota, dan margin semua institusi — {monthLabel}</p>
       </div>
 
+      <div className="bg-rose-50 border-2 border-rose-100 rounded-2xl px-4 py-3 text-xs font-bold text-rose-800 leading-relaxed">
+        <span className="font-black">Cara membaca halaman ini:</span> mulai dari ringkasan bulan berjalan, lalu gunakan analitik periode untuk melihat pola biaya. Klik baris institusi untuk melihat rincian event AI.
+      </div>
+
+      <SectionHeading title="Ringkasan Bulan Berjalan" description="Status langganan, pendapatan, biaya AI, dan margin saat ini." />
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Kpi icon={<Building2 size={16} />} label="Organizations" value={formatNum(totals.orgs)} tone="slate" />
@@ -355,6 +360,7 @@ export default function SuperAdminUsagePage() {
         </p>
       </div>
 
+      <SectionHeading title="Analitik Biaya" description="Bandingkan tren biaya dan fungsi AI pada periode yang sama." />
       {/* Range toggle — drives the trend chart and the breakdown panels below
           it together, so they always describe the same period. */}
       <div className="flex items-center gap-2">
@@ -472,6 +478,7 @@ export default function SuperAdminUsagePage() {
           (a suspicious drop to zero) or lines up a spike with a real
           incident, ahead of reconciling against the provider's own totals
           in the live-check panel below. */}
+      <SectionHeading title="Pemakaian Harian" description="Gunakan grafik ini untuk menemukan lonjakan biaya atau hari dengan pencatatan yang tidak biasa." />
       <Panel
         title={`Perbandingan Harian — ${DAILY_WINDOW_DAYS} Hari Terakhir`}
         icon={<TrendingUp size={15} />}
@@ -527,6 +534,7 @@ export default function SuperAdminUsagePage() {
           legible no matter how many orgs exist) plus a ranked list, both
           sourced from usage_daily_by_org() (see
           scripts/migrations/20260808_usage_daily_by_org_rpc.sql). */}
+      <SectionHeading title="Per Institusi" description="Lihat institusi mana yang paling banyak menggunakan layanan dan cek pemakaian hariannya." />
       <div className="grid lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3">
           <Panel
@@ -614,6 +622,7 @@ export default function SuperAdminUsagePage() {
           billed, and puts it next to what our own tracking recorded for the
           same window. A gap here means a real tracking bug, not just an
           approximation — this is the fastest way to catch the next one. */}
+      <SectionHeading title="Verifikasi Provider" description="Bandingkan pencatatan internal aplikasi dengan angka langsung dari provider." />
       <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 p-5" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
         <div className="flex items-center gap-2 mb-4 text-slate-600">
           <SatelliteDish size={15} className="text-rose-500" />
@@ -644,20 +653,21 @@ export default function SuperAdminUsagePage() {
       </div>
 
       {/* Per-org table */}
+      <SectionHeading title="Detail Kuota Institusi" description="Klik satu baris untuk melihat 50 event AI terbaru dan rincian biaya sepanjang waktu." />
       <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
         <div className="px-5 py-3 border-b-2 border-slate-50">
-          <h3 className="font-black text-slate-800 text-sm">Per organization</h3>
+          <h3 className="font-black text-slate-800 text-sm">Kuota &amp; margin per institusi</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">
-                <th className="px-4 py-2">Organization</th>
-                <th className="px-4 py-2">Plan</th>
-                <th className="px-4 py-2">Reports</th>
-                <th className="px-4 py-2">Voice</th>
-                <th className="px-4 py-2 text-right">Cost</th>
-                <th className="px-4 py-2 text-right">Revenue</th>
+                <th className="px-4 py-2">Institusi</th>
+                <th className="px-4 py-2">Paket</th>
+                <th className="px-4 py-2">Laporan</th>
+                <th className="px-4 py-2">Suara</th>
+                <th className="px-4 py-2 text-right">Biaya</th>
+                <th className="px-4 py-2 text-right">Pendapatan</th>
                 <th className="px-4 py-2 text-right">Margin</th>
               </tr>
             </thead>
@@ -704,6 +714,15 @@ function Kpi({ icon, label, value, sub, tone }: { icon: React.ReactNode; label: 
       <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
       <p className="text-lg font-black text-slate-800 leading-tight">{value}</p>
       {sub && <p className="text-[11px] font-black text-slate-400">{sub}</p>}
+    </div>
+  );
+}
+
+function SectionHeading({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="pt-2">
+      <h3 className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{title}</h3>
+      <p className="text-xs font-bold text-slate-400 mt-1">{description}</p>
     </div>
   );
 }
