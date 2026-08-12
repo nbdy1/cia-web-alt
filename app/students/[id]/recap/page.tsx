@@ -283,6 +283,34 @@ function getSubCount(subIndicator: string, countMap: Map<string, number>): numbe
   return countMap.get(subIndicator.trim().toLowerCase()) ?? 0;
 }
 
+function getRecommendedFocus(
+  themes: { id: number; title: string; indicators: { title: string; sub_indicators: string[] }[] }[],
+  countMap: Map<string, number>,
+): { themeId: number; themeTitle: string; indicatorTitle: string; subIndicator: string; count: number } | null {
+  let recommendation: { themeId: number; themeTitle: string; indicatorTitle: string; subIndicator: string; count: number } | null = null;
+
+  // Iterate in framework order. Strictly replacing only on a higher count
+  // makes the first item win whenever multiple sub-indicators are tied.
+  themes.forEach((theme) => {
+    theme.indicators.forEach((indicator) => {
+      indicator.sub_indicators.forEach((subIndicator) => {
+        const count = getSubCount(subIndicator, countMap);
+        if (!recommendation || count > recommendation.count) {
+          recommendation = {
+            themeId: theme.id,
+            themeTitle: theme.title,
+            indicatorTitle: indicator.title,
+            subIndicator,
+            count,
+          };
+        }
+      });
+    });
+  });
+
+  return recommendation;
+}
+
 // (Kuat/Lemah replaced by 5-phase system — see getCDSPhase in lib/cia-phases.ts)
 
 export default async function RecapPage({
@@ -375,6 +403,7 @@ export default async function RecapPage({
           {categories.map((cat) => {
             const Icon = cat.icon;
             const countMap = countByCategory[cat.label] ?? new Map<string, number>();
+            const recommendedFocus = getRecommendedFocus(cat.data.themes, countMap);
 
             // Progress = sub-indicators fulfilled at least once
             let totalSub = 0;
@@ -431,6 +460,27 @@ export default async function RecapPage({
                 </summary>
 
                 <div className="p-6 border-t border-slate-100 bg-slate-50/50 space-y-6 overflow-x-hidden">
+                  {recommendedFocus && (
+                    <div className={`rounded-[1.5rem] border-2 p-4 ${cat.bg} ${cat.color} border-current/20`}>
+                      <div className="flex items-start gap-3">
+                        <div className="shrink-0 rounded-xl bg-white/80 px-2.5 py-2 text-[9px] font-black uppercase tracking-widest">
+                          Fokus Ustadz
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black uppercase tracking-wider opacity-70">
+                            Tema {recommendedFocus.themeId} · {recommendedFocus.indicatorTitle}
+                          </p>
+                          <p className="mt-1 text-sm font-black text-slate-800 leading-snug">
+                            {recommendedFocus.subIndicator}
+                          </p>
+                          <p className="mt-1 text-[10px] font-bold text-slate-500">
+                            Saat ini tercatat {recommendedFocus.count}× terpenuhi. Jadikan ini satu titik fokus pendampingan {categoryDisplayLabel(cat.label).toLowerCase()} berikutnya.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Theme fulfillment bars */}
                   <div className="bg-white rounded-[2rem] border border-slate-100 p-6">
                     <FulfillmentBars
@@ -536,12 +586,17 @@ export default async function RecapPage({
                                       const iconCls = tier === "kuat" ? "text-brand-500" : tier === "tumbuh" ? "text-amber-400" : "text-slate-300";
                                       const badgeCls = tier === "kuat" ? "bg-brand-500 text-white" : tier === "tumbuh" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500";
                                       const label = tier === "kuat" ? "Kuat" : tier === "tumbuh" ? "Tumbuh" : "Benih";
-                                      return (
-                                        <div key={sIdx} className={`flex items-start gap-3 p-2.5 rounded-xl border ${rowCls}`}>
+                                    return (
+                                      <div key={sIdx} className={`flex items-start gap-3 p-2.5 rounded-xl border ${rowCls} ${recommendedFocus?.subIndicator === sub ? "ring-2 ring-offset-1 ring-brand-400" : ""}`}>
                                           <CheckCircle2 size={15} className={`${iconCls} mt-0.5 shrink-0`} />
                                           <span className="flex-1 text-[13px] leading-snug font-medium text-slate-800">
                                             {sub}
                                           </span>
+                                          {recommendedFocus?.subIndicator === sub && (
+                                            <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 bg-brand-600 text-white">
+                                              Fokus
+                                            </span>
+                                          )}
                                           <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${badgeCls}`}>
                                             {label} ({subCount}×)
                                           </span>
