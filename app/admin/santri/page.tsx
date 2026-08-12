@@ -27,6 +27,7 @@ import { useAuth } from '@/lib/context/auth-context';
 import { useTerminology } from '@/lib/hooks/use-terminology';
 import { getFrameworkForOrganization } from '@/lib/data/framework';
 import { compressImage } from '@/lib/compress-image';
+import { AdminSpreadsheetImport } from '@/components/AdminSpreadsheetImport';
 
 export default function ManageSantriPage() {
   const { activeOrganizationId } = useAuth();
@@ -274,13 +275,16 @@ export default function ManageSantriPage() {
           <p className="text-slate-400 text-sm font-bold mt-0.5">Tambah, lihat, atau nonaktifkan data {t.santriLower}</p>
         </div>
         {!showRemoved && (
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
-            style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
-          >
-            <Plus size={15} /> Tambah {t.santri}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <AdminSpreadsheetImport kind="students" organizationId={activeOrganizationId ?? ""} onComplete={fetchStudents} />
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
+              style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
+            >
+              <Plus size={15} /> Tambah {t.santri}
+            </button>
+          </div>
         )}
       </div>
 

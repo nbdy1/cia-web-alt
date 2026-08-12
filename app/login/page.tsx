@@ -76,7 +76,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-black mb-4">
             <ShieldCheck className="w-4 h-4 text-brand-600" />
-            <span>Portal Evaluasi Ustadz</span>
+            <span>Portal Evaluasi Pembimbing</span>
           </div>
           <h1 className="text-4xl font-black tracking-tight text-slate-900 flex items-center justify-center gap-2 font-serif">
             <span className="text-brand-600">CDS</span> Portal
@@ -194,7 +194,7 @@ export default function LoginPage() {
           {/* Quick Info */}
           <div className="mt-8 pt-6 border-t-2 border-slate-100 text-center">
             <p className="text-slate-400 text-xs italic font-bold">
-              &quot;Menjaga dan memantau perkembangan santri dengan sepenuh hati dan ketelitian.&quot;
+              &quot;Menjaga dan memantau perkembangan siswa/i dengan sepenuh hati dan ketelitian.&quot;
             </p>
           </div>
         </div>

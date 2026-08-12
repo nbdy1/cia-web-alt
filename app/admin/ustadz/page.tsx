@@ -23,6 +23,7 @@ import { supabase } from '@/lib/supabase';
 import { Users, Search, Loader2, Sparkles, Mail, Calendar, X, Plus, UserPlus, AlertCircle, Eye, EyeOff, UserX, ArchiveX, ShieldCheck, ArrowLeftRight, Crown } from 'lucide-react';
 import { useUserRole } from '@/lib/hooks/use-user-role';
 import { useTerminology } from '@/lib/hooks/use-terminology';
+import { AdminSpreadsheetImport } from '@/components/AdminSpreadsheetImport';
 
 // "owner" and "admin" are both full admin-tier roles (see AdminLayout's guard:
 // role === 'owner' || role === 'admin') — treat them the same visually here,
@@ -247,13 +248,16 @@ export default function ManageUstadzPage() {
           <p className="text-slate-400 text-sm font-bold mt-0.5">Kelola daftar {t.ustadz} dan Admin</p>
         </div>
         {!showRemoved && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
-            style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
-          >
-            <UserPlus size={15} /> Tambah Pengguna
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <AdminSpreadsheetImport kind="teachers" organizationId={organizationId ?? ""} onComplete={fetchUstadz} />
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
+              style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
+            >
+              <UserPlus size={15} /> Tambah Pengguna
+            </button>
+          </div>
         )}
       </div>
 
