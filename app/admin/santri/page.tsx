@@ -146,7 +146,7 @@ export default function ManageSantriPage() {
         const path = `${inserted.id}.webp`;
         const { error: uploadErr } = await supabase.storage
           .from('student-photos')
-          .upload(path, compressedFile, { upsert: true, contentType: 'image/webp' });
+          .upload(path, compressedFile, { upsert: true, contentType: 'image/webp', cacheControl: '31536000' });
         if (!uploadErr) {
           const { data: urlData } = supabase.storage.from('student-photos').getPublicUrl(path);
           await supabase.from('students').update({ photo_url: urlData.publicUrl }).eq('id', inserted.id);

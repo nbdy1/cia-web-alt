@@ -33,32 +33,32 @@ const SIZE_CLASSES: Record<string, { container: string; text: string; radius: st
   xl:  { container: "w-20 h-20",  text: "text-3xl",  radius: "rounded-[1.6rem]" },
 };
 
-const IMAGE_SIZES: Record<"sm" | "md" | "lg" | "xl", number> = {
-  sm: 80,
-  md: 96,
-  lg: 128,
-  xl: 256,
-};
+// const IMAGE_SIZES: Record<"sm" | "md" | "lg" | "xl", number> = {
+//   sm: 80,
+//   md: 96,
+//   lg: 128,
+//   xl: 256,
+// };
 
-function getOptimizedPhotoUrl(photoUrl: string, size: "sm" | "md" | "lg" | "xl") {
-  try {
-    const url = new URL(photoUrl);
-    const marker = "/storage/v1/object/public/";
-    const markerIndex = url.pathname.indexOf(marker);
-    if (markerIndex === -1) return photoUrl;
+// function getOptimizedPhotoUrl(photoUrl: string, size: "sm" | "md" | "lg" | "xl") {
+//   try {
+//     const url = new URL(photoUrl);
+//     const marker = "/storage/v1/object/public/";
+//     const markerIndex = url.pathname.indexOf(marker);
+//     if (markerIndex === -1) return photoUrl;
 
-    // Supabase Image Transformations are served from render/image while the
-    // object path remains identical. The CDN caches each rendered variant.
-    url.pathname = url.pathname.replace(marker, "/storage/v1/render/image/public/");
-    url.searchParams.set("width", String(IMAGE_SIZES[size]));
-    url.searchParams.set("height", String(IMAGE_SIZES[size]));
-    url.searchParams.set("resize", "cover");
-    url.searchParams.set("quality", size === "xl" ? "80" : "70");
-    return url.toString();
-  } catch {
-    return photoUrl;
-  }
-}
+//     // Supabase Image Transformations are served from render/image while the
+//     // object path remains identical. The CDN caches each rendered variant.
+//     url.pathname = url.pathname.replace(marker, "/storage/v1/render/image/public/");
+//     url.searchParams.set("width", String(IMAGE_SIZES[size]));
+//     url.searchParams.set("height", String(IMAGE_SIZES[size]));
+//     url.searchParams.set("resize", "cover");
+//     url.searchParams.set("quality", size === "xl" ? "80" : "70");
+//     return url.toString();
+//   } catch {
+//     return photoUrl;
+//   }
+// }
 
 interface StudentAvatarProps {
   name: string;
@@ -85,12 +85,12 @@ export function StudentAvatar({
   const base = `${container} ${radius} flex-shrink-0 overflow-hidden flex items-center justify-center ${className}`;
 
   if (photoUrl && !imgError) {
-    const optimizedPhotoUrl = getOptimizedPhotoUrl(photoUrl, size);
+    const imageUrl = photoUrl
     return (
       <div className={base} style={style}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={optimizedPhotoUrl}
+          src={imageUrl}
           alt={name}
           className="w-full h-full object-cover"
           loading={size === "xl" ? "eager" : "lazy"}

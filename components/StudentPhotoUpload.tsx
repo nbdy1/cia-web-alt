@@ -73,7 +73,7 @@ export function StudentPhotoUpload({
 
       const { error: uploadError } = await supabase.storage
         .from("student-photos")
-        .upload(path, compressedFile, { upsert: true, contentType: "image/webp" });
+        .upload(path, compressedFile, { upsert: true, contentType: "image/webp", cacheControl: "31536000" });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from("student-photos").getPublicUrl(path);
