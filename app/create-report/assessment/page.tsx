@@ -489,7 +489,15 @@ export default function AssessmentPage() {
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Mobile keyboards use Enter as the natural way to write multi-line notes.
+    // Check at keypress time so this also works when a device changes between
+    // portrait/desktop layouts without introducing a hydration-sensitive flag.
+    const isMobileInput =
+      typeof window !== 'undefined' &&
+      (window.matchMedia('(max-width: 767px)').matches ||
+        window.matchMedia('(pointer: coarse)').matches);
+
+    if (e.key === 'Enter' && !e.shiftKey && !isMobileInput) {
       e.preventDefault();
       handleSend();
     }
@@ -684,7 +692,8 @@ export default function AssessmentPage() {
         </div>
 
         <p className="mt-2 text-center text-[10px] text-slate-400 font-bold">
-          Enter untuk kirim · Shift+Enter baris baru
+          <span className="hidden md:inline">Enter untuk kirim · Shift+Enter baris baru</span>
+          <span className="md:hidden">Enter untuk baris baru</span>
         </p>
 
         {messages.length >= 2 && (

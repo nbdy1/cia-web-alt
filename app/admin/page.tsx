@@ -99,6 +99,26 @@ function buildWeekBuckets(reports: { created_at: string }[]): DayBucket[] {
   return days;
 }
 
+function getJakartaWeekWindowStart(now = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  const startOfTodayUtc = Date.UTC(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day),
+  );
+
+  // Jakarta is UTC+07:00 and has no daylight-saving changes. Subtract six
+  // local calendar days, then convert that local midnight to UTC for the
+  // Supabase timestamp filter.
+  return new Date(startOfTodayUtc - 6 * 86_400_000 - 7 * 3_600_000).toISOString();
+}
+
 // ─── SVG Bar Chart ────────────────────────────────────────────────────────────
 function BarChart({ data }: { data: DayBucket[] }) {
   const max = Math.max(...data.map((d) => d.count), 1);
@@ -182,6 +202,9 @@ export default function AdminOverviewPage() {
         // ── 1. Counts ───────────────────────────────────────────────────────
         let studentsQ = supabase.from("students").select("*", { count: "exact", head: true }).or("is_removed.is.null,is_removed.eq.false");
         let reportsQ = supabase.from("reports").select("id, created_at, student_id, title, created_by, treatment_plan, students(name, photo_url)").order("created_at", { ascending: false }).limit(50);
+        let reportCountQ = supabase
+          .from("reports")
+          .select("id", { count: "exact", head: true });
         let students2Q = supabase.from("students").select("id, assigned_ustadz_id, reports(id)").or("is_removed.is.null,is_removed.eq.false");
         // Ordered oldest-first: declined_sub_indicators decrements a running
         // per-student count floored at 0, which requires replaying each
@@ -191,27 +214,40 @@ export default function AdminOverviewPage() {
         // count, active-santri count, and the week-activity chart below, so
         // none of those silently truncate once an org passes 50 reports.
         let allReportsQ = supabase.from("reports").select("student_id, created_at, treatment_plan, students(id, name)").order("created_at", { ascending: true });
+        // Keep the chart query bounded to the visible window. Supabase REST
+        // applies a row limit to unpaginated queries, so an ascending
+        // historical query can otherwise stop several days before today.
+        let weekReportsQ = supabase
+          .from("reports")
+          .select("created_at")
+          .gte("created_at", getJakartaWeekWindowStart());
 
         // ── Filter by active organization ────────────────────────────────────
         studentsQ = studentsQ.eq('organization_id', activeOrganizationId);
         reportsQ = reportsQ.eq('organization_id', activeOrganizationId);
+        reportCountQ = reportCountQ.eq('organization_id', activeOrganizationId);
         students2Q = students2Q.eq('organization_id', activeOrganizationId);
         allReportsQ = allReportsQ.eq('organization_id', activeOrganizationId);
+        weekReportsQ = weekReportsQ.eq('organization_id', activeOrganizationId);
 
         const [
           { count: santriCount },
+          { count: reportCount },
           { data: reportsRaw },
           { data: studentsRaw },
           { data: ustadzRaw },
           { data: allReportsForLeader },
+          { data: weekReportsRaw },
         ] = await Promise.all([
           studentsQ,
+          reportCountQ,
           reportsQ,
           students2Q,
           ustadzMemberIds.length > 0
             ? supabase.from("profiles").select("id, name").in('id', ustadzMemberIds).or("is_removed.is.null,is_removed.eq.false")
             : Promise.resolve({ data: [] as any[] }),
           allReportsQ,
+          weekReportsQ,
         ]);
         const ustadzCount = ustadzRaw?.length ?? 0;
 
@@ -233,12 +269,12 @@ export default function AdminOverviewPage() {
         setStats({
           ustadz: ustadzCount ?? 0,
           santri: santriCount ?? 0,
-          reports: allReportsUnlimited.length,
+          reports: reportCount ?? 0,
           activeSantri: activeSantriIds.size,
         });
 
         // ── 3. Week chart ───────────────────────────────────────────────────
-        setWeekData(buildWeekBuckets(allReportsUnlimited as any));
+        setWeekData(buildWeekBuckets((weekReportsRaw ?? []) as any));
 
         // ── 4. Recent reports ───────────────────────────────────────────────
         setRecentReports(
