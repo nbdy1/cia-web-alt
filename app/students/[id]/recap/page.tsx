@@ -43,6 +43,8 @@ import {
 import { getCDSPhase } from "@/lib/cia-phases";
 import Link from "next/link";
 import { getFrameworkForOrganization, isSupplementaryTheme } from "@/lib/data/framework";
+import { getLocalizedTerminology } from "@/lib/data/terminology";
+import { getServerAppLanguage } from "@/lib/server/language";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 
 // ─── Theme Fulfillment Bar Chart ─────────────────────────────────────────────
@@ -53,11 +55,13 @@ function FulfillmentBars({
   countMap,
   accentColor,
   categoryLabel,
+  isEnglish = false,
 }: {
   themes: { id: number; title: string; indicators: { title: string; sub_indicators: string[] }[] }[];
   countMap: Map<string, number>;
   accentColor: string;
   categoryLabel: string;
+  isEnglish?: boolean;
 }) {
   const catTitle = categoryLabel.charAt(0).toUpperCase() + categoryLabel.slice(1);
 
@@ -91,7 +95,7 @@ function FulfillmentBars({
   if (fulfilledCount === 0 && benihThemes.length === 0) {
     return (
       <div className="py-6 text-center">
-        <p className="text-xs text-slate-400 font-bold">Belum ada tema yang terpenuhi</p>
+        <p className="text-xs text-slate-400 font-bold">{isEnglish ? "No themes fulfilled yet" : "Belum ada tema yang terpenuhi"}</p>
       </div>
     );
   }
@@ -102,7 +106,7 @@ function FulfillmentBars({
       {fulfilledCount > 0 && (
         <>
           <p className="text-sm font-bold text-slate-600 mb-3">
-            Ada {fulfilledCount} {categoryLabel} yang sedang tumbuh dalam diri ananda:
+            {isEnglish ? `${fulfilledCount} ${categoryLabel} themes are currently developing:` : `Ada ${fulfilledCount} ${categoryLabel} yang sedang tumbuh dalam diri ananda:`}
           </p>
           {themes.map((theme, i) => {
             const { pct, fulfilled, total } = themeStats[i];
@@ -140,11 +144,11 @@ function FulfillmentBars({
         <div className={fulfilledCount > 0 ? "mt-5 pt-4 border-t border-slate-100" : ""}>
           {fulfilledCount === 0 && (
             <p className="text-sm font-bold text-slate-400 mb-2">
-              Belum ada {categoryLabel} yang tumbuh dalam diri ananda:
+              {isEnglish ? `No ${categoryLabel} themes are developing yet:` : `Belum ada ${categoryLabel} yang tumbuh dalam diri ananda:`}
             </p>
           )}
           <p className="text-sm font-bold text-slate-600 mb-2">
-            {fulfilledCount === 0 ? "Namun, sudah ada" : "Dan ada"} {benihThemes.length} benih {categoryLabel} yang sudah nampak:
+            {isEnglish ? `${fulfilledCount === 0 ? "However, there are already" : "There are also"} ${benihThemes.length} emerging ${categoryLabel} themes:` : `${fulfilledCount === 0 ? "Namun, sudah ada" : "Dan ada"} ${benihThemes.length} benih ${categoryLabel} yang sudah nampak:`}
           </p>
           <div className="space-y-1">
             {benihThemes.map((theme) => (
@@ -319,10 +323,12 @@ export default async function RecapPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const language = await getServerAppLanguage();
+  const isEnglish = language === "en";
   const { student, countByCategory, totalReports } = await getStudentRecap(id);
 
   if (!student)
-    return <div className="p-10 text-center">Santri tidak ditemukan.</div>;
+    return <div className="p-10 text-center">{isEnglish ? "Student not found." : "Santri tidak ditemukan."}</div>;
 
   const framework = getFrameworkForOrganization(student.organization_id ?? null);
   const categories = [
@@ -369,7 +375,7 @@ export default async function RecapPage({
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div className="text-center">
-          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest">Rekapitulasi</p>
+          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest">{isEnglish ? "Recap" : "Rekapitulasi"}</p>
           <h1 className="text-sm font-black text-slate-900">{student.name}</h1>
         </div>
         <div className="w-9" />
@@ -383,18 +389,18 @@ export default async function RecapPage({
           </div>
           <div className="relative z-10">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-400 mb-2">
-              Total Laporan Dianalisis
+              {isEnglish ? "Total reports analysed" : "Total Laporan Dianalisis"}
             </h3>
             <div className="flex items-baseline gap-2">
               <span className="text-5xl font-black">{totalReports}</span>
               <span className="text-sm font-bold text-slate-400">
-                Laporan
+                {isEnglish ? "Reports" : "Laporan"}
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-4 max-w-sm leading-relaxed">
-              Persentase pertumbuhan CMS ini di simpulkan dari{" "}
+              {isEnglish ? "This CMS growth percentage is based on " : "Persentase pertumbuhan CMS ini di simpulkan dari "}
               <span className="text-white font-black">{totalReports}</span>{" "}
-              laporan yang masuk.
+              {isEnglish ? " submitted reports." : " laporan yang masuk."}
             </p>
           </div>
         </section>
@@ -441,7 +447,7 @@ export default async function RecapPage({
                       </h2>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <p className="text-xs font-bold text-slate-400">
-                          {fulfilledSub} dari {totalSub} Indikator Kuat
+                          {isEnglish ? `${fulfilledSub} of ${totalSub} strong indicators` : `${fulfilledSub} dari ${totalSub} Indikator Kuat`}
                         </p>
                       </div>
                     </div>
@@ -464,17 +470,17 @@ export default async function RecapPage({
                     <div className={`rounded-[1.5rem] border-2 p-4 ${cat.bg} ${cat.color} border-current/20`}>
                       <div className="flex items-start gap-3">
                         <div className="shrink-0 rounded-xl bg-white/80 px-2.5 py-2 text-[9px] font-black uppercase tracking-widest">
-                          Fokus Ustadz
+                          {isEnglish ? `${getLocalizedTerminology(student.organization_id, language).ustadz} focus` : "Fokus Ustadz"}
                         </div>
                         <div className="min-w-0">
                           <p className="text-[10px] font-black uppercase tracking-wider opacity-70">
-                            Tema {recommendedFocus.themeId} · {recommendedFocus.indicatorTitle}
+                            {isEnglish ? `Theme ${recommendedFocus.themeId} · ${recommendedFocus.indicatorTitle}` : `Tema ${recommendedFocus.themeId} · ${recommendedFocus.indicatorTitle}`}
                           </p>
                           <p className="mt-1 text-sm font-black text-slate-800 leading-snug">
                             {recommendedFocus.subIndicator}
                           </p>
                           <p className="mt-1 text-[10px] font-bold text-slate-500">
-                            Saat ini tercatat {recommendedFocus.count}× terpenuhi. Jadikan ini satu titik fokus pendampingan {categoryDisplayLabel(cat.label).toLowerCase()} berikutnya.
+                            {isEnglish ? `Recorded as fulfilled ${recommendedFocus.count}×. Use this as the next focused ${categoryDisplayLabel(cat.label).toLowerCase()} development point.` : `Saat ini tercatat ${recommendedFocus.count}× terpenuhi. Jadikan ini satu titik fokus pendampingan ${categoryDisplayLabel(cat.label).toLowerCase()} berikutnya.`}
                           </p>
                         </div>
                       </div>
@@ -488,6 +494,7 @@ export default async function RecapPage({
                       countMap={countMap}
                       accentColor={cat.accentColor}
                       categoryLabel={categoryDisplayLabel(cat.label).toLowerCase()}
+                      isEnglish={isEnglish}
                     />
                   </div>
 
@@ -529,7 +536,7 @@ export default async function RecapPage({
                           <div className="mb-5 flex flex-col gap-1.5">
                             <div className="flex items-center gap-2">
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                Tema {theme.id}
+                                {isEnglish ? `Theme ${theme.id}` : `Tema ${theme.id}`}
                               </span>
                               {themePhase && (
                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-wider ${themePhase.bg} ${themePhase.border} ${themePhase.text}`}>
@@ -537,7 +544,7 @@ export default async function RecapPage({
                                 </span>
                               )}
                               <span className="text-[9px] text-slate-400 font-bold ml-auto">
-                                {themeFilledSub}/{themeTotalSub} kuat
+                                {isEnglish ? `${themeFilledSub}/${themeTotalSub} strong` : `${themeFilledSub}/${themeTotalSub} kuat`}
                               </span>
                             </div>
                             <h3 className="text-[15px] font-bold text-slate-900 font-serif leading-tight">
@@ -569,7 +576,7 @@ export default async function RecapPage({
 
                           {visibleIndicators.length === 0 ? (
                             <p className="text-[11px] text-slate-400 font-bold italic">
-                              Belum ada sub-indikator yang terpenuhi pada tema ini.
+                              {isEnglish ? "No sub-indicators have been fulfilled for this theme yet." : "Belum ada sub-indikator yang terpenuhi pada tema ini."}
                             </p>
                           ) : (
                             <div className="space-y-5">
@@ -585,7 +592,7 @@ export default async function RecapPage({
                                       const rowCls = tier === "kuat" ? "border-brand-200 bg-brand-50" : tier === "tumbuh" ? "border-amber-100/80 bg-amber-50/60" : "border-slate-100/80 bg-slate-50/50";
                                       const iconCls = tier === "kuat" ? "text-brand-500" : tier === "tumbuh" ? "text-amber-400" : "text-slate-300";
                                       const badgeCls = tier === "kuat" ? "bg-brand-500 text-white" : tier === "tumbuh" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500";
-                                      const label = tier === "kuat" ? "Kuat" : tier === "tumbuh" ? "Tumbuh" : "Benih";
+                                      const label = tier === "kuat" ? (isEnglish ? "Strong" : "Kuat") : tier === "tumbuh" ? (isEnglish ? "Growing" : "Tumbuh") : (isEnglish ? "Emerging" : "Benih");
                                     return (
                                       <div key={sIdx} className={`flex items-start gap-3 p-2.5 rounded-xl border ${rowCls} ${recommendedFocus?.subIndicator === sub ? "ring-2 ring-offset-1 ring-brand-400" : ""}`}>
                                           <CheckCircle2 size={15} className={`${iconCls} mt-0.5 shrink-0`} />
@@ -594,7 +601,7 @@ export default async function RecapPage({
                                           </span>
                                           {recommendedFocus?.subIndicator === sub && (
                                             <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 bg-brand-600 text-white">
-                                              Fokus
+                                              {isEnglish ? "Focus" : "Fokus"}
                                             </span>
                                           )}
                                           <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${badgeCls}`}>
@@ -621,7 +628,7 @@ export default async function RecapPage({
                           ))
                         ) : (
                           <div className="text-center p-8 bg-white rounded-[2rem] border border-dashed border-slate-200">
-                            <p className="text-sm font-bold text-slate-400">Belum ada kriteria yang terpenuhi</p>
+                            <p className="text-sm font-bold text-slate-400">{isEnglish ? "No criteria fulfilled yet" : "Belum ada kriteria yang terpenuhi"}</p>
                           </div>
                         )}
 
@@ -629,8 +636,8 @@ export default async function RecapPage({
                         {unfulfilledThemes.length > 0 && (
                           <details suppressHydrationWarning className="group/unfulfilled mt-6">
                             <summary className="cursor-pointer flex items-center justify-center gap-2 bg-slate-200/50 hover:bg-slate-200 transition-colors py-4 px-6 rounded-2xl text-xs font-black text-slate-500 uppercase tracking-widest select-none">
-                              <span className="group-open/unfulfilled:hidden">Tampilkan {unfulfilledThemes.length} Tema Belum Terpenuhi</span>
-                              <span className="hidden group-open/unfulfilled:inline">Sembunyikan Tema Belum Terpenuhi</span>
+                              <span className="group-open/unfulfilled:hidden">{isEnglish ? `Show ${unfulfilledThemes.length} unfulfilled themes` : `Tampilkan ${unfulfilledThemes.length} Tema Belum Terpenuhi`}</span>
+                              <span className="hidden group-open/unfulfilled:inline">{isEnglish ? "Hide unfulfilled themes" : "Sembunyikan Tema Belum Terpenuhi"}</span>
                             </summary>
                             <div className="pt-6 space-y-6">
                               {unfulfilledThemes.map((theme) => (

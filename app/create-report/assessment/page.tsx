@@ -56,12 +56,20 @@ type AssessmentDraft = {
   discoveredPillars: string[];
 };
 
-const FINALIZE_STEPS = [
-  "Menganalisis transkrip…",
-  "Mencocokkan kriteria CDS…",
-  "Menyusun rencana penanganan…",
-  "Merapikan laporan akhir…",
-];
+const FINALIZE_STEPS = {
+  id: [
+    "Menganalisis transkrip…",
+    "Mencocokkan kriteria CDS…",
+    "Menyusun rencana penanganan…",
+    "Merapikan laporan akhir…",
+  ],
+  en: [
+    "Analysing the conversation…",
+    "Matching CDS criteria…",
+    "Preparing the support plan…",
+    "Polishing the report…",
+  ],
+} as const;
 
 // Mobile Chrome can emit a new final result that repeats the tail of the
 // previous result (for example, "aku melihat" followed by "aku melihat Ahmad").
@@ -106,8 +114,10 @@ export default function AssessmentPage() {
   const [discoveredCount, setDiscoveredCount] = useState(0);
   const [discoveredPillars, setDiscoveredPillars] = useState<string[]>([]);
 
-  const { selectedModel, temperature } = useSettings();
-  const { speak, stop: stopVoice, unlock: unlockVoice } = useCDSVoice();
+  const { selectedModel, temperature, language } = useSettings();
+  const isEnglish = language === "en";
+  const finalizeSteps = FINALIZE_STEPS[language];
+  const { speak, stop: stopVoice, unlock: unlockVoice } = useCDSVoice(language);
   const recognitionRef = useRef<any>(null);
   // Tracks user *intent* to record — survives iOS onend auto-fires
   const shouldRecordRef = useRef(false);
@@ -171,7 +181,7 @@ export default function AssessmentPage() {
       return;
     }
     const stepInterval = setInterval(() => {
-      setFinalizeStepIndex((i) => (i + 1) % FINALIZE_STEPS.length);
+      setFinalizeStepIndex((i) => (i + 1) % finalizeSteps.length);
     }, 2600);
     const progressInterval = setInterval(() => {
       setFinalizeProgress((p) => (p < 92 ? p + (92 - p) * 0.06 : p));
@@ -218,7 +228,7 @@ export default function AssessmentPage() {
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'id-ID';
+    recognition.lang = language === 'en' ? 'en-US' : 'id-ID';
     recognition.continuous = !isIOS;
     recognition.interimResults = true;
 
@@ -264,11 +274,11 @@ export default function AssessmentPage() {
       if (error === 'not-allowed' || error === 'service-not-allowed') {
         shouldRecordRef.current = false;
         setIsRecording(false);
-        setMicError('Akses mikrofon ditolak. Izinkan di pengaturan browser lalu coba lagi.');
+        setMicError(isEnglish ? 'Microphone access was denied. Allow it in your browser settings, then try again.' : 'Akses mikrofon ditolak. Izinkan di pengaturan browser lalu coba lagi.');
       } else if (error === 'network') {
         shouldRecordRef.current = false;
         setIsRecording(false);
-        setMicError('Koneksi bermasalah. Coba lagi.');
+        setMicError(isEnglish ? 'Connection problem. Please try again.' : 'Koneksi bermasalah. Coba lagi.');
       }
       // 'no-speech' and 'aborted' are non-fatal — onend will handle the restart
     };
@@ -279,7 +289,7 @@ export default function AssessmentPage() {
       shouldRecordRef.current = false;
       recognition.abort?.();
     };
-  }, []);
+  }, [isEnglish, language]);
 
   // Converts a Blob to a base64 string (strips the data-URL prefix)
   const blobToBase64 = (blob: Blob): Promise<string> =>
@@ -314,7 +324,7 @@ export default function AssessmentPage() {
           const text = await transcribeAudio(base64, mimeType, studentId);
           if (text) setCurrentInput((prev) => (prev ? prev + ' ' + text : text).trim());
         } catch {
-          setMicError('Transkripsi gagal. Coba lagi.');
+          setMicError(isEnglish ? 'Transcription failed. Please try again.' : 'Transkripsi gagal. Coba lagi.');
         } finally {
           setIsTranscribing(false);
         }
@@ -323,7 +333,7 @@ export default function AssessmentPage() {
       recorder.start();
       setIsRecording(true);
     } catch {
-      setMicError('Akses mikrofon ditolak. Izinkan di pengaturan browser lalu coba lagi.');
+      setMicError(isEnglish ? 'Microphone access was denied. Allow it in your browser settings, then try again.' : 'Akses mikrofon ditolak. Izinkan di pengaturan browser lalu coba lagi.');
     }
   };
 
@@ -396,8 +406,15 @@ export default function AssessmentPage() {
         previousAccumulatedThemes: discoveredPillars,
         previousAccumulatedCount: discoveredPillars.length,
       });
-      const transcript = newMessages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
-      const result = await processInterviewStep(transcript, discoveredPillars, studentId || undefined, selectedModel, temperature);
+      const transcript = newMessages.map(m => `${m.role === 'teacher' ? (isEnglish ? 'Teacher' : t.ustadz) : 'AI'}: ${m.text}`).join('\n');
+      const result = await processInterviewStep(
+        transcript,
+        discoveredPillars,
+        studentId || undefined,
+        selectedModel,
+        temperature,
+        language,
+      );
 
       if (result.reply) {
         const newDiscovered = Array.isArray(result.discoveredPillars) ? result.discoveredPillars : [];
@@ -429,7 +446,7 @@ export default function AssessmentPage() {
   const handleFinalize = async () => {
     setIsFinalizing(true);
     setIsProcessing(true);
-    const fullTranscript = messages.map(m => `${m.role === 'teacher' ? 'Guru' : 'AI'}: ${m.text}`).join('\n');
+    const fullTranscript = messages.map(m => `${m.role === 'teacher' ? (isEnglish ? 'Teacher' : t.ustadz) : 'AI'}: ${m.text}`).join('\n');
 
     try {
       console.log('[Finalize][Client] Sending finalization request', {
@@ -443,6 +460,7 @@ export default function AssessmentPage() {
         discoveredPillars,
         selectedModel,
         temperature,
+        language,
       );
       console.log('[Finalize][Client] Final analysis received', {
         statusSummary: analysis?.status_summary,
@@ -522,7 +540,7 @@ export default function AssessmentPage() {
             colorIndex={0}
           />
           <div>
-            <h1 className="text-base font-black text-slate-900 leading-tight">Diskusi dengan CDS</h1>
+            <h1 className="text-base font-black text-slate-900 leading-tight">{isEnglish ? "Discussion with CDS" : "Diskusi dengan CDS"}</h1>
             <p className="text-[10px] text-brand-600 font-black uppercase tracking-widest leading-none">{studentName}</p>
           </div>
         </div>
@@ -533,7 +551,7 @@ export default function AssessmentPage() {
           style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}
         >
           <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-          <span className="text-xs font-black text-brand-700">{discoveredCount} Topik</span>
+          <span className="text-xs font-black text-brand-700">{discoveredCount} {isEnglish ? "Topics" : "Topik"}</span>
         </div>
       </header>
 
@@ -546,7 +564,7 @@ export default function AssessmentPage() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
             </span>
             <p className="text-[11px] font-bold text-red-500">
-              Rekaman aktif — tekan <span className="font-black">stop</span> sebelum kirim pesan
+              {isEnglish ? "Recording is active — press " : "Rekaman aktif — tekan "}<span className="font-black">stop</span>{isEnglish ? " before sending a message" : " sebelum kirim pesan"}
             </p>
           </div>
         </div>
@@ -563,7 +581,7 @@ export default function AssessmentPage() {
               <Quote size={34} className="text-slate-300" />
             </div>
             <p className="text-base font-black text-slate-400 max-w-[220px] leading-snug">
-              Ceritakan observasi tentang {studentName}…
+              {isEnglish ? `Share an observation about ${studentName}…` : `Ceritakan observasi tentang ${studentName}…`}
             </p>
           </div>
         )}
@@ -633,7 +651,7 @@ export default function AssessmentPage() {
               style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
             >
               <Loader2 size={14} className="animate-spin text-brand-500" />
-              <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Berpikir…</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-wider">{isEnglish ? "Thinking…" : "Berpikir…"}</span>
             </div>
           </div>
         )}
@@ -672,7 +690,7 @@ export default function AssessmentPage() {
             value={currentInput}
             onChange={(e) => setCurrentInput(e.target.value)}
             onKeyDown={handleInputKeyDown}
-            placeholder="Ketik atau bicara…"
+            placeholder={isEnglish ? "Type or speak…" : "Ketik atau bicara…"}
             rows={1}
             className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 py-2.5 leading-5 resize-none max-h-36 overflow-y-auto"
           />
@@ -692,8 +710,8 @@ export default function AssessmentPage() {
         </div>
 
         <p className="mt-2 text-center text-[10px] text-slate-400 font-bold">
-          <span className="hidden md:inline">Enter untuk kirim · Shift+Enter baris baru</span>
-          <span className="md:hidden">Enter untuk baris baru</span>
+          <span className="hidden md:inline">{isEnglish ? "Enter to send · Shift+Enter for a new line" : "Enter untuk kirim · Shift+Enter baris baru"}</span>
+          <span className="md:hidden">{isEnglish ? "Enter for a new line" : "Enter untuk baris baru"}</span>
         </p>
 
         {messages.length >= 2 && (
@@ -710,12 +728,12 @@ export default function AssessmentPage() {
             {isFinalizing ? (
               <>
                 <Loader2 size={16} className="animate-spin text-brand-400" />
-                Menyusun Laporan…
+                {isEnglish ? "Creating report…" : "Menyusun Laporan…"}
               </>
             ) : (
               <>
                 <Sparkles size={16} className="text-brand-400" />
-                Selesai & Buat Laporan
+                {isEnglish ? "Finish & Create Report" : "Selesai & Buat Laporan"}
               </>
             )}
           </button>
@@ -730,7 +748,7 @@ export default function AssessmentPage() {
               />
             </div>
             <p className="text-center text-[10px] font-bold text-slate-400">
-              {FINALIZE_STEPS[finalizeStepIndex]}
+              {finalizeSteps[finalizeStepIndex]}
             </p>
           </div>
         )}
@@ -738,13 +756,13 @@ export default function AssessmentPage() {
 
       <ConfirmModal
         isOpen={pendingNavigation !== null}
-        title={pendingNavigation === 'finalize' ? 'Buat laporan sekarang?' : 'Keluar dari percakapan?'}
+        title={pendingNavigation === 'finalize' ? (isEnglish ? 'Create the report now?' : 'Buat laporan sekarang?') : (isEnglish ? 'Leave this conversation?' : 'Keluar dari percakapan?')}
         description={pendingNavigation === 'finalize'
-          ? 'Pastikan percakapan sudah cukup. Setelah laporan dibuat, Anda masih bisa kembali untuk melanjutkan percakapan.'
-          : 'Percakapan Anda akan disimpan agar bisa dilanjutkan nanti.'}
-        confirmLabel={pendingNavigation === 'finalize' ? 'Buat laporan' : 'Keluar'}
+          ? (isEnglish ? 'Make sure the conversation is sufficient. You can return and continue after the report is created.' : 'Pastikan percakapan sudah cukup. Setelah laporan dibuat, Anda masih bisa kembali untuk melanjutkan percakapan.')
+          : (isEnglish ? 'Your conversation will be saved so you can continue later.' : 'Percakapan Anda akan disimpan agar bisa dilanjutkan nanti.')}
+        confirmLabel={pendingNavigation === 'finalize' ? (isEnglish ? 'Create report' : 'Buat laporan') : (isEnglish ? 'Leave' : 'Keluar')}
         confirmVariant={pendingNavigation === 'finalize' ? 'success' : 'danger'}
-        cancelLabel="Tetap di sini"
+        cancelLabel={isEnglish ? "Stay here" : "Tetap di sini"}
         onCancel={() => setPendingNavigation(null)}
         onConfirm={() => {
           const action = pendingNavigation;

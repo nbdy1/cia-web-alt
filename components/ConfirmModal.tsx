@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useSettings } from "@/lib/context/settings-context";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -17,13 +18,17 @@ export function ConfirmModal({
   isOpen,
   title,
   description,
-  confirmLabel = "Ya",
-  cancelLabel = "Batal",
+  confirmLabel,
+  cancelLabel,
   confirmVariant = "danger",
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const { language } = useSettings();
   if (!isOpen) return null;
+
+  const resolvedConfirmLabel = confirmLabel ?? (language === "en" ? "Yes" : "Ya");
+  const resolvedCancelLabel = cancelLabel ?? (language === "en" ? "Cancel" : "Batal");
 
   const isSuccess = confirmVariant === "success";
   const ConfirmIcon = isSuccess ? CheckCircle2 : AlertTriangle;
@@ -48,14 +53,14 @@ export function ConfirmModal({
             onClick={onCancel}
             className="flex-1 py-3.5 rounded-2xl font-black text-sm text-slate-500 bg-slate-100 active:translate-y-px transition-all"
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </button>
           <button
             onClick={onConfirm}
             className={`flex-1 py-3.5 rounded-2xl font-black text-sm text-white active:translate-y-1 transition-transform ${isSuccess ? "bg-brand-500" : "bg-rose-500"}`}
             style={{ boxShadow: isSuccess ? "0 4px 0 0 var(--brand-700)" : "0 4px 0 0 #be123c" }}
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </button>
         </div>
       </div>

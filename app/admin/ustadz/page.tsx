@@ -33,6 +33,8 @@ const isAdminTier = (role: string) => role === 'admin' || role === 'owner';
 export default function ManageUstadzPage() {
   const { organizationId } = useUserRole();
   const t = useTerminology();
+  const isEnglish = t.language === 'en';
+  const locale = isEnglish ? 'en-US' : 'id-ID';
   const [ustadzList, setUstadzList] = useState<any[]>([]);
   const [removedList, setRemovedList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,7 +146,7 @@ export default function ManageUstadzPage() {
         throw new Error(result.error || "Gagal mendaftarkan pengguna baru");
       }
 
-      setModalSuccess("Pengguna berhasil didaftarkan!");
+      setModalSuccess(isEnglish ? "User added successfully!" : "Pengguna berhasil didaftarkan!");
       setFormData({ name: '', email: '', password: '', role: 'ustadz' });
       fetchUstadz();
       setTimeout(() => { setIsModalOpen(false); setModalSuccess(null); }, 2000);
@@ -198,7 +200,7 @@ export default function ManageUstadzPage() {
 
   const handleRemoveUstadz = async () => {
     if (!userToRemove || !removeReason.trim()) {
-      setRemoveError("Alasan penghapusan wajib diisi.");
+      setRemoveError(isEnglish ? "A removal reason is required." : "Alasan penghapusan wajib diisi.");
       return;
     }
     setIsRemoving(true);
@@ -244,8 +246,8 @@ export default function ManageUstadzPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Manajemen Pengguna</h2>
-          <p className="text-slate-400 text-sm font-bold mt-0.5">Kelola daftar {t.ustadz} dan Admin</p>
+          <h2 className="text-2xl font-black text-slate-800">{isEnglish ? "User management" : "Manajemen Pengguna"}</h2>
+          <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `Manage ${t.ustadz.toLowerCase()}s and administrators` : `Kelola daftar ${t.ustadz} dan Admin`}</p>
         </div>
         {!showRemoved && (
           <div className="flex flex-wrap gap-2">
@@ -255,7 +257,7 @@ export default function ManageUstadzPage() {
               className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
               style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
             >
-              <UserPlus size={15} /> Tambah Pengguna
+              <UserPlus size={15} /> {isEnglish ? "Add user" : "Tambah Pengguna"}
             </button>
           </div>
         )}
@@ -268,14 +270,14 @@ export default function ManageUstadzPage() {
           className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={!showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
         >
-          Aktif ({ustadzList.length})
+          {isEnglish ? "Active" : "Aktif"} ({ustadzList.length})
         </button>
         <button
           onClick={() => { setShowRemoved(true); setSearchQuery(''); }}
           className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${showRemoved ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={showRemoved ? { boxShadow: "0 3px 0 0 #b91c1c" } : {}}
         >
-          Dinonaktifkan ({removedList.length})
+          {isEnglish ? "Deactivated" : "Dinonaktifkan"} ({removedList.length})
         </button>
       </div>
 
@@ -284,7 +286,7 @@ export default function ManageUstadzPage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
-          placeholder={showRemoved ? "Cari pengguna yang dinonaktifkan…" : "Cari nama, email, atau role…"}
+          placeholder={showRemoved ? (isEnglish ? "Search deactivated users…" : "Cari pengguna yang dinonaktifkan…") : (isEnglish ? "Search name, email, or role…" : "Cari nama, email, atau role…")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
@@ -330,7 +332,7 @@ export default function ManageUstadzPage() {
                 {showRemoved && (
                   <div className="mt-2 p-2.5 bg-rose-50 border border-rose-100 rounded-xl">
                     <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider mb-0.5">
-                      Dinonaktifkan {user.removed_at ? new Date(user.removed_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : ""}
+                      {isEnglish ? "Deactivated" : "Dinonaktifkan"} {user.removed_at ? new Date(user.removed_at).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" }) : ""}
                     </p>
                     <p className="text-xs font-bold text-rose-700 leading-snug">{user.removed_reason}</p>
                   </div>
@@ -369,8 +371,8 @@ export default function ManageUstadzPage() {
             : <Users className="w-8 h-8 mx-auto text-slate-200 mb-3" />}
           <p className="text-slate-400 font-black text-sm">
             {searchQuery
-              ? "Tidak ada hasil pencarian"
-              : showRemoved ? "Belum ada pengguna yang dinonaktifkan" : "Belum ada data pengguna"}
+              ? (isEnglish ? "No matching results" : "Tidak ada hasil pencarian")
+              : showRemoved ? (isEnglish ? "No deactivated users yet" : "Belum ada pengguna yang dinonaktifkan") : (isEnglish ? "No users yet" : "Belum ada data pengguna")}
           </p>
         </div>
       )}
@@ -386,7 +388,7 @@ export default function ManageUstadzPage() {
               <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}>
                 <UserPlus size={20} className="text-brand-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Tambah Pengguna</h3>
+              <h3 className="text-xl font-black text-slate-800">{isEnglish ? "Add user" : "Tambah Pengguna"}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">Daftarkan akun {t.ustadz} atau Admin baru.</p>
             </div>
             {modalError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={15} />{modalError}</div>}
@@ -395,7 +397,7 @@ export default function ManageUstadzPage() {
               <div><label className={labelCls}>Nama Lengkap *</label><input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ustaz Abdullah" className={inputCls} /></div>
               <div><label className={labelCls}>Email *</label><input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="ustadz@pesantren.com" className={inputCls} /></div>
               <div>
-                <label className={labelCls}>Password *</label>
+                <label className={labelCls}>{isEnglish ? "Password *" : "Password *"}</label>
                 <div className="relative">
                   <input type={showPassword ? "text" : "password"} required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} placeholder="••••••••" className={inputCls + " pr-12"} />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -411,7 +413,7 @@ export default function ManageUstadzPage() {
                 </select>
               </div>
               <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan Pengguna
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} {isEnglish ? "Save user" : "Simpan Pengguna"}
               </button>
             </form>
           </div>
@@ -430,7 +432,7 @@ export default function ManageUstadzPage() {
               <div className="w-11 h-11 bg-indigo-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #c7d2fe" }}>
                 <ShieldCheck size={20} className="text-indigo-500" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Ubah Role</h3>
+              <h3 className="text-xl font-black text-slate-800">{isEnglish ? "Change role" : "Ubah Role"}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">
                 <strong className="text-slate-700">{userToChangeRole.name}</strong> saat ini adalah{' '}
                 <span className={`font-black ${userToChangeRole.role === 'admin' ? 'text-slate-900' : 'text-brand-600'}`}>
@@ -460,7 +462,7 @@ export default function ManageUstadzPage() {
             </div>
             <div className="flex gap-3">
               <button onClick={() => setIsRoleModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-black py-3 rounded-xl hover:bg-slate-200 transition-colors">
-                Batal
+                {isEnglish ? "Cancel" : "Batal"}
               </button>
               <button
                 onClick={handleChangeRole}
@@ -488,7 +490,7 @@ export default function ManageUstadzPage() {
               <div className="w-11 h-11 bg-rose-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #fecaca" }}>
                 <UserX size={20} className="text-rose-500" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Nonaktifkan Pengguna</h3>
+              <h3 className="text-xl font-black text-slate-800">{isEnglish ? "Deactivate user" : "Nonaktifkan Pengguna"}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">
                 <strong className="text-slate-700">{userToRemove.name}</strong> akan disembunyikan dari daftar aktif. Data dan riwayatnya tetap tersimpan.
               </p>
@@ -496,7 +498,7 @@ export default function ManageUstadzPage() {
             {removeError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={15} />{removeError}</div>}
             <div className="space-y-4">
               <div>
-                <label className={labelCls}>Alasan Penghapusan *</label>
+                <label className={labelCls}>{isEnglish ? "Reason for removal *" : "Alasan Penghapusan *"}</label>
                 <textarea
                   required
                   rows={3}
@@ -508,7 +510,7 @@ export default function ManageUstadzPage() {
               </div>
               <div className="flex gap-3 pt-1">
                 <button onClick={() => setIsRemoveModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-black py-3 rounded-xl hover:bg-slate-200 transition-colors">
-                  Batal
+                  {isEnglish ? "Cancel" : "Batal"}
                 </button>
                 <button
                   onClick={handleRemoveUstadz}

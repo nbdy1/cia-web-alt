@@ -473,6 +473,8 @@ export default function RaporPage() {
   const params = useParams<{ id: string }>();
   const studentId = params.id;
   const t = useTerminology();
+  const isEnglish = t.language === "en";
+  const locale = isEnglish ? "en-US" : "id-ID";
 
   const [student, setStudent] = useState<Student | null>(null);
   const [periods, setPeriods] = useState<string[]>([]);
@@ -547,7 +549,7 @@ export default function RaporPage() {
 
   const handlePrint = () => {
     if (!student) return;
-    const printDate = new Date().toLocaleDateString("id-ID", {
+    const printDate = new Date().toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -564,7 +566,7 @@ export default function RaporPage() {
       t,
     });
     const win = window.open("", "_blank", "width=900,height=700");
-    if (!win) { alert("Popup diblokir. Izinkan popup untuk halaman ini."); return; }
+    if (!win) { alert(isEnglish ? "The print window was blocked. Allow pop-ups for this page." : "Popup diblokir. Izinkan popup untuk halaman ini."); return; }
     win.document.write(html);
     win.document.close();
   };
@@ -596,7 +598,7 @@ export default function RaporPage() {
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div className="flex-1">
-          <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Cetak Rapor</p>
+          <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">{isEnglish ? "Print report card" : "Cetak Rapor"}</p>
           <h1 className="text-sm font-black text-slate-900">{displayName}</h1>
         </div>
         <button
@@ -605,7 +607,7 @@ export default function RaporPage() {
           className="flex items-center gap-2 bg-violet-600 text-white px-4 py-2.5 rounded-xl font-black text-sm disabled:opacity-50"
           style={{ boxShadow: "0 3px 0 0 #5b21b6" }}
         >
-          <Printer size={15} /> Cetak
+          <Printer size={15} /> {isEnglish ? "Print" : "Cetak"}
         </button>
       </header>
 
@@ -613,7 +615,7 @@ export default function RaporPage() {
       {periods.length > 0 && (
         <div className="px-5 py-3 bg-white border-b-2 border-slate-100">
           <div className="flex items-center gap-3 max-w-3xl mx-auto">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">Periode:</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">{isEnglish ? "Period:" : "Periode:"}</span>
             <div className="flex flex-wrap gap-2">
               {periods.map((p) => (
                 <button
@@ -643,7 +645,7 @@ export default function RaporPage() {
         >
           <div className="bg-slate-800 px-8 py-5 flex justify-between items-center">
             <div>
-              <p className="text-xs font-black text-brand-400">Sekolah Impian — Laporan Nilai</p>
+              <p className="text-xs font-black text-brand-400">{isEnglish ? "Assessment report card" : "Sekolah Impian — Laporan Nilai"}</p>
               <p className="text-base font-black text-white">{displayName}</p>
             </div>
             <p className="text-sm text-slate-300 font-bold">{selectedPeriod}</p>
@@ -651,7 +653,7 @@ export default function RaporPage() {
 
           <div className="px-8 py-6 space-y-6">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Nilai Per Mata Pelajaran — {selectedPeriod || "—"}
+              {isEnglish ? "Scores by subject" : "Nilai Per Mata Pelajaran"} — {selectedPeriod || "—"}
             </p>
 
             {/* Score tables */}
@@ -661,17 +663,17 @@ export default function RaporPage() {
                   <ClipboardList size={22} />
                 </div>
                 <h2 className="text-base font-black text-slate-900">
-                  Nilai CMS belum diisi
+                  {isEnglish ? "CMS scores have not been entered" : "Nilai CMS belum diisi"}
                 </h2>
                 <p className="mt-2 text-sm font-bold leading-relaxed text-slate-500">
-                  Isi nilai terlebih dahulu agar preview rapor siap ditampilkan dan dicetak.
+                  {isEnglish ? "Enter scores first so the report-card preview can be displayed and printed." : "Isi nilai terlebih dahulu agar preview rapor siap ditampilkan dan dicetak."}
                 </p>
                 <Link
                   href={`/students/${studentId}/scores`}
                   className="mt-5 inline-flex items-center justify-center rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-black text-white"
                   style={{ boxShadow: "0 3px 0 0 #5b21b6" }}
                 >
-                  Input Nilai CMS
+                  {isEnglish ? "Enter CMS scores" : "Input Nilai CMS"}
                 </Link>
               </div>
             ) : loading ? (
@@ -687,7 +689,7 @@ export default function RaporPage() {
                       <span className="text-white font-black text-sm">{subj}</span>
                     </div>
                     <div className="grid grid-cols-[2fr_1fr_1fr_1fr] border-b-2 border-slate-100 bg-slate-50">
-                      {["Jenis Nilai", "Nilai Harian", "Nilai Bulanan", "Nilai Akhir"].map((h, i) => (
+                      {(isEnglish ? ["Score type", "Daily", "Monthly", "Final"] : ["Jenis Nilai", "Nilai Harian", "Nilai Bulanan", "Nilai Akhir"]).map((h, i) => (
                         <div
                           key={h}
                           className={`px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-wider ${i > 0 ? "text-center" : ""}`}
@@ -725,7 +727,7 @@ export default function RaporPage() {
             {!loading && !hasNoScorePeriods && (
               <div className="border-t-2 border-slate-100 pt-6 space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Rekapitulasi CDS — Ketercapaian Sub-Indikator
+                  {isEnglish ? "CDS recap — sub-indicator achievement" : "Rekapitulasi CDS — Ketercapaian Sub-Indikator"}
                 </p>
 
                 {/* Category summary cards */}
@@ -791,7 +793,7 @@ export default function RaporPage() {
                       <div className="p-4 space-y-1.5">
                         {/* Theme bars */}
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                          Pemenuhan Per Tema
+                          {isEnglish ? "Fulfillment by theme" : "Pemenuhan Per Tema"}
                         </p>
                         {cat.data.themes.map((theme, i) => {
                           const { pct, fulfilled, total } = themeStats[i];
@@ -813,7 +815,7 @@ export default function RaporPage() {
                         {/* Sub-indicator details per theme */}
                         <div className="border-t-2 border-slate-100 mt-4 pt-4 space-y-3">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                            Sub-Indikator Terpenuhi
+                            {isEnglish ? "Fulfilled sub-indicators" : "Sub-Indikator Terpenuhi"}
                           </p>
                           {cat.data.themes.map((theme, i) => {
                             // Theme-level phase: fulfilled / total sub-indicators for this theme
@@ -858,7 +860,7 @@ export default function RaporPage() {
                                           const rowCls = tier === "kuat" ? "border-brand-100 bg-brand-50" : tier === "tumbuh" ? "border-amber-100 bg-amber-50/60" : "border-slate-100 bg-slate-50/50";
                                           const iconCls = tier === "kuat" ? "text-brand-500" : tier === "tumbuh" ? "text-amber-400" : "text-slate-300";
                                           const badgeCls = tier === "kuat" ? "bg-brand-500 text-white" : tier === "tumbuh" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500";
-                                          const label = tier === "kuat" ? "Kuat" : tier === "tumbuh" ? "Tumbuh" : "Benih";
+                                          const label = tier === "kuat" ? (isEnglish ? "Strong" : "Kuat") : tier === "tumbuh" ? (isEnglish ? "Growing" : "Tumbuh") : (isEnglish ? "Emerging" : "Benih");
                                           return (
                                             <div key={sIdx} className={`flex items-start gap-2 px-2.5 py-2 rounded-lg border ${rowCls}`}>
                                               <CheckCircle2 size={13} className={`${iconCls} mt-0.5 shrink-0`} />
@@ -889,13 +891,13 @@ export default function RaporPage() {
             {/* Signatures */}
             <div className="border-t-2 border-slate-100 pt-6">
               <div className="grid grid-cols-2 gap-8">
-                {[`${t.ustadz} / Wali Kelas`, "Orang Tua / Wali"].map((label) => (
+                {[`${t.ustadz} / ${isEnglish ? "Class advisor" : "Wali Kelas"}`, isEnglish ? "Parent / Guardian" : "Orang Tua / Wali"].map((label) => (
                   <div key={label} className="text-center">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-12">
                       {label}
                     </p>
                     <div className="border-b-2 border-slate-300 mb-2" />
-                    <p className="text-[10px] text-slate-400 font-bold">Tanda Tangan & Nama</p>
+                    <p className="text-[10px] text-slate-400 font-bold">{isEnglish ? "Signature & name" : "Tanda Tangan & Nama"}</p>
                   </div>
                 ))}
               </div>

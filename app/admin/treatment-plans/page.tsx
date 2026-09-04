@@ -48,6 +48,8 @@ function parsePlan(raw: any) {
 export default function TreatmentPlansPage() {
   const { activeOrganizationId } = useAuth();
   const t = useTerminology();
+  const isEnglish = t.language === 'en';
+  const locale = isEnglish ? 'en-US' : 'id-ID';
   const [rows, setRows] = useState<PlanRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,7 +101,7 @@ export default function TreatmentPlansPage() {
             studentId: student?.id,
             studentName: student?.name ?? t.santri,
             studentPhoto: student?.photo_url ?? null,
-            ustadzName: nameById.get(student?.assigned_ustadz_id) ?? `Belum ada ${t.ustadz} yang dipasangkan`,
+            ustadzName: nameById.get(student?.assigned_ustadz_id) ?? (isEnglish ? `No ${t.ustadz.toLowerCase()} assigned` : `Belum ada ${t.ustadz} yang dipasangkan`),
             priorityTheme: treatment.priority_theme ?? '',
             actionPlan: treatment.action_plan ?? '',
             status,
@@ -114,7 +116,7 @@ export default function TreatmentPlansPage() {
     }
 
     fetchData();
-  }, [activeOrganizationId]);
+  }, [activeOrganizationId, isEnglish, t.ustadz]);
 
   const filteredRows = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -137,21 +139,21 @@ export default function TreatmentPlansPage() {
   return (
     <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
       <div>
-        <h2 className="text-2xl font-black text-slate-800">Rencana Penanganan</h2>
+        <h2 className="text-2xl font-black text-slate-800">{isEnglish ? 'Support plans' : 'Rencana Penanganan'}</h2>
         <p className="text-slate-400 text-sm font-bold mt-0.5">
-          Semua rencana penanganan yang dibuat {t.ustadzLower}, dan status penyelesaiannya
+          {isEnglish ? `All support plans created by ${t.ustadzLower}s and their completion status` : `Semua rencana penanganan yang dibuat ${t.ustadzLower}, dan status penyelesaiannya`}
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
-          <Lightbulb size={10} /> {rows.length} Rencana
+          <Lightbulb size={10} /> {rows.length} {isEnglish ? 'Plans' : 'Rencana'}
         </div>
         <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
-          <CheckCircle2 size={10} /> {doneCount} Selesai
+          <CheckCircle2 size={10} /> {doneCount} {isEnglish ? 'Completed' : 'Selesai'}
         </div>
         <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
-          <XCircle size={10} /> {declinedCount} Ditolak
+          <XCircle size={10} /> {declinedCount} {isEnglish ? 'Declined' : 'Ditolak'}
         </div>
       </div>
 
@@ -160,7 +162,7 @@ export default function TreatmentPlansPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder={`Cari ${t.santriLower}, ${t.ustadzLower}, atau tema…`}
+            placeholder={isEnglish ? `Search ${t.santriLower}, ${t.ustadzLower}, or theme…` : `Cari ${t.santriLower}, ${t.ustadzLower}, atau tema…`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
@@ -169,10 +171,10 @@ export default function TreatmentPlansPage() {
         </div>
         <div className="flex bg-slate-100 p-1 rounded-2xl shrink-0">
           {([
-            { id: 'all', label: 'Semua' },
-            { id: 'pending', label: 'Belum Selesai' },
-            { id: 'done', label: 'Selesai' },
-            { id: 'declined', label: 'Ditolak' },
+            { id: 'all', label: isEnglish ? 'All' : 'Semua' },
+            { id: 'pending', label: isEnglish ? 'Pending' : 'Belum Selesai' },
+            { id: 'done', label: isEnglish ? 'Completed' : 'Selesai' },
+            { id: 'declined', label: isEnglish ? 'Declined' : 'Ditolak' },
           ] as { id: FilterOption; label: string }[]).map((opt) => (
             <button
               key={opt.id}
@@ -217,15 +219,15 @@ export default function TreatmentPlansPage() {
                 </div>
                 {row.status === 'completed' ? (
                   <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                    <CheckCircle2 size={10} /> Selesai
+                    <CheckCircle2 size={10} /> {isEnglish ? 'Completed' : 'Selesai'}
                   </span>
                 ) : row.status === 'declined' ? (
                   <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
-                    <XCircle size={10} /> Ditolak
+                    <XCircle size={10} /> {isEnglish ? 'Declined' : 'Ditolak'}
                   </span>
                 ) : (
                   <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
-                    <Clock size={10} /> Belum
+                    <Clock size={10} /> {isEnglish ? 'Pending' : 'Belum'}
                   </span>
                 )}
               </div>
@@ -252,9 +254,9 @@ export default function TreatmentPlansPage() {
 
               <div className="flex items-center gap-1.5 mt-3 text-[10px] font-bold text-slate-300">
                 <FileText size={11} />
-                {new Date(row.createdAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                {new Date(row.createdAt).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" })}
                 {" · "}
-                {new Date(row.createdAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                {new Date(row.createdAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
               </div>
             </Link>
           ))}
@@ -263,7 +265,7 @@ export default function TreatmentPlansPage() {
         <div className="text-center py-16 bg-white rounded-[1.5rem] border-2 border-dashed border-slate-200">
           <Lightbulb className="w-8 h-8 mx-auto text-slate-200 mb-3" />
           <p className="text-slate-400 font-black text-sm">
-            {searchQuery || filter !== 'all' ? "Tidak ada hasil" : "Belum ada rencana penanganan"}
+            {searchQuery || filter !== 'all' ? (isEnglish ? 'No matching results' : 'Tidak ada hasil') : (isEnglish ? 'No support plans yet' : 'Belum ada rencana penanganan')}
           </p>
         </div>
       )}

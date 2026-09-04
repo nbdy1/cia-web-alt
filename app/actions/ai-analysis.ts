@@ -55,6 +55,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { recordUsage, withUsageContext } from "@/lib/usage/usage-tracker";
 import { checkQuota } from "@/lib/usage/quota";
 import { buildFinalAnalysisPrompt, buildInterviewPrompt } from "@/lib/data/prompts";
+import { normalizeAppLanguage, type AppLanguage } from "@/lib/data/language";
 import {
   normalise,
   sanitizeFreeText,
@@ -425,6 +426,7 @@ export async function generateStudentProfile(
   studentId: string,
   selectedModel: string = CHAT_MODEL,
   temperature: number = DEFAULT_TEMPERATURE,
+  language: AppLanguage = "id",
 ): Promise<void> {
   return withUsageContext({ purpose: "profile_summary", studentId }, async () => {
     try {
@@ -486,7 +488,8 @@ export async function generateStudentProfile(
       })
       .join("\n\n");
 
-    const systemPrompt = `Anda menganalisis riwayat asesmen karakter seorang santri di pesantren (Sekolah Impian). Berdasarkan laporan-laporan di bawah, buatlah PROFIL SANTRI yang ringkas (tidak lebih dari 200 kata) dalam Bahasa Indonesia.
+    const outputLanguage = normalizeAppLanguage(language);
+    const systemPrompt = `Anda menganalisis riwayat asesmen karakter seorang santri di pesantren (Sekolah Impian). Berdasarkan laporan-laporan di bawah, buatlah PROFIL SANTRI yang ringkas (tidak lebih dari 200 kata) dalam ${outputLanguage === "en" ? "English" : "Bahasa Indonesia"}.
 
 Profil harus mencakup:
 - Kesan umum kepribadian dan karakter santri secara alami
@@ -497,7 +500,7 @@ Profil harus mencakup:
 
 Tulis seperti catatan profesional yang disiapkan untuk seseorang yang belum pernah bertemu santri ini. Gunakan gaya narasi yang alami, bukan daftar poin.
 
-PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak boleh ada array, tidak boleh ada markdown, tidak boleh ada judul, tidak boleh ada key-value. Hanya paragraf teks biasa.`;
+PENTING: Kembalikan HANYA teks profil mentah — tidak boleh ada JSON, tidak boleh ada array, tidak boleh ada markdown, tidak boleh ada judul, tidak boleh ada key-value. Hanya paragraf teks biasa.${outputLanguage === "en" ? " Write the entire profile in English." : " Tulis seluruh profil dalam Bahasa Indonesia."}`;
 
     const profileText = await callOpenRouter(systemPrompt, reportContext, selectedModel, temperature);
 
@@ -565,6 +568,7 @@ export async function processInterviewStep(
   studentId?: string,
   selectedModel: string = CHAT_MODEL,
   temperature: number = DEFAULT_TEMPERATURE,
+  language: AppLanguage = "id",
 ) {
   return withUsageContext({ purpose: "interview_step", studentId }, async () => {
     try {
@@ -608,12 +612,14 @@ export async function processInterviewStep(
     console.log("[Knowledge RAG] Expanded query:", _kqExpanded);
     console.log("[Knowledge RAG] Sections retrieved:", knowledgeRows.map((r) => `${r.section} (${r.similarity?.toFixed(2)})`));
 
+    const outputLanguage = normalizeAppLanguage(language);
     const interviewPrompt = buildInterviewPrompt(
       frontierCriteriaContext,
       unexploredThemesContext,
       discoveredThemes,
       studentProfile,
-      knowledgeContext || undefined
+      knowledgeContext || undefined,
+      outputLanguage,
     );
     const frontierThemeSet = Array.from(new Set(frontierRows.map((r) => r.theme)));
 
@@ -653,6 +659,7 @@ export async function finalizeAssessment(
   discoveredThemes: string[] = [],
   selectedModel: string = CHAT_MODEL,
   temperature: number = DEFAULT_TEMPERATURE,
+  language: AppLanguage = "id",
 ) {
   return withUsageContext({ purpose: "finalize", studentId }, async () => {
     try {
@@ -773,10 +780,12 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     });
 
     // 3. Build a lean prompt injecting criteria + knowledge context + student profile
+    const outputLanguage = normalizeAppLanguage(language);
     const systemPrompt = buildFinalAnalysisPrompt(
       criteriaContext,
       studentProfile,
-      knowledgeContext || undefined
+      knowledgeContext || undefined,
+      outputLanguage,
     );
 
     // 4. Call the LLM
@@ -790,6 +799,7 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     let enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? [], organizationId);
     enrichedAssessments = await stripUngroundedDeclines(enrichedAssessments, studentId, db);
     parsed.analysis_version = 2;
+    parsed.output_language = outputLanguage;
     parsed.status_summary = sanitizeFreeText(String(parsed?.status_summary ?? ""));
     parsed.report_title = normalizeReportTitle(parsed?.report_title, parsed);
     parsed.model_used = selectedModel;

@@ -4,13 +4,14 @@ import { describe, it } from "node:test";
 import { getTerminology } from "../lib/data/terminology";
 
 describe("getTerminology", () => {
-  it("defaults to Ustadz/Santri for an unknown organization", () => {
-    assert.deepEqual(getTerminology("some-unknown-org-id"), {
-      ustadz: "Ustadz",
-      ustadzLower: "ustadz",
-      santri: "Santri",
-      santriLower: "santri",
-    });
+  it("defaults to Ustadz/Santri and Teacher/Student for an unknown organization", () => {
+    const t = getTerminology("some-unknown-org-id");
+    assert.equal(t.ustadz, "Ustadz");
+    assert.equal(t.ustadzLower, "ustadz");
+    assert.equal(t.santri, "Santri");
+    assert.equal(t.santriLower, "santri");
+    assert.equal(t.teacher, "Teacher");
+    assert.equal(t.student, "Student");
   });
 
   it("defaults to Ustadz/Santri for null or undefined org ids", () => {

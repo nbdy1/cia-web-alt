@@ -17,10 +17,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { runFullAnalysis } from '@/app/actions/ai-analysis';
+import { useSettings } from '@/lib/context/settings-context';
 
 export default function AnalysisPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { language } = useSettings();
   const [status, setStatus] = useState("Initializing CDS...");
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function AnalysisPage() {
       }
 
       setStatus("Consulting the 33 Pillars...");
-      const result = await runFullAnalysis(narrative);
+      const result = await runFullAnalysis(narrative, undefined, [], undefined, undefined, language);
 
       if (result?.error) {
         console.error("🔍 Client: AI Analysis failed:", result.error);

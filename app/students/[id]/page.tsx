@@ -19,8 +19,6 @@ import {
   FileText,
   ChevronRight,
   BookOpen,
-  ClipboardList,
-  Printer,
   UserCircle2,
   CheckCircle2,
   XCircle,
@@ -29,7 +27,9 @@ import {
 import Link from "next/link";
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { StudentAvatar } from "@/components/StudentAvatar";
-import { getTerminology } from "@/lib/data/terminology";
+import { StudentDetailActions } from "@/components/StudentDetailActions";
+import { getLocalizedTerminology } from "@/lib/data/terminology";
+import { getServerAppLanguage } from "@/lib/server/language";
 import { isTenantOrganization } from "@/lib/tenant-server";
 
 async function getStudentData(id: string) {
@@ -93,6 +93,9 @@ export default async function StudentProfile({
   searchParams?: Promise<{ from?: string | string[] }>;
 }) {
   const { id } = await params;
+  const language = await getServerAppLanguage();
+  const isEnglish = language === "en";
+  const locale = isEnglish ? "en-US" : "id-ID";
   const resolvedSearchParams = await searchParams;
   const { student, reports } = await getStudentData(id);
   const rawFrom = resolvedSearchParams?.from;
@@ -106,11 +109,11 @@ export default async function StudentProfile({
   if (!student)
     return (
       <div className="p-10 text-center text-slate-500 font-medium">
-        Santri tidak ditemukan.
+        {isEnglish ? "Student not found." : "Santri tidak ditemukan."}
       </div>
     );
 
-  const t = getTerminology(student.organization_id);
+  const t = getLocalizedTerminology(student.organization_id, language);
 
   return (
     <div className="min-h-screen bg-paper pb-20 font-sans">
@@ -141,34 +144,7 @@ export default async function StudentProfile({
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="grid grid-cols-2 gap-3 mb-2">
-          <Link
-            href={`/students/${student.id}/scores`}
-            className="flex items-center gap-2 px-4 py-3 justify-center font-black text-sm text-sky-700 bg-white rounded-2xl border-2 border-sky-200 active:translate-y-px transition-transform"
-            style={{ boxShadow: "0 4px 0 0 #bae6fd" }}
-          >
-            <ClipboardList size={16} />
-            Input Nilai CMS
-          </Link>
-          <Link
-            href={`/students/${student.id}/rapor`}
-            className="flex items-center gap-2 px-4 py-3 justify-center font-black text-sm text-violet-700 bg-white rounded-2xl border-2 border-violet-200 active:translate-y-px transition-transform"
-            style={{ boxShadow: "0 4px 0 0 #ddd6fe" }}
-          >
-            <Printer size={16} />
-            Cetak Rapor
-          </Link>
-        </div>
-
-        <Link
-          href={`/students/${student.id}/recap`}
-          className="flex items-center gap-2 px-5 py-3 w-full justify-center font-black text-sm text-brand-700 bg-white rounded-2xl border-2 border-brand-200 active:translate-y-px transition-transform"
-          style={{ boxShadow: "0 4px 0 0 var(--brand-300)" }}
-        >
-          <FileText size={16} />
-          Persentase CMS
-        </Link>
+        <StudentDetailActions studentId={student.id} />
       </div>
 
       <main className="px-6 space-y-6">
@@ -184,8 +160,8 @@ export default async function StudentProfile({
                 <UserCircle2 size={18} className="text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Profil {t.santri}</p>
-                <p className="text-[9px] text-amber-500 font-bold">Dihasilkan oleh AI dari riwayat laporan</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">{isEnglish ? `${t.santri} profile` : `Profil ${t.santri}`}</p>
+                <p className="text-[9px] text-amber-500 font-bold">{isEnglish ? "Generated from report history" : "Dihasilkan dari riwayat laporan"}</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-amber-200 text-amber-800">
@@ -259,7 +235,7 @@ export default async function StudentProfile({
         {/* Report count badge */}
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
-            <FileText size={9} /> {reports?.length || 0} Laporan
+            <FileText size={9} /> {reports?.length || 0} {isEnglish ? "Reports" : "Laporan"}
           </div>
         </div>
 
@@ -276,19 +252,19 @@ export default async function StudentProfile({
                     const status = getTreatmentStatus(report.treatment_plan);
                     const statusConfig = {
                       pending: {
-                        label: "Belum selesai",
+                        label: isEnglish ? "Pending" : "Belum selesai",
                         className: "bg-slate-100 text-slate-500 border-slate-200",
                         shadow: "#cbd5e1",
                         icon: <Clock3 size={10} />,
                       },
                       completed: {
-                        label: "Selesai",
+                        label: isEnglish ? "Completed" : "Selesai",
                         className: "bg-brand-100 text-brand-700 border-brand-200",
                         shadow: "var(--brand-300)",
                         icon: <CheckCircle2 size={10} />,
                       },
                       declined: {
-                        label: "Ditolak",
+                        label: isEnglish ? "Declined" : "Ditolak",
                         className: "bg-rose-100 text-rose-700 border-rose-200",
                         shadow: "#fda4af",
                         icon: <XCircle size={10} />,
@@ -311,16 +287,16 @@ export default async function StudentProfile({
                     </div>
                     <div className="min-w-0">
                       <p className="font-black text-slate-900 text-sm leading-tight">
-                        {report.title || "Laporan Perkembangan"}
+                        {report.title || (isEnglish ? "Development report" : "Laporan Perkembangan")}
                       </p>
                       <div className="flex items-center gap-2 mt-1 min-w-0 flex-nowrap overflow-hidden">
                         <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400">
                           <Calendar size={8} />
-                          {new Date(report.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                          {new Date(report.created_at).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" })}
                         </span>
                         {report.created_by_name && (
                           <span className="block min-w-0 max-w-[min(12rem,45vw)] overflow-hidden text-ellipsis whitespace-nowrap text-[10px] font-black text-brand-600">
-                            Dibuat oleh {report.created_by_name}
+                            {isEnglish ? "Created by" : "Dibuat oleh"} {report.created_by_name}
                           </span>
                         )}
                       </div>
@@ -335,7 +311,7 @@ export default async function StudentProfile({
           ) : (
             <div className="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
               <FileText className="w-10 h-10 mx-auto mb-3 text-slate-200" />
-              <p className="text-sm font-black text-slate-400">Belum ada laporan</p>
+              <p className="text-sm font-black text-slate-400">{isEnglish ? "No reports yet" : "Belum ada laporan"}</p>
             </div>
           )}
         </div>

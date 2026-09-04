@@ -14,9 +14,13 @@
 
 export interface Terminology {
   ustadz: string; // "Ustadz" | "Guru"
-  ustadzLower: string; // "ustadz" | "guru"
-  santri: string; // "Santri" | "Siswa"
-  santriLower: string; // "santri" | "siswa"
+ ustadzLower: string; // "ustadz" | "guru"
+ santri: string; // "Santri" | "Siswa"
+ santriLower: string; // "santri" | "siswa"
+  teacher: string;
+  teacherLower: string;
+  student: string;
+  studentLower: string;
 }
 
 const DEFAULT_TERMINOLOGY: Terminology = {
@@ -24,6 +28,10 @@ const DEFAULT_TERMINOLOGY: Terminology = {
   ustadzLower: "ustadz",
   santri: "Santri",
   santriLower: "santri",
+  teacher: "Teacher",
+  teacherLower: "teacher",
+  student: "Student",
+  studentLower: "student",
 };
 
 const ORG_TERMINOLOGY: Record<string, Terminology> = {
@@ -33,6 +41,10 @@ const ORG_TERMINOLOGY: Record<string, Terminology> = {
     ustadzLower: "guru",
     santri: "Siswa",
     santriLower: "siswa",
+    teacher: "Teacher",
+    teacherLower: "teacher",
+    student: "Student",
+    studentLower: "student",
   },
   // Limau Bendi School
   "cde16fd0-691d-4343-bacd-19c24cec6041": {
@@ -40,10 +52,28 @@ const ORG_TERMINOLOGY: Record<string, Terminology> = {
     ustadzLower: "guru",
     santri: "Murid",
     santriLower: "murid",
+    teacher: "Teacher",
+    teacherLower: "teacher",
+    student: "Student",
+    studentLower: "student",
   },
 };
 
 export function getTerminology(organizationId: string | null | undefined): Terminology {
   if (!organizationId) return DEFAULT_TERMINOLOGY;
   return ORG_TERMINOLOGY[organizationId] ?? DEFAULT_TERMINOLOGY;
+}
+
+export function getLocalizedTerminology(
+  organizationId: string | null | undefined,
+  language: "id" | "en" = "id",
+) {
+  const terminology = getTerminology(organizationId);
+  return {
+    ...terminology,
+    ustadz: language === "en" ? terminology.teacher : terminology.ustadz,
+    ustadzLower: language === "en" ? terminology.teacherLower : terminology.ustadzLower,
+    santri: language === "en" ? terminology.student : terminology.santri,
+    santriLower: language === "en" ? terminology.studentLower : terminology.santriLower,
+  };
 }

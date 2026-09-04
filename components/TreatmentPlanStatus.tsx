@@ -11,6 +11,7 @@
 import { useState, useTransition } from "react";
 import { CheckCircle2, Loader2, RotateCcw, XCircle } from "lucide-react";
 import { setTreatmentPlanStatus, type TreatmentPlanStatusValue } from "@/app/actions/reports";
+import { useSettings } from "@/lib/context/settings-context";
 
 interface Props {
   reportId: string;
@@ -20,6 +21,9 @@ interface Props {
 }
 
 export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote }: Props) {
+  const { language } = useSettings();
+  const isEnglish = language === "en";
+  const locale = isEnglish ? "en-US" : "id-ID";
   const [currentStatus, setCurrentStatus] = useState<TreatmentPlanStatusValue>(status);
   const [note, setNote] = useState("");
   const [savedNote, setSavedNote] = useState(outcomeNote ?? "");
@@ -63,14 +67,14 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-emerald-700">
             <CheckCircle2 size={16} />
-            <span className="text-xs font-black uppercase tracking-wider">Sudah Ditangani</span>
+            <span className="text-xs font-black uppercase tracking-wider">{isEnglish ? "Completed" : "Sudah Ditangani"}</span>
           </div>
           <button
             onClick={handleUndo}
             disabled={isPending}
             className="text-[10px] font-black text-emerald-600 hover:text-emerald-800 uppercase tracking-wider flex items-center gap-1"
           >
-            <RotateCcw size={11} /> Ubah
+            <RotateCcw size={11} /> {isEnglish ? "Change" : "Ubah"}
           </button>
         </div>
         {savedNote && (
@@ -78,9 +82,9 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
         )}
         {savedAt && (
           <p className="text-[10px] text-emerald-500 font-bold mt-2">
-            {new Date(savedAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+            {new Date(savedAt).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" })}
             {" · "}
-            {new Date(savedAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+            {new Date(savedAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
           </p>
         )}
       </div>
@@ -93,14 +97,14 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-rose-700">
             <XCircle size={16} />
-            <span className="text-xs font-black uppercase tracking-wider">Tidak Diterapkan</span>
+            <span className="text-xs font-black uppercase tracking-wider">{isEnglish ? "Not applied" : "Tidak Diterapkan"}</span>
           </div>
           <button
             onClick={handleUndo}
             disabled={isPending}
             className="text-[10px] font-black text-rose-600 hover:text-rose-800 uppercase tracking-wider flex items-center gap-1"
           >
-            <RotateCcw size={11} /> Ubah
+            <RotateCcw size={11} /> {isEnglish ? "Change" : "Ubah"}
           </button>
         </div>
         {savedNote && (
@@ -108,9 +112,9 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
         )}
         {savedAt && (
           <p className="text-[10px] text-rose-500 font-bold mt-2">
-            {new Date(savedAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+            {new Date(savedAt).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" })}
             {" · "}
-            {new Date(savedAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+            {new Date(savedAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
           </p>
         )}
       </div>
@@ -121,14 +125,14 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
   return (
     <div className="mt-4 bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 space-y-3">
       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-        Status Penanganan
+        {isEnglish ? "Support status" : "Status Penanganan"}
       </span>
 
       {draftAction && (
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder={draftAction === "completed" ? "Catatan hasil penanganan (opsional)…" : "Alasan tidak diterapkan (opsional)…"}
+          placeholder={draftAction === "completed" ? (isEnglish ? "Outcome note (optional)…" : "Catatan hasil penanganan (opsional)…") : (isEnglish ? "Reason it was not applied (optional)…" : "Alasan tidak diterapkan (opsional)…")}
           rows={2}
           autoFocus
           className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 text-xs font-medium text-slate-700 placeholder:text-slate-300 outline-none focus:border-brand-400 resize-none"
@@ -144,13 +148,13 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
             style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
           >
             {isPending ? <Loader2 size={14} className="shrink-0 animate-spin" /> : <CheckCircle2 size={14} className="shrink-0" />}
-            Konfirmasi Selesai
+            {isEnglish ? "Confirm completion" : "Konfirmasi Selesai"}
           </button>
           <button
             onClick={() => setDraftAction(null)}
             className="w-full py-2.5 rounded-xl bg-slate-200 text-slate-500 text-xs font-black"
           >
-            Batal
+            {isEnglish ? "Cancel" : "Batal"}
           </button>
         </div>
       ) : draftAction === "declined" ? (
@@ -162,13 +166,13 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
             style={{ boxShadow: "0 3px 0 0 #be123c" }}
           >
             {isPending ? <Loader2 size={14} className="shrink-0 animate-spin" /> : <XCircle size={14} className="shrink-0" />}
-            Konfirmasi Tidak Diterapkan
+            {isEnglish ? "Confirm not applied" : "Konfirmasi Tidak Diterapkan"}
           </button>
           <button
             onClick={() => setDraftAction(null)}
             className="w-full py-2.5 rounded-xl bg-slate-200 text-slate-500 text-xs font-black"
           >
-            Batal
+            {isEnglish ? "Cancel" : "Batal"}
           </button>
         </div>
       ) : (
@@ -178,14 +182,14 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
             className="flex-1 py-3 rounded-xl bg-white border-2 border-rose-200 text-rose-600 text-xs font-black flex items-center justify-center gap-1.5 active:translate-y-px transition-all"
             style={{ boxShadow: "0 3px 0 0 #fecdd3" }}
           >
-            <XCircle size={14} className="shrink-0" /> Tolak
+            <XCircle size={14} className="shrink-0" /> {isEnglish ? "Decline" : "Tolak"}
           </button>
           <button
             onClick={() => { setDraftAction("completed"); setNote(""); }}
             className="flex-1 py-3 rounded-xl bg-brand-500 text-white text-xs font-black flex items-center justify-center gap-1.5 active:translate-y-px transition-all"
             style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
           >
-            <CheckCircle2 size={14} className="shrink-0" /> Tandai Selesai
+            <CheckCircle2 size={14} className="shrink-0" /> {isEnglish ? "Mark complete" : "Tandai Selesai"}
           </button>
         </div>
       )}

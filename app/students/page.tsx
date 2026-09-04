@@ -63,19 +63,23 @@ const PAGE_SIZE = 10;
 
 type SortOption = "name-asc" | "recent-desc" | "tema-desc" | "subind-desc" | "laporan-desc";
 
-const SORT_OPTIONS: { id: SortOption; label: string }[] = [
-  { id: "name-asc", label: "Nama (A-Z)" },
-  { id: "recent-desc", label: "Terbaru" },
-  { id: "tema-desc", label: "Tema Terbanyak" },
-  { id: "subind-desc", label: "Sub-Indikator Terbanyak" },
-  { id: "laporan-desc", label: "Laporan Terbanyak" },
-];
+const SORT_OPTION_IDS: SortOption[] = ["name-asc", "recent-desc", "tema-desc", "subind-desc", "laporan-desc"];
+
+function getSortOptions(isEnglish: boolean): { id: SortOption; label: string }[] {
+  return [
+    { id: "name-asc", label: isEnglish ? "Name (A-Z)" : "Nama (A-Z)" },
+    { id: "recent-desc", label: isEnglish ? "Most recent" : "Terbaru" },
+    { id: "tema-desc", label: isEnglish ? "Most themes" : "Tema Terbanyak" },
+    { id: "subind-desc", label: isEnglish ? "Most sub-indicators" : "Sub-Indikator Terbanyak" },
+    { id: "laporan-desc", label: isEnglish ? "Most reports" : "Laporan Terbanyak" },
+  ];
+}
 
 function getInitialSort(): SortOption {
   if (typeof window === "undefined") return "name-asc";
   try {
     const stored = window.localStorage.getItem(SORT_STORAGE_KEY);
-    return SORT_OPTIONS.some((o) => o.id === stored) ? (stored as SortOption) : "name-asc";
+    return SORT_OPTION_IDS.some((id) => id === stored) ? (stored as SortOption) : "name-asc";
   } catch {
     return "name-asc";
   }
@@ -103,6 +107,9 @@ export default function StudentsAnalyticsPage() {
   const { user, activeOrganizationId } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const t = useTerminology();
+  const isEnglish = t.language === "en";
+  const locale = isEnglish ? "en-US" : "id-ID";
+  const sortOptions = getSortOptions(isEnglish);
 
   const [students, setStudents] = useState<StudentWithStats[]>([]);
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
@@ -352,7 +359,7 @@ export default function StudentsAnalyticsPage() {
         <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center animate-bounce-in" style={{ boxShadow: "0 4px 0 0 var(--brand-200)" }}>
           <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
         </div>
-        <p className="text-brand-600 text-xs font-black uppercase tracking-widest">Memuat data…</p>
+        <p className="text-brand-600 text-xs font-black uppercase tracking-widest">{isEnglish ? "Loading data…" : "Memuat data…"}</p>
       </div>
     );
   }
@@ -369,7 +376,7 @@ export default function StudentsAnalyticsPage() {
             <ChevronLeft size={16} />
           </div>
           <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">
-            Beranda
+            {isEnglish ? "Home" : "Beranda"}
           </span>
         </Link>
 
@@ -379,7 +386,7 @@ export default function StudentsAnalyticsPage() {
           </div>
           <div>
             <h1 className="text-3xl font-black text-slate-800 leading-none">{t.santri}</h1>
-            <p className="text-brand-600 text-xs font-black uppercase tracking-widest mt-0.5">Analitik & Histori</p>
+            <p className="text-brand-600 text-xs font-black uppercase tracking-widest mt-0.5">{isEnglish ? "Analytics & history" : "Analitik & Histori"}</p>
           </div>
         </div>
       </header>
@@ -401,7 +408,7 @@ export default function StudentsAnalyticsPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={`Cari nama atau NIS ${t.santriLower}…`}
+                placeholder={isEnglish ? `Search ${t.santriLower} name or ID…` : `Cari nama atau NIS ${t.santriLower}…`}
                 className="w-full border-2 border-slate-200 bg-white rounded-2xl py-3 pl-11 pr-10 font-bold text-sm text-slate-800 outline-none focus:border-brand-400 transition-all"
                 style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
               />
@@ -409,7 +416,7 @@ export default function StudentsAnalyticsPage() {
                 <button
                   onClick={() => setSearchQuery("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
-                  title="Bersihkan"
+                  title={isEnglish ? "Clear" : "Bersihkan"}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -423,7 +430,7 @@ export default function StudentsAnalyticsPage() {
                   isSortOpen ? "bg-brand-500 text-white border-brand-400" : "bg-white text-slate-500 border-slate-200"
                 }`}
                 style={{ boxShadow: isSortOpen ? "0 3px 0 0 var(--brand-700)" : "0 3px 0 0 #e2e8f0" }}
-                title="Urutkan"
+                title={isEnglish ? "Sort" : "Urutkan"}
               >
                 <ArrowUpDown className="w-4 h-4" />
               </button>
@@ -433,7 +440,7 @@ export default function StudentsAnalyticsPage() {
                   className="absolute right-0 top-[3.25rem] z-30 w-56 bg-white rounded-2xl border-2 border-slate-100 p-1.5 animate-fade-in"
                   style={{ boxShadow: "0 5px 0 0 #e2e8f0" }}
                 >
-                  {SORT_OPTIONS.map((option) => (
+                  {sortOptions.map((option) => (
                     <button
                       key={option.id}
                       onClick={() => {
@@ -457,7 +464,7 @@ export default function StudentsAnalyticsPage() {
             <div className="p-10 text-center bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
               <Users className="w-10 h-10 mx-auto mb-3 text-slate-200" />
               <p className="text-sm font-black text-slate-400">
-                {searchQuery ? `${t.santri} tidak ditemukan` : `Belum ada ${t.santriLower}`}
+                {searchQuery ? (isEnglish ? `${t.santri} not found` : `${t.santri} tidak ditemukan`) : (isEnglish ? `No ${t.santriLower}s yet` : `Belum ada ${t.santriLower}`)}
               </p>
             </div>
           ) : (
@@ -517,15 +524,15 @@ export default function StudentsAnalyticsPage() {
                       <div className="flex gap-2">
                         <div className="flex-1 bg-brand-50 rounded-xl py-2 px-3 text-center border border-brand-100">
                           <p className="text-base font-black text-brand-700">{student.themesExplored}</p>
-                          <p className="text-[9px] font-black text-brand-500 uppercase tracking-wider">Tema</p>
+                          <p className="text-[9px] font-black text-brand-500 uppercase tracking-wider">{isEnglish ? "Themes" : "Tema"}</p>
                         </div>
                         <div className="flex-1 bg-sky-50 rounded-xl py-2 px-3 text-center border border-sky-100">
                           <p className="text-base font-black text-sky-700">{student.fulfilledSubIndicators}</p>
-                          <p className="text-[9px] font-black text-sky-500 uppercase tracking-wider">Sub-Ind.</p>
+                          <p className="text-[9px] font-black text-sky-500 uppercase tracking-wider">{isEnglish ? "Sub-ind." : "Sub-Ind."}</p>
                         </div>
                         <div className="flex-1 bg-amber-50 rounded-xl py-2 px-3 text-center border border-amber-100">
                           <p className="text-base font-black text-amber-700">{student.reportsCount}</p>
-                          <p className="text-[9px] font-black text-amber-500 uppercase tracking-wider">Laporan</p>
+                          <p className="text-[9px] font-black text-amber-500 uppercase tracking-wider">{isEnglish ? "Reports" : "Laporan"}</p>
                         </div>
                       </div>
                     </div>
@@ -543,7 +550,7 @@ export default function StudentsAnalyticsPage() {
                     disabled={page === 0}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-white border-2 border-slate-200 text-slate-400 disabled:opacity-30 active:translate-y-px transition-all"
                     style={{ boxShadow: "0 2px 0 0 #e2e8f0" }}
-                    title="Sebelumnya"
+                    title={isEnglish ? "Previous" : "Sebelumnya"}
                   >
                     <ChevronLeft size={14} />
                   </button>
@@ -554,7 +561,7 @@ export default function StudentsAnalyticsPage() {
                       className={`rounded-full transition-all ${
                         dotIdx === page ? "w-5 h-2 bg-brand-500" : "w-2 h-2 bg-slate-200"
                       }`}
-                      title={`Halaman ${dotIdx + 1}`}
+                      title={isEnglish ? `Page ${dotIdx + 1}` : `Halaman ${dotIdx + 1}`}
                     />
                   ))}
                   <button
@@ -562,7 +569,7 @@ export default function StudentsAnalyticsPage() {
                     disabled={page === totalPages - 1}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-white border-2 border-slate-200 text-slate-400 disabled:opacity-30 active:translate-y-px transition-all"
                     style={{ boxShadow: "0 2px 0 0 #e2e8f0" }}
-                    title="Selanjutnya"
+                    title={isEnglish ? "Next" : "Selanjutnya"}
                   >
                     <ChevronRight size={14} />
                   </button>
@@ -576,14 +583,14 @@ export default function StudentsAnalyticsPage() {
         <section>
           <div className="flex items-center gap-2 mb-4">
             <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
-              <TrendingUp size={10} /> Histori Terbaru
+              <TrendingUp size={10} /> {isEnglish ? "Recent history" : "Histori Terbaru"}
             </div>
           </div>
           <div className="bg-white rounded-[2rem] overflow-hidden border-2 border-slate-100" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
             {recentReports.length === 0 ? (
               <div className="p-10 text-center text-slate-300">
                 <TrendingUp className="w-8 h-8 mx-auto mb-3" />
-                <p className="text-sm font-black text-slate-400">Belum ada laporan</p>
+                <p className="text-sm font-black text-slate-400">{isEnglish ? "No reports yet" : "Belum ada laporan"}</p>
               </div>
             ) : (
               recentReports.map((report: any, idx: number) => {
@@ -621,16 +628,16 @@ export default function StudentsAnalyticsPage() {
                             {report.title}
                           </p>
                         )}
-                        {report.createdByName && <p className="text-[10px] font-black text-brand-600 mt-0.5">Dibuat oleh {report.createdByName}</p>}
+                        {report.createdByName && <p className="text-[10px] font-black text-brand-600 mt-0.5">{isEnglish ? "Created by" : "Dibuat oleh"} {report.createdByName}</p>}
                         <p className="text-[10px] font-bold text-slate-400 mt-0.5">
-                          {new Date(report.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}
+                          {new Date(report.created_at).toLocaleDateString(locale, { day: "2-digit", month: "short" })}
                           {" · "}
-                          {new Date(report.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                          {new Date(report.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">{themesCount} tema</span>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">{themesCount} {isEnglish ? 'themes' : 'tema'}</span>
                       <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-100 text-sky-700">{fulfilledCount} SI</span>
                     </div>
                   </Link>
@@ -650,7 +657,7 @@ export default function StudentsAnalyticsPage() {
               className="w-full flex items-center justify-between gap-2 mb-4"
             >
               <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
-                <UserSearch size={10} /> Laporan {t.santriLower} Lain ({otherReports.length})
+                <UserSearch size={10} /> {isEnglish ? `Other ${t.santriLower} reports` : `Laporan ${t.santriLower} Lain`} ({otherReports.length})
               </div>
               <ChevronDown
                 size={16}
@@ -691,14 +698,14 @@ export default function StudentsAnalyticsPage() {
                               </p>
                             )}
                             <p className="text-[10px] font-bold text-slate-400 mt-0.5">
-                              {new Date(report.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}
+                              {new Date(report.created_at).toLocaleDateString(locale, { day: "2-digit", month: "short" })}
                               {" · "}
-                              {new Date(report.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                              {new Date(report.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                             </p>
                           </div>
                         </div>
                         <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 shrink-0">
-                          Bukan bimbingan Anda
+                          {isEnglish ? "Not assigned to you" : "Bukan bimbingan Anda"}
                         </span>
                       </Link>
                     ))}

@@ -38,18 +38,18 @@ import { useTerminology } from '@/lib/hooks/use-terminology';
 
 // Relative-time label for each student card's "terakhir input" badge — e.g. "3 jam lalu",
 // "Kemarin", "5 hari lalu", or "Belum ada laporan" if never inputted.
-function formatRelativeTime(dateStr: string): string {
+function formatRelativeTime(dateStr: string, language: "id" | "en"): string {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   const minute = 60_000, hour = 3_600_000, day = 86_400_000;
-  if (diffMs < minute) return "Baru saja";
-  if (diffMs < hour) return `${Math.floor(diffMs / minute)}m lalu`;
-  if (diffMs < day) return `${Math.floor(diffMs / hour)}j lalu`;
+  if (diffMs < minute) return language === "en" ? "Just now" : "Baru saja";
+  if (diffMs < hour) return language === "en" ? `${Math.floor(diffMs / minute)}m ago` : `${Math.floor(diffMs / minute)}m lalu`;
+  if (diffMs < day) return language === "en" ? `${Math.floor(diffMs / hour)}h ago` : `${Math.floor(diffMs / hour)}j lalu`;
   const days = Math.floor(diffMs / day);
-  if (days === 1) return "Kemarin";
-  if (days < 30) return `${days}hr lalu`;
+  if (days === 1) return language === "en" ? "Yesterday" : "Kemarin";
+  if (days < 30) return language === "en" ? `${days}d ago` : `${days}hr lalu`;
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months}bln lalu`;
-  return `${Math.floor(months / 12)}thn lalu`;
+  if (months < 12) return language === "en" ? `${months}mo ago` : `${months}bln lalu`;
+  return language === "en" ? `${Math.floor(months / 12)}y ago` : `${Math.floor(months / 12)}thn lalu`;
 }
 
 export default function CreateReport() {
@@ -66,6 +66,7 @@ export default function CreateReport() {
   const { role } = useUserRole();
   const { user, activeOrganizationId } = useAuth();
   const t = useTerminology();
+  const isEnglish = t.language === "en";
   const recognitionRef = useRef<any>(null);
   // Tracks user *intent* to listen — survives iOS onend auto-fires
   const shouldListenRef = useRef(false);
@@ -160,7 +161,7 @@ export default function CreateReport() {
     }
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return alert("Browser tidak mendukung fitur suara");
+    if (!SpeechRecognition) return alert(isEnglish ? "Your browser does not support voice input" : "Browser tidak mendukung fitur suara");
 
     // iOS Safari doesn't support continuous mode — simulate it by restarting on end
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -169,7 +170,7 @@ export default function CreateReport() {
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
 
-    recognition.lang = 'id-ID';
+    recognition.lang = isEnglish ? 'en-US' : 'id-ID';
     recognition.continuous = !isIOS;
     recognition.interimResults = true;
 
@@ -192,7 +193,7 @@ export default function CreateReport() {
       if (error === 'not-allowed' || error === 'service-not-allowed') {
         shouldListenRef.current = false;
         setIsListening(false);
-        alert("Akses mikrofon ditolak. Izinkan di pengaturan browser lalu coba lagi.");
+        alert(isEnglish ? "Microphone access was denied. Allow it in your browser settings, then try again." : "Akses mikrofon ditolak. Izinkan di pengaturan browser lalu coba lagi.");
       } else if (error !== 'no-speech' && error !== 'aborted') {
         // non-fatal errors let onend handle the restart; fatal ones stop here
         shouldListenRef.current = false;
@@ -227,12 +228,12 @@ export default function CreateReport() {
             <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500" style={{ boxShadow: "0 3px 0 0 #e2e8f0", minWidth: 32 }}>
               <ChevronLeft className="w-4 h-4" />
             </div>
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">Beranda</span>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">{isEnglish ? "Home" : "Beranda"}</span>
           </Link>
         </div>
         <h1 className="text-3xl font-black text-slate-800">Pilih {t.santri}</h1>
         <p className="text-slate-400 text-sm font-bold mt-1">
-          {searchingOthers ? `Mencari di luar ${t.santriLower} bimbingan Anda` : "Siapa yang akan dinilai hari ini?"}
+          {searchingOthers ? (isEnglish ? `Searching outside your assigned ${t.santriLower}s` : `Mencari di luar ${t.santriLower} bimbingan Anda`) : (isEnglish ? "Who would you like to assess today?" : "Siapa yang akan dinilai hari ini?")}
         </p>
       </header>
 
@@ -243,7 +244,7 @@ export default function CreateReport() {
             <Search className="absolute left-4 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder={isListening ? "Mendengar…" : `Cari nama ${t.santriLower}…`}
+              placeholder={isListening ? (isEnglish ? "Listening…" : "Mendengar…") : (isEnglish ? `Search ${t.santriLower} name…` : `Cari nama ${t.santriLower}…`)}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full border-2 rounded-2xl py-4 pl-12 pr-14 font-bold text-slate-800 outline-none transition-all ${
@@ -271,7 +272,7 @@ export default function CreateReport() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
               </span>
-              <span className="text-[10px] text-red-500 font-black uppercase tracking-widest">Suara Aktif</span>
+              <span className="text-[10px] text-red-500 font-black uppercase tracking-widest">{isEnglish ? "Voice active" : "Suara Aktif"}</span>
             </div>
           )}
         </div>
@@ -286,14 +287,14 @@ export default function CreateReport() {
                 onClick={() => { setSearchingOthers(false); setSearchQuery(''); setSelectedStudent(null); }}
                 className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors px-1"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Kembali ke {t.santriLower} saya
+                <ArrowLeft className="w-3.5 h-3.5" /> {isEnglish ? `Back to my ${t.santriLower}s` : `Kembali ke ${t.santriLower} saya`}
               </button>
             ) : (
               <button
                 onClick={() => { setSearchingOthers(true); setSearchQuery(''); setSelectedStudent(null); loadOtherStudents(); }}
                 className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-brand-500 hover:text-brand-700 transition-colors px-1"
               >
-                <UserSearch className="w-3.5 h-3.5" /> Cari {t.santriLower} lain (di luar bimbingan Anda)
+                <UserSearch className="w-3.5 h-3.5" /> {isEnglish ? `Find another ${t.santriLower} (outside your assignment)` : `Cari ${t.santriLower} lain (di luar bimbingan Anda)`}
               </button>
             )}
           </div>
@@ -302,7 +303,7 @@ export default function CreateReport() {
         {searchingOthers && (
           <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-amber-50 border-2 border-amber-100">
             <p className="text-[11px] font-bold text-amber-700 leading-snug">
-              Anda sedang mencari {t.santriLower} yang bukan bimbingan Anda. Laporan tetap bisa dibuat, dan akan muncul di daftar laporan Anda untuk ditindaklanjuti.
+              {isEnglish ? `You are searching for a ${t.santriLower} outside your assignment. You can still create a report, and it will appear in your report list for follow-up.` : `Anda sedang mencari ${t.santriLower} yang bukan bimbingan Anda. Laporan tetap bisa dibuat, dan akan muncul di daftar laporan Anda untuk ditindaklanjuti.`}
             </p>
           </div>
         )}
@@ -310,7 +311,7 @@ export default function CreateReport() {
         {/* Student list */}
         <div className="mt-2 flex-1 overflow-y-auto pb-28">
           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-3">
-            {searchQuery ? "Hasil Pencarian" : searchingOthers ? `Semua ${t.santri}` : `${t.santri} Saya`}
+            {searchQuery ? (isEnglish ? "Search results" : "Hasil Pencarian") : searchingOthers ? (isEnglish ? `All ${t.santri}s` : `Semua ${t.santri}`) : (isEnglish ? `My ${t.santri}s` : `${t.santri} Saya`)}
           </p>
           {loading || (searchingOthers && otherStudentsLoading) ? (
             <div className="flex justify-center py-10">
@@ -319,7 +320,7 @@ export default function CreateReport() {
           ) : filteredStudents.length === 0 ? (
             <div className="p-8 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
               <p className="text-sm font-black text-slate-400">
-                {searchingOthers ? `${t.santri} tidak ditemukan` : `Belum ada ${t.santriLower} yang dibimbing`}
+                {searchingOthers ? (isEnglish ? `No ${t.santriLower}s found` : `${t.santri} tidak ditemukan`) : (isEnglish ? `No assigned ${t.santriLower}s yet` : `Belum ada ${t.santriLower} yang dibimbing`)}
               </p>
             </div>
           ) : (
@@ -358,7 +359,7 @@ export default function CreateReport() {
                         <span className={`truncate ${isSelected ? "text-brand-800" : "text-slate-700"}`}>{student.name}</span>
                         {isOther && (
                           <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 mt-0.5">
-                            Bukan bimbingan Anda
+                            {isEnglish ? "Not assigned to you" : "Bukan bimbingan Anda"}
                           </span>
                         )}
                       </div>
@@ -374,7 +375,7 @@ export default function CreateReport() {
                               : "bg-slate-100 text-slate-500 border-slate-200"
                           : "bg-slate-50 text-slate-400 border-slate-200/60"
                       }`}>
-                        {studentLastReport ? `Input ${formatRelativeTime(studentLastReport)}` : "Belum ada laporan"}
+                        {studentLastReport ? (isEnglish ? `Updated ${formatRelativeTime(studentLastReport, t.language)}` : `Input ${formatRelativeTime(studentLastReport, t.language)}`) : (isEnglish ? "No reports yet" : "Belum ada laporan")}
                       </span>
                       {isSelected && <CheckCircle2 className="w-5 h-5 text-brand-500" />}
                     </div>
@@ -409,7 +410,7 @@ export default function CreateReport() {
             }`}
             style={selectedStudent ? { boxShadow: "0 4px 0 0 var(--brand-700)" } : {}}
           >
-            Mulai Input →
+            {isEnglish ? "Start assessment →" : "Mulai Input →"}
           </button>
         </Link>
       </footer>

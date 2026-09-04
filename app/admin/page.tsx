@@ -172,6 +172,8 @@ function BarChart({ data }: { data: DayBucket[] }) {
 export default function AdminOverviewPage() {
   const { activeOrganizationId } = useAuth();
   const t = useTerminology();
+  const isEnglish = t.language === "en";
+  const locale = isEnglish ? "en-US" : "id-ID";
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ ustadz: 0, santri: 0, reports: 0, activeSantri: 0 });
   const [weekData, setWeekData] = useState<DayBucket[]>([]);
@@ -289,7 +291,7 @@ export default function AdminOverviewPage() {
               studentPhotoUrl: (r.students as any)?.photo_url ?? null,
               title: r.title ?? null,
               createdByName: r.created_by ? (authorNames.get(r.created_by) ?? null) : null,
-              date: `${new Date(r.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })} · ${new Date(r.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`,
+              date: `${new Date(r.created_at).toLocaleDateString(locale, { day: "2-digit", month: "short" })} · ${new Date(r.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}`,
               themesCount: themes,
               siCount: si,
             };
@@ -379,13 +381,13 @@ export default function AdminOverviewPage() {
       }
     }
     load();
-  }, [activeOrganizationId]);
+  }, [activeOrganizationId, locale]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 gap-3">
         <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
-        <span className="text-sm font-black text-slate-400 uppercase tracking-widest">Memuat…</span>
+        <span className="text-sm font-black text-slate-400 uppercase tracking-widest">{isEnglish ? "Loading…" : "Memuat…"}</span>
       </div>
     );
   }
@@ -397,8 +399,8 @@ export default function AdminOverviewPage() {
 
       {/* ── Page title ───────────────────────────────────────────────────── */}
       <div>
-        <h2 className="text-2xl font-black text-slate-800">Overview</h2>
-        <p className="text-slate-400 text-sm font-bold mt-0.5">Ringkasan aktivitas CDS secara global</p>
+        <h2 className="text-2xl font-black text-slate-800">{isEnglish ? "Overview" : "Ringkasan"}</h2>
+        <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? "A summary of assessment activity across your organisation" : "Ringkasan aktivitas CDS secara global"}</p>
       </div>
 
       {/* ── Stat cards ───────────────────────────────────────────────────── */}
@@ -406,8 +408,8 @@ export default function AdminOverviewPage() {
         {[
           { label: t.ustadz, value: stats.ustadz, icon: Users, bg: "#f0fdf4", icon_color: "#22c55e", shadow: "#a7f3d0" },
           { label: t.santri, value: stats.santri, icon: GraduationCap, bg: "#eff6ff", icon_color: "#3b82f6", shadow: "#bfdbfe" },
-          { label: "Total Laporan", value: stats.reports, icon: FileText, bg: "#faf5ff", icon_color: "#a855f7", shadow: "#e9d5ff" },
-          { label: `${t.santri} Aktif`, value: stats.activeSantri, icon: TrendingUp, bg: "#fffbeb", icon_color: "#f59e0b", shadow: "#fde68a" },
+          { label: isEnglish ? "Total reports" : "Total Laporan", value: stats.reports, icon: FileText, bg: "#faf5ff", icon_color: "#a855f7", shadow: "#e9d5ff" },
+          { label: isEnglish ? `Active ${t.santri}s` : `${t.santri} Aktif`, value: stats.activeSantri, icon: TrendingUp, bg: "#fffbeb", icon_color: "#f59e0b", shadow: "#fde68a" },
         ].map((s) => {
           const Icon = s.icon;
           return (
@@ -436,8 +438,8 @@ export default function AdminOverviewPage() {
         <div className="bg-white rounded-[1.5rem] p-5 border-2 border-slate-100 flex flex-col" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <div>
-              <p className="font-black text-slate-800">Aktivitas Minggu Ini</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Laporan dibuat per hari</p>
+              <p className="font-black text-slate-800">{isEnglish ? "This week's activity" : "Aktivitas Minggu Ini"}</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? "Reports created each day" : "Laporan dibuat per hari"}</p>
             </div>
             <div
               className="px-3 py-1.5 rounded-xl text-xs font-black text-brand-700 bg-brand-50"
@@ -455,8 +457,8 @@ export default function AdminOverviewPage() {
         <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
-              <p className="font-black text-slate-800">Cakupan Ketercapaian</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{t.santri} dengan skor CMS keseluruhan tertinggi</p>
+              <p className="font-black text-slate-800">{isEnglish ? "Achievement coverage" : "Cakupan Ketercapaian"}</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? `${t.santri}s with the highest overall CMS score` : `${t.santri} dengan skor CMS keseluruhan tertinggi`}</p>
             </div>
             <Award size={16} className="text-brand-400" />
           </div>
@@ -464,7 +466,7 @@ export default function AdminOverviewPage() {
             {santriLeader.length === 0 ? (
               <div className="px-5 py-8 text-center text-slate-300">
                 <GraduationCap className="w-7 h-7 mx-auto mb-2" />
-                <p className="text-xs font-black">Belum ada data</p>
+                <p className="text-xs font-black">{isEnglish ? "No data yet" : "Belum ada data"}</p>
               </div>
             ) : (() => {
               const medalColors = ["#f59e0b", "#94a3b8", "#b45309"];
@@ -508,18 +510,18 @@ export default function AdminOverviewPage() {
         <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
-              <p className="font-black text-slate-800">Laporan Terbaru</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">8 laporan terakhir</p>
+              <p className="font-black text-slate-800">{isEnglish ? "Recent reports" : "Laporan Terbaru"}</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? "Last 8 reports" : "8 laporan terakhir"}</p>
             </div>
             <Link href="/admin/monitoring" className="text-[10px] font-black text-brand-600 uppercase tracking-wider hover:underline">
-              Lihat semua →
+              {isEnglish ? "View all →" : "Lihat semua →"}
             </Link>
           </div>
           <div className="divide-y-2 divide-slate-50">
             {recentReports.length === 0 ? (
               <div className="px-5 py-8 text-center text-slate-300">
                 <BookOpen className="w-7 h-7 mx-auto mb-2" />
-                <p className="text-xs font-black">Belum ada laporan</p>
+                <p className="text-xs font-black">{isEnglish ? "No reports yet" : "Belum ada laporan"}</p>
               </div>
             ) : (
               recentReports.map((r) => (
@@ -539,7 +541,7 @@ export default function AdminOverviewPage() {
                     <div>
                       <p className="font-black text-slate-800 text-sm leading-tight">{r.studentName}</p>
                       {r.title && <p className="text-xs font-bold text-slate-600 truncate max-w-[180px] mt-0.5">{r.title}</p>}
-                      {r.createdByName && <p className="text-[10px] font-black text-brand-600 mt-0.5">Dibuat oleh {r.createdByName}</p>}
+                      {r.createdByName && <p className="text-[10px] font-black text-brand-600 mt-0.5">{isEnglish ? "Created by" : "Dibuat oleh"} {r.createdByName}</p>}
                       <div className="flex items-center gap-1 mt-0.5">
                         <Calendar size={9} className="text-slate-400" />
                         <span className="text-[10px] font-bold text-slate-400">{r.date}</span>
@@ -560,18 +562,18 @@ export default function AdminOverviewPage() {
         <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
-              <p className="font-black text-slate-800">Aktivitas {t.ustadz}</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Top 12 berdasarkan laporan</p>
+              <p className="font-black text-slate-800">{isEnglish ? `${t.ustadz} activity` : `Aktivitas ${t.ustadz}`}</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? "Top 12 by report count" : "Top 12 berdasarkan laporan"}</p>
             </div>
             <Link href="/admin/monitoring" className="text-[10px] font-black text-brand-600 uppercase tracking-wider hover:underline">
-              Lihat semua →
+              {isEnglish ? "View all →" : "Lihat semua →"}
             </Link>
           </div>
           <div className="divide-y-2 divide-slate-50">
             {ustadzBoard.length === 0 ? (
               <div className="px-5 py-8 text-center text-slate-300">
                 <Users className="w-7 h-7 mx-auto mb-2" />
-                <p className="text-xs font-black">Belum ada {t.ustadz}</p>
+                <p className="text-xs font-black">{isEnglish ? `No ${t.ustadz.toLowerCase()}s yet` : `Belum ada ${t.ustadz}`}</p>
               </div>
             ) : (
               ustadzBoard.slice(0, 12).map((u, i) => {
@@ -595,7 +597,7 @@ export default function AdminOverviewPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-black text-slate-800 text-sm">{u.reportCount}</p>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">laporan</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{isEnglish ? "reports" : "laporan"}</p>
                     </div>
                   </div>
                 );

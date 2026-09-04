@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useTerminology } from "@/lib/hooks/use-terminology";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,8 @@ function parseScore(v: string): number | null {
 
 export default function ScoresPage() {
   const params = useParams<{ id: string }>();
+  const t = useTerminology();
+  const isEnglish = t.language === "en";
   const studentId = params.id;
 
   const [studentName, setStudentName] = useState("");
@@ -154,7 +157,7 @@ export default function ScoresPage() {
       setTimeout(() => setSaveStatus("idle"), 2500);
     } else {
       setSaveStatus("error");
-      setSaveError(result.error ?? "Gagal menyimpan nilai.");
+      setSaveError(result.error ?? (isEnglish ? "Unable to save scores." : "Gagal menyimpan nilai."));
     }
   };
 
@@ -205,7 +208,7 @@ export default function ScoresPage() {
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div>
-          <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">Input Nilai CMS</p>
+          <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">{isEnglish ? "Enter CMS scores" : "Input Nilai CMS"}</p>
           <h1 className="text-sm font-black text-slate-900">{studentName}</h1>
         </div>
         <div className="ml-auto">
@@ -219,7 +222,7 @@ export default function ScoresPage() {
 
         {/* Period selector */}
         <section className="bg-white rounded-[2rem] border-2 border-slate-100 p-5 space-y-3" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Periode / Semester</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isEnglish ? "Period / semester" : "Periode / Semester"}</p>
           {periods.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {periods.map((p) => (
@@ -238,7 +241,7 @@ export default function ScoresPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-400 font-bold">Belum ada periode. Tambahkan periode baru di bawah.</p>
+            <p className="text-sm text-slate-400 font-bold">{isEnglish ? "No periods yet. Add a new period below." : "Belum ada periode. Tambahkan periode baru di bawah."}</p>
           )}
 
           {showNewPeriod ? (
@@ -247,7 +250,7 @@ export default function ScoresPage() {
                 type="text"
                 value={newPeriodInput}
                 onChange={(e) => setNewPeriodInput(e.target.value)}
-                placeholder="mis. Semester 1 2024/2025"
+                placeholder={isEnglish ? "e.g. Semester 1 2024/2025" : "mis. Semester 1 2024/2025"}
                 className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:outline-none focus:border-sky-400 transition-colors"
                 onKeyDown={(e) => { if (e.key === "Enter") handleAddPeriod(); }}
                 autoFocus
@@ -264,7 +267,7 @@ export default function ScoresPage() {
                 onClick={() => { setShowNewPeriod(false); setNewPeriodInput(""); }}
                 className="bg-slate-100 text-slate-500 px-4 py-2 rounded-xl font-black text-sm hover:bg-slate-200"
               >
-                Batal
+                {isEnglish ? "Cancel" : "Batal"}
               </button>
             </div>
           ) : (
@@ -272,7 +275,7 @@ export default function ScoresPage() {
               onClick={() => setShowNewPeriod(true)}
               className="flex items-center gap-2 text-sky-600 font-black text-sm hover:text-sky-700"
             >
-              <Plus size={14} /> Tambah Periode Baru
+              <Plus size={14} /> {isEnglish ? "Add new period" : "Tambah Periode Baru"}
             </button>
           )}
         </section>
@@ -290,10 +293,10 @@ export default function ScoresPage() {
 
             {/* Table header */}
             <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2 px-4 py-2 border-b-2 border-slate-100 bg-slate-50">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Jenis Nilai</span>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">Nilai Harian</span>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">Nilai Bulanan</span>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">Nilai Akhir</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{isEnglish ? "Score type" : "Jenis Nilai"}</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">{isEnglish ? "Daily" : "Nilai Harian"}</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">{isEnglish ? "Monthly" : "Nilai Bulanan"}</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">{isEnglish ? "Final" : "Nilai Akhir"}</span>
             </div>
 
             {/* Score rows */}
@@ -354,7 +357,7 @@ export default function ScoresPage() {
           <div className="max-w-2xl mx-auto space-y-2">
             {saveStatus === "success" && (
               <div className="flex items-center gap-2 text-brand-700 text-sm font-black bg-brand-50 border-2 border-brand-100 rounded-xl px-4 py-2">
-                <CheckCircle2 size={15} /> Nilai berhasil disimpan!
+                <CheckCircle2 size={15} /> {isEnglish ? "Scores saved successfully!" : "Nilai berhasil disimpan!"}
               </div>
             )}
             {saveStatus === "error" && (
@@ -369,7 +372,7 @@ export default function ScoresPage() {
               style={{ boxShadow: "0 4px 0 0 #0284c7" }}
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={16} />}
-              Simpan Nilai — {selectedPeriod}
+              {isEnglish ? "Save scores" : "Simpan Nilai"} — {selectedPeriod}
             </button>
           </div>
         </div>

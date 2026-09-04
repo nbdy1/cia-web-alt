@@ -35,6 +35,7 @@
 
 import { useCallback, useState, useRef } from "react";
 import { generateSpeech } from "@/app/actions/speech";
+import type { AppLanguage } from "@/lib/data/language";
 
 // Master kill switch — when false, speak() is a no-op regardless of backend
 // (no ElevenLabs call, no browser SpeechSynthesis fallback).
@@ -75,7 +76,7 @@ const SILENT_WAV = (() => {
   return "data:audio/wav;base64," + btoa(binary);
 })();
 
-export function useCDSVoice() {
+export function useCDSVoice(language: AppLanguage = "id") {
   const [isSpeaking, setIsSpeaking] = useState(false);
   // ONE reusable audio element for the whole session. Reusing (instead of
   // `new Audio()` per call) is what keeps playback allowed after mic use.
@@ -174,7 +175,7 @@ export function useCDSVoice() {
       // Native Browser TTS (fallback)
       try {
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "id-ID";
+        utterance.lang = language === "en" ? "en-US" : "id-ID";
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
         utterance.onend = () => setIsSpeaking(false);
@@ -184,7 +185,7 @@ export function useCDSVoice() {
         setIsSpeaking(false);
       }
     },
-    [getAudioEl]
+    [getAudioEl, language]
   );
 
   const stop = useCallback(() => {

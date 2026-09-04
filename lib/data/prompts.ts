@@ -22,12 +22,27 @@
  * in ai-analysis.ts after each report is saved, and stored in
  * students.profile_summary. Token overhead per call: ~250 tokens.
  */
+import type { AppLanguage } from "@/lib/data/language";
+
+function outputLanguageInstruction(language: AppLanguage) {
+  if (language === "en") {
+    return `
+### OUTPUT LANGUAGE — HIGHEST PRIORITY
+Write every human-facing response in natural, professional English. This includes reply, report_title, status_summary, reasoning, and action_plan. The framework's Category, Theme, Indicator, and Sub-indicator strings must remain EXACTLY as supplied in the criteria context, even when those strings are Indonesian. Do not translate those framework identifiers.`;
+  }
+
+  return `
+### BAHASA OUTPUT — PRIORITAS TERTINGGI
+Seluruh teks yang dibaca pengguna wajib menggunakan Bahasa Indonesia. Nama Category, Theme, Indicator, dan Sub-indicator harus tetap PERSIS seperti di konteks kriteria.`;
+}
+
 export function buildInterviewPrompt(
   frontierCriteriaContext: string,
   unexploredThemesContext: string,
   discoveredThemes: string[],
   studentProfile?: string,
-  knowledgeContext?: string
+  knowledgeContext?: string,
+  language: AppLanguage = "id",
 ): string {
   const discovered = discoveredThemes.length > 0 ? discoveredThemes.join(", ") : "(belum ada)";
 
@@ -68,7 +83,7 @@ Sebelum merespons, tentukan dulu jenis pesan dari Ustadz:
 3. **Gali Lebih Dalam**: Gunakan Indikator dan Sub-indikator untuk mengajukan pertanyaan yang spesifik dan mendalam. Jika Ustadz menyebutkan suatu perilaku, gali sub-indikator yang berkaitan.
 4. **Identifikasi Kekosongan**: Perhatikan Tema mana yang belum memiliki data berdasarkan transkrip.
 5. **Gaya Bahasa Percakapan**: Buat respons Anda singkat (1-2 kalimat) agar percakapan tetap mengalir — KECUALI saat menjawab pertanyaan pengetahuan, di mana jawaban boleh lebih panjang dan lengkap.
-6. **Bahasa**: Selalu gunakan Bahasa Indonesia. (Sangat Penting!)
+6. **Bahasa**: Ikuti instruksi bahasa output berprioritas tertinggi di bawah. (Sangat Penting!)
 7. **Keterbacaan**: Gunakan Markdown ringan bila membantu keterbacaan, seperti paragraf pendek, bullet list, atau penekanan tebal. Jangan mengubah gaya percakapan yang alami dan jangan berlebihan.
 
 ### KONTEKS DINAMIS WAWANCARA:
@@ -92,10 +107,11 @@ ${unexploredThemesContext || "(tidak ada tema unexplored yang tersisa)"}
 
 ### FORMAT RESPON (HANYA JSON):
 {
-  "reply": "Pertanyaan lanjutan Anda yang alami dalam Bahasa Indonesia",
+  "reply": "Respons lanjutan yang alami dalam bahasa output yang dipilih",
   "discoveredPillars": ["Daftar judul Tema yang telah diidentifikasi sejauh ini"],
   "isFinished": false
 }
+${outputLanguageInstruction(language)}
 `;
 }
 
@@ -108,7 +124,8 @@ ${unexploredThemesContext || "(tidak ada tema unexplored yang tersisa)"}
 export function buildFinalAnalysisPrompt(
   criteriaContext: string,
   studentProfile?: string,
-  knowledgeContext?: string
+  knowledgeContext?: string,
+  language: AppLanguage = "id",
 ): string {
   const profileSection = studentProfile
     ? `
@@ -131,7 +148,7 @@ Gunakan referensi ini HANYA untuk menulis action_plan yang lebih kaya dan berbas
   return `
 Analisis transkrip wawancara berikut untuk seorang Santri di Sekolah Impian.
 Berdasarkan transkrip dan KRITERIA RELEVAN yang diberikan di bawah, buatlah penilaian ketercapaian yang presisi.
-Seluruh output teks deskriptif dalam JSON Anda harus dalam Bahasa Indonesia.
+Ikuti instruksi bahasa output berprioritas tertinggi di bawah untuk seluruh teks deskriptif JSON.
 ${profileSection}${knowledgeSection}
 ### KRITERIA RELEVAN (Diambil dari Kerangka Kerja CDS berdasarkan isi transkrip):
 ${criteriaContext}
@@ -153,7 +170,7 @@ Karakter, mental, dan soft skill bisa naik maupun turun — seperti iman, sifatn
 ### ATURAN JUDUL LAPORAN:
 1. Buat field report_title yang singkat, natural, dan mudah diingat.
 2. Panjang maksimal 6 kata.
-3. Wajib Bahasa Indonesia yang baku, formal, dan BEBAS dari kesalahan ejaan/typo (sesuai KBBI).
+3. Gunakan bahasa output yang baku, formal, dan bebas dari kesalahan ejaan/typo.
 4. Jangan pakai nama santri di judul.
 5. Jangan pakai tanda kutip.
 
@@ -169,12 +186,12 @@ Karakter, mental, dan soft skill bisa naik maupun turun — seperti iman, sifatn
 4. **Tanpa Basa-basi**: Penanganan harus praktis, empatik, dan mengakar pada konteks Pesantren serta kepribadian santri.
 
 ### ATURAN TEKS BEBAS (status_summary, reasoning, action_plan, report_title):
-Field-field ini WAJIB berupa kalimat naratif biasa dalam Bahasa Indonesia. JANGAN gunakan tanda kurung siku ganda [[ ]], tanda kurung kurawal { }, potongan JSON, atau markup apa pun di dalam teks — bahkan jika PROFIL SANTRI atau konteks referensi di atas menampilkan format seperti itu. Tulis seolah sedang menulis catatan biasa untuk dibaca manusia.
+Field-field ini WAJIB berupa kalimat naratif biasa dalam bahasa output yang dipilih. JANGAN gunakan tanda kurung siku ganda [[ ]], tanda kurung kurawal { }, potongan JSON, atau markup apa pun di dalam teks — bahkan jika PROFIL SANTRI atau konteks referensi di atas menampilkan format seperti itu. Tulis seolah sedang menulis catatan biasa untuk dibaca manusia.
 
 ### FORMAT RESPON (HANYA JSON, TANPA KOMENTAR APAPUN DI LUAR JSON):
 {
-  "report_title": "Judul ringkas laporan (maksimal 6 kata)",
-  "status_summary": "Ringkasan kualitatif perkembangan dalam Bahasa Indonesia",
+  "report_title": "Judul ringkas laporan dalam bahasa output (maksimal 6 kata)",
+  "status_summary": "Ringkasan kualitatif perkembangan dalam bahasa output",
   "detailed_assessments": [
     {
       "category": "Karakter | Mental | Soft Skill",
@@ -182,15 +199,16 @@ Field-field ini WAJIB berupa kalimat naratif biasa dalam Bahasa Indonesia. JANGA
       "indicator": "Judul Indikator PERSIS seperti di KRITERIA RELEVAN",
       "fulfilled_sub_indicators": ["Sub-indikator PERSIS seperti di KRITERIA RELEVAN"],
       "declined_sub_indicators": ["Sub-indikator yang menunjukkan kemunduran JELAS, PERSIS seperti di KRITERIA RELEVAN (kosongkan jika tidak ada)"],
-      "reasoning": "Penjelasan singkat kaitan antara perilaku dan kriteria dalam Bahasa Indonesia"
+      "reasoning": "Penjelasan singkat kaitan antara perilaku dan kriteria dalam bahasa output"
     }
   ],
   "treatment": {
     "priority_theme": "Nama tema pertama yang belum lengkap",
     "priority_indicator": "Indikator spesifik yang sedang ditangani",
     "target_sub_indicators": ["Daftar sub-indikator yang sedang ditangani"],
-    "action_plan": "Rencana penanganan yang detail, empatik, dan dipersonalisasi sesuai kepribadian santri (dalam Bahasa Indonesia)"
+    "action_plan": "Rencana penanganan yang detail, empatik, dan dipersonalisasi dalam bahasa output"
   }
 }
+${outputLanguageInstruction(language)}
 `;
 }

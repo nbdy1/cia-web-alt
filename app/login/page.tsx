@@ -16,8 +16,11 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import { useSettings } from '@/lib/context/settings-context';
 
 export default function LoginPage() {
+  const { language } = useSettings();
+  const isEnglish = language === 'en';
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,7 +43,7 @@ export default function LoginPage() {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (resetError) throw resetError;
-        setSuccess("Jika email terdaftar, tautan untuk mengatur ulang kata sandi telah dikirim.");
+        setSuccess(isEnglish ? "If the email is registered, a password reset link has been sent." : "Jika email terdaftar, tautan untuk mengatur ulang kata sandi telah dikirim.");
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -49,16 +52,16 @@ export default function LoginPage() {
 
         if (signInError) throw signInError;
         
-        setSuccess("Login berhasil! Mengalihkan ke dashboard...");
+        setSuccess(isEnglish ? "Signed in successfully. Redirecting to the dashboard..." : "Login berhasil! Mengalihkan ke dashboard...");
         router.push('/');
       }
     } catch (err: any) {
       console.error("Auth error:", err);
-      const msg = err?.message || "Terjadi kesalahan saat autentikasi";
+      const msg = err?.message || (isEnglish ? "An authentication error occurred" : "Terjadi kesalahan saat autentikasi");
       if (msg.toLowerCase().includes("email not confirmed")) {
-        setError("Email belum diverifikasi.");
+        setError(isEnglish ? "Email has not been verified." : "Email belum diverifikasi.");
         } else if (msg.toLowerCase().includes("invalid login credentials")) {
-          setError("Email atau kata sandi tidak valid.");
+          setError(isEnglish ? "Email or password is invalid." : "Email atau kata sandi tidak valid.");
           setShowForgotLink(true);
       } else {
         setError(msg);
@@ -76,7 +79,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-black mb-4">
             <ShieldCheck className="w-4 h-4 text-brand-600" />
-            <span>Portal Evaluasi Pembimbing</span>
+            <span>{isEnglish ? "Mentor assessment portal" : "Portal Evaluasi Pembimbing"}</span>
           </div>
           <h1 className="text-4xl font-black tracking-tight text-slate-900 flex items-center justify-center gap-2 font-serif">
             <span className="text-brand-600">CDS</span> Portal
@@ -107,7 +110,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
-                Alamat Email
+                {isEnglish ? "Email address" : "Alamat Email"}
               </label>
               <div className="relative flex items-center">
                 <Mail className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
@@ -125,7 +128,7 @@ export default function LoginPage() {
 
             {!isForgotPassword && <div>
               <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
-                Kata Sandi
+                {isEnglish ? "Password" : "Kata Sandi"}
               </label>
               <div className="relative flex items-center">
                 <Lock className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
@@ -153,7 +156,7 @@ export default function LoginPage() {
                     onClick={() => { setIsForgotPassword(true); setError(null); setSuccess(null); }}
                     className="text-xs font-black text-brand-600 hover:text-brand-700 hover:underline"
                   >
-                    Lupa kata sandi?
+                    {isEnglish ? "Forgot password?" : "Lupa kata sandi?"}
                   </button>
                 </div>
               )}
@@ -170,11 +173,11 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Memproses...</span>
+                  <span>{isEnglish ? "Processing..." : "Memproses..."}</span>
                 </>
               ) : (
                 <>
-                  <span>{isForgotPassword ? 'Kirim Tautan Reset' : 'Masuk Portal'}</span>
+                  <span>{isForgotPassword ? (isEnglish ? 'Send reset link' : 'Kirim Tautan Reset') : (isEnglish ? 'Sign in' : 'Masuk Portal')}</span>
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
@@ -187,7 +190,7 @@ export default function LoginPage() {
               onClick={() => { setIsForgotPassword(false); setError(null); setSuccess(null); }}
               className="w-full mt-4 text-xs font-black text-slate-500 hover:text-slate-700"
             >
-              Kembali ke halaman masuk
+              {isEnglish ? 'Back to sign in' : 'Kembali ke halaman masuk'}
             </button>
           )}
 

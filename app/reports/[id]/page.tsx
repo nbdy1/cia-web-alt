@@ -34,7 +34,8 @@ import { TreatmentPlanStatus } from "@/components/TreatmentPlanStatus";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { MarkdownText } from "@/components/MarkdownText";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
-import { getTerminology } from "@/lib/data/terminology";
+import { getLocalizedTerminology } from "@/lib/data/terminology";
+import { getServerAppLanguage } from "@/lib/server/language";
 import { isTenantOrganization } from "@/lib/tenant-server";
 import { getFrameworkForOrganization, isSupplementaryTheme } from "@/lib/data/framework";
 
@@ -177,6 +178,9 @@ export default async function ReportDetailPage({
   searchParams?: Promise<{ from?: string | string[] }>;
 }) {
   const { id } = await params;
+  const language = await getServerAppLanguage();
+  const isEnglish = language === "en";
+  const locale = isEnglish ? "en-US" : "id-ID";
   const resolvedSearchParams = await searchParams;
   const { report, authorName } = await getReportDetails(id);
   const rawFrom = resolvedSearchParams?.from;
@@ -185,7 +189,7 @@ export default async function ReportDetailPage({
   if (!report)
     return (
       <div className="p-10 text-center text-slate-500 font-serif">
-        Laporan tidak ditemukan.
+        {isEnglish ? "Report not found." : "Laporan tidak ditemukan."}
       </div>
     );
 
@@ -195,7 +199,7 @@ export default async function ReportDetailPage({
       : report.treatment_plan;
   const reportOrganizationId = (report as any).organization_id as string | null;
   const displayOverallStats = computeDisplayOverallStats(analysis, reportOrganizationId);
-  const t = getTerminology(reportOrganizationId);
+  const t = getLocalizedTerminology(reportOrganizationId, language);
 
   const categories = ["Karakter", "Mental", "Soft Skill"];
 
@@ -210,10 +214,10 @@ export default async function ReportDetailPage({
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
         <div className="text-center">
-          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest">Laporan</p>
+          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest">{isEnglish ? "Report" : "Laporan"}</p>
           <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
           {authorName && (
-            <p className="text-[9px] font-bold text-slate-400 mt-1">Dibuat oleh {authorName}</p>
+            <p className="text-[9px] font-bold text-slate-400 mt-1">{isEnglish ? "Created by" : "Dibuat oleh"} {authorName}</p>
           )}
         </div>
         <div className="w-9" />
@@ -236,9 +240,9 @@ export default async function ReportDetailPage({
               <p className="text-sm font-bold text-slate-500 mt-1 max-w-xs">{report.title}</p>
             )}
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">
-              {new Date(report.created_at).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {new Date(report.created_at).toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               {" · "}
-              {new Date(report.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+              {new Date(report.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
             </p>
           </div>
         </div>
@@ -250,7 +254,7 @@ export default async function ReportDetailPage({
           </div>
           <div className="relative z-10">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-400 mb-3">
-              Perkembangan Keseluruhan
+              {isEnglish ? "Overall development" : "Perkembangan Keseluruhan"}
             </h3>
             <div className="grid grid-cols-3 gap-3">
               {Object.entries(displayOverallStats || {}).map(
@@ -286,7 +290,7 @@ export default async function ReportDetailPage({
         <section className="bg-white p-6 rounded-[2rem] border-2 border-slate-100 relative" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           {/* <Quote className="absolute top-6 left-6 w-8 h-8 text-slate-50" /> */}
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
-            Narasi Observasi
+            {isEnglish ? "Observation narrative" : "Narasi Observasi"}
           </h3>
 
           <div className="space-y-4 relative z-10 mt-4">
@@ -335,7 +339,7 @@ export default async function ReportDetailPage({
                         style={isGuru ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
                       >
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
-                          {isGuru ? t.ustadz : "Asisten CDS"}
+                          {isGuru ? t.ustadz : (isEnglish ? "CDS Assistant" : "Asisten CDS")}
                         </p>
                         <MarkdownText className="text-sm leading-relaxed font-bold" children={msg.text} />
                       </div>
@@ -357,7 +361,7 @@ export default async function ReportDetailPage({
           <div className="mt-6 flex items-center gap-2 text-slate-300">
             <Calendar size={12} />
             <span className="text-[9px] font-bold uppercase tracking-tighter">
-              {new Date(report.created_at).toLocaleString("id-ID", {
+              {new Date(report.created_at).toLocaleString(locale, {
                 dateStyle: "full",
                 timeStyle: "short",
               })}
@@ -371,7 +375,7 @@ export default async function ReportDetailPage({
             <div className="flex items-center gap-2">
               <Lightbulb className="text-brand-600" size={18} />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Rencana Penanganan
+                {isEnglish ? "Support plan" : "Rencana Penanganan"}
               </h3>
             </div>
             <div className="bg-brand-50 p-5 rounded-[2rem] border border-brand-100">
@@ -415,7 +419,7 @@ export default async function ReportDetailPage({
         {/* 4. DETAILED ANALYSIS */}
         <section className="space-y-4">
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-            Detail Pencapaian
+            {isEnglish ? "Achievement details" : "Detail Pencapaian"}
           </h3>
 
           {(() => {
@@ -446,7 +450,7 @@ export default async function ReportDetailPage({
                       {cat === "Soft Skill" && <Zap size={18} />}
                     </div>
                     <h4 className="font-bold text-slate-800 text-sm font-serif">
-                      Analisis {categoryDisplayLabel(cat)}
+                      {isEnglish ? `${categoryDisplayLabel(cat)} analysis` : `Analisis ${categoryDisplayLabel(cat)}`}
                     </h4>
                   </div>
 
@@ -507,7 +511,7 @@ export default async function ReportDetailPage({
                             {Array.isArray(item.declined_sub_indicators) && item.declined_sub_indicators.length > 0 && (
                               <div className="pt-2 border-t border-slate-200 space-y-1.5">
                                 <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">
-                                  Kemunduran Terdeteksi
+                                  {isEnglish ? "Regression detected" : "Kemunduran Terdeteksi"}
                                 </p>
                                 {item.declined_sub_indicators.map((sub: string, si: number) => (
                                   <div key={si} className="flex items-start gap-2 text-[11px] text-rose-600 font-medium leading-snug">
@@ -534,7 +538,7 @@ export default async function ReportDetailPage({
                     <BarChart3 size={22} className="text-slate-300" />
                   </div>
                   <p className="text-sm font-bold text-slate-400 leading-snug">
-                    Tidak ada pencapaian character, mental, ataupun soft skill di laporan ini.
+                    {isEnglish ? "There are no recorded character, mental, or soft-skill achievements in this report." : "Tidak ada pencapaian karakter, mental, ataupun soft skill di laporan ini."}
                   </p>
                 </div>
               );

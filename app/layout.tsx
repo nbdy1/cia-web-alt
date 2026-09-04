@@ -82,6 +82,7 @@ const appearanceScript = `
     const root = document.documentElement;
     const font = window.localStorage.getItem("cia:font-family");
     const scale = window.localStorage.getItem("cia:font-scale");
+    const language = window.localStorage.getItem("cia:language");
     const allowedFonts = ["din", "nunito", "jakarta", "atkinson"];
     const fontMap = {
       din: "var(--font-din-rounded), var(--font-nunito), sans-serif",
@@ -97,6 +98,7 @@ const appearanceScript = `
     root.style.setProperty("--app-font-family", selectedFamily);
     root.style.setProperty("--font-sans", selectedFamily);
     root.style.setProperty("--font-serif", selectedFamily);
+    root.lang = language === "en" ? "en" : "id";
 
     if (Number.isFinite(parsedScale) && parsedScale >= 0.9 && parsedScale <= 1.18) {
       root.style.setProperty("--app-font-scale", String(parsedScale));

@@ -63,6 +63,7 @@ export default function ResultsPage() {
   const [editedSummary, setEditedSummary] = useState("");
 
   const t = useTerminology();
+  const isEnglish = t.language === "en";
   const studentId = searchParams.get("id");
   const studentName = searchParams.get("name") || t.santri;
   const [studentPhotoUrl, setStudentPhotoUrl] = useState<string | null>(null);
@@ -134,7 +135,7 @@ export default function ResultsPage() {
   };
 
   const handleSave = async () => {
-    if (!studentId) return alert(`ID ${t.santriLower} tidak ditemukan`);
+    if (!studentId) return alert(isEnglish ? `${t.santri} ID was not found` : `ID ${t.santriLower} tidak ditemukan`);
 
     setIsSaving(true);
     const result = await saveAssessmentAction({
@@ -152,7 +153,7 @@ export default function ResultsPage() {
       sessionStorage.removeItem("assessment_return_url");
       router.push("/students");
     } else {
-      alert("Gagal menyimpan: " + result.error);
+      alert((isEnglish ? "Could not save: " : "Gagal menyimpan: ") + result.error);
       setIsSaving(false);
     }
   };
@@ -170,7 +171,7 @@ export default function ResultsPage() {
           <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
         </div>
         <p className="text-brand-600 text-xs font-black uppercase tracking-widest">
-          Memuat Hasil…
+          {isEnglish ? "Loading results…" : "Memuat Hasil…"}
         </p>
       </div>
     );
@@ -193,7 +194,7 @@ export default function ResultsPage() {
         <div className="text-center">
           <h1 className="text-sm font-black text-slate-900">{studentName}</h1>
           <p className="text-[10px] text-brand-600 font-black uppercase tracking-widest">
-            Asesmen Perkembangan
+            {isEnglish ? "Development Assessment" : "Asesmen Perkembangan"}
           </p>
         </div>
         <div className="w-9" />
@@ -212,7 +213,7 @@ export default function ResultsPage() {
           />
           <div className="text-center">
             <h2 className="text-lg font-black text-slate-900 leading-tight">{studentName}</h2>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Hasil Asesmen</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{isEnglish ? "Assessment results" : "Hasil Asesmen"}</p>
           </div>
         </div>
 
@@ -227,7 +228,7 @@ export default function ResultsPage() {
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
               <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white">
-                <Sparkles size={9} /> Kondisi Umum
+                <Sparkles size={9} /> {isEnglish ? "Overview" : "Kondisi Umum"}
               </div>
               {!isEditingSummary ? (
                 <button
@@ -237,7 +238,7 @@ export default function ResultsPage() {
                   }}
                   className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
                 >
-                  <Pencil size={9} /> Edit
+                  <Pencil size={9} /> {isEnglish ? "Edit" : "Edit"}
                 </button>
               ) : (
                 <div className="flex gap-1.5">
@@ -251,7 +252,7 @@ export default function ResultsPage() {
                     }}
                     className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white text-brand-700 hover:bg-brand-50 transition-colors"
                   >
-                    <Check size={9} /> Simpan
+                    <Check size={9} /> {isEnglish ? "Save" : "Simpan"}
                   </button>
                   <button
                     onClick={() => setIsEditingSummary(false)}
@@ -310,7 +311,7 @@ export default function ResultsPage() {
                 <Target className="text-amber-600" size={16} />
               </div>
               <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
-                Treatment Prioritas
+                {isEnglish ? "Priority support plan" : "Treatment Prioritas"}
               </span>
             </div>
             <div className="bg-brand-50 p-4 rounded-2xl border-2 border-brand-100">
@@ -343,7 +344,7 @@ export default function ResultsPage() {
         {/* 3. Detailed Fulfillment */}
         <section className="space-y-3">
           <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
-            <Bookmark size={9} /> Detail Ketercapaian
+            <Bookmark size={9} /> {isEnglish ? "Assessment details" : "Detail Ketercapaian"}
           </div>
           {(() => {
             const categoryBlocks = categories.map((cat) => {
@@ -444,7 +445,7 @@ export default function ResultsPage() {
                                 item.theme,
                               ) && (
                                 <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 mb-1">
-                                  BM400 · Tiga Pilar
+                                  BM400 · {isEnglish ? "Three Pillars" : "Tiga Pilar"}
                                 </span>
                               )}
                               <span className="font-black text-xs text-slate-800 leading-snug">
@@ -476,7 +477,7 @@ export default function ResultsPage() {
                             {item.declined_sub_indicators?.length > 0 && (
                               <div className="space-y-1 pt-2 border-t border-slate-200">
                                 <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">
-                                  Kemunduran Terdeteksi
+                                  {isEnglish ? "Regression detected" : "Kemunduran Terdeteksi"}
                                 </p>
                                 {item.declined_sub_indicators.map(
                                   (si: string, idx: number) => (
@@ -511,8 +512,9 @@ export default function ResultsPage() {
                     <Sparkles size={22} className="text-slate-300" />
                   </div>
                   <p className="text-sm font-bold text-slate-400 leading-snug">
-                    Tidak ada pencapaian karakter, mental, ataupun soft skill di
-                    laporan ini.
+                    {isEnglish
+                      ? "No character, mindset, or soft-skill achievements were identified in this report."
+                      : "Tidak ada pencapaian karakter, mental, ataupun soft skill di laporan ini."}
                   </p>
                 </div>
               );
@@ -540,19 +542,19 @@ export default function ResultsPage() {
           ) : (
             <Save size={18} />
           )}
-          {isSaving ? "Menyimpan…" : "Simpan Input"}
+          {isSaving ? (isEnglish ? "Saving…" : "Menyimpan…") : (isEnglish ? "Save report" : "Simpan Input")}
         </button>
       </footer>
 
       <ConfirmModal
         isOpen={pendingNavigation !== null}
-        title={pendingNavigation === "save" ? "Simpan laporan ini?" : "Kembali ke percakapan?"}
+        title={pendingNavigation === "save" ? (isEnglish ? "Save this report?" : "Simpan laporan ini?") : (isEnglish ? "Return to the conversation?" : "Kembali ke percakapan?")}
         description={pendingNavigation === "save"
-          ? "Laporan akan disimpan dan percakapan ini akan ditutup."
-          : "Percakapan sebelumnya akan dipulihkan agar Anda dapat melanjutkan atau membuat laporan ulang."}
-        confirmLabel={pendingNavigation === "save" ? "Simpan laporan" : "Lanjutkan percakapan"}
+          ? (isEnglish ? "The report will be saved and this conversation will be closed." : "Laporan akan disimpan dan percakapan ini akan ditutup.")
+          : (isEnglish ? "Your previous conversation will be restored so you can continue or create the report again." : "Percakapan sebelumnya akan dipulihkan agar Anda dapat melanjutkan atau membuat laporan ulang.")}
+        confirmLabel={pendingNavigation === "save" ? (isEnglish ? "Save report" : "Simpan laporan") : (isEnglish ? "Continue conversation" : "Lanjutkan percakapan")}
         confirmVariant={pendingNavigation === "save" ? "success" : "danger"}
-        cancelLabel="Tetap di sini"
+        cancelLabel={isEnglish ? "Stay here" : "Tetap di sini"}
         onCancel={() => setPendingNavigation(null)}
         onConfirm={() => {
           const action = pendingNavigation;

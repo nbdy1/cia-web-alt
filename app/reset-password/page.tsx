@@ -4,8 +4,11 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowRight, Eye, EyeOff, KeyRound, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useSettings } from "@/lib/context/settings-context";
 
 export default function ResetPasswordPage() {
+  const { language } = useSettings();
+  const isEnglish = language === "en";
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -21,11 +24,11 @@ export default function ResetPasswordPage() {
     setSuccess(null);
 
     if (password.length < 6) {
-      setError("Kata sandi minimal 6 karakter.");
+      setError(isEnglish ? "Password must be at least 6 characters." : "Kata sandi minimal 6 karakter.");
       return;
     }
     if (password !== confirmation) {
-      setError("Konfirmasi kata sandi tidak cocok.");
+      setError(isEnglish ? "Password confirmation does not match." : "Konfirmasi kata sandi tidak cocok.");
       return;
     }
 
@@ -38,7 +41,7 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setSuccess("Kata sandi berhasil diubah. Mengalihkan ke halaman masuk...");
+    setSuccess(isEnglish ? "Password changed successfully. Redirecting to sign in..." : "Kata sandi berhasil diubah. Mengalihkan ke halaman masuk...");
     await supabase.auth.signOut();
     window.setTimeout(() => router.push("/login"), 1200);
   };
@@ -49,13 +52,13 @@ export default function ResetPasswordPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-black mb-4">
             <ShieldCheck className="w-4 h-4 text-brand-600" />
-            <span>Portal Evaluasi Ustadz</span>
+            <span>{isEnglish ? "Mentor assessment portal" : "Portal Evaluasi Ustadz"}</span>
           </div>
           <h1 className="text-3xl font-black text-slate-900 flex items-center justify-center gap-2 font-serif">
             <KeyRound className="w-7 h-7 text-brand-600" />
-            Atur Ulang Kata Sandi
+            {isEnglish ? "Reset password" : "Atur Ulang Kata Sandi"}
           </h1>
-          <p className="text-slate-400 text-sm mt-2 font-bold">Buat kata sandi baru untuk akun Anda.</p>
+          <p className="text-slate-400 text-sm mt-2 font-bold">{isEnglish ? "Create a new password for your account." : "Buat kata sandi baru untuk akun Anda."}</p>
         </div>
 
         <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] p-8" style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}>
@@ -74,8 +77,8 @@ export default function ResetPasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {[
-              { label: "Kata Sandi Baru", value: password, setValue: setPassword, shown: showPassword, toggle: () => setShowPassword(!showPassword) },
-              { label: "Konfirmasi Kata Sandi", value: confirmation, setValue: setConfirmation, shown: showConfirmation, toggle: () => setShowConfirmation(!showConfirmation) },
+              { label: isEnglish ? "New password" : "Kata Sandi Baru", value: password, setValue: setPassword, shown: showPassword, toggle: () => setShowPassword(!showPassword) },
+              { label: isEnglish ? "Confirm password" : "Konfirmasi Kata Sandi", value: confirmation, setValue: setConfirmation, shown: showConfirmation, toggle: () => setShowConfirmation(!showConfirmation) },
             ].map((field) => (
               <div key={field.label}>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">{field.label}</label>
@@ -98,7 +101,7 @@ export default function ResetPasswordPage() {
             ))}
 
             <button type="submit" disabled={loading} className={`w-full mt-2 py-4 px-6 rounded-2xl font-black text-sm text-white flex items-center justify-center gap-3 ${loading ? "bg-slate-300" : "bg-brand-500"}`} style={loading ? {} : { boxShadow: "0 4px 0 0 var(--brand-700)" }}>
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><span>Simpan Kata Sandi</span><ArrowRight className="w-5 h-5" /></>}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><span>{isEnglish ? "Save password" : "Simpan Kata Sandi"}</span><ArrowRight className="w-5 h-5" /></>}
             </button>
           </form>
         </div>

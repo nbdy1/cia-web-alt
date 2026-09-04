@@ -14,6 +14,7 @@
 "use client";
 
 import React, { FormEvent, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Building2,
@@ -21,7 +22,9 @@ import {
   Eye,
   EyeOff,
   HelpCircle,
+  Languages,
   LockKeyhole,
+  MessageSquareHeart,
   RotateCcw,
   Settings,
   Shield,
@@ -32,6 +35,10 @@ import {
 import { CriteriaGlossaryModal } from "./CriteriaGlossaryModal";
 import { useAuth } from "@/lib/context/auth-context";
 import { supabase } from "@/lib/supabase";
+import { languageName } from "@/lib/data/language";
+import { useSettings } from "@/lib/context/settings-context";
+import { setUserAppMode, type OrganizationAppMode } from "@/app/actions/organization-mode";
+import { ConfirmModal } from "./ConfirmModal";
 
 const FONT_STORAGE_KEY = "cia:font-family";
 const FONT_SCALE_STORAGE_KEY = "cia:font-scale";
@@ -63,8 +70,16 @@ const fontOptions = [
   },
 ] as const;
 
+const fontHelpers: Record<FontOptionId, { id: string; en: string }> = {
+  din: { id: "Ramah dan bulat", en: "Friendly and rounded" },
+  nunito: { id: "Lembut seperti aplikasi belajar", en: "Soft, like a learning app" },
+  jakarta: { id: "Bersih dan modern", en: "Clean and modern" },
+  atkinson: { id: "Paling mudah dibaca", en: "Easiest to read" },
+};
+
 const tabs = [
   { id: "account", label: "Akun", icon: UserRound },
+  { id: "mode", label: "Mode", icon: MessageSquareHeart },
   { id: "appearance", label: "Tampilan", icon: Sliders },
   // { id: "guide", label: "Panduan", icon: BookOpen },
 ] as const;
@@ -127,7 +142,7 @@ function getInitialFontScale() {
 }
 
 export function SettingsDropdown() {
-  const { user, organizations, activeOrganizationId, setActiveOrganizationId } =
+  const { user, organizations, activeOrganizationId, setActiveOrganizationId, setActiveOrganizationMode } =
     useAuth();
   const canSwitchOrg = organizations.length > 1;
   const activeOrg = organizations.find((org) => org.id === activeOrganizationId) ?? null;
@@ -144,7 +159,31 @@ export function SettingsDropdown() {
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [pendingMode, setPendingMode] = useState<OrganizationAppMode | null>(null);
+  const [modeError, setModeError] = useState<string | null>(null);
+  const [isUpdatingMode, setIsUpdatingMode] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { language, setLanguage } = useSettings();
+  const isEnglish = language === "en";
+
+  async function confirmModeChange() {
+    if (!activeOrg || !pendingMode) return;
+    setIsUpdatingMode(true);
+    setModeError(null);
+    const result = await setUserAppMode(activeOrg.id, pendingMode);
+    setIsUpdatingMode(false);
+    if (!result.success) {
+      setModeError(result.error ?? (isEnglish ? "Could not change mode." : "Mode tidak dapat diubah."));
+      setPendingMode(null);
+      return;
+    }
+    setActiveOrganizationMode(pendingMode);
+    setPendingMode(null);
+    setIsOpen(false);
+    router.push("/");
+    router.refresh();
+  }
 
 
   useEffect(() => {
@@ -174,12 +213,12 @@ export function SettingsDropdown() {
     setPasswordError(null);
 
     if (newPassword.length < 8) {
-      setPasswordError("Password minimal 8 karakter.");
+      setPasswordError(isEnglish ? "Password must be at least 8 characters." : "Password minimal 8 karakter.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError("Konfirmasi password belum sama.");
+      setPasswordError(isEnglish ? "The password confirmation does not match." : "Konfirmasi password belum sama.");
       return;
     }
 
@@ -194,7 +233,7 @@ export function SettingsDropdown() {
 
     setNewPassword("");
     setConfirmPassword("");
-    setPasswordMessage("Password berhasil diperbarui.");
+    setPasswordMessage(isEnglish ? "Password updated successfully." : "Password berhasil diperbarui.");
   }
 
   return (
@@ -211,7 +250,7 @@ export function SettingsDropdown() {
             ? { boxShadow: "0 3px 0 0 var(--brand-700)" }
             : { boxShadow: "0 3px 0 0 #cbd5e1" }
         }
-        title="Pengaturan"
+        title={isEnglish ? "Settings" : "Pengaturan"}
       >
         <Settings
           className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`}
@@ -224,14 +263,16 @@ export function SettingsDropdown() {
           style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}
         >
           <div className="px-5 py-4 border-b-2 border-slate-100">
-            <h4 className="font-black text-slate-800 text-base">Pengaturan</h4>
+            <h4 className="font-black text-slate-800 text-base">{isEnglish ? "Settings" : "Pengaturan"}</h4>
             <p className="text-[11px] text-slate-400 font-bold mt-0.5">
-              Akun & tampilan 
+              {activeTab === "mode"
+                ? (isEnglish ? "Your preferred application mode" : "Mode aplikasi pilihan Anda")
+                : (isEnglish ? "Account & appearance" : "Akun & tampilan")}
             </p>
           </div>
 
           <div className="px-3 pt-3">
-            <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1">
+            <div className="grid grid-cols-3 gap-1 rounded-2xl bg-slate-100 p-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isSelected = activeTab === tab.id;
@@ -248,7 +289,7 @@ export function SettingsDropdown() {
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">{tab.label}</span>
+                        <span className="truncate">{isEnglish ? (tab.id === "account" ? "Account" : tab.id === "mode" ? "Mode" : "Appearance") : tab.label}</span>
                   </button>
                 );
               })}
@@ -286,10 +327,10 @@ export function SettingsDropdown() {
                     </div>
                     <div>
                       <span className="block text-sm font-black text-slate-800">
-                        Institusi Pengguna
+                        {isEnglish ? "Organisation" : "Institusi Pengguna"}
                       </span>
                       <span className="block text-[10px] font-bold text-slate-400">
-                        Pilih institusi aktif
+                        {isEnglish ? "Choose active organisation" : "Pilih institusi aktif"}
                       </span>
                     </div>
                   </div>
@@ -346,10 +387,10 @@ export function SettingsDropdown() {
                     <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-black text-slate-700">
-                          {activeOrg?.name ?? "Belum ada organisasi"}
+                          {activeOrg?.name ?? (isEnglish ? "No organisation yet" : "Belum ada organisasi")}
                         </p>
                         <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                          {activeOrg?.role ?? "Tidak ada role"}
+                          {activeOrg?.role ?? (isEnglish ? "No role" : "Tidak ada role")}
                         </p>
                       </div>
                       <CheckCircle2 className="ml-2 h-4 w-4 shrink-0 text-brand-500" />
@@ -367,10 +408,10 @@ export function SettingsDropdown() {
                     </div>
                     <div>
                       <span className="block text-sm font-black text-slate-800">
-                        Ganti Password
+                        {isEnglish ? "Change password" : "Ganti Password"}
                       </span>
                       <span className="block text-[10px] font-bold text-slate-400">
-                        Minimal 8 karakter
+                        {isEnglish ? "At least 8 characters" : "Minimal 8 karakter"}
                       </span>
                     </div>
                   </div>
@@ -385,7 +426,7 @@ export function SettingsDropdown() {
                           setPasswordError(null);
                           setPasswordMessage(null);
                         }}
-                        placeholder="Password baru"
+                        placeholder={isEnglish ? "New password" : "Password baru"}
                         className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 pr-10 text-sm font-bold text-slate-700 outline-none transition-colors placeholder:text-slate-300 focus:border-brand-300"
                       />
                       <button
@@ -394,8 +435,8 @@ export function SettingsDropdown() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                         title={
                           showNewPassword
-                            ? "Sembunyikan password"
-                            : "Tampilkan password"
+                            ? (isEnglish ? "Hide password" : "Sembunyikan password")
+                            : (isEnglish ? "Show password" : "Tampilkan password")
                         }
                       >
                         {showNewPassword ? (
@@ -415,7 +456,7 @@ export function SettingsDropdown() {
                           setPasswordError(null);
                           setPasswordMessage(null);
                         }}
-                        placeholder="Ulangi password baru"
+                        placeholder={isEnglish ? "Repeat new password" : "Ulangi password baru"}
                         className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 pr-10 text-sm font-bold text-slate-700 outline-none transition-colors placeholder:text-slate-300 focus:border-brand-300"
                       />
                       <button
@@ -426,8 +467,8 @@ export function SettingsDropdown() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                         title={
                           showConfirmPassword
-                            ? "Sembunyikan password"
-                            : "Tampilkan password"
+                            ? (isEnglish ? "Hide password" : "Sembunyikan password")
+                            : (isEnglish ? "Show password" : "Tampilkan password")
                         }
                       >
                         {showConfirmPassword ? (
@@ -463,7 +504,7 @@ export function SettingsDropdown() {
                           : "0 3px 0 0 var(--brand-700)",
                     }}
                   >
-                    {isUpdatingPassword ? "Menyimpan..." : "Simpan Password"}
+                    {isUpdatingPassword ? (isEnglish ? "Saving..." : "Menyimpan...") : (isEnglish ? "Save password" : "Simpan Password")}
                   </button>
                 </form>
               </div>
@@ -480,20 +521,51 @@ export function SettingsDropdown() {
                   </div>
                   <div>
                     <span className="block font-black text-slate-800 text-sm">
-                      Tampilan
+                      {isEnglish ? "Appearance" : "Tampilan"}
                     </span>
                     <span className="block text-[10px] text-slate-400 font-bold">
-                      Huruf & ukuran teks
+                      {isEnglish ? "Font & text size" : "Huruf & ukuran teks"}
                     </span>
                   </div>
                 </div>
 
                 <div className="mt-4 space-y-3">
+                  <div className="rounded-2xl bg-white border border-slate-100 px-3 py-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Languages className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+                        {isEnglish ? "Language" : "Bahasa / Language"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["id", "en"] as const).map((option) => {
+                        const selected = language === option;
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => setLanguage(option)}
+                            className={`rounded-xl border px-3 py-2 text-left text-sm font-black transition-colors ${
+                              selected
+                                ? "border-brand-300 bg-brand-50 text-brand-800"
+                                : "border-slate-100 bg-white text-slate-600 hover:border-slate-200"
+                            }`}
+                          >
+                            {languageName(option)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2 text-[10px] font-bold text-slate-400">
+                      {language === "en" ? "New AI conversations and reports will be written in English." : "Percakapan dan laporan AI baru akan ditulis dalam Bahasa Indonesia."}
+                    </p>
+                  </div>
+
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Type className="w-3.5 h-3.5 text-slate-400" />
                       <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                        Jenis Huruf
+                        {isEnglish ? "Font family" : "Jenis Huruf"}
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -518,7 +590,7 @@ export function SettingsDropdown() {
                               {option.label}
                             </span>
                             <span className="block text-[10px] font-semibold text-slate-400 mt-0.5 leading-tight">
-                              {option.helper}
+                              {isEnglish ? fontHelpers[option.id].en : fontHelpers[option.id].id}
                             </span>
                           </button>
                         );
@@ -529,7 +601,7 @@ export function SettingsDropdown() {
                   <div className="rounded-2xl bg-white border border-slate-100 px-3 py-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                        Ukuran Teks
+                      {isEnglish ? "Text size" : "Ukuran Teks"}
                       </span>
                       <span className="text-[11px] font-black text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
                         {Math.round(fontScale * 100)}%
@@ -546,12 +618,12 @@ export function SettingsDropdown() {
                         setFontScale(nextScale);
                       }}
                       className="w-full accent-brand-600"
-                      aria-label="Ukuran teks aplikasi"
+                      aria-label={isEnglish ? "Application text size" : "Ukuran teks aplikasi"}
                     />
                     <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-slate-400">
-                      <span>Kecil</span>
-                      <span>Normal</span>
-                      <span>Besar</span>
+                      <span>{isEnglish ? "Small" : "Kecil"}</span>
+                      <span>{isEnglish ? "Normal" : "Normal"}</span>
+                      <span>{isEnglish ? "Large" : "Besar"}</span>
                     </div>
                   </div>
 
@@ -564,9 +636,59 @@ export function SettingsDropdown() {
                     className="w-full flex items-center justify-center gap-2 text-[11px] font-black text-slate-500 hover:text-brand-700 bg-white hover:bg-brand-50 border border-slate-100 hover:border-brand-100 rounded-2xl py-2 transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    Kembalikan Tampilan Awal
+                    {isEnglish ? "Restore default appearance" : "Kembalikan Tampilan Awal"}
                   </button>
                 </div>
+              </div>
+            )}
+
+            {activeTab === "mode" && (
+              <div className="space-y-3">
+                <div className="rounded-2xl border-2 border-slate-100 bg-slate-50 p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-brand-100 bg-brand-50 text-brand-700">
+                      <MessageSquareHeart className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="block text-sm font-black text-slate-800">{isEnglish ? "Application mode" : "Mode aplikasi"}</span>
+                      <span className="block text-[10px] font-bold text-slate-400">{isEnglish ? "This choice is saved for your account" : "Pilihan ini disimpan untuk akun Anda"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {([
+                  {
+                    id: "cds" as const,
+                    title: "CDS",
+                    description: isEnglish ? "Full CMS assessment, progress, and support plans." : "Asesmen CMS lengkap, progres, dan rencana penanganan.",
+                  },
+                  {
+                    id: "bp" as const,
+                    title: isEnglish ? "Counselling mode" : "Mode BP",
+                    description: isEnglish ? "Focused counselling notes, issues, and practical follow-up without CMS scores." : "Catatan bimbingan, masalah, dan tindak lanjut praktis tanpa skor CMS.",
+                  },
+                ]).map((mode) => {
+                  const selected = activeOrg?.appMode === mode.id;
+                  return (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      disabled={selected || isUpdatingMode}
+                      onClick={() => setPendingMode(mode.id)}
+                      className={`w-full rounded-2xl border-2 p-4 text-left transition-all disabled:cursor-default ${selected ? "border-brand-300 bg-brand-50" : "border-slate-100 bg-white hover:border-brand-200"}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className={`text-sm font-black ${selected ? "text-brand-800" : "text-slate-800"}`}>{mode.title}</p>
+                          <p className="mt-1 text-[11px] font-bold leading-relaxed text-slate-500">{mode.description}</p>
+                        </div>
+                        {selected && <CheckCircle2 className="h-5 w-5 shrink-0 text-brand-600" />}
+                      </div>
+                    </button>
+                  );
+                })}
+
+                {modeError && <p className="rounded-xl bg-rose-50 px-3 py-2 text-[11px] font-bold text-rose-600">{modeError}</p>}
               </div>
             )}
 
@@ -636,7 +758,7 @@ export function SettingsDropdown() {
               CDS V0.1
             </span>
             <span className="text-[10px] text-slate-400 font-black">
-              Bahasa Indonesia
+              {languageName(language)}
             </span>
           </div>
         </div>
@@ -645,6 +767,16 @@ export function SettingsDropdown() {
       <CriteriaGlossaryModal
         isOpen={isGlossaryOpen}
         onClose={() => setIsGlossaryOpen(false)}
+      />
+      <ConfirmModal
+        isOpen={pendingMode !== null}
+        title={pendingMode === "bp" ? (isEnglish ? "Switch to Counselling mode?" : "Beralih ke Mode BP?") : (isEnglish ? "Switch to CDS?" : "Beralih ke CDS?")}
+        description={pendingMode === "bp" ? (isEnglish ? "CMS progress remains intact. This changes only your own workspace; colleagues keep their chosen mode." : "Progres CMS tetap aman. Ini hanya mengubah ruang kerja Anda; rekan tetap memakai mode pilihannya.") : (isEnglish ? "Your BP session history remains intact. This changes only your own workspace." : "Riwayat sesi BP tetap aman. Ini hanya mengubah ruang kerja Anda.")}
+        confirmLabel={isEnglish ? "Switch mode" : "Ganti mode"}
+        cancelLabel={isEnglish ? "Cancel" : "Batal"}
+        confirmVariant="success"
+        onConfirm={confirmModeChange}
+        onCancel={() => setPendingMode(null)}
       />
     </div>
   );

@@ -46,14 +46,16 @@ import { useTerminology } from '@/lib/hooks/use-terminology';
 type PresetKey = 'all' | 'today' | 'yesterday' | 'this_week' | 'last_week' | 'custom';
 type SortKey = 'az' | 'za' | 'most_reports' | 'least_reports' | 'most_recent' | 'least_recent';
 
-const PRESETS: { key: PresetKey; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'today', label: 'Hari Ini' },
-  { key: 'yesterday', label: 'Kemarin' },
-  { key: 'this_week', label: 'Minggu Ini' },
-  { key: 'last_week', label: 'Minggu Lalu' },
-  { key: 'custom', label: 'Pilih Tanggal' },
-];
+function getPresets(isEnglish: boolean): { key: PresetKey; label: string }[] {
+  return [
+    { key: 'all', label: isEnglish ? 'All' : 'Semua' },
+    { key: 'today', label: isEnglish ? 'Today' : 'Hari Ini' },
+    { key: 'yesterday', label: isEnglish ? 'Yesterday' : 'Kemarin' },
+    { key: 'this_week', label: isEnglish ? 'This week' : 'Minggu Ini' },
+    { key: 'last_week', label: isEnglish ? 'Last week' : 'Minggu Lalu' },
+    { key: 'custom', label: isEnglish ? 'Choose dates' : 'Pilih Tanggal' },
+  ];
+}
 
 // Local (not UTC) YYYY-MM-DD key — created_at comparisons must use the
 // admin's local calendar day, not a UTC-shifted one from toISOString().
@@ -153,6 +155,9 @@ function fingerprint(formattedData: any[]): string {
 export default function MonitoringPage() {
   const { activeOrganizationId } = useAuth();
   const t = useTerminology();
+  const isEnglish = t.language === 'en';
+  const locale = isEnglish ? 'en-US' : 'id-ID';
+  const presets = getPresets(isEnglish);
 
   // Lazily seeded from sessionStorage so navigating back from a report shows
   // the list instantly instead of a loading spinner + re-fetch.
@@ -421,15 +426,15 @@ export default function MonitoringPage() {
   const activeData = sortedData.filter((ustadz) => ustadz.isActive);
   const inactiveData = sortedData.filter((ustadz) => !ustadz.isActive);
   const groups = range ? [
-    { label: 'Aktif pada periode ini', items: activeData },
-    { label: 'Belum ada laporan pada periode ini', items: inactiveData },
+    { label: isEnglish ? 'Active in this period' : 'Aktif pada periode ini', items: activeData },
+    { label: isEnglish ? 'No reports in this period' : 'Belum ada laporan pada periode ini', items: inactiveData },
   ] : [{ label: '', items: sortedData }];
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
       <div>
-        <h2 className="text-2xl font-black text-slate-800">Monitor Laporan</h2>
-        <p className="text-slate-400 text-sm font-bold mt-0.5">Progres laporan {t.santriLower} per {t.ustadzLower} pembimbing</p>
+        <h2 className="text-2xl font-black text-slate-800">{isEnglish ? 'Report monitoring' : 'Monitor Laporan'}</h2>
+        <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `${t.santri} report progress by supervising ${t.ustadz.toLowerCase()}` : `Progres laporan ${t.santriLower} per ${t.ustadzLower} pembimbing`}</p>
       </div>
 
       {/* Search */}
@@ -448,7 +453,7 @@ export default function MonitoringPage() {
       {/* Date range filter */}
       <div className="space-y-2.5">
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-          {PRESETS.map((p) => (
+          {presets.map((p) => (
             <button
               key={p.key}
               onClick={() => setPreset(p.key)}
@@ -467,7 +472,7 @@ export default function MonitoringPage() {
         {preset === 'custom' && (
           <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-2xl p-3" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
             <div className="flex-1">
-              <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Dari</label>
+              <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">{isEnglish ? 'From' : 'Dari'}</label>
               <input
                 type="date"
                 value={customFrom}
@@ -477,7 +482,7 @@ export default function MonitoringPage() {
             </div>
             <div className="w-px h-8 bg-slate-100" />
             <div className="flex-1">
-              <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Sampai (opsional)</label>
+              <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">{isEnglish ? 'To (optional)' : 'Sampai (opsional)'}</label>
               <input
                 type="date"
                 value={customTo}
@@ -492,19 +497,19 @@ export default function MonitoringPage() {
 
       <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-2xl p-3" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
         <BarChart3 size={15} className="text-brand-500 shrink-0" />
-        <label htmlFor="monitoring-sort" className="text-xs font-black text-slate-600 whitespace-nowrap">Urutkan:</label>
+        <label htmlFor="monitoring-sort" className="text-xs font-black text-slate-600 whitespace-nowrap">{isEnglish ? 'Sort:' : 'Urutkan:'}</label>
         <select
           id="monitoring-sort"
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as SortKey)}
           className="min-w-0 flex-1 bg-transparent text-xs font-black text-slate-700 outline-none"
         >
-          <option value="az">Nama A-Z</option>
-          <option value="za">Nama Z-A</option>
-          <option value="most_reports">Laporan terbanyak</option>
-          <option value="least_reports">Laporan tersedikit</option>
-          <option value="most_recent">Laporan terbaru</option>
-          <option value="least_recent">Laporan terlama</option>
+          <option value="az">{isEnglish ? 'Name A-Z' : 'Nama A-Z'}</option>
+          <option value="za">{isEnglish ? 'Name Z-A' : 'Nama Z-A'}</option>
+          <option value="most_reports">{isEnglish ? 'Most reports' : 'Laporan terbanyak'}</option>
+          <option value="least_reports">{isEnglish ? 'Fewest reports' : 'Laporan tersedikit'}</option>
+          <option value="most_recent">{isEnglish ? 'Most recent report' : 'Laporan terbaru'}</option>
+          <option value="least_recent">{isEnglish ? 'Oldest report' : 'Laporan terlama'}</option>
         </select>
       </div>
 
@@ -548,11 +553,11 @@ export default function MonitoringPage() {
                           <Users size={9} /> {totalStudents} {t.santri}
                         </span>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black border border-blue-100">
-                          <BookOpen size={9} /> {ustadz.periodReportCount} Laporan
+                          <BookOpen size={9} /> {ustadz.periodReportCount} {isEnglish ? 'reports' : 'Laporan'}
                         </span>
                         {showInactive && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black border border-amber-100">
-                            Tidak aktif
+                            {isEnglish ? 'Inactive' : 'Tidak aktif'}
                           </span>
                         )}
                       </div>
@@ -570,7 +575,7 @@ export default function MonitoringPage() {
                           <div className="flex items-center gap-2 pt-1 pb-0">
                             <div className="h-px flex-1 bg-amber-100" />
                             <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 whitespace-nowrap">
-                              Laporan dari luar bimbingan Anda
+                              {isEnglish ? 'Reports outside your assigned roster' : 'Laporan dari luar bimbingan Anda'}
                             </span>
                             <div className="h-px flex-1 bg-amber-100" />
                           </div>
@@ -587,11 +592,11 @@ export default function MonitoringPage() {
                             <span className="font-black text-slate-700 text-sm">{student.name}</span>
                             {student.isCrossAssignment && (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-black">
-                                Bukan bimbingan Anda
+                                {isEnglish ? 'Not assigned to you' : 'Bukan bimbingan Anda'}
                               </span>
                             )}
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black">
-                              {student.periodReports.length} laporan
+                              {student.periodReports.length} {isEnglish ? 'reports' : 'laporan'}
                             </span>
                           </div>
                           {student.periodReports.length > 0 ? (
@@ -601,16 +606,16 @@ export default function MonitoringPage() {
                                   <div className="flex items-center justify-between mb-1.5">
                                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
                                       <Calendar size={11} className="text-brand-500" />
-                                      {new Date(report.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                      {new Date(report.created_at).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" })}
                                       <span className="text-slate-300">·</span>
-                                      {new Date(report.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                                      {new Date(report.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                       <Link href={`/students/${student.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-black text-slate-600 bg-white px-2.5 py-1 rounded-lg border-2 border-slate-200 hover:border-slate-300 transition-colors flex items-center gap-1">
-                                        <Users size={10} /> Profil
+                                        <Users size={10} /> {isEnglish ? 'Profile' : 'Profil'}
                                       </Link>
                                       <Link href={`/reports/${report.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-black text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg border-2 border-brand-200 hover:bg-brand-100 transition-colors flex items-center gap-1">
-                                        <FileText size={10} /> Detail
+                                        <FileText size={10} /> {isEnglish ? 'Details' : 'Detail'}
                                       </Link>
                                     </div>
                                   </div>
@@ -621,7 +626,7 @@ export default function MonitoringPage() {
                             </div>
                           ) : (
                             <p className="text-xs text-slate-400 font-bold ml-3.5 pl-3 border-l-2 border-slate-100 py-1">
-                              {range ? "Tidak ada laporan pada periode ini." : "Belum ada laporan."}
+                              {range ? (isEnglish ? "No reports in this period." : "Tidak ada laporan pada periode ini.") : (isEnglish ? "No reports yet." : "Belum ada laporan.")}
                             </p>
                           )}
                         </div>
@@ -630,7 +635,7 @@ export default function MonitoringPage() {
                     ) : (
                       <div className="text-center py-6">
                         <AlertCircle className="w-7 h-7 mx-auto text-amber-300 mb-2" />
-                        <p className="text-sm text-slate-400 font-black">Belum ada {t.santriLower} yang ditugaskan.</p>
+                        <p className="text-sm text-slate-400 font-black">{isEnglish ? `No ${t.santri.toLowerCase()}s assigned yet.` : `Belum ada ${t.santriLower} yang ditugaskan.`}</p>
                       </div>
                     )}
                   </div>
@@ -645,7 +650,7 @@ export default function MonitoringPage() {
         <div className="text-center py-16 bg-white rounded-[1.5rem] border-2 border-dashed border-slate-200">
           <BookOpen className="w-8 h-8 mx-auto text-slate-200 mb-3" />
           <p className="text-slate-400 font-black text-sm">
-            {searchQuery ? "Tidak ada hasil pencarian" : "Belum ada data monitoring"}
+            {searchQuery ? (isEnglish ? "No matching results" : "Tidak ada hasil pencarian") : (isEnglish ? "No monitoring data yet" : "Belum ada data monitoring")}
           </p>
         </div>
       )}

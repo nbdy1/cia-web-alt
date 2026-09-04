@@ -32,6 +32,8 @@ import { AdminSpreadsheetImport } from '@/components/AdminSpreadsheetImport';
 export default function ManageSantriPage() {
   const { activeOrganizationId } = useAuth();
   const t = useTerminology();
+  const isEnglish = t.language === 'en';
+  const locale = isEnglish ? 'en-US' : 'id-ID';
   const [students, setStudents] = useState<any[]>([]);
   const [removedStudents, setRemovedStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,14 +155,14 @@ export default function ManageSantriPage() {
         }
       }
 
-      setModalSuccess(`${t.santri} berhasil ditambahkan!`);
+      setModalSuccess(isEnglish ? `${t.santri} added successfully!` : `${t.santri} berhasil ditambahkan!`);
       setFormData({ name: '', nis: '' });
       setPendingPhotoFile(null);
       setPendingPhotoPreview(null);
       fetchStudents();
       setTimeout(() => { setIsAddModalOpen(false); setModalSuccess(null); }, 2000);
     } catch (err: any) {
-      setModalError(err.message || `Gagal menambahkan ${t.santriLower} baru`);
+      setModalError(err.message || (isEnglish ? `Unable to add a new ${t.santriLower}` : `Gagal menambahkan ${t.santriLower} baru`));
     } finally {
       setIsSubmitting(false);
     }
@@ -182,7 +184,7 @@ export default function ManageSantriPage() {
 
   const handleRemoveSantri = async () => {
     if (!studentToRemove || !removeReason.trim()) {
-      setRemoveError("Alasan penghapusan wajib diisi.");
+      setRemoveError(isEnglish ? "A removal reason is required." : "Alasan penghapusan wajib diisi.");
       return;
     }
     setIsRemoving(true);
@@ -262,7 +264,7 @@ export default function ManageSantriPage() {
     const update = (rows: any[]) => rows.map((row) => row.id === studentId ? { ...row, assigned_ustadz_id: ustadzId || null, profiles: ustadzList.find((u) => u.id === ustadzId) ?? null } : row);
     setStudents(update);
     setRemovedStudents(update);
-    setAssignmentMessage('Penugasan tersimpan');
+    setAssignmentMessage(isEnglish ? 'Assignment saved' : 'Penugasan tersimpan');
     window.setTimeout(() => setAssignmentMessage(null), 1800);
   };
 
@@ -271,8 +273,8 @@ export default function ManageSantriPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Manajemen {t.santri}</h2>
-          <p className="text-slate-400 text-sm font-bold mt-0.5">Tambah, lihat, atau nonaktifkan data {t.santriLower}</p>
+          <h2 className="text-2xl font-black text-slate-800">{isEnglish ? `${t.santri} management` : `Manajemen ${t.santri}`}</h2>
+          <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `Add, view, or deactivate ${t.santriLower} records` : `Tambah, lihat, atau nonaktifkan data ${t.santriLower}`}</p>
         </div>
         {!showRemoved && (
           <div className="flex flex-wrap gap-2">
@@ -282,7 +284,7 @@ export default function ManageSantriPage() {
               className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
               style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
             >
-              <Plus size={15} /> Tambah {t.santri}
+              <Plus size={15} /> {isEnglish ? `Add ${t.santri}` : `Tambah ${t.santri}`}
             </button>
           </div>
         )}
@@ -295,14 +297,14 @@ export default function ManageSantriPage() {
           className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={!showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
         >
-          Aktif ({students.length})
+          {isEnglish ? 'Active' : 'Aktif'} ({students.length})
         </button>
         <button
           onClick={() => { setShowRemoved(true); setSearchQuery(''); }}
           className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${showRemoved ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={showRemoved ? { boxShadow: "0 3px 0 0 #b91c1c" } : {}}
         >
-          Dinonaktifkan ({removedStudents.length})
+          {isEnglish ? 'Deactivated' : 'Dinonaktifkan'} ({removedStudents.length})
         </button>
       </div>
 
@@ -311,7 +313,7 @@ export default function ManageSantriPage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
-          placeholder={showRemoved ? `Cari ${t.santriLower} yang dinonaktifkan…` : "Cari nama atau NIS…"}
+          placeholder={showRemoved ? (isEnglish ? `Search deactivated ${t.santriLower}s…` : `Cari ${t.santriLower} yang dinonaktifkan…`) : (isEnglish ? 'Search name or student ID…' : 'Cari nama atau NIS…')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
@@ -321,11 +323,11 @@ export default function ManageSantriPage() {
 
       {!showRemoved && (
         <div className="flex items-center justify-between gap-3 bg-white border-2 border-slate-200 rounded-2xl p-3" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
-          <div className="flex items-center gap-2 text-xs font-black text-slate-600"><ArrowUpDown size={14} className="text-brand-500" /> Urutkan</div>
+          <div className="flex items-center gap-2 text-xs font-black text-slate-600"><ArrowUpDown size={14} className="text-brand-500" /> {isEnglish ? 'Sort' : 'Urutkan'}</div>
           <select value={sortOption} onChange={(e) => setSortOption(e.target.value as typeof sortOption)} className="bg-transparent text-xs font-black text-slate-700 outline-none">
-            <option value="name">Nama A-Z</option>
-            <option value="score">Skor CMS tertinggi</option>
-            <option value="reports">Laporan terbanyak</option>
+            <option value="name">{isEnglish ? 'Name A-Z' : 'Nama A-Z'}</option>
+            <option value="score">{isEnglish ? 'Highest CMS score' : 'Skor CMS tertinggi'}</option>
+            <option value="reports">{isEnglish ? 'Most reports' : 'Laporan terbanyak'}</option>
           </select>
         </div>
       )}
@@ -380,14 +382,14 @@ export default function ManageSantriPage() {
                 </div>
                 {!showRemoved && (
                   <div className="flex items-center gap-2 mt-3">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 whitespace-nowrap">Pembimbing</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 whitespace-nowrap">{isEnglish ? 'Supervisor' : 'Pembimbing'}</span>
                     <select
                       value={student.assigned_ustadz_id ?? ''}
                       disabled={savingAssignmentId === student.id}
                       onChange={(event) => changeAssignment(student.id, event.target.value)}
                       className="min-w-0 flex-1 max-w-xs bg-white border-2 border-brand-100 rounded-xl px-3 py-2 text-xs font-black text-brand-700 outline-none focus:border-brand-400 disabled:opacity-60"
                     >
-                      <option value="">Belum ditugaskan</option>
+                      <option value="">{isEnglish ? 'Not assigned' : 'Belum ditugaskan'}</option>
                       {ustadzList.map((ustadz) => <option key={ustadz.id} value={ustadz.id}>{ustadz.name}</option>)}
                     </select>
                     {savingAssignmentId === student.id && <Loader2 size={14} className="animate-spin text-brand-500" />}
@@ -396,14 +398,14 @@ export default function ManageSantriPage() {
                 {!showRemoved && (
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-black">CMS {student.cmsScore?.toFixed(1).replace('.', ',')}%</span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 text-[10px] font-black"><FileText size={10} /> {student.reportCount ?? 0} laporan</span>
-                    <Link href={`/students/${student.id}?from=${encodeURIComponent('/admin/santri')}`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black hover:bg-slate-200"><ExternalLink size={10} /> Profil</Link>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 text-[10px] font-black"><FileText size={10} /> {student.reportCount ?? 0} {isEnglish ? 'reports' : 'laporan'}</span>
+                    <Link href={`/students/${student.id}?from=${encodeURIComponent('/admin/santri')}`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black hover:bg-slate-200"><ExternalLink size={10} /> {isEnglish ? 'Profile' : 'Profil'}</Link>
                   </div>
                 )}
                 {showRemoved && (
                   <div className="mt-2 p-2.5 bg-rose-50 border border-rose-100 rounded-xl">
                     <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider mb-0.5">
-                      Dinonaktifkan {student.removed_at ? new Date(student.removed_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : ""}
+                      {isEnglish ? 'Deactivated' : 'Dinonaktifkan'} {student.removed_at ? new Date(student.removed_at).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" }) : ""}
                     </p>
                     <p className="text-xs font-bold text-rose-700 leading-snug">{student.removed_reason}</p>
                   </div>
@@ -435,8 +437,8 @@ export default function ManageSantriPage() {
             : <GraduationCap className="w-8 h-8 mx-auto text-slate-200 mb-3" />}
           <p className="text-slate-400 font-black text-sm">
             {searchQuery
-              ? "Tidak ada hasil pencarian"
-              : showRemoved ? `Belum ada ${t.santriLower} yang dinonaktifkan` : `Belum ada data ${t.santriLower}`}
+              ? (isEnglish ? 'No matching results' : 'Tidak ada hasil pencarian')
+              : showRemoved ? (isEnglish ? `No deactivated ${t.santriLower}s yet` : `Belum ada ${t.santriLower} yang dinonaktifkan`) : (isEnglish ? `No ${t.santriLower} data yet` : `Belum ada data ${t.santriLower}`)}
           </p>
         </div>
       )}
@@ -452,8 +454,8 @@ export default function ManageSantriPage() {
               <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}>
                 <Plus size={20} className="text-brand-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Tambah {t.santri}</h3>
-              <p className="text-slate-400 text-sm font-bold mt-0.5">Masukkan data {t.santriLower} baru.</p>
+              <h3 className="text-xl font-black text-slate-800">{isEnglish ? `Add ${t.santri}` : `Tambah ${t.santri}`}</h3>
+              <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `Enter the new ${t.santriLower}'s details.` : `Masukkan data ${t.santriLower} baru.`}</p>
             </div>
             {modalError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={16} />{modalError}</div>}
             {modalSuccess && <div className="mb-4 p-3 bg-brand-50 border-2 border-brand-200 text-brand-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={16} />{modalSuccess}</div>}
@@ -470,27 +472,27 @@ export default function ManageSantriPage() {
                   ) : (
                     <div className="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1 text-slate-400 group-hover:border-brand-400 group-hover:text-brand-500 transition-colors">
                       <Camera size={22} />
-                      <span className="text-[9px] font-black uppercase tracking-wider">Foto</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider">{isEnglish ? 'Photo' : 'Foto'}</span>
                     </div>
                   )}
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white border-2 border-slate-200 rounded-lg flex items-center justify-center" style={{ boxShadow: '0 2px 0 0 #e2e8f0' }}>
                     <Camera size={11} className="text-slate-500" />
                   </div>
                 </button>
-                <p className="text-[10px] text-slate-400 font-bold">Opsional — bisa diubah nanti</p>
+                <p className="text-[10px] text-slate-400 font-bold">{isEnglish ? 'Optional — can be changed later' : 'Opsional — bisa diubah nanti'}</p>
                 <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePendingPhoto} />
               </div>
 
               <div>
-                <label className={labelCls}>Nama Lengkap *</label>
+                <label className={labelCls}>{isEnglish ? 'Full name *' : 'Nama Lengkap *'}</label>
                 <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ahmad Zaid" className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>NIS (Nomor Induk {t.santri})</label>
+                <label className={labelCls}>{isEnglish ? `${t.santri} ID` : `NIS (Nomor Induk ${t.santri})`}</label>
                 <input type="text" value={formData.nis} onChange={e => setFormData({...formData, nis: e.target.value})} placeholder="2024001" className={inputCls} />
               </div>
               <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} Simpan {t.santri}
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} {isEnglish ? `Save ${t.santri}` : `Simpan ${t.santri}`}
               </button>
             </form>
           </div>
@@ -509,27 +511,27 @@ export default function ManageSantriPage() {
               <div className="w-11 h-11 bg-rose-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #fecaca" }}>
                 <UserX size={20} className="text-rose-500" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Nonaktifkan {t.santri}</h3>
+              <h3 className="text-xl font-black text-slate-800">{isEnglish ? `Deactivate ${t.santri}` : `Nonaktifkan ${t.santri}`}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">
-                <strong className="text-slate-700">{studentToRemove.name}</strong> akan disembunyikan dari daftar aktif. Riwayat laporannya tetap tersimpan.
+                {isEnglish ? <><strong className="text-slate-700">{studentToRemove.name}</strong> will be hidden from the active list. Their report history will remain available.</> : <><strong className="text-slate-700">{studentToRemove.name}</strong> akan disembunyikan dari daftar aktif. Riwayat laporannya tetap tersimpan.</>}
               </p>
             </div>
             {removeError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={15} />{removeError}</div>}
             <div className="space-y-4">
               <div>
-                <label className={labelCls}>Alasan Penghapusan *</label>
+                <label className={labelCls}>{isEnglish ? 'Reason for removal *' : 'Alasan Penghapusan *'}</label>
                 <textarea
                   required
                   rows={3}
                   value={removeReason}
                   onChange={e => setRemoveReason(e.target.value)}
-                  placeholder={`Contoh: ${t.santri} telah lulus dan keluar dari pesantren.`}
+                  placeholder={isEnglish ? `Example: ${t.santri} has graduated and left the school.` : `Contoh: ${t.santri} telah lulus dan keluar dari pesantren.`}
                   className={inputCls + " resize-none"}
                 />
               </div>
               <div className="flex gap-3 pt-1">
                 <button onClick={() => setIsRemoveModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-black py-3 rounded-xl hover:bg-slate-200 transition-colors">
-                  Batal
+                  {isEnglish ? 'Cancel' : 'Batal'}
                 </button>
                 <button
                   onClick={handleRemoveSantri}
@@ -537,7 +539,7 @@ export default function ManageSantriPage() {
                   className="flex-1 bg-rose-500 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
                   style={{ boxShadow: "0 3px 0 0 #b91c1c" }}
                 >
-                  {isRemoving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX size={14} />} Nonaktifkan
+                  {isRemoving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX size={14} />} {isEnglish ? 'Deactivate' : 'Nonaktifkan'}
                 </button>
               </div>
             </div>

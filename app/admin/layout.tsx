@@ -16,7 +16,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, ChevronLeft, BookOpen, GraduationCap, Loader2, Settings, Lightbulb } from 'lucide-react';
+import { LayoutDashboard, Users, ChevronLeft, BookOpen, GraduationCap, Loader2, Settings, Lightbulb, MessageSquareHeart } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth-context';
 import { useUserRole } from '@/lib/hooks/use-user-role';
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher';
@@ -27,8 +27,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, activeOrganization } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const t = useTerminology();
+  const isEnglish = t.language === "en";
   const router = useRouter();
   const isAdmin = role === 'owner' || role === 'admin';
+  const isBpMode = activeOrganization?.appMode === 'bp';
 
   // Redirect non-admin users away from /admin
   useEffect(() => {
@@ -50,12 +52,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isAdmin) return null;
 
   const navItems = [
-    { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-    { href: '/admin/santri', label: `Kelola ${t.santri}`, icon: GraduationCap },
-    { href: '/admin/ustadz', label: `Kelola ${t.ustadz}`, icon: Users },
-    { href: '/admin/monitoring', label: 'Monitor Laporan', icon: BookOpen },
-    { href: '/admin/treatment-plans', label: 'Rencana Penanganan', icon: Lightbulb },
-    { href: '/admin/settings', label: 'Pengaturan Sistem', icon: Settings },
+    { href: isBpMode ? '/admin/bp' : '/admin', label: isBpMode ? (isEnglish ? 'Counselling' : 'Bimbingan') : 'Overview', icon: isBpMode ? MessageSquareHeart : LayoutDashboard },
+    { href: '/admin/santri', label: isEnglish ? `Manage ${t.santri}s` : `Kelola ${t.santri}`, icon: GraduationCap },
+    { href: '/admin/ustadz', label: isEnglish ? `Manage ${t.ustadz}s` : `Kelola ${t.ustadz}`, icon: Users },
+    ...(isBpMode ? [] : [
+      { href: '/admin/monitoring', label: isEnglish ? 'Report Monitor' : 'Monitor Laporan', icon: BookOpen },
+      { href: '/admin/treatment-plans', label: isEnglish ? 'Support Plans' : 'Rencana Penanganan', icon: Lightbulb },
+    ]),
+    { href: '/admin/settings', label: isEnglish ? 'System Settings' : 'Pengaturan Sistem', icon: Settings },
   ];
   const mobilePrimaryItems = navItems;
 
@@ -100,7 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Desktop sidebar */}
         <aside className="hidden md:flex flex-col w-56 bg-white border-r-2 border-slate-100 p-3 space-y-1 flex-shrink-0" style={{ boxShadow: "2px 0 0 0 #e2e8f0" }}>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 pb-1">Navigasi</p>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 pb-1">{isEnglish ? "Navigation" : "Navigasi"}</p>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;

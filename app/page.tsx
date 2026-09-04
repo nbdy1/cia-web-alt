@@ -645,7 +645,9 @@ export default function HomePage() {
   const { user, signOut, activeOrganization } = useAuth();
   const { role } = useUserRole();
   const t = useTerminology();
+  const isEnglish = t.language === "en";
   const isAdmin = role === "owner" || role === "admin";
+  const isBpMode = activeOrganization?.appMode === "bp";
   const userName =
     user?.user_metadata?.name || user?.email?.split("@")[0] || "Ustaz Abdullah";
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
@@ -681,20 +683,20 @@ export default function HomePage() {
             onClick={() => setShowLogoutConfirm(true)}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-black text-rose-500 bg-white border-2 border-rose-100 rounded-2xl hover:bg-rose-50 active:translate-y-px transition-all"
             style={{ boxShadow: "0 3px 0 0 #fecaca" }}
-            title="Keluar"
+            title={isEnglish ? "Sign out" : "Keluar"}
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Keluar</span>
+            <span>{isEnglish ? "Sign out" : "Keluar"}</span>
           </button>
         </div>
       </header>
 
       <ConfirmModal
         isOpen={showLogoutConfirm}
-        title="Keluar dari akun?"
-        description="Anda perlu masuk kembali untuk mengakses aplikasi."
-        confirmLabel="Keluar"
-        cancelLabel="Batal"
+        title={isEnglish ? "Sign out?" : "Keluar dari akun?"}
+        description={isEnglish ? "You will need to sign in again to access the application." : "Anda perlu masuk kembali untuk mengakses aplikasi."}
+        confirmLabel={isEnglish ? "Sign out" : "Keluar"}
+        cancelLabel={isEnglish ? "Cancel" : "Batal"}
         onConfirm={() => {
           setShowLogoutConfirm(false);
           signOut();
@@ -706,16 +708,16 @@ export default function HomePage() {
         {/* Welcome */}
         <section>
           <p className="text-brand-600 font-black text-sm uppercase tracking-widest mb-1">
-            Assalamualaikum 👋
+            {isEnglish ? "Assalamualaikum" : "Assalamualaikum"}
           </p>
           <h1 className="text-4xl font-black text-slate-800 leading-tight">
             {userName}
           </h1>
         </section>
 
-        {/* Primary Action — Create Report */}
+        {/* The organisation-wide mode decides which workflow teachers enter. */}
         <Link
-          href="/create-report"
+          href={isBpMode ? "/bp" : "/create-report"}
           className="block active:translate-y-1 transition-transform"
         >
           <div
@@ -723,22 +725,22 @@ export default function HomePage() {
             style={{ boxShadow: "0 5px 0 0 var(--brand-700)" }}
           >
             <div className="w-20 h-20 bg-white/20 rounded-[1.4rem] flex items-center justify-center">
-              <Mic className="w-10 h-10 text-white" />
+              {isBpMode ? <HeartHandshake className="w-10 h-10 text-white" /> : <Mic className="w-10 h-10 text-white" />}
             </div>
             <div>
               <p className="text-brand-100 text-xs font-black uppercase tracking-widest mb-1">
-                Mulai Sekarang
+                {isBpMode ? (isEnglish ? "Counselling workspace" : "Ruang bimbingan") : (isEnglish ? "Start now" : "Mulai Sekarang")}
               </p>
               <span className="text-white text-2xl font-black leading-tight">
-                Input Data {t.santri}
+                {isBpMode ? (isEnglish ? `Guide a ${t.santriLower}` : `Bimbing ${t.santriLower}`) : (isEnglish ? `Add ${t.santri} Notes` : `Input Data ${t.santri}`)}
               </span>
             </div>
           </div>
         </Link>
 
-        {/* Secondary Action — Students & Analytics */}
+        {/* BP keeps history separate from CMS analytics. */}
         <Link
-          href="/students"
+          href={isBpMode ? "/bp/history" : "/students"}
           className="block active:translate-y-1 transition-transform"
         >
           <div
@@ -746,14 +748,14 @@ export default function HomePage() {
             style={{ boxShadow: "0 5px 0 0 #cbd5e1" }}
           >
             <div className="w-16 h-16 bg-brand-50 rounded-[1.2rem] flex items-center justify-center border-2 border-brand-100">
-              <BarChart3 className="w-8 h-8 text-brand-600" />
+              {isBpMode ? <ClipboardList className="w-8 h-8 text-brand-600" /> : <BarChart3 className="w-8 h-8 text-brand-600" />}
             </div>
             <div>
               <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">
-                Pantau & Analisis
+                {isBpMode ? (isEnglish ? "Review & continue" : "Tinjau & lanjutkan") : (isEnglish ? "Track & analyse" : "Pantau & Analisis")}
               </p>
               <span className="text-slate-800 text-xl font-black leading-tight">
-                Profil CMS {t.santri}
+                {isBpMode ? (isEnglish ? "Counselling notes" : "Catatan bimbingan") : (isEnglish ? `${t.santri} CMS Profile` : `Profil CMS ${t.santri}`)}
               </span>
             </div>
           </div>
@@ -762,7 +764,7 @@ export default function HomePage() {
         {/* Admin Portal */}
         {isAdmin && (
           <Link
-            href="/admin"
+            href={isBpMode ? "/admin/bp" : "/admin"}
             className="block active:translate-y-1 transition-transform"
           >
             <div
@@ -773,7 +775,7 @@ export default function HomePage() {
                 <ShieldCheck className="w-7 h-7 text-brand-400" />
               </div>
               <span className="text-white text-lg font-black">
-                Portal Admin
+                {isEnglish ? "Admin Portal" : "Portal Admin"}
               </span>
             </div>
           </Link>

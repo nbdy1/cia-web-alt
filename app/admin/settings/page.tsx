@@ -5,20 +5,23 @@ import { ImageUp, Palette, Check, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/context/auth-context";
 import { supabase } from "@/lib/supabase";
 import { COLOR_PRESETS, generateBrandScale, isValidHexColor, applyBrandScale } from "@/lib/theme/colors";
+import { useSettings } from "@/lib/context/settings-context";
 
 export default function AdminSettingsPage() {
   const { activeOrganization } = useAuth();
+  const { language } = useSettings();
+  const isEnglish = language === "en";
 
   return (
     <div className="p-6 space-y-6">
       <div className="mb-2">
-        <h2 className="text-xl font-black text-slate-800">Pengaturan Sistem</h2>
+        <h2 className="text-xl font-black text-slate-800">{isEnglish ? "System settings" : "Pengaturan Sistem"}</h2>
         <p className="text-sm font-semibold text-slate-500 mt-1">
-          Konfigurasi global untuk aplikasi CDS
+          {isEnglish ? "Global configuration for the CDS application" : "Konfigurasi global untuk aplikasi CDS"}
         </p>
       </div>
 
-      {activeOrganization && <BrandingCard organization={activeOrganization} />}
+      {activeOrganization && <BrandingCard organization={activeOrganization} isEnglish={isEnglish} />}
 
     </div>
   );
@@ -31,7 +34,7 @@ interface OrgForBranding {
   primaryColor: string;
 }
 
-function BrandingCard({ organization }: { organization: OrgForBranding }) {
+function BrandingCard({ organization, isEnglish }: { organization: OrgForBranding; isEnglish: boolean }) {
   const [logoUrl, setLogoUrl] = useState(organization.logoUrl);
   const [primaryColor, setPrimaryColor] = useState(organization.primaryColor);
   const [customHex, setCustomHex] = useState(organization.primaryColor);
@@ -68,7 +71,7 @@ function BrandingCard({ organization }: { organization: OrgForBranding }) {
   const handleCustomHexSubmit = () => {
     const hex = customHex.trim();
     if (!isValidHexColor(hex)) {
-      setError("Format warna tidak valid. Gunakan format #RRGGBB.");
+      setError(isEnglish ? "Invalid color format. Use #RRGGBB." : "Format warna tidak valid. Gunakan format #RRGGBB.");
       return;
     }
     persistColor(hex);
@@ -101,7 +104,7 @@ function BrandingCard({ organization }: { organization: OrgForBranding }) {
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     } catch (err: any) {
-      setError(err.message || "Gagal mengunggah logo");
+      setError(err.message || (isEnglish ? "Unable to upload the logo" : "Gagal mengunggah logo"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -118,9 +121,9 @@ function BrandingCard({ organization }: { organization: OrgForBranding }) {
           <Palette className="w-5 h-5" />
         </div>
         <div>
-          <span className="block font-black text-slate-800 text-base">Branding Organisasi</span>
+          <span className="block font-black text-slate-800 text-base">{isEnglish ? "Organisation branding" : "Branding Organisasi"}</span>
           <span className="block text-xs text-slate-400 font-bold">
-            Logo dan skema warna untuk {organization.name}
+            {isEnglish ? `Logo and color scheme for ${organization.name}` : `Logo dan skema warna untuk ${organization.name}`}
           </span>
         </div>
       </div>
@@ -162,7 +165,7 @@ function BrandingCard({ organization }: { organization: OrgForBranding }) {
                 ) : (
                   <ImageUp className="w-3.5 h-3.5" />
                 )}
-                {uploading ? "Mengunggah..." : "Ganti logo"}
+                {uploading ? (isEnglish ? "Uploading..." : "Mengunggah...") : (isEnglish ? "Change logo" : "Ganti logo")}
               </label>
               <p className="text-[10px] font-semibold text-slate-400 mt-2">PNG, JPG, SVG, atau WebP</p>
             </div>
@@ -171,7 +174,7 @@ function BrandingCard({ organization }: { organization: OrgForBranding }) {
 
         {/* Color scheme */}
         <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-100">
-          <span className="block font-black text-slate-700 text-sm mb-3">Skema Warna</span>
+          <span className="block font-black text-slate-700 text-sm mb-3">{isEnglish ? "Color scheme" : "Skema Warna"}</span>
           <div className="flex flex-wrap gap-2 mb-3">
             {COLOR_PRESETS.map((preset) => {
               const isActive = activePreset?.id === preset.id;
@@ -201,7 +204,7 @@ function BrandingCard({ organization }: { organization: OrgForBranding }) {
                 persistColor(e.target.value);
               }}
               className="w-9 h-9 rounded-lg border-2 border-slate-200 cursor-pointer bg-white p-0.5"
-              title="Pilih warna kustom"
+              title={isEnglish ? "Choose custom color" : "Pilih warna kustom"}
             />
             <input
               type="text"
@@ -217,8 +220,8 @@ function BrandingCard({ organization }: { organization: OrgForBranding }) {
       </div>
 
       <div className="mt-4 h-4 text-xs font-bold">
-        {saving && <span className="text-slate-400">Menyimpan...</span>}
-        {saved && !saving && <span className="text-brand-600">Tersimpan ✓</span>}
+        {saving && <span className="text-slate-400">{isEnglish ? "Saving..." : "Menyimpan..."}</span>}
+        {saved && !saving && <span className="text-brand-600">{isEnglish ? "Saved" : "Tersimpan"} ✓</span>}
         {error && <span className="text-rose-500">{error}</span>}
       </div>
     </div>

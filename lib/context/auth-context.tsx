@@ -41,6 +41,7 @@ interface Organization {
   role: string;
   logoUrl: string | null;
   primaryColor: string;
+  appMode: "cds" | "bp";
 }
 
 interface AuthContextType {
@@ -49,6 +50,7 @@ interface AuthContextType {
   activeOrganizationId: string | null;
   activeOrganization: Organization | null;
   setActiveOrganizationId: (id: string) => void;
+  setActiveOrganizationMode: (mode: "cds" | "bp") => void;
   loading: boolean;
   signOut: () => Promise<void>;
 }
@@ -97,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from('organization_members')
       .select(`
         role,
+        app_mode,
         organizations (
           id,
           name,
@@ -118,13 +121,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
     }
 
-    const mappedOrgs = (orgsData ?? []).map((row: any) => ({
+    const mappedOrgs: Organization[] = (orgsData ?? []).map((row: any) => ({
       id: row.organizations.id,
       name: row.organizations.name,
       slug: row.organizations.slug,
       role: row.role,
       logoUrl: row.organizations.logo_url ?? null,
       primaryColor: row.organizations.primary_color ?? '#10b981',
+      appMode: (row.app_mode === "bp" ? "bp" : "cds") as "cds" | "bp",
     }));
 
     setOrganizations(mappedOrgs);
@@ -216,6 +220,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const activeOrganization = organizations.find((o) => o.id === activeOrganizationId) ?? null;
 
+  // This is a local optimistic update. The persisted setting belongs to the
+  // signed-in user's membership, so switching does not affect colleagues.
+  const setActiveOrganizationMode = (mode: "cds" | "bp") => {
+    if (!activeOrganizationId) return;
+    setOrganizations((current) => current.map((organization) =>
+      organization.id === activeOrganizationId ? { ...organization, appMode: mode } : organization,
+    ));
+  };
+
   useEffect(() => {
     if (!activeOrganization || typeof window === "undefined") return;
 
@@ -287,7 +300,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, organizations, activeOrganizationId, activeOrganization, setActiveOrganizationId, loading, signOut }}>
+    <AuthContext.Provider value={{ user, organizations, activeOrganizationId, activeOrganization, setActiveOrganizationId, setActiveOrganizationMode, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
