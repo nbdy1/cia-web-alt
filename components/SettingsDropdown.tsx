@@ -664,7 +664,7 @@ export function SettingsDropdown() {
                   },
                   {
                     id: "bp" as const,
-                    title: isEnglish ? "Counselling mode" : "Mode BP",
+                    title: isEnglish ? "Counselling mode" : "Mode BK",
                     description: isEnglish ? "Focused counselling notes, issues, and practical follow-up without CMS scores." : "Catatan bimbingan, masalah, dan tindak lanjut praktis tanpa skor CMS.",
                   },
                 ]).map((mode) => {
@@ -770,8 +770,8 @@ export function SettingsDropdown() {
       />
       <ConfirmModal
         isOpen={pendingMode !== null}
-        title={pendingMode === "bp" ? (isEnglish ? "Switch to Counselling mode?" : "Beralih ke Mode BP?") : (isEnglish ? "Switch to CDS?" : "Beralih ke CDS?")}
-        description={pendingMode === "bp" ? (isEnglish ? "CMS progress remains intact. This changes only your own workspace; colleagues keep their chosen mode." : "Progres CMS tetap aman. Ini hanya mengubah ruang kerja Anda; rekan tetap memakai mode pilihannya.") : (isEnglish ? "Your BP session history remains intact. This changes only your own workspace." : "Riwayat sesi BP tetap aman. Ini hanya mengubah ruang kerja Anda.")}
+        title={pendingMode === "bp" ? (isEnglish ? "Switch to Counselling mode?" : "Beralih ke Mode BK?") : (isEnglish ? "Switch to CDS?" : "Beralih ke CDS?")}
+        description={pendingMode === "bp" ? (isEnglish ? "CMS progress remains intact. This changes only your own workspace; colleagues keep their chosen mode." : "Progres CMS tetap aman. Ini hanya mengubah ruang kerja Anda; rekan tetap memakai mode pilihannya.") : (isEnglish ? "Your counselling session history remains intact. This changes only your own workspace." : "Riwayat sesi BK tetap aman. Ini hanya mengubah ruang kerja Anda.")}
         confirmLabel={isEnglish ? "Switch mode" : "Ganti mode"}
         cancelLabel={isEnglish ? "Cancel" : "Batal"}
         confirmVariant="success"

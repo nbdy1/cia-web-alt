@@ -36,7 +36,7 @@ export default function BpHomePage() {
         <Link href="/" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-brand-700"><ArrowLeft className="h-4 w-4" />{isEnglish ? "Home" : "Beranda"}</Link>
         <div className="mt-5 flex items-center gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white" style={{ boxShadow: "0 4px 0 var(--brand-700)" }}><MessageSquareHeart className="h-6 w-6" /></div>
-          <div><p className="text-[10px] font-black uppercase tracking-widest text-brand-600">{isEnglish ? "Counselling mode" : "Mode BP"}</p><h1 className="text-2xl font-black text-slate-800">{isEnglish ? "Student counselling" : `Bimbingan ${t.santri}`}</h1></div>
+          <div><p className="text-[10px] font-black uppercase tracking-widest text-brand-600">{isEnglish ? "Counselling mode" : "Mode BK"}</p><h1 className="text-2xl font-black text-slate-800">{isEnglish ? "Student counselling" : `Bimbingan ${t.santri}`}</h1></div>
         </div>
       </header>
       <main className="space-y-5 px-6 pt-6">

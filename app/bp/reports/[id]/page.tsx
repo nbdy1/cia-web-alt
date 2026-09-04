@@ -40,7 +40,7 @@ function SessionTranscript({ narrative }: { narrative: string }) {
     <h2 className="mb-4 flex items-center gap-2 text-sm font-black text-slate-800"><MessageSquareText className="h-4 w-4 text-brand-600" />Percakapan sesi</h2>
     <div className="space-y-3">
       {turns.map((turn, index) => <div key={index} className={turn.role === "teacher" ? "ml-auto max-w-[88%]" : "w-full"}>
-        <p className={`mb-1 text-[9px] font-black uppercase tracking-widest ${turn.role === "teacher" ? "text-right text-brand-600" : "text-slate-400"}`}>{turn.role === "teacher" ? "Guru" : "Asisten BP"}</p>
+        <p className={`mb-1 text-[9px] font-black uppercase tracking-widest ${turn.role === "teacher" ? "text-right text-brand-600" : "text-slate-400"}`}>{turn.role === "teacher" ? "Guru" : "Asisten BK"}</p>
         <div className={turn.role === "teacher" ? "rounded-2xl rounded-br-md bg-brand-500 px-3 py-2.5 text-sm font-bold leading-relaxed text-white" : "rounded-2xl rounded-bl-md border border-slate-100 bg-slate-50 px-3 py-2.5 text-sm font-bold leading-relaxed text-slate-700"}>
           <MarkdownText>{turn.text}</MarkdownText>
         </div>
