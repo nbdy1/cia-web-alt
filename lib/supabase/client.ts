@@ -10,6 +10,17 @@ import { createBrowserClient } from '@supabase/ssr';
 import { SUPABASE_COOKIE_ENCODING, tenantCookieOptions } from '@/lib/tenant';
 
 export function createClient() {
+  // Client modules can be evaluated while Next prerenders a route. There is no
+  // document.cookie in that phase, so provide an inert cookie store there;
+  // real browser requests still use Supabase's document.cookie adapter.
+  const cookieConfig = typeof window === 'undefined'
+    ? {
+        encode: SUPABASE_COOKIE_ENCODING,
+        getAll: () => [],
+        setAll: () => {},
+      }
+    : { encode: SUPABASE_COOKIE_ENCODING };
+
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,9 +28,7 @@ export function createClient() {
       // Persist auth cookies across browser restarts and, in production,
       // across all organization tenant hosts under characterdev.systems.
       cookieOptions: tenantCookieOptions(),
-      cookies: {
-        encode: SUPABASE_COOKIE_ENCODING,
-      },
+      cookies: cookieConfig,
     }
   );
 }
