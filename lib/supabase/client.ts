@@ -13,7 +13,8 @@ export function createClient() {
   // Client modules can be evaluated while Next prerenders a route. There is no
   // document.cookie in that phase, so provide an inert cookie store there;
   // real browser requests still use Supabase's document.cookie adapter.
-  const cookieConfig = typeof window === 'undefined'
+  const isServerRender = typeof window === "undefined";
+  const cookieConfig = isServerRender
     ? {
         encode: SUPABASE_COOKIE_ENCODING,
         getAll: () => [],
@@ -29,6 +30,18 @@ export function createClient() {
       // across all organization tenant hosts under characterdev.systems.
       cookieOptions: tenantCookieOptions(),
       cookies: cookieConfig,
+      // @supabase/ssr uses window.localStorage to cache the user when
+      // tokens-only encoding is enabled. Give prerendering a no-op cache;
+      // browser requests retain its default localStorage-backed cache.
+      auth: isServerRender
+        ? {
+            userStorage: {
+              getItem: () => null,
+              setItem: () => {},
+              removeItem: () => {},
+            },
+          }
+        : undefined,
     }
   );
 }
