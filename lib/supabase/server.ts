@@ -8,7 +8,7 @@
  */
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { tenantCookieOptions } from '@/lib/tenant';
+import { SUPABASE_COOKIE_ENCODING, tenantCookieOptions } from '@/lib/tenant';
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -21,6 +21,7 @@ export async function createClient() {
       // browser restarts instead of being downgraded to session cookies.
       cookieOptions: tenantCookieOptions(),
       cookies: {
+        encode: SUPABASE_COOKIE_ENCODING,
         getAll() {
           return cookieStore.getAll();
         },

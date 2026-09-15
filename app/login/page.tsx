@@ -13,7 +13,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useSettings } from '@/lib/context/settings-context';
@@ -29,7 +28,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +51,12 @@ export default function LoginPage() {
         if (signInError) throw signInError;
         
         setSuccess(isEnglish ? "Signed in successfully. Redirecting to the dashboard..." : "Login berhasil! Mengalihkan ke dashboard...");
-        router.push('/');
+        // The server may route / from characterdev.systems to the user's
+        // institution subdomain. This must be a document navigation rather
+        // than a Next client transition, which cannot reliably follow an
+        // authenticated cross-domain redirect.
+        window.location.assign('/');
+        return;
       }
     } catch (err: any) {
       console.error("Auth error:", err);

@@ -9,6 +9,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import {
   ACTIVE_ORG_COOKIE,
+  SUPABASE_COOKIE_ENCODING,
   TENANT_SLUG_COOKIE,
   getTenantHost,
   tenantCookieOptions,
@@ -48,6 +49,19 @@ function nextWithRequest(request: NextRequest) {
   return NextResponse.next({ request });
 }
 
+// Supabase may refresh the session while this proxy is running. When we then
+// redirect an apex-domain request to an institution subdomain, the refreshed
+// cookies must travel with that redirect; otherwise the browser can retry with
+// a refresh token that has already been consumed.
+function redirectWithSessionCookies(url: URL, source: NextResponse) {
+  const response = NextResponse.redirect(url);
+  source.headers.forEach((value, key) => {
+    if (key !== "location" && key !== "set-cookie") response.headers.set(key, value);
+  });
+  source.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+  return response;
+}
+
 function chooseDefaultOrg(rows: OrgMembership[]) {
   const rank: Record<string, number> = { owner: 0, admin: 1, ustadz: 2 };
   return [...rows]
@@ -68,10 +82,11 @@ export async function proxy(request: NextRequest) {
     {
       cookieOptions,
       cookies: {
+        encode: SUPABASE_COOKIE_ENCODING,
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, headers) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
@@ -84,6 +99,9 @@ export async function proxy(request: NextRequest) {
               ...cookieOptions,
             }),
           );
+          Object.entries(headers).forEach(([name, value]) =>
+            supabaseResponse.headers.set(name, value),
+          );
         },
       },
     },
@@ -91,7 +109,14 @@ export async function proxy(request: NextRequest) {
 
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  // An expired or otherwise invalid browser session should be handled by the
+  // client AuthProvider, not turn a navigation request into a Next error page.
+  if (authError) {
+    console.warn("[Auth proxy] Could not validate session:", authError.message);
+  }
 
   requestHeaders.set("x-cia-tenant-host", tenantHost.hostname);
   if (tenantHost.slug) {
@@ -140,8 +165,9 @@ export async function proxy(request: NextRequest) {
   const defaultSlug = defaultOrg ? getOrgSlug(defaultOrg) : null;
 
   if (defaultSlug && request.nextUrl.pathname !== "/login") {
-    return NextResponse.redirect(
+    return redirectWithSessionCookies(
       tenantUrl(defaultSlug, request.nextUrl.pathname, request.url),
+      supabaseResponse,
     );
   }
 

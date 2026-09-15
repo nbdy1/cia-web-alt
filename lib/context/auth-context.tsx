@@ -176,20 +176,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // onAuthStateChange fires an INITIAL_SESSION event on subscribe (cold load /
-    // tab reopen, restored from the cookie), plus SIGNED_IN on login and
-    // TOKEN_REFRESHED on refresh. Handling all of them here — and loading orgs
-    // each time — is what removes the "need to refresh after login" quirk.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const applyAuthenticatedUser = (event: string, nextUser: User | null) => {
       if (!mounted) return;
 
-      const u = session?.user ?? null;
-      setUser(u);
-
-      if (u) {
-        // Fire-and-forget: awaiting other supabase calls directly inside the
-        // auth callback can deadlock GoTrue, so we don't await here.
-        loadOrganizations(u).finally(() => {
+      setUser(nextUser);
+      if (nextUser) {
+        loadOrganizations(nextUser).finally(() => {
           if (mounted) setLoading(false);
         });
       } else {
@@ -200,6 +192,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           router.push('/login');
         }
       }
+    };
+
+    // onAuthStateChange fires an INITIAL_SESSION event on subscribe (cold load /
+    // tab reopen, restored from the cookie), plus SIGNED_IN on login and
+    // TOKEN_REFRESHED on refresh. Handling all of them here — and loading orgs
+    // each time — is what removes the "need to refresh after login" quirk.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      if (session?.user) {
+        applyAuthenticatedUser(event, session.user);
+        return;
+      }
+
+      if (!session) {
+        applyAuthenticatedUser(event, null);
+        return;
+      }
+
+      // In tokens-only mode a returning browser may have the session tokens
+      // before its local user cache is populated. Resolve the verified user on
+      // the next task; awaiting inside this auth callback can deadlock GoTrue.
+      window.setTimeout(() => {
+        void supabase.auth.getUser().then(({ data, error }) => {
+          if (error) console.warn('[Auth] user refresh failed:', error.message);
+          applyAuthenticatedUser(event, data.user ?? null);
+        });
+      }, 0);
     });
 
     return () => {

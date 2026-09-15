@@ -4,6 +4,11 @@ export const APP_DOMAIN =
 export const ACTIVE_ORG_COOKIE = "cia_active_organization";
 export const TENANT_SLUG_COOKIE = "cia_tenant_slug";
 
+// Supabase sessions used to include the whole user object in every request
+// cookie. Keep only access/refresh tokens there; the browser caches the user
+// separately and server code already verifies it with auth.getUser().
+export const SUPABASE_COOKIE_ENCODING = "tokens-only" as const;
+
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const RESERVED_SUBDOMAINS = new Set(["www", "app"]);
 
