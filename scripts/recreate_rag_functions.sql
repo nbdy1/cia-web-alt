@@ -23,7 +23,10 @@ CREATE EXTENSION IF NOT EXISTS vector;
 SET maintenance_work_mem = '256MB';
 
 -- Drop the functions first — they depend on the column type we're about to fix.
+DROP FUNCTION IF EXISTS public.match_cia_criteria(vector, float, int, uuid);
 DROP FUNCTION IF EXISTS public.match_cia_criteria(vector, float, int);
+DROP FUNCTION IF EXISTS public.match_pdf_knowledge(vector, float, int, uuid);
+DROP FUNCTION IF EXISTS public.match_pdf_knowledge(vector, float, int, uuid, text);
 DROP FUNCTION IF EXISTS public.match_pdf_knowledge(vector, float, int);
 
 -- ── cia_criteria ──────────────────────────────────────────────────────────────
@@ -34,8 +37,15 @@ CREATE TABLE IF NOT EXISTS public.cia_criteria (
   indicator     TEXT NOT NULL,
   sub_indicator TEXT NOT NULL,
   search_text   TEXT NOT NULL,
-  embedding     VECTOR(1536)
+  embedding     VECTOR(1536),
+  organization_id UUID REFERENCES public.organizations(id)
 );
+
+ALTER TABLE public.cia_criteria
+  ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES public.organizations(id);
+
+CREATE INDEX IF NOT EXISTS idx_cia_criteria_organization_id
+  ON public.cia_criteria(organization_id);
 
 -- If the embedding column exists but isn't a vector (e.g. jsonb), convert it.
 DO $$
@@ -58,8 +68,22 @@ CREATE TABLE IF NOT EXISTS public.pdf_knowledge (
   section    TEXT,
   page_start INTEGER,
   page_end   INTEGER,
-  embedding  VECTOR(1536)
+  embedding  VECTOR(1536),
+  organization_id UUID REFERENCES public.organizations(id),
+  knowledge_type TEXT NOT NULL DEFAULT 'general',
+  source_document TEXT
 );
+
+ALTER TABLE public.pdf_knowledge
+  ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES public.organizations(id),
+  ADD COLUMN IF NOT EXISTS knowledge_type TEXT NOT NULL DEFAULT 'general',
+  ADD COLUMN IF NOT EXISTS source_document TEXT;
+
+ALTER TABLE public.pdf_knowledge
+  DROP CONSTRAINT IF EXISTS pdf_knowledge_knowledge_type_check;
+ALTER TABLE public.pdf_knowledge
+  ADD CONSTRAINT pdf_knowledge_knowledge_type_check
+  CHECK (knowledge_type IN ('general', 'diagnostic_guidance'));
 
 -- Drop the ivfflat index before any type change (a column type can't be altered
 -- while an index depends on it), convert if needed, then recreate the index.
@@ -83,19 +107,27 @@ CREATE INDEX IF NOT EXISTS pdf_knowledge_embedding_idx
   USING ivfflat (embedding vector_cosine_ops)
   WITH (lists = 100);
 
+CREATE INDEX IF NOT EXISTS idx_pdf_knowledge_organization_id
+  ON public.pdf_knowledge(organization_id);
+CREATE INDEX IF NOT EXISTS idx_pdf_knowledge_source_document
+  ON public.pdf_knowledge(source_document)
+  WHERE source_document IS NOT NULL;
+
 -- ── Functions ─────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.match_cia_criteria (
-  query_embedding VECTOR(1536),
-  match_threshold FLOAT,
-  match_count     INT
+  query_embedding        VECTOR(1536),
+  match_threshold        FLOAT,
+  match_count             INT,
+  target_organization_id  UUID DEFAULT NULL
 )
 RETURNS TABLE (
-  id            INT,
-  category      TEXT,
-  theme         TEXT,
-  indicator     TEXT,
-  sub_indicator TEXT,
-  similarity    FLOAT
+  id              INT,
+  category        TEXT,
+  theme           TEXT,
+  indicator       TEXT,
+  sub_indicator   TEXT,
+  similarity      FLOAT,
+  organization_id UUID
 )
 LANGUAGE SQL STABLE
 AS $$
@@ -105,9 +137,11 @@ AS $$
     cia_criteria.theme,
     cia_criteria.indicator,
     cia_criteria.sub_indicator,
-    1 - (cia_criteria.embedding <=> query_embedding) AS similarity
+    1 - (cia_criteria.embedding <=> query_embedding) AS similarity,
+    cia_criteria.organization_id
   FROM public.cia_criteria
   WHERE 1 - (cia_criteria.embedding <=> query_embedding) > match_threshold
+    AND (cia_criteria.organization_id IS NULL OR cia_criteria.organization_id = target_organization_id)
   ORDER BY cia_criteria.embedding <=> query_embedding
   LIMIT match_count;
 $$;
@@ -115,14 +149,19 @@ $$;
 CREATE OR REPLACE FUNCTION public.match_pdf_knowledge(
   query_embedding VECTOR(1536),
   match_threshold FLOAT DEFAULT 0.15,
-  match_count     INT   DEFAULT 5
+  match_count     INT   DEFAULT 5,
+  target_organization_id UUID DEFAULT NULL,
+  target_knowledge_type TEXT DEFAULT NULL
 )
 RETURNS TABLE (
-  id         BIGINT,
-  content    TEXT,
-  section    TEXT,
-  page_start INTEGER,
-  similarity FLOAT
+  id              BIGINT,
+  content         TEXT,
+  section         TEXT,
+  page_start      INTEGER,
+  similarity      FLOAT,
+  organization_id UUID,
+  knowledge_type  TEXT,
+  source_document TEXT
 )
 LANGUAGE SQL STABLE
 AS $$
@@ -131,9 +170,14 @@ AS $$
     pdf_knowledge.content,
     pdf_knowledge.section,
     pdf_knowledge.page_start,
-    1 - (pdf_knowledge.embedding <=> query_embedding) AS similarity
+    1 - (pdf_knowledge.embedding <=> query_embedding) AS similarity,
+    pdf_knowledge.organization_id,
+    pdf_knowledge.knowledge_type,
+    pdf_knowledge.source_document
   FROM public.pdf_knowledge
   WHERE 1 - (pdf_knowledge.embedding <=> query_embedding) > match_threshold
+    AND (pdf_knowledge.organization_id IS NULL OR pdf_knowledge.organization_id = target_organization_id)
+    AND (target_knowledge_type IS NULL OR pdf_knowledge.knowledge_type = target_knowledge_type)
   ORDER BY pdf_knowledge.embedding <=> query_embedding
   LIMIT match_count;
 $$;
@@ -141,8 +185,8 @@ $$;
 -- ── Grants + reload PostgREST cache ───────────────────────────────────────────
 GRANT ALL ON public.cia_criteria, public.pdf_knowledge TO anon, authenticated, service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.match_cia_criteria(vector, float, int) TO anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.match_pdf_knowledge(vector, float, int) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.match_cia_criteria(vector, float, int, uuid) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.match_pdf_knowledge(vector, float, int, uuid, text) TO anon, authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';
 

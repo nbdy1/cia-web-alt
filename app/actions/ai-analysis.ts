@@ -67,6 +67,7 @@ import {
   expandKnowledgeQuery,
   formatKnowledgeContext,
   formatCriteriaContext,
+  selectDistinctDiagnosticGuidance,
   getRecentTranscriptWindow,
   buildUnexploredThemesContext,
   type CriteriaRow,
@@ -135,7 +136,18 @@ function tokenize(text: string): string[] {
 // of only doing so when it happens to also win on similarity/lexical overlap.
 const ORG_PRIORITY_BOOST = 0.12;
 
-function hybridRescore<T extends { similarity: number; organization_id?: string | null }>(
+function diagnosticRagDebug(rows: KnowledgeRow[]) {
+  return rows
+    .filter((row) => row.knowledge_type === "diagnostic_guidance")
+    .map((row) => ({
+      section: row.section,
+      page: row.page_start,
+      similarity: Number(row.similarity?.toFixed(3)),
+      excerpt: row.content.replace(/^\[[^\]]+\]\n/, "").replace(/\s+/g, " ").slice(0, 180),
+    }));
+}
+
+function hybridRescore<T extends { similarity: number; organization_id?: string | null; knowledge_type?: string | null }>(
   query: string,
   candidates: T[],
   toText: (item: T) => string,
@@ -154,7 +166,10 @@ function hybridRescore<T extends { similarity: number; organization_id?: string 
     // Embedding similarity stays the dominant signal; lexical overlap is a
     // boost for candidates that share exact domain terms with the query.
     const orgBoost = row.organization_id ? ORG_PRIORITY_BOOST : 0;
-    const combinedScore = row.similarity + lexicalScore * 0.25 + orgBoost;
+    // Let focused diagnostic guidance win close knowledge-search ties. It is
+    // still never part of the fulfillment or decline calculation.
+    const diagnosticBoost = label === "knowledge" && row.knowledge_type === "diagnostic_guidance" ? 0.04 : 0;
+    const combinedScore = row.similarity + lexicalScore * 0.25 + orgBoost + diagnosticBoost;
     return { row, combinedScore, lexicalScore };
   });
 
@@ -367,7 +382,8 @@ async function retrieveRelevantCriteria(
 async function retrieveRelevantKnowledge(
   query: string,
   topK = 5,
-  organizationId?: string | null
+  organizationId?: string | null,
+  knowledgeType?: "diagnostic_guidance",
 ): Promise<KnowledgeRow[]> {
   try {
     const startedAt = Date.now();
@@ -383,17 +399,18 @@ async function retrieveRelevantKnowledge(
       match_threshold: 0.15,  // same as criteria — let the prompt handle relevance
       match_count: candidateCount,
       target_organization_id: organizationId ?? null,
+      ...(knowledgeType ? { target_knowledge_type: knowledgeType } : {}),
     });
 
     if (error) {
       // Non-fatal: if the table doesn't exist yet (before migration), just return empty
-      console.warn("[Knowledge RAG] RPC error (table may not exist yet):", error.message);
+      console.warn(`[${knowledgeType ? "Diagnostic RAG" : "Knowledge RAG"}] RPC error:`, error.message);
       return [];
     }
 
     const candidates = (data as KnowledgeRow[]) ?? [];
     console.log(
-      `[RAG][knowledge] embedText ${embedMs}ms, embedding search ${candidates.length}/${candidateCount} candidates (threshold 0.15)`
+      `[RAG][${knowledgeType ?? "knowledge"}] embedText ${embedMs}ms, embedding search ${candidates.length}/${candidateCount} candidates (threshold 0.15)`
     );
 
     return hybridRescore(
@@ -401,10 +418,10 @@ async function retrieveRelevantKnowledge(
       candidates,
       (row) => `[${row.section}] ${row.content.replace(/^\[[^\]]+\]\n/, "").trim().slice(0, 300)}`,
       topK,
-      "knowledge",
+      knowledgeType ?? "knowledge",
     );
   } catch (err: any) {
-    console.warn("[Knowledge RAG] Skipped:", err.message);
+    console.warn(`[${knowledgeType ? "Diagnostic RAG" : "Knowledge RAG"}] Skipped:`, err.message);
     return [];
   }
 }
@@ -597,10 +614,16 @@ export async function processInterviewStep(
     const recentWindow = getRecentTranscriptWindow(transcript, 4);
 
     // Run criteria RAG and knowledge RAG in parallel to save latency
-    const [frontierRows, knowledgeRows] = await Promise.all([
+    const [frontierRows, generalKnowledgeRows, diagnosticCandidates] = await Promise.all([
       retrieveRelevantCriteria(recentWindow || transcript, 15, organizationId),
       retrieveRelevantKnowledge(recentWindow || transcript, 3, organizationId),
+      retrieveRelevantKnowledge(recentWindow || transcript, 8, organizationId, "diagnostic_guidance"),
     ]);
+    const diagnosticKnowledgeRows = selectDistinctDiagnosticGuidance(diagnosticCandidates);
+    const knowledgeRows = [
+      ...diagnosticKnowledgeRows,
+      ...generalKnowledgeRows.filter((row) => row.knowledge_type !== "diagnostic_guidance"),
+    ];
 
     const frontierCriteriaContext = formatCriteriaContext(frontierRows);
     const unexploredThemesContext = buildUnexploredThemesContext(frontierRows, discoveredThemes, 4, organizationId);
@@ -611,6 +634,7 @@ export async function processInterviewStep(
     console.log("[Knowledge RAG] Raw query:", _kqRaw);
     console.log("[Knowledge RAG] Expanded query:", _kqExpanded);
     console.log("[Knowledge RAG] Sections retrieved:", knowledgeRows.map((r) => `${r.section} (${r.similarity?.toFixed(2)})`));
+    console.log("[RAG][diagnostic][interview] Retrieved guidance:", diagnosticRagDebug(knowledgeRows));
 
     const outputLanguage = normalizeAppLanguage(language);
     const interviewPrompt = buildInterviewPrompt(
@@ -640,6 +664,8 @@ export async function processInterviewStep(
       temperature
     );
     const parsed = parseModelJson(responseText, "Interview step");
+    console.log("[RAG][diagnostic][interview] Model consideration:", Array.isArray(parsed?.diagnostic_guidance_considered) ? parsed.diagnostic_guidance_considered : []);
+    delete parsed.diagnostic_guidance_considered;
     console.log("[Interview][Server] Model output", {
       discoveredPillarsThisStep: parsed?.discoveredPillars ?? [],
       discoveredPillarsCount: parsed?.discoveredPillars?.length ?? 0,
@@ -754,10 +780,16 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
 
     // 2. RAG: run criteria and knowledge retrieval in parallel
     console.log("[RAG] Embedding transcript and retrieving relevant criteria + knowledge...");
-    const [relevantRows, knowledgeRows] = await Promise.all([
+    const [relevantRows, generalKnowledgeRows, diagnosticCandidates] = await Promise.all([
       retrieveRelevantCriteria(transcript, 30, organizationId),
       retrieveRelevantKnowledge(transcript, 4, organizationId),
+      retrieveRelevantKnowledge(transcript, 8, organizationId, "diagnostic_guidance"),
     ]);
+    const diagnosticKnowledgeRows = selectDistinctDiagnosticGuidance(diagnosticCandidates);
+    const knowledgeRows = [
+      ...diagnosticKnowledgeRows,
+      ...generalKnowledgeRows.filter((row) => row.knowledge_type !== "diagnostic_guidance"),
+    ];
 
     const discoveredThemesContext = discoveredThemes.length
       ? `\n\n### TEMA YANG SUDAH DIEKSPLORASI SELAMA WAWANCARA:\n${discoveredThemes
@@ -771,6 +803,7 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     if (knowledgeRows.length > 0) {
       console.log("[Knowledge RAG] Sections injected:", knowledgeRows.map((r) => r.section));
     }
+    console.log("[RAG][diagnostic][final] Retrieved guidance:", diagnosticRagDebug(knowledgeRows));
     console.log("[Finalize][Server] Inputs for final summary", {
       discoveredThemesCount: discoveredThemes.length,
       discoveredThemes,
@@ -796,6 +829,13 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
       temperature
     );
     const parsed = parseModelJson(responseText, "Finalize assessment");
+    const diagnosticTrace = Array.isArray(parsed?.diagnostic_guidance_considered)
+      ? parsed.diagnostic_guidance_considered
+      : [];
+    console.log("[RAG][diagnostic][final] Model consideration:", diagnosticTrace);
+    // This exists exclusively for server-side verification and must not become
+    // part of the persisted report payload or user-facing report content.
+    delete parsed.diagnostic_guidance_considered;
     let enrichedAssessments = enrichDetailedAssessments(parsed?.detailed_assessments ?? [], organizationId);
     enrichedAssessments = await stripUngroundedDeclines(enrichedAssessments, studentId, db);
     parsed.analysis_version = 2;

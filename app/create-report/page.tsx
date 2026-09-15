@@ -73,7 +73,9 @@ export default function CreateReport() {
 
   const isAdmin = role === 'admin' || role === 'owner';
 
-  // FETCH REAL STUDENTS FROM DB + THEIR LATEST REPORT TIMESTAMPS
+  // Fetch the student's picker data and the safe, aggregate report metadata
+  // separately. A teacher may not be allowed to read another teacher's report,
+  // but still needs an accurate "has been assessed" status for the picker.
   useEffect(() => {
     async function fetchStudentsAndReports() {
       if (!activeOrganizationId) return;
@@ -85,11 +87,9 @@ export default function CreateReport() {
           .eq('organization_id', activeOrganizationId)
           .or('is_removed.is.null,is_removed.eq.false')
           .order('name', { ascending: true }),
-        supabase
-          .from('reports')
-          .select('student_id, created_at')
-          .eq('organization_id', activeOrganizationId)
-          .order('created_at', { ascending: false })
+        supabase.rpc('get_student_last_report_dates', {
+          target_organization_id: activeOrganizationId,
+        })
       ]);
 
       if (!studentsRes.error && studentsRes.data) {
@@ -97,11 +97,12 @@ export default function CreateReport() {
       }
 
       if (!reportsRes.error && reportsRes.data) {
-        // Build map of student_id -> latest created_at
+        // The RPC is deliberately limited to one timestamp per student; it
+        // never exposes a report's author, title, conversation, or contents.
         const reportMap: Record<string, string> = {};
         for (const r of reportsRes.data) {
-          if (r.student_id && !reportMap[r.student_id]) {
-            reportMap[r.student_id] = r.created_at;
+          if (r.student_id && r.last_report_at) {
+            reportMap[r.student_id] = r.last_report_at;
           }
         }
         setLastReportMap(reportMap);

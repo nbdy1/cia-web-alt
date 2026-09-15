@@ -15,6 +15,7 @@ import {
   computeOverallStats,
   expandKnowledgeQuery,
   formatKnowledgeContext,
+  selectDistinctDiagnosticGuidance,
   formatCriteriaContext,
   getRecentTranscriptWindow,
   buildUnexploredThemesContext,
@@ -400,6 +401,30 @@ describe("formatKnowledgeContext / formatCriteriaContext", () => {
     ]);
     assert.ok(out.includes("Isi materi."));
     assert.ok(!out.includes("[Dasar Teori]\nIsi"));
+  });
+
+  it("labels diagnostic guidance without treating it as scoring criteria", () => {
+    const out = formatKnowledgeContext([
+      {
+        id: 2,
+        section: "Panduan diagnosis: Memiliki tujuan hidup",
+        content: "[Panduan diagnosis]\nPerilaku yang perlu dikonfirmasi bersama guru.",
+        page_start: 3,
+        similarity: 0.8,
+        knowledge_type: "diagnostic_guidance",
+      },
+    ]);
+    assert.ok(out.includes("[PANDUAN DIAGNOSIS]"));
+    assert.ok(out.includes("Perilaku yang perlu dikonfirmasi bersama guru."));
+  });
+
+  it("keeps only the best diagnostic row from each theme", () => {
+    const rows = [
+      { id: 1, section: "Panduan diagnosis: Konsisten ibadahnya & memiliki hubungan yang kuat dengan Al-Quran - dampak bila belum berkembang", content: "a", page_start: 17, similarity: 0.9, knowledge_type: "diagnostic_guidance" as const },
+      { id: 2, section: "Panduan diagnosis: Konsisten ibadahnya & memiliki hubungan yang kuat dengan Al-Quran - dampak bila belum berkembang", content: "b", page_start: 18, similarity: 0.8, knowledge_type: "diagnostic_guidance" as const },
+      { id: 3, section: "Panduan diagnosis: Memiliki tujuan hidup - dampak bila belum berkembang", content: "c", page_start: 3, similarity: 0.7, knowledge_type: "diagnostic_guidance" as const },
+    ];
+    assert.deepEqual(selectDistinctDiagnosticGuidance(rows).map((row) => row.id), [1, 3]);
   });
 
   it("groups criteria rows by category > theme > indicator", () => {

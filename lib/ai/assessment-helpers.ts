@@ -393,6 +393,8 @@ export interface KnowledgeRow {
   page_start: number;
   similarity: number;
   organization_id?: string | null;
+  knowledge_type?: "general" | "diagnostic_guidance" | null;
+  source_document?: string | null;
 }
 
 // If the query looks like a direct knowledge question ("Apa itu X?", "Jelaskan Y"),
@@ -418,10 +420,32 @@ export function formatKnowledgeContext(rows: KnowledgeRow[]): string {
       // Strip the "[Section Name]" prefix that was prepended during ingest
       // so the AI sees clean prose, not the metadata tag
       const cleanContent = row.content.replace(/^\[[^\]]+\]\n/, "").trim();
-      const tag = row.organization_id ? "[PRIORITAS TINGGI] " : "";
+      const priorityTag = row.organization_id ? "[PRIORITAS TINGGI] " : "";
+      const diagnosticTag = row.knowledge_type === "diagnostic_guidance" ? "[PANDUAN DIAGNOSIS] " : "";
+      const tag = `${priorityTag}${diagnosticTag}`;
       return `— ${tag}${row.section}:\n${cleanContent}`;
     })
     .join("\n\n");
+}
+
+/**
+ * A single broad symptom can be semantically close to several diagnostic
+ * themes. Preserve the best candidate from each theme so the model compares
+ * plausible developmental directions instead of anchoring on one repeated
+ * section of the same source document.
+ */
+export function selectDistinctDiagnosticGuidance(rows: KnowledgeRow[], limit = 3): KnowledgeRow[] {
+  const seenThemes = new Set<string>();
+  return rows.filter((row) => {
+    if (row.knowledge_type !== "diagnostic_guidance") return false;
+    const theme = row.section
+      .replace(/^Panduan diagnosis:\s*/i, "")
+      .replace(/\s+-\s+dampak bila belum berkembang$/i, "")
+      .trim();
+    if (!theme || seenThemes.has(theme)) return false;
+    seenThemes.add(theme);
+    return true;
+  }).slice(0, limit);
 }
 
 // ─── Format retrieved rows into a compact, structured string ──────────────────

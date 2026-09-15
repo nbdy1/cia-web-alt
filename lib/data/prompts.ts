@@ -51,6 +51,7 @@ export function buildInterviewPrompt(
 ### PROFIL SANTRI (berdasarkan riwayat laporan sebelumnya):
 ${studentProfile}
 Gunakan profil ini untuk menginformasikan pertanyaan Anda — misalnya, gali lebih dalam area yang diketahui lemah, atau validasi apakah kekuatan sebelumnya masih konsisten. Jangan sebutkan profil ini secara eksplisit kepada Ustadz.
+Profil adalah konteks historis, BUKAN bukti kondisi saat ini. Jangan menyatakan atau mengisyaratkan profil sebagai fakta dalam respons kepada Ustadz, misalnya dengan kalimat "biasanya ananda...", "ananda dikenal...", atau "mengingat ananda sangat...". Gunakan profil hanya untuk memilih pertanyaan netral yang memverifikasi kondisi terkini.
 `
     : "";
 
@@ -61,7 +62,7 @@ Gunakan profil ini untuk menginformasikan pertanyaan Anda — misalnya, gali leb
     ? `
 ### REFERENSI PENGETAHUAN CMS (dari buku panduan — bukan rubrik penilaian):
 ${knowledgeContext}
-Gunakan referensi ini untuk memperkaya pertanyaan Anda dengan konteks Qurani atau panduan situasional yang relevan. JANGAN gunakan ini untuk menentukan kriteria penilaian. Referensi bertanda [PRIORITAS TINGGI] harus lebih diutamakan untuk memperkaya pertanyaan dibanding referensi lain.
+Gunakan referensi ini untuk memperkaya pertanyaan Anda dengan konteks Qurani atau panduan situasional yang relevan. JANGAN gunakan ini untuk menentukan kriteria penilaian. Referensi bertanda [PRIORITAS TINGGI] harus lebih diutamakan untuk memperkaya pertanyaan dibanding referensi lain. Referensi bertanda [PANDUAN DIAGNOSIS] hanya boleh dipakai untuk membentuk HIPOTESIS yang perlu dikonfirmasi melalui pertanyaan berikutnya; jangan pernah menyimpulkan sebab, kekurangan karakter, atau kondisi psikologis sebagai fakta. Bila beberapa panduan muncul, bandingkan semuanya dan utamakan yang paling langsung didukung perilaku di transkrip serta tidak bertentangan dengan PROFIL SANTRI.
 `
     : "";
 
@@ -109,8 +110,15 @@ ${unexploredThemesContext || "(tidak ada tema unexplored yang tersisa)"}
 {
   "reply": "Respons lanjutan yang alami dalam bahasa output yang dipilih",
   "discoveredPillars": ["Daftar judul Tema yang telah diidentifikasi sejauh ini"],
-  "isFinished": false
+  "isFinished": false,
+  "diagnostic_guidance_considered": [{
+    "guidance_section": "Judul PERSIS dari referensi [PANDUAN DIAGNOSIS], atau string kosong",
+    "transcript_evidence": "Bukti perilaku eksplisit dari transkrip, atau string kosong",
+    "hypothesis": "Kemungkinan kebutuhan pembinaan yang perlu dikonfirmasi melalui pertanyaan",
+    "recommended_direction": "Arah pertanyaan lanjutan"
+  }]
 }
+Isi diagnostic_guidance_considered hanya bila ada referensi [PANDUAN DIAGNOSIS] yang benar-benar relevan dan bukti eksplisit di transkrip; jika tidak, kembalikan array kosong. Field ini hanya untuk pemeriksaan internal dan tidak ditampilkan kepada pengguna.
 ${outputLanguageInstruction(language)}
 `;
 }
@@ -132,6 +140,7 @@ export function buildFinalAnalysisPrompt(
 ### PROFIL SANTRI (dari riwayat laporan sebelumnya):
 ${studentProfile}
 Gunakan profil ini untuk mempersonalisasi action_plan pada bagian treatment — rencana penanganan harus sesuai dengan kepribadian, pola belajar, dan konteks santri ini secara spesifik.
+Profil hanya merupakan konteks historis. Jangan menjadikannya bukti kondisi saat ini, kesimpulan permanen, atau pernyataan faktual yang tidak didukung transkrip terbaru.
 `
     : "";
 
@@ -141,7 +150,7 @@ Gunakan profil ini untuk mempersonalisasi action_plan pada bagian treatment — 
     ? `
 ### REFERENSI PANDUAN CMS (dari buku panduan — hanya untuk memperkaya action_plan):
 ${knowledgeContext}
-Gunakan referensi ini HANYA untuk menulis action_plan yang lebih kaya dan berbasis panduan Qurani. JANGAN gunakan ini untuk menentukan kriteria atau sub-indikator yang terpenuhi. Referensi bertanda [PRIORITAS TINGGI] harus lebih diutamakan dibanding referensi lain.
+Gunakan referensi ini HANYA untuk memperkaya penalaran dan action_plan; JANGAN gunakan ini untuk menentukan kriteria atau sub-indikator yang terpenuhi. Referensi bertanda [PRIORITAS TINGGI] harus lebih diutamakan dibanding referensi lain. Referensi bertanda [PANDUAN DIAGNOSIS] dapat membantu menghubungkan perilaku yang terbukti di transkrip dengan kemungkinan kebutuhan pembinaan, lalu memilih tindakan yang relevan. Bila beberapa panduan muncul, bandingkan semuanya dan pilih hanya yang paling langsung didukung bukti serta tidak bertentangan dengan PROFIL SANTRI. Jangan memperlakukan daftar dampak sebagai hubungan sebab-akibat pasti, diagnosis medis/psikologis, atau label permanen bagi santri.
 `
     : "";
 
@@ -207,8 +216,15 @@ Field-field ini WAJIB berupa kalimat naratif biasa dalam bahasa output yang dipi
     "priority_indicator": "Indikator spesifik yang sedang ditangani",
     "target_sub_indicators": ["Daftar sub-indikator yang sedang ditangani"],
     "action_plan": "Rencana penanganan yang detail, empatik, dan dipersonalisasi dalam bahasa output"
-  }
+  },
+  "diagnostic_guidance_considered": [{
+    "guidance_section": "Judul PERSIS dari referensi [PANDUAN DIAGNOSIS], atau string kosong",
+    "transcript_evidence": "Bukti perilaku eksplisit dari transkrip, atau string kosong",
+    "hypothesis": "Kemungkinan kebutuhan pembinaan yang perlu dikonfirmasi, bukan diagnosis atau kepastian",
+    "recommended_direction": "Arah action_plan yang dipengaruhi panduan, atau string kosong"
+  }]
 }
+Isi diagnostic_guidance_considered hanya bila ada referensi [PANDUAN DIAGNOSIS] yang benar-benar relevan dan bukti eksplisit di transkrip; jika tidak, kembalikan array kosong. Field ini hanya untuk pemeriksaan internal dan tidak ditampilkan kepada pengguna.
 ${outputLanguageInstruction(language)}
 `;
 }
