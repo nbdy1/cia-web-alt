@@ -182,6 +182,16 @@ describe("isLikelySameSubIndicator", () => {
     assert.equal(isLikelySameSubIndicator("Rajin belajar", "Santri rajin belajar setiap hari"), true);
   });
 
+  it("ignores punctuation and casing in a legacy partial value", () => {
+    assert.equal(
+      isLikelySameSubIndicator(
+        "Berpikiran Positif ; Mampu membangun suasana optimis dan mendorong tim untuk",
+        "Berpikiran positif; mampu membangun suasana optimis dan mendorong tim untuk mencapai tujuan bersama.",
+      ),
+      true,
+    );
+  });
+
   it("does not match unrelated strings", () => {
     assert.equal(isLikelySameSubIndicator("Rajin belajar", "Suka bermain game"), false);
   });

@@ -31,7 +31,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Kesadaran bahwa tujuan belajar itu adalah ilmu (bukan ijazah atau sekedar untuk",
+          title: "Kesadaran bahwa tujuan belajar adalah ilmu, bukan ijazah atau sekadar formalitas",
           sub_indicators: [
             "Menyadari bahwa belajar bukan sekadar formalitas, tetapi untuk memahami kebenaran.",
             "Menempatkan ilmu sebagai jalan menuju kedekatan dengan Allah.",
@@ -928,7 +928,7 @@ export const mentalData = {
           title: "Tangguh dan tawadlu",
           sub_indicators: [
             "Tidak mudah putus asa ketika kalah.",
-            "Tidak cepat puas ketika menang dan",
+            "Tidak cepat puas ketika menang dan terus berusaha meningkatkan diri.",
             "Tidak sombong ketika menang",
           ]
         },

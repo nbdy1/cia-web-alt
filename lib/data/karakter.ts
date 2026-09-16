@@ -86,9 +86,9 @@ export const karakterData = {
         {
           title: "Santri yang bisa memimpin",
           sub_indicators: [
-            "Berpikiran Positif ; Mampu membangun suasana optimis dan mendorong tim untuk",
-            "Memiliki Kepercayaan diri yang baik ; Menunjukkan keyakinan dalam mengambil",
-            "Pandai berkomunikasi ; Menyampaikan visi dengan jelas, pembicara yang baik, juga",
+            "Berpikiran positif; mampu membangun suasana optimis dan mendorong tim untuk mencapai tujuan bersama.",
+            "Memiliki kepercayaan diri yang baik; menunjukkan keyakinan dalam mengambil keputusan.",
+            "Pandai berkomunikasi; menyampaikan visi dengan jelas, serta menjadi pembicara dan pendengar yang baik.",
             "Memiliki Integritas ; yang diucapkan sama dengan yang dilakukan.",
             "Kreatif dalam mencari solusi",
           ]

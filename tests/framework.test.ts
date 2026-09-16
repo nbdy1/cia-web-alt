@@ -78,3 +78,29 @@ test("BM400 supplementary themes are available to unexplored-theme prompts", () 
   assert.match(context, /Berwawasan global dan terbuka terhadap keberagaman/);
   assert.match(context, /Kolaborasi lintas budaya/);
 });
+
+test("canonical framework restores formerly truncated criteria text", () => {
+  const leadership = lookupCanonicalIndicator(
+    "Karakter",
+    "Mampu memimpin & dipimpin",
+    "Santri yang bisa memimpin",
+  );
+  assert.ok(leadership);
+  assert.deepEqual(leadership.subIndicators.slice(0, 3), [
+    "Berpikiran positif; mampu membangun suasana optimis dan mendorong tim untuk mencapai tujuan bersama.",
+    "Memiliki kepercayaan diri yang baik; menunjukkan keyakinan dalam mengambil keputusan.",
+    "Pandai berkomunikasi; menyampaikan visi dengan jelas, serta menjadi pembicara dan pendengar yang baik.",
+  ]);
+
+  // Older RAG rows and in-flight model output can still contain the old
+  // prefixes. Enrichment must resolve them to the full canonical wording.
+  const enriched = enrichDetailedAssessments([{
+    category: "Karakter",
+    theme: "Mampu memimpin & dipimpin",
+    indicator: "Santri yang bisa memimpin",
+    fulfilled_sub_indicators: [
+      "Berpikiran Positif ; Mampu membangun suasana optimis dan mendorong tim untuk",
+    ],
+  }]);
+  assert.deepEqual(enriched[0].fulfilled_sub_indicators, [leadership.subIndicators[0]]);
+});

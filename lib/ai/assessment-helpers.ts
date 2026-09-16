@@ -195,8 +195,16 @@ export function lookupCanonicalIndicator(
 }
 
 export function isLikelySameSubIndicator(candidate: string, target: string): boolean {
-  const c = normalise(candidate);
-  const t = normalise(target);
+  // Model output and older imported rows can differ from the canonical text
+  // only by case, punctuation, or whitespace (for example `Positif ; Mampu`
+  // versus `positif; mampu`). Ignore those presentation differences while
+  // retaining the existing conservative prefix/containment requirement.
+  const normalizeSubIndicator = (value: string) => normalise(value)
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const c = normalizeSubIndicator(candidate);
+  const t = normalizeSubIndicator(target);
   return c === t || c.includes(t) || t.includes(c);
 }
 
