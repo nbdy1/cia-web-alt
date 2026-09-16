@@ -79,28 +79,67 @@ test("BM400 supplementary themes are available to unexplored-theme prompts", () 
   assert.match(context, /Kolaborasi lintas budaya/);
 });
 
-test("canonical framework restores formerly truncated criteria text", () => {
+test("canonical framework uses the latest leadership criteria wording", () => {
   const leadership = lookupCanonicalIndicator(
     "Karakter",
-    "Mampu memimpin & dipimpin",
-    "Santri yang bisa memimpin",
+    "Mampu memimpin & dipimpin.",
+    "Seorang pemimpin",
   );
   assert.ok(leadership);
   assert.deepEqual(leadership.subIndicators.slice(0, 3), [
-    "Berpikiran positif; mampu membangun suasana optimis dan mendorong tim untuk mencapai tujuan bersama.",
-    "Memiliki kepercayaan diri yang baik; menunjukkan keyakinan dalam mengambil keputusan.",
-    "Pandai berkomunikasi; menyampaikan visi dengan jelas, serta menjadi pembicara dan pendengar yang baik.",
+    "Berpikiran Positif dengan menunjukkan kemampuan membangun suasana optimis dan mendorong tim untuk berkontribusi.",
+    "Memiliki Kepercayaan diri yang baik dengan menunjukkan keyakinan dalam mengambil keputusan, tanpa arogan.",
+    "Pandai berkomunikasi dengan menunjukkan kemampuan menyampaikan visi dengan jelas, pembicara yang baik, juga pendengar yang baik.",
   ]);
 
-  // Older RAG rows and in-flight model output can still contain the old
-  // prefixes. Enrichment must resolve them to the full canonical wording.
+  // Current model output is normalized to the PDF's canonical wording.
   const enriched = enrichDetailedAssessments([{
     category: "Karakter",
-    theme: "Mampu memimpin & dipimpin",
-    indicator: "Santri yang bisa memimpin",
+    theme: "Mampu memimpin & dipimpin.",
+    indicator: "Seorang pemimpin",
     fulfilled_sub_indicators: [
-      "Berpikiran Positif ; Mampu membangun suasana optimis dan mendorong tim untuk",
+      "Berpikiran positif dengan menunjukkan kemampuan membangun suasana optimis dan mendorong tim untuk berkontribusi.",
     ],
   }]);
   assert.deepEqual(enriched[0].fulfilled_sub_indicators, [leadership.subIndicators[0]]);
+});
+
+test("canonical Mental framework retains the latest added criteria", () => {
+  const monetization = lookupCanonicalIndicator(
+    "Mental",
+    "Monetitatif (Daya menguangkan).",
+    "Pandai melihat nilai jual pada suatu produk.",
+  );
+  assert.ok(monetization);
+  assert.deepEqual(monetization.subIndicators, [
+    "Mampu melihat potensi monetisasi pada suatu karya.",
+    "Tidak hanya berkarya untuk ekspresi, tetapi juga untuk mendapatkan uang.",
+  ]);
+
+  const reflection = lookupCanonicalIndicator(
+    "Mental",
+    "Aku sedang menulis kitabku sendiri.",
+    "Selalu mencari hikmah dari pengalaman hidupnya.",
+  );
+  assert.ok(reflection);
+  assert.equal(reflection.subIndicators.length, 2);
+});
+
+test("canonical Soft Skill framework uses the revised goal-loyalty structure", () => {
+  const goal = lookupCanonicalIndicator(
+    "Soft Skill",
+    "Kesetiaan pada tujuan.",
+    "Siap berkurban demi tujuannya.",
+  );
+  assert.ok(goal);
+  assert.deepEqual(goal.subIndicators, [
+    "Daya juangnya tinggi.",
+    "Sabar menghadapi kegagalan.",
+    "Kuat untuk bangkit berkali-kali.",
+  ]);
+
+  assert.equal(
+    lookupCanonicalIndicator("Soft Skill", "Kesetiaan pada tujuan.", "Kejujuran & Integritas"),
+    null,
+  );
 });

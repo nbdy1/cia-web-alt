@@ -80,26 +80,29 @@ export const karakterData = {
     },
     {
       id: 2,
-      title: "Mampu memimpin & dipimpin",
+      title: "Mampu memimpin & dipimpin.",
       explanation: "Tujuan penciptaan yang pertama adalah menjadi pemimpin (khalifah). Dan tak mungkin bisa menjadi pemimpin apabila tidak bisa dipimpin.",
       indicators: [
         {
-          title: "Santri yang bisa memimpin",
+          title: "Seorang pemimpin",
           sub_indicators: [
-            "Berpikiran positif; mampu membangun suasana optimis dan mendorong tim untuk mencapai tujuan bersama.",
-            "Memiliki kepercayaan diri yang baik; menunjukkan keyakinan dalam mengambil keputusan.",
-            "Pandai berkomunikasi; menyampaikan visi dengan jelas, serta menjadi pembicara dan pendengar yang baik.",
-            "Memiliki Integritas ; yang diucapkan sama dengan yang dilakukan.",
+            "Berpikiran Positif dengan menunjukkan kemampuan membangun suasana optimis dan mendorong tim untuk berkontribusi.",
+            "Memiliki Kepercayaan diri yang baik dengan menunjukkan keyakinan dalam mengambil keputusan, tanpa arogan.",
+            "Pandai berkomunikasi dengan menunjukkan kemampuan menyampaikan visi dengan jelas, pembicara yang baik, juga pendengar yang baik.",
+            "Memiliki Integritas dengan menunjukkan bahwa yang diucapkan sama dengan yang dilakukan.",
             "Kreatif dalam mencari solusi",
+            "Berani mengambil keputusan dan berani mengambil langkah yang berbeda.",
+            "Tahu kelebihan dan kelemahan dirinya",
           ]
         },
         {
-          title: "Santri yang bisa dipimpin",
+          title: "Seorang yang dipimpin",
           sub_indicators: [
-            "Rendah hati ; mau dan rela dipimpin tanpa merasa direndahkan.",
+            "Rendah hati dengan menunjukkan bahwa ia mau dan rela dipimpin tanpa merasa direndahkan.",
+            "Memiliki Loyalitas dengan menunjukkan bahwa ia setia pada tujuan bersama, bukan hanya kepentingan pribadi / egois.",
             "Mau dikritik dan mampu belajar dari kritikan.",
-            "Disiplin ; mentaati peraturan",
-            "Punya tanggung jawab ; Menjalankan tugas sesuai arahan dengan konsisten.",
+            "Disiplin dengan menunjukkan bahwa ia mentaati peraturan",
+            "Punya tanggung jawab dengan menunjukkan bahwa ia menjalankan tugas sesuai arahan dengan konsisten.",
           ]
         },
       ]
@@ -197,126 +200,248 @@ export const karakterData = {
     },
     {
       id: 5,
-      title: "Konsisten ibadahnya & memiliki hubungan yang kuat dengan Al-Quran",
+      title: "Konsisten ibadahnya & memiliki hubungan yang kuat dengan Al-Quran.",
       explanation: "Apabila manusia tidak beribadah, maka gagal meraih tujuan penciptaan. Interaksi dengan Al-Quran adalah syarat mencapai tujuan tersebut.",
       indicators: [
         {
-          title: "Konsistensi Ibadah & Keterikatan Al-Quran",
+          title: "Tekun menegakkan Shalat",
           sub_indicators: [
-            "Tekun menegakkan shalat; menjaga shalat wajib tepat waktu dan berusaha menambah shalat sunnah.",
-            "Tidak meninggalkan ibadah meski sibuk atau lelah.",
-            "Menjaga kebersihan hati dan niat dalam beribadah.",
-            "Berusaha mengamalkan Al-Quran dalam kehidupan sehari-hari (praktek).",
-            "Rutin menyiarkan dan mendakwahkan tentang Al-Quran kepada orang lain.",
+            "Tahu bahwa sholat adalah rajanya ibadah.",
+            "Menjaga shalat wajib tepat waktu.",
+            "Berusaha menambah dengan shalat sunnah.",
+          ]
+        },
+        {
+          title: "Tidak meninggalkan ibadah meski sibuk atau lelah.",
+          sub_indicators: [
+            "Tahu bahwa tidak ada alasan untuk tidak beribadah.",
+            "Meyakini bahwa ibadah adalah sumber energy.",
+            "Meyakini bahwa semuanya bisa ditunda untuk ibadah.",
+          ]
+        },
+        {
+          title: "Menjaga kebersihan hati dan niat dalam beribadah.",
+          sub_indicators: [
+            "Tahu bahwa ibadah itu gabungan antara fisik dengan hati.",
+            "Sebelum menggerakkan fisik dan hati, terlebih dahulu harus memunculkan niat.",
+            "Meyakini bahwa hati adalah ruhnya ibadah.",
+          ]
+        },
+        {
+          title: "Rutin dalam membaca Al-Quran (tilawah & tajwid)",
+          sub_indicators: [
+            "Tahu bukti cinta yang pertama adalah membaca.",
+            "Tahu bahwa Al-Quran hanya ada di dalam diri kalau terus menerus dibaca.",
+            "Tahu bahwa tanpa membaca tidak ada hafalan dan tadabur.",
+          ]
+        },
+        {
+          title: "Rutin dalam menghafal Al-Quran (tahfiz)",
+          sub_indicators: [
+            "Menyadari bahwa hanya yang dihafallah yang bisa diamalkan sempurna.",
+            "Memahami bahwa menghafal itu butuh cinta.",
+            "Memahami bahwa menjaga hafalan itu butuh setia.",
+          ]
+        },
+        {
+          title: "Rutin dalam memahami Al-Quran (tadabur)",
+          sub_indicators: [
+            "Menyadari bahwa hanya yang dipahamilah yang bisa diamalkan sempurna.",
+            "Memahami bahwa tujuan Al-Quran adalah merubah, dan tidak akan ada perubahan tanpa pemahaman.",
+          ]
+        },
+        {
+          title: "Berusaha mengamalkan Al-Quran (praktek)",
+          sub_indicators: [
+            "Menyadari bahwa tujuan akhir Al-Quran adalah diamalkan.",
+            "Tahu bahwa pengamalan adalah tujuan dari membaca dan memahami.",
+          ]
+        },
+        {
+          title: "Rutin menyiarkan tentang Al-Quran (dakwah)",
+          sub_indicators: [
+            "Tahu bahwa menjaga dan menyiarkan Al-Quran adalah kewajiban semua muslim.",
+            "Menyadari bahwa tugas Nabi Muhammad Saw seumur hidupnya adalah dakwah.",
+            "Ingin seperti Nabi Muhammad Saw yang mengisi hidupnya sampai wafat dengan dakwah.",
           ]
         },
       ]
     },
     {
       id: 6,
-      title: "Rasa ingin tahunya besar & gemar membaca",
+      title: "Rasa ingin tahunya besar & gemar membaca.",
       explanation: "Belajar adalah perintah pertama. Semakin banyak membaca semakin kaya pertanyaan. Ciri manusia cerdas adalah banyak bertanya.",
       indicators: [
         {
-          title: "Rasa Ingin Tahu Besar",
+          title: "Banyak Bertanya",
           sub_indicators: [
-            "Banyak Bertanya; Tidak puas dengan jawaban singkat, selalu ingin tahu “mengapa” dan “bagaimana”.",
-            "Antusias terhadap Hal Baru; Tertarik mencoba pengalaman baru atau mempelajari bidang yang belum dikenal.",
-            "Keterbukaan Pikiran; Mau menerima sudut pandang berbeda.",
+            "Tidak puas dengan jawaban singkat, selalu ingin tahu \"mengapa\" dan \"bagaimana\".",
+            "Menggali informasi lebih dalam dari berbagai sumber.",
           ]
         },
         {
-          title: "Gemar Membaca",
+          title: "Antusias terhadap Hal Baru.",
           sub_indicators: [
-            "Menyediakan Waktu Khusus untuk Membaca; Menjadikan membaca sebagai rutinitas harian.",
-            "Punya variasi bacaan; Tidak hanya membaca satu jenis, tetapi beragam: fiksi, nonfiksi, artikel, tafsir, sejarah, dll.",
-            "Menghubungkan Bacaan dengan Kehidupan; Mengambil pelajaran dari bacaan untuk diterapkan dalam keseharian.",
-            "Konsisten; Membaca bukan hanya saat senggang, tetapi menjadi kebutuhan.",
+            "Tertarik mencoba pengalaman baru atau mempelajari bidang yang belum dikenal.",
+            "Melihat tantangan sebagai kesempatan belajar.",
+          ]
+        },
+        {
+          title: "Keterbukaan Pikiran.",
+          sub_indicators: [
+            "Mau menerima sudut pandang berbeda.",
+            "Tidak cepat menolak ide yang asing.",
+          ]
+        },
+        {
+          title: "Menyediakan Waktu Khusus untuk Membaca.",
+          sub_indicators: [
+            "Menjadikan membaca sebagai rutinitas harian.",
+            "Membawa buku atau bahan bacaan ke mana pun.",
+          ]
+        },
+        {
+          title: "Punya variasi bacaan.",
+          sub_indicators: [
+            "Tidak hanya membaca satu jenis, tetapi beragam: fiksi, nonfiksi, artikel, tafsir, sejarah, dll.",
+            "Menunjukkan minat luas terhadap berbagai topik.",
+          ]
+        },
+        {
+          title: "Menghubungkan Bacaan dengan Kehidupan.",
+          sub_indicators: [
+            "Mengambil pelajaran dari bacaan untuk diterapkan dalam keseharian.",
+            "Menyampaikan kembali isi bacaan kepada orang lain.",
+          ]
+        },
+        {
+          title: "Konsisten terus membaca.",
+          sub_indicators: [
+            "Membaca bukan hanya saat senggang, tetapi menjadi kebutuhan.",
+            "Menjaga kebiasaan membaca meski sibuk.",
           ]
         },
       ]
     },
     {
       id: 7,
-      title: "Berpikiran terbuka & suka mencoba hal baru",
+      title: "Berpikiran terbuka & suka mencoba hal baru.",
       explanation: "Mindset growth dan open mind akan memaksimalkan kecerdasan kognitif, emotional, dan spiritual.",
       indicators: [
         {
-          title: "Berpikiran Terbuka",
+          title: "Menerima Perbedaan",
           sub_indicators: [
-            "Menerima Perbedaan; Tidak cepat menghakimi orang lain.",
-            "Fleksibilitas dalam Berpikir; Tidak kaku pada satu cara atau pendapat.",
-            "Rasa Hormat terhadap Ide Orang Lain; Menghargai masukan meski berbeda dengan keyakinannya.",
+            "Tidak cepat menghakimi orang lain.",
+            "Mau mendengar sudut pandang yang berbeda.",
           ]
         },
         {
-          title: "Suka Mencoba Hal Baru",
+          title: "Fleksibilitas dalam Berpikir",
           sub_indicators: [
-            "Rasa Ingin Tahu yang Tinggi; Aktif bertanya dan mencari tahu hal-hal yang belum dikenalnya.",
-            "Berani Keluar dari Zona Nyaman; Tidak takut gagal ketika mencoba sesuatu yang belum pernah dilakukan.",
-            "Proaktif Mencari Pengalaman Baru; Mengusulkan ide atau kegiatan baru dalam kelompok.",
-            "Adaptif terhadap Perubahan; Cepat menyesuaikan diri ketika menghadapi situasi baru.",
-            "Menjadikan Kesalahan sebagai Proses Belajar; Tidak berkecil hati ketika hasil percobaan tidak sesuai harapan.",
+            "Tidak kaku pada satu cara atau pendapat.",
+            "Siap menyesuaikan diri dengan situasi baru",
+          ]
+        },
+        {
+          title: "Rasa Hormat terhadap Ide Orang Lain.",
+          sub_indicators: [
+            "Menghargai masukan meski berbeda dengan keyakinannya.",
+            "Menjadikan diskusi sebagai sarana belajar, bukan perdebatan semata.",
+          ]
+        },
+        {
+          title: "Rasa Ingin Tahu yang Tinggi.",
+          sub_indicators: [
+            "Aktif bertanya dan mencari tahu hal-hal yang belum dikenalnya.",
+            "Tertarik mempelajari topik, aktivitas, atau pengalaman baru tanpa harus diminta.",
+          ]
+        },
+        {
+          title: "Berani Keluar dari Zona Nyaman.",
+          sub_indicators: [
+            "Tidak takut gagal ketika mencoba sesuatu yang belum pernah dilakukan.",
+            "Mau mengambil tantangan baru meski ada risiko atau ketidakpastian.",
+          ]
+        },
+        {
+          title: "Proaktif Mencari Pengalaman Baru.",
+          sub_indicators: [
+            "Mengusulkan ide atau kegiatan baru dalam kelompok.",
+            "Mencari kesempatan untuk mencoba metode, alat, atau pendekatan yang berbeda.",
+          ]
+        },
+        {
+          title: "Adaptif terhadap Perubahan",
+          sub_indicators: [
+            "Cepat menyesuaikan diri ketika menghadapi situasi baru.",
+            "Tidak mudah panik atau menolak perubahan, justru melihatnya sebagai peluang belajar.",
+          ]
+        },
+        {
+          title: "Menjadikan Kesalahan sebagai Proses Belajar.",
+          sub_indicators: [
+            "Tidak berkecil hati ketika hasil percobaan tidak sesuai harapan.",
+            "Menganalisis kesalahan untuk memperbaiki percobaan berikutnya.",
           ]
         },
       ]
     },
     {
       id: 8,
-      title: "Imajinasinya kaya",
+      title: "Imajinasinya kaya (Sumber K2IAM).",
       explanation: "Pondasi kreativitas, inovasi, dan antisipatif. Menggunakan telinga, mata, dan hati untuk membaca dan mempertajam rasa ingin tahu.",
       indicators: [
         {
-          title: "Kreativitasnya Tinggi",
+          title: "Kreativitasnya Tinggi.",
           sub_indicators: [
             "Mampu menghasilkan ide-ide baru yang tidak terpikirkan orang lain.",
             "Sering menemukan solusi alternatif dalam menghadapi masalah.",
           ]
         },
         {
-          title: "Berpikir Simbolik dan Asosiatif",
+          title: "Berpikir Simbolik dan Asosiatif.",
           sub_indicators: [
             "Melihat hubungan antara hal-hal yang tampak tidak berkaitan.",
             "Menggunakan metafora atau analogi untuk menjelaskan sesuatu.",
           ]
         },
         {
-          title: "Ekspresi dalam Seni atau Tulisan",
+          title: "Ekspresif dalam Seni atau Tulisan.",
           sub_indicators: [
             "Menyalurkan imajinasi lewat seni, musik, cerita, atau desain.",
             "Menikmati aktivitas yang memberi ruang untuk berkreasi.",
           ]
         },
         {
-          title: "Kemampuan Berfantasi",
+          title: "Kemampuan Berfantasi.",
           sub_indicators: [
             "Sering membayangkan skenario, dunia, atau kemungkinan baru.",
             "Menggunakan fantasi sebagai cara memahami atau memperkaya realitas.",
           ]
         },
         {
-          title: "Rasa Ingin Tahu dan Eksplorasi",
+          title: "Rasa Ingin Tahu dan Eksplorasi.",
           sub_indicators: [
             "Tertarik mencoba hal-hal baru untuk memperluas wawasan.",
             "Membaca, menonton, atau berdiskusi untuk memicu ide-ide segar.",
           ]
         },
         {
-          title: "Berani Berbeda",
+          title: "Berani Berbeda.",
           sub_indicators: [
             "Tidak takut mengemukakan gagasan yang unik.",
-            "Menikmati proses berpikir “di luar kotak” meski kadang dianggap aneh.",
+            "Menikmati proses berpikir \"di luar kotak\" meski kadang dianggap aneh.",
           ]
         },
       ]
     },
     {
       id: 9,
-      title: "Berjuang memfilter 3 alat belajar",
+      title: "Berjuang memfilter 3 alat belajar.",
       explanation: "Semakin banyak membaca semakin takut kepada Allah. Berhati-hati terhadap apa yang didengar, lihat, dan rasa.",
       indicators: [
         {
-          title: "Memfilter Telinga (Pendengaran)",
+          title: "Memfilter Telinga (Pendengaran).",
           sub_indicators: [
             "Tidak mudah mendengar gosip, fitnah, atau perkataan yang merusak hati.",
             "Lebih memilih mendengar hal-hal bermanfaat: nasihat, ilmu, bacaan Qur'an, atau diskusi positif.",
@@ -324,7 +449,7 @@ export const karakterData = {
           ]
         },
         {
-          title: "Memfilter Mata (Penglihatan)",
+          title: "Memfilter Mata (Penglihatan).",
           sub_indicators: [
             "Menjaga pandangan dari hal-hal yang haram atau tidak bermanfaat.",
             "Mengarahkan mata pada bacaan, tontonan, dan aktivitas yang menambah ilmu serta iman.",
@@ -332,7 +457,7 @@ export const karakterData = {
           ]
         },
         {
-          title: "Memfilter Hati (Perasaan & Pikiran)",
+          title: "Memfilter Hati (Perasaan & Pikiran).",
           sub_indicators: [
             "Berusaha menghindari iri, dengki, sombong, dan prasangka buruk.",
             "Mengisi hati dengan dzikir, syukur, dan niat baik.",
@@ -343,39 +468,46 @@ export const karakterData = {
     },
     {
       id: 10,
-      title: "Menjadikan Islam sebagai identitas diri yang utama",
+      title: "Menjadikan Islam sebagai identitas diri yang utama.",
       explanation: "Fungsi utama agama adalah mengenalkan Tuhan dan kebenaran. Keterikatan dengan agama adalah syarat mutlak menghadapi hawa nafsu.",
       indicators: [
         {
-          title: "Aqidahnya kokoh",
+          title: "Aqidahnya kokoh.",
           sub_indicators: [
             "Menjadikan tauhid sebagai fondasi hidup.",
             "Keyakinan terhadap Allah dan Rasul-Nya menjadi pusat orientasi diri.",
           ]
         },
         {
-          title: "Ibadahnya konsisten",
+          title: "Ibadahnya konsisten.",
           sub_indicators: [
             "Menjaga shalat, puasa, zakat, dan ibadah lainnya dengan disiplin.",
             "Menjadikan ibadah sebagai kebutuhan, bukan sekadar kewajiban.",
           ]
         },
         {
-          title: "Menjadikan Al-Qur'an dan Sunnah sebagai Pedoman",
+          title: "Menghindari perilaku yang bertentangan dengan syariat.",
+          sub_indicators: [
+            "Selalu mengukur segala sesuatu dengan syariat.",
+            "Menolak keuntungan apapun yang bertentangan dengan syariat.",
+          ]
+        },
+        {
+          title: "Menjadikan Al-Qur'an dan Sunnah sebagai Pedoman.",
           sub_indicators: [
             "Mengambil keputusan berdasarkan nilai Islam.",
             "Mengukur benar dan salah dengan standar syariat, bukan sekadar budaya atau tren.",
           ]
         },
         {
-          title: "Identitas & Komitmen Islami",
+          title: "Bangga menunjukkan identitas Muslim.",
           sub_indicators: [
-            "Menghindari perilaku yang bertentangan dengan syariat dalam kehidupan sehari-hari.",
             "Bangga menunjukkan identitas Muslim dalam berpakaian, berbicara, dan berperilaku.",
+            "Dan tidak mudah ikuta-ikutan dengan gaya hidup yang bertentangan dengan Islam.",
           ]
         },
         {
-          title: "Komitmen dalam Dakwah dan Amar Ma'ruf Nahi Munkar",
+          title: "Komitmen dalam Dakwah dan Amar Ma'ruf Nahi Munkar.",
           sub_indicators: [
             "Berusaha mengajak orang lain kepada kebaikan.",
             "Menjadi teladan dalam lingkungan, baik keluarga maupun masyarakat.",
@@ -496,7 +628,7 @@ export const karakterData = {
           ]
         },
         {
-          title: "Kesungguhan dalam Usaha",
+          title: "Kesungguhan dalam Ikhtiar.",
           sub_indicators: [
             "Berusaha mencari cara terbaik agar tindakannya benar.",
             "Tidak mudah menyerah ketika menghadapi godaan atau kesulitan.",
@@ -531,7 +663,7 @@ export const karakterData = {
       explanation: "Keinginan untuk tidak berbuat salah memberi kesempatan taubat.",
       indicators: [
         {
-          title: "Kesadaran Diri yang Tinggi",
+          title: "Kesadaran diri yang tinggi.",
           sub_indicators: [
             "Selalu introspeksi sebelum bertindak.",
             "Menimbang konsekuensi dari setiap ucapan dan perbuatan.",
@@ -545,28 +677,28 @@ export const karakterData = {
           ]
         },
         {
-          title: "kuat pengendalian dirinya",
+          title: "Kuat pengendalian dirinya",
           sub_indicators: [
             "Mampu menahan dorongan hawa nafsu atau emosi sesaat.",
             "Mengutamakan kesabaran daripada reaksi spontan yang bisa salah.",
           ]
         },
         {
-          title: "Komit pada Nilai Kebenaran",
+          title: "Komit pada nilai kebenaran.",
           sub_indicators: [
             "Menjadikan syariat dan moral sebagai pedoman utama.",
             "Menolak tindakan yang merugikan orang lain meski ada keuntungan pribadi.",
           ]
         },
         {
-          title: "Belajar dari Kesalahan",
+          title: "Belajar dari kesalahan.",
           sub_indicators: [
             "Tidak menutup mata terhadap kekeliruan.",
             "Mau memperbaiki diri dan menjadikannya pelajaran.",
           ]
         },
         {
-          title: "memilih teman dan lingkungan",
+          title: "Memilih teman dan lingkungan.",
           sub_indicators: [
             "Memilih teman, bacaan, dan aktivitas yang menjaga dari kesalahan.",
             "Menghindari situasi dan lingkungan yang berpotensi menjerumuskan.",
@@ -776,7 +908,7 @@ export const karakterData = {
       explanation: "Hidup adalah ujian dalam bentuk tawa dan tangis. Ujian adalah keniscayaan yang pasti terjadi.",
       indicators: [
         {
-          title: "Kesadaran akan Hakikat Hidup",
+          title: "Menyadari hakikat Hidup.",
           sub_indicators: [
             "Menyadari bahwa hidup di dunia pasti penuh ujian.",
             "Tidak kaget atau putus asa ketika menghadapi kesulitan.",
@@ -811,7 +943,7 @@ export const karakterData = {
           ]
         },
         {
-          title: "Tidak Mudah Tergoda Jalan Pintas",
+          title: "Tidak tergoda jalan pintas.",
           sub_indicators: [
             "Menolak solusi yang haram atau merugikan orang lain demi keluar dari ujian.",
             "Memilih jalan yang benar meski lebih sulit.",
@@ -874,7 +1006,7 @@ export const karakterData = {
       explanation: "Menghadapi musibah/kehilangan dengan terus berikhtiar (jihad). Tidak boleh menyerah.",
       indicators: [
         {
-          title: "Kesadaran bahwa Tangis = Ujian",
+          title: "Kesadaran bahwa Tangis adalah Ujian.",
           sub_indicators: [
             "Menyadari kesedihan bukan sekadar perasaan, tetapi ujian dari Allah.",
             "Tidak larut dalam putus asa, melainkan melihatnya sebagai peluang untuk memperkuat iman.",
@@ -923,7 +1055,7 @@ export const karakterData = {
       explanation: "Fisik baik, rezeki melimpah adalah ujian. Harus dijawab dengan syukur dan tidak sombong.",
       indicators: [
         {
-          title: "Kendali Diri dalam Kebahagiaan",
+          title: "Mampu mengendalikan diri ketika bahagia.",
           sub_indicators: [
             "Tidak larut berlebihan dalam kesenangan.",
             "Menjaga diri agar tetap ingat Allah saat bahagia.",
@@ -937,7 +1069,7 @@ export const karakterData = {
           ]
         },
         {
-          title: "Menjaga dari Maksiat",
+          title: "Menjauhi maksiat.",
           sub_indicators: [
             "Tidak menggunakan nikmat untuk hal-hal yang melanggar syariat.",
             "Menjadikan kesenangan sebagai sarana ibadah, bukan pintu kelalaian.",
@@ -951,14 +1083,14 @@ export const karakterData = {
           ]
         },
         {
-          title: "Kesadaran akan Sementara-nya Dunia",
+          title: "Sadar bahwa dunia ini hanyalah sementara.",
           sub_indicators: [
             "Menyadari bahwa tawa hanyalah fase ujian, bukan tujuan akhir.",
             "Tidak menjadikan kesenangan sebagai pusat hidup, tetapi sebagai bekal menuju akhirat.",
           ]
         },
         {
-          title: "Menguatkan Iman dalam Nikmat",
+          title: "Tetap menguatkan Iman walau dalam keadaan bahagia.",
           sub_indicators: [
             "Semakin banyak nikmat, semakin kuat rasa syukur dan ketaatan.",
             "Menjadikan keberhasilan sebagai sarana dakwah dan teladan.",
@@ -1042,7 +1174,7 @@ export const karakterData = {
           ]
         },
         {
-          title: "Konsistensi dalam Usaha",
+          title: "Konsistensi dalam Ikhtiar.",
           sub_indicators: [
             "Tidak menyerah meski hasil belum terlihat.",
             "Terus berikhtiar dengan sabar dan istiqamah.",
@@ -1077,7 +1209,7 @@ export const karakterData = {
       explanation: "Fokus pada hikmah dan manfaat, bukan hanya penderitaan. Hikmah ada di awal, tengah, dan akhir.",
       indicators: [
         {
-          title: "Menemukan Hikmah Sejak Awal",
+          title: "Dapat menemukan Hikmah Sejak Awal.",
           sub_indicators: [
             "Mampu melihat tanda-tanda kebaikan meski ujian baru datang.",
             "Tidak panik, tetapi segera mencari makna di balik peristiwa.",
@@ -1157,7 +1289,7 @@ export const karakterData = {
           ]
         },
         {
-          title: "Motivasi Intrinsik",
+          title: "Motivasinya muncul dari internal diri sendiri.",
           sub_indicators: [
             "Dorongan berasal dari keyakinan dan makna pribadi, bukan sekadar imbalan eksternal.",
             "Merasa bahagia dalam proses perjuangan, bukan hanya hasil akhir.",
@@ -1402,7 +1534,7 @@ export const karakterData = {
       explanation: "Apapun yang terjadi di masa depan adalah tanggung jawabmu sendiri, bukan orang tua atau nasib.",
       indicators: [
         {
-          title: "Kesadaran Tanggung Jawab",
+          title: "Kesadaran akan adanya Tanggung Jawab.",
           sub_indicators: [
             "Menyadari bahwa masa depan tidak ditentukan orang lain, tetapi oleh usaha diri sendiri.",
             "Tidak bergantung sepenuhnya pada nasib atau bantuan orang lain.",
@@ -1521,7 +1653,7 @@ export const karakterData = {
           ]
         },
         {
-          title: "Landasan Syariat",
+          title: "Berpikir dengan berlandaskan Syariat.",
           sub_indicators: [
             "Menjadikan Al-Qur'an dan Sunnah sebagai filter utama dalam memilih.",
             "Memastikan pilihan tidak bertentangan dengan halal-haram.",
@@ -1570,7 +1702,7 @@ export const karakterData = {
       explanation: "Setiap pilihan ada resikonya: tidak ada resiko, resiko kecil, atau resiko besar.",
       indicators: [
         {
-          title: "Kesadaran Risiko",
+          title: "Kesadaran akan pasti adanya risiko.",
           sub_indicators: [
             "Menyadari bahwa setiap pilihan membawa potensi dampak positif maupun negatif.",
             "Tidak menganggap remeh keputusan kecil sekalipun.",
@@ -1622,7 +1754,7 @@ export const karakterData = {
     },
     {
       id: 35,
-      title: "Menerima kesalahan dengan wajar & tidak menyalahkan siapapun tanpa argumentasi yang logis dan syar'i",
+      title: "Menerima kesalahan dengan wajar & tidak menyalahkan apapun dan siapapun tanpa argumentasi yang logis dan syar'i.",
       explanation: "Mengambil tanggung jawab penuh atas kesalahan/kegagalan. Jangan menyalahkan orang lain seperti anak kecil.",
       indicators: [
         {
@@ -1682,7 +1814,7 @@ export const karakterData = {
       explanation: "Konflik adalah proses menuju harmonis. Di dalam konflik kita belajar harmonisasi.",
       indicators: [
         {
-          title: "Kesadaran bahwa Konflik = Ujian",
+          title: "Kesadaran bahwa Konflik adalah salah satu dari bentuk Ujian.",
           sub_indicators: [
             "Menyadari konflik adalah bagian alami dari kehidupan.",
             "Tidak menganggap konflik sebagai musuh, tetapi sebagai kesempatan untuk tumbuh.",

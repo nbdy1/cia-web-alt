@@ -27,6 +27,21 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+let nextCriteriaId: number | null = null;
+
+async function allocateCriteriaId(): Promise<number> {
+  if (nextCriteriaId === null) {
+    const { data, error } = await supabase
+      .from("cia_criteria")
+      .select("id")
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    nextCriteriaId = Number(data?.id ?? 0) + 1;
+  }
+  return nextCriteriaId++;
+}
 
 async function ingestCategory(categoryName: string, categoryData: any, organizationId: string | null = null): Promise<number> {
   console.log(`\n🚀 Starting ingestion for category: ${categoryName}${organizationId ? ` (org ${organizationId})` : ""}`);
@@ -71,6 +86,7 @@ async function ingestCategory(categoryName: string, categoryData: any, organizat
           const { error } = await supabase
             .from('cia_criteria')
             .insert({
+              id: await allocateCriteriaId(),
               category: categoryName,
               theme: theme.title,
               indicator: indicator.title,

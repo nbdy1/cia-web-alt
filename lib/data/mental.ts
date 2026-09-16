@@ -20,53 +20,53 @@ export const mentalData = {
     {
       id: 1,
       group: "Niat",
-      title: "Belajar itu ibadah. Belajar itu untuk tahu dan bisa.",
+      title: "Prinsip belajar",
       explanation: "Belajar itu adalah ibadah. Belajar itu untuk tahu dan bisa. Belajar itu persis seperti ibadah, apabila tidak dilakukan dengan benar maka manfaatnya tidak akan di dapat.",
       indicators: [
         {
-          title: "Niat Belajar sebagai Ibadah",
+          title: "Niat Belajar sebagai Ibadah.",
           sub_indicators: [
             "Menjadikan belajar sebagai bentuk pengabdian kepada Allah.",
             "Memulai belajar dengan doa dan niat yang lurus.",
           ]
         },
         {
-          title: "Kesadaran bahwa tujuan belajar adalah ilmu, bukan ijazah atau sekadar formalitas",
+          title: "Kesadaran bahwa tujuan belajar itu adalah ilmu (bukan ijazah atau sekedar untuk mendapatkan pekerjaan dan uang).",
           sub_indicators: [
             "Menyadari bahwa belajar bukan sekadar formalitas, tetapi untuk memahami kebenaran.",
             "Menempatkan ilmu sebagai jalan menuju kedekatan dengan Allah.",
           ]
         },
         {
-          title: "Orientasi “Tahu dan Bisa”",
+          title: "Orientasi “Tahu dan Bisa.”",
           sub_indicators: [
             "Belajar bukan hanya untuk hafal, tetapi untuk memahami dan mengamalkan.",
             "Menjadikan ilmu sebagai bekal praktik nyata dalam kehidupan.",
           ]
         },
         {
-          title: "Istiqomah dalam Menuntut Ilmu",
+          title: "Istiqomah dalam Menuntut Ilmu.",
           sub_indicators: [
             "Tekun belajar meski menghadapi kesulitan.",
             "Tidak mudah menyerah ketika belum paham.",
           ]
         },
         {
-          title: "Mengintegrasikan Ilmu dan Amal",
+          title: "Mengintegrasikan Ilmu dan Amal.",
           sub_indicators: [
             "Menghubungkan pengetahuan dengan tindakan nyata.",
             "Menjadikan ilmu sebagai pedoman dalam akhlak dan ibadah.",
           ]
         },
         {
-          title: "Rendah Hati",
+          title: "Rendah Hati.",
           sub_indicators: [
             "Tidak sombong dengan ilmu yang dimiliki.",
             "Menyadari bahwa ilmu adalah amanah, bukan sekadar prestasi.",
           ]
         },
         {
-          title: "Tujuan utama belajar adalah cinta dan ridlo Allah",
+          title: "Tujuan utama belajar adalah cinta dan ridlo Allah.",
           sub_indicators: [
             "Menjadikan belajar sebagai sarana mendekatkan diri kepada Allah.",
             "Meyakini bahwa ilmu yang bermanfaat adalah yang membawa keberkahan.",
@@ -81,7 +81,7 @@ export const mentalData = {
       explanation: "Prioritas 1: Indah (Benar + Baik). Prioritas 2: Benar (Allah). Prioritas 3: Baik (Manusia). Harus melakukan apa yang penting dan bermanfaat walau tidak suka.",
       indicators: [
         {
-          title: "Menjadikan nilai “Benar” sebagai Fondasi",
+          title: "Menjadikan nilai “Benar” sebagai Fondasi.",
           sub_indicators: [
             "Memastikan setiap pilihan dan tindakan sesuai syariat Allah.",
             "Tidak mengorbankan prinsip halal-haram demi keuntungan duniawi.",
@@ -89,7 +89,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Menjadikan nilai “Baik” sebagai ekspresi sosial",
+          title: "Menjadikan nilai “Baik” sebagai ekspresi sosial.",
           sub_indicators: [
             "Menampilkan akhlak mulia dalam interaksi sosial.",
             "Menghargai norma, budaya, dan etika yang berlaku.",
@@ -97,7 +97,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Menjadikan nilai “Indah” sebagai Harmoni",
+          title: "Menjadikan nilai “Indah” sebagai Harmoni.",
           sub_indicators: [
             "Menggabungkan kebenaran syariat dengan kebaikan sosial sehingga lahir keindahan.",
             "Menyampaikan kebenaran dengan cara yang disukai manusia",
@@ -105,7 +105,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Prioritas yang Seimbang",
+          title: "Prioritas yang Seimbang.",
           sub_indicators: [
             "Tidak hanya mengejar “baik menurut manusia” jika bertentangan dengan syariat.",
             "Tidak hanya berpegang pada “benar menurut Allah” tanpa memperhatikan cara penyampaian.",
@@ -113,7 +113,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Integrasi Spiritualitas & Sosialita",
+          title: "Integrasi Spiritualitas & Sosialita.",
           sub_indicators: [
             "Menjadikan iman sebagai fondasi.",
             "Menjadikan akhlak sebagai wajah.",
@@ -129,7 +129,7 @@ export const mentalData = {
       explanation: "Bahagia, rela, ridlo menjadi seorang hamba Allah. Karena kita ridlo, maka kita jauh lebih siap menghadapNya.",
       indicators: [
         {
-          title: "Merasa bahagia dalam ketaatan",
+          title: "Merasa bahagia dalam ketaatan.",
           sub_indicators: [
             "Merasa tenang dan bahagia ketika beribadah.",
             "Ingin menjadikan ketaatan sebagai sumber kebahagiaan, bukan beban.",
@@ -137,21 +137,21 @@ export const mentalData = {
           ]
         },
         {
-          title: "Konsistensi Ibadah",
+          title: "Konsistensi Ibadah.",
           sub_indicators: [
             "Menjaga shalat, dzikir, doa, dan amal shalih dengan istiqamah.",
             "Tidak mudah lalai meski sibuk dengan urusan dunia.",
           ]
         },
         {
-          title: "Orientasi Akhirat",
+          title: "Orientasi Akhirat.",
           sub_indicators: [
             "Menyadari bahwa hidup di dunia hanyalah sementara.",
             "Menjadikan akhirat sebagai tujuan utama dalam setiap langkah.",
           ]
         },
         {
-          title: "Kesiapan Menghadap Allah",
+          title: "Kesiapan Menghadap Allah.",
           sub_indicators: [
             "Senantiasa sibuk memperbaiki diri",
             "Senantiasa sibuk bertaubat dari kesalahan.",
@@ -159,21 +159,21 @@ export const mentalData = {
           ]
         },
         {
-          title: "Syukur & Sabar",
+          title: "Syukur & Sabar.",
           sub_indicators: [
             "Bersyukur atas nikmat kecil maupun besar.",
             "Bersabar atas ujian, karena yakin semua adalah bagian dari kasih sayang Allah.",
           ]
         },
         {
-          title: "Hidup dengan “Benar”",
+          title: "Hidup dengan “Benar”.",
           sub_indicators: [
             "Menjalani kehidupan sesuai syariat, baik dalam ibadah maupun muamalah.",
             "Menjaga akhlak mulia sebagai cerminan hamba Allah.",
           ]
         },
         {
-          title: "Keteladanan Spiritual",
+          title: "Keteladanan Spiritual.",
           sub_indicators: [
             "Menjadi teladan bagi orang lain dalam ketenangan, kesabaran, dan keikhlasan.",
             "Membuat orang lain merasakan kedamaian dari sikapnya.",
@@ -188,28 +188,28 @@ export const mentalData = {
       explanation: "Bahagia dan bangga menjadi umat Nabi Muhammad Saw. Mengenal sejarah, hadits, dan patuh kepadanya.",
       indicators: [
         {
-          title: "Cinta Nabi Saw",
+          title: "Cinta Nabi Saw.",
           sub_indicators: [
             "Menjadikan beliau sebagai teladan utama dalam hidup.",
             "Merasa bangga dan bahagia menjadi bagian dari umatnya.",
           ]
         },
         {
-          title: "Menghidupkan Sunnah",
+          title: "Menghidupkan Sunnah.",
           sub_indicators: [
             "Berusaha menjalankan sunnah Rasulullah dalam ibadah, akhlak, dan muamalah.",
             "Menjadikan sunnah sebagai pedoman sehari-hari, bukan sekadar simbol.",
           ]
         },
         {
-          title: "Rindu Nabi Saw",
+          title: "Rindu Nabi Saw.",
           sub_indicators: [
             "Sering bershalawat sebagai wujud cinta dan kerinduan.",
             "Berdoa agar kelak bisa berjumpa dengan Rasulullah di akhirat.",
           ]
         },
         {
-          title: "Berusaha mengamalkan banyak sunah Nabi saw",
+          title: "Mengamalkan sunah utama Nabi Saw.",
           sub_indicators: [
             "Membaca biografi Nabi Saw",
             "Berinteraksi dengan Quran sebagai sunah yang utama",
@@ -217,14 +217,14 @@ export const mentalData = {
           ]
         },
         {
-          title: "Bersyukur menjadi umat Nabi Saw",
+          title: "Bersyukur menjadi umat Nabi Saw.",
           sub_indicators: [
             "Merasa mulia dengan identitas keislaman yang diwariskan Rasulullah.",
             "Melibatkan diri dalam dakwah",
           ]
         },
         {
-          title: "Bukan hanya ingin surga dan melihat Allah, tetapi ingin berjumpa dengan nabi Saw",
+          title: "Bukan hanya ingin surga dan melihat Allah, tetapi ingin berjumpa dengan Nabi Saw.",
           sub_indicators: [
             "Menjadikan perjumpaan dengan Rasulullah sebagai cita-cita tertinggi.",
             "Memperbanyak amal shalih sebagai bekal agar layak bertemu beliau.",
@@ -239,14 +239,14 @@ export const mentalData = {
       explanation: "Al-Quran adalah petunjuk kehidupan. Pecinta sejati mempelajari, merenungi, dan menjadikannya pedoman.",
       indicators: [
         {
-          title: "Mencintai Al-Qur’an",
+          title: "Mencintai Al-Qur'an.",
           sub_indicators: [
             "Merasa rindu dan bahagia ketika membaca atau mendengar Al-Qur’an.",
             "Menjadikan interaksi dengan Quran (baca, hafal, tadabur) sebagai kebutuhan, bukan kewajiban.",
           ]
         },
         {
-          title: "Dekat dengan Al-Qur’an",
+          title: "Dekat dengan Al-Qur'an.",
           sub_indicators: [
             "Mendawamkan / setiap hari ada target membaca Al-Qur’an",
             "Mendawamkan / setiap hari ada target menghafal Al-Qur’an",
@@ -254,21 +254,21 @@ export const mentalData = {
           ]
         },
         {
-          title: "Berusaha mengamalkan Al-Qur’an",
+          title: "Berusaha mengamalkan Al-Qur'an.",
           sub_indicators: [
             "Menjadikan Al-Qur’an sebagai kompas dalam berpikir, berkata, dan bertindak.",
             "Mengukur benar-salah dengan standar Al-Qur’an, bukan logika manusia.",
           ]
         },
         {
-          title: "Konsistensi dengan Al-Qur’an",
+          title: "Konsistensi dengan Al-Qur'an.",
           sub_indicators: [
             "Menjalankan ibadah, muamalah, dan akhlak sesuai tuntunan Al-Qur’an.",
             "Tidak mudah tergoda oleh hal-hal yang bertentangan dengan nilai Qur’ani.",
           ]
         },
         {
-          title: "Terikat dengan Al-Qur’an",
+          title: "Terikat dengan Al-Qur'an.",
           sub_indicators: [
             "Merasakan ketenangan hati saat berinteraksi dengan Al-Qur’an.",
             "Menjadikan Al-Qur’an sebagai sumber kekuatan dalam menghadapi ujian hidup.",
@@ -284,7 +284,7 @@ export const mentalData = {
       explanation: "Mukmin yang hebat adalah penghafal Al-Quran. Pengamalan bergantung pada kekuatan hafalan.",
       indicators: [
         {
-          title: "Niat yang Lurus",
+          title: "Niat yang Lurus.",
           sub_indicators: [
             "Menghafal Al-Qur’an karena Allah Swt & Rasulullah Saw",
             "Menghafal Al-Qur’an bukan hanya untuk orangtua",
@@ -293,7 +293,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Konsistensi dalam Menghafal",
+          title: "Konsistensi dalam Menghafal.",
           sub_indicators: [
             "Punya target hafalan (ziyadah & mutqinin)",
             "Menjaga rutinitas muraja’ah (mengulang hafalan) agar tidak hilang.",
@@ -301,35 +301,35 @@ export const mentalData = {
           ]
         },
         {
-          title: "Merasakan koneksi dengan Al-Quran",
+          title: "Merasakan koneksi dengan Al-Quran.",
           sub_indicators: [
             "Merasakan ketenangan dan kebahagiaan saat berinteraksi dengan Al-Qur’an.",
             "Menjadikan hafalan sebagai sarana memperkuat iman dan taqwa.",
           ]
         },
         {
-          title: "Ingin memahami Al-Quran",
+          title: "Ingin memahami Al-Quran.",
           sub_indicators: [
             "Tidak hanya menghafal, tetapi juga berusaha memahami isi Al-Qur’an.",
             "Tidak hanya menghafal, tetapi juga berusaha mengamalkan isi Al-Qur’an.",
           ]
         },
         {
-          title: "Orientasi Akhirat",
+          title: "Orientasi Akhirat.",
           sub_indicators: [
             "Meyakini bahwa kemuliaan sejati adalah bersama Al-Qur’an di akhirat.",
             "Menjadikan hafalan sebagai bekal untuk mendapatkan syafaat Al-Qur’an.",
           ]
         },
         {
-          title: "Kerendahan Hati",
+          title: "Kerendahan Hati.",
           sub_indicators: [
             "Tidak sombong dengan hafalan, tapi tetap tawadhu.",
             "Menyadari bahwa hafalan adalah amanah yang harus dijaga.",
           ]
         },
         {
-          title: "Dakwah & Teladan",
+          title: "Dakwah & Teladan.",
           sub_indicators: [
             "Mengajak orang lain mencintai Al-Qur’an melalui teladan pribadi.",
             "Takut berbuat salah dan buruk karena merasa menodai Al-Quran",
@@ -351,42 +351,42 @@ export const mentalData = {
           ]
         },
         {
-          title: "Pemanfaatan Teknologi untuk Kebaikan",
+          title: "Pemanfaatan Teknologi untuk Kebaikan.",
           sub_indicators: [
             "Menggunakan teknologi sebagai alat untuk mempermudah hidup, memperluas dakwah, dan meningkatkan produktivitas.",
             "Tidak menyalahgunakan teknologi untuk hal yang merusak moral atau merugikan orang lain.",
           ]
         },
         {
-          title: "Bisnis yang Beretika & Syariah",
+          title: "Bisnis yang Beretika & Syar'i.",
           sub_indicators: [
             "Menjalankan usaha dengan prinsip halal, jujur, dan amanah.",
             "Menjadikan bisnis sebagai sarana memberi manfaat bagi masyarakat, bukan sekadar mencari keuntungan.",
           ]
         },
         {
-          title: "Dakwah yang Kreatif & Relevan",
+          title: "Dakwah yang Kreatif & Relevan.",
           sub_indicators: [
             "Menggunakan media modern untuk menyampaikan pesan Islam dengan cara yang menarik dan mudah dipahami.",
             "Menjadikan dakwah sebagai bagian dari aktivitas sehari-hari, bukan hanya di mimbar.",
           ]
         },
         {
-          title: "Integrasi Dunia & Akhirat",
+          title: "Integrasi Dunia & Akhirat.",
           sub_indicators: [
             "Menyadari bahwa kemuliaan dunia harus menjadi bekal menuju akhirat.",
             "Menjadikan setiap aktivitas bisnis dan teknologi sebagai ibadah dan diniatkan untuk Allah.",
           ]
         },
         {
-          title: "Kepemimpinan & Keteladanan",
+          title: "Kepemimpinan & Keteladanan.",
           sub_indicators: [
             "Menjadi teladan dalam memadukan profesionalisme dengan nilai spiritual.",
             "Menginspirasi orang lain untuk berbisnis dan berdakwah dengan cara yang mulia.",
           ]
         },
         {
-          title: "Orientasi Maslahat",
+          title: "Orientasi Maslahat.",
           sub_indicators: [
             "Fokus pada manfaat luas: teknologi untuk memudahkan, bisnis untuk mensejahterakan, dakwah untuk mensolehkan",
             "Menjadikan keberhasilan dunia sebagai sarana memperkuat ukhuwah dan dakwah.",
@@ -397,32 +397,32 @@ export const mentalData = {
     {
       id: 8,
       group: "Niat",
-      title: "Berpikir Besar",
+      title: "Berpikir Besar.",
       explanation: "Apa yang kamu inginkan itulah yang kamu dapat. Bercita-citalah yang tinggi.",
       indicators: [
         {
-          title: "Visinya sampai akhirat",
+          title: "Visinya sampai akhirat.",
           sub_indicators: [
             "Visi misi dan cita-citanya bukan cuma dunia saja tapi sekaligus akhirat",
             "Tidak hanya memikirkan diri sendiri, tetapi juga dampak bagi masyarakat dan umat.",
           ]
         },
         {
-          title: "Berani Bermimpi Besar",
+          title: "Berani Bermimpi Besar.",
           sub_indicators: [
             "Tidak takut dianggap “terlalu tinggi” dalam cita-cita.",
             "Menjadikan mimpi besar sebagai motivasi, bukan sekadar angan-angan.",
           ]
         },
         {
-          title: "Ketekunan & Disiplin",
+          title: "Ketekunan & Disiplin.",
           sub_indicators: [
             "Cita-cita besar nya setara dengan daya juangnya.",
             "Tidak akan menyerah meski menghadapi rintangan besar.",
           ]
         },
         {
-          title: "Berani Mengambil Risiko",
+          title: "Berani Mengambil Risiko.",
           sub_indicators: [
             "Menyadari bahwa cita-cita besar membutuhkan pengorbanan.",
             "Siap menghadapi tantangan dengan strategi dan keberanian.",
@@ -430,14 +430,14 @@ export const mentalData = {
           ]
         },
         {
-          title: "Memastikan prosesnya haq (Sesuai syariat)",
+          title: "Memastikan prosesnya haq (Sesuai syariat).",
           sub_indicators: [
             "Menjadikan cita-cita besar tetap berpandu pada syariat Allah.",
             "Meyakini bahwa keberhasilan sejati adalah yang diridhai Allah.",
           ]
         },
         {
-          title: "Mampu menginspirasi",
+          title: "Mampu menginspirasi.",
           sub_indicators: [
             "Membuat orang lain ikut termotivasi dengan cita-citanya.",
             "Menjadi teladan dalam berpikir visioner dan bertindak nyata.",
@@ -448,11 +448,11 @@ export const mentalData = {
     {
       id: 9,
       group: "Niat",
-      title: "Tidak ada rasa malu kecuali dosa",
+      title: "Tidak ada rasa malu kecuali di tiga keadaan",
       explanation: "Malu hanya layak dalam tiga hal: terpikir dosa, sedang berdosa, dan setelah berdosa. Selain itu harus berani (tampil, bicara, memimpin).",
       indicators: [
         {
-          title: "Hanya Malu saat ingin berbuat Dosa",
+          title: "Hanya Malu saat ingin berbuat Dosa.",
           sub_indicators: [
             "Hatinya langsung resah ketika muncul niat buruk.",
             "Ada dorongan kuat untuk menahan diri sebelum melangkah ke perbuatan salah.",
@@ -460,7 +460,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Hanya Malu saat berbuat Dosa",
+          title: "Hanya Malu saat berbuat Dosa.",
           sub_indicators: [
             "Merasa bersalah dan tidak tenang ketika melakukan kesalahan.",
             "Tidak bisa menikmati maksiat karena hati selalu mengingat Allah.",
@@ -476,9 +476,11 @@ export const mentalData = {
           ]
         },
         {
-          title: "Tidak malu dalam hal-hal yang positif, misalnya maju ke depan kelas, bartanya,",
+          title: "Tidak malu dalam hal-hal yang positif.",
           sub_indicators: [
-            "Tidak malu dalam hal-hal yang positif, misalnya maju ke depan kelas, bartanya,",
+            "Misalnya aktivitas di kelas seperti, bertanya, berpendapat, dsb.",
+            "Interaksi sosial seperti, berinisiatif, mengambil peran menjadi pemimpin, dsb.",
+            "Menegakkan hak dan kewajiban, misalnya ; menuntut hak, menegakkan kebenaran, dsb.",
           ]
         },
       ]
@@ -486,46 +488,46 @@ export const mentalData = {
     {
       id: 10,
       group: "Niat",
-      title: "Mental Inisiatif",
+      title: "Inisiatif.",
       explanation: "Kemampuan bertindak tanpa menunggu perintah. Menunjukkan kepedulian, tanggung jawab, dan keberanian.",
       indicators: [
         {
-          title: "Ia Proaktif",
+          title: "Ia Proaktif.",
           sub_indicators: [
             "Tidak menunggu diperintah, langsung bergerak ketika melihat peluang atau masalah.",
             "Mampu membaca situasi dan bertindak cepat.",
           ]
         },
         {
-          title: "Berani Memulai",
+          title: "Berani Memulai.",
           sub_indicators: [
             "Tidak takut mencoba hal baru meski belum ada jaminan berhasil.",
             "Menjadikan tantangan sebagai kesempatan untuk tumbuh.",
           ]
         },
         {
-          title: "Dia punya Tanggung Jawab yang besar",
+          title: "Punya Tanggung Jawab yang besar",
           sub_indicators: [
             "Siap menanggung risiko dari keputusan yang diambil.",
             "Tidak lari dari konsekuensi, tetapi belajar dari hasilnya.",
           ]
         },
         {
-          title: "Dia kreatif dalam mencari solusi",
+          title: "kreatif dalam mencari solusi.",
           sub_indicators: [
             "Mencari cara baru untuk menyelesaikan masalah.",
             "Tidak hanya mengikuti pola lama, tetapi berani berinovasi.",
           ]
         },
         {
-          title: "Konsistensi dan tekun",
+          title: "Konsistensi dan tekun.",
           sub_indicators: [
             "Menyelesaikan apa yang sudah dimulai dengan penuh komitmen.",
             "Tidak mudah menyerah meski menghadapi hambatan.",
           ]
         },
         {
-          title: "ia peka secara sosial",
+          title: "Peka secara sosial.",
           sub_indicators: [
             "Peka terhadap kebutuhan orang lain dan lingkungan.",
             "Mengambil inisiatif untuk membantu atau memberi manfaat.",
@@ -536,53 +538,53 @@ export const mentalData = {
     {
       id: 11,
       group: "Niat",
-      title: "Kreatif / Daya cipta",
+      title: "Kreatif / Daya cipta.",
       explanation: "Kemampuan mencari ide dan menciptakan sesuatu yang baru untuk mengatasi masalah.",
       indicators: [
         {
-          title: "Suka berpikir Out of the Box",
+          title: "Suka berpikir Out of the Box.",
           sub_indicators: [
             "Mampu melihat kemungkinan di luar kebiasaan.",
             "Tidak terpaku pada cara lama, berani mencoba pendekatan baru.",
           ]
         },
         {
-          title: "Kaya Imajinasi",
+          title: "Kaya Imajinasi.",
           sub_indicators: [
             "Sering membayangkan ide, konsep, atau solusi yang belum pernah ada.",
             "Mampu menghubungkan hal-hal yang tampaknya tidak berkaitan.",
           ]
         },
         {
-          title: "Pandai beradaptasi",
+          title: "Pandai beradaptasi.",
           sub_indicators: [
             "Mudah beradaptasi dengan perubahan.",
             "Tidak kaku dalam menghadapi masalah, selalu mencari alternatif lain.",
           ]
         },
         {
-          title: "Pandai memecahkan masalah",
+          title: "Pandai memecahkan masalah.",
           sub_indicators: [
             "Menjadikan masalah sebagai tantangan dan peluang untuk berinovasi.",
             "Mampu menemukan solusi kreatif yang praktis dan efektif.",
           ]
         },
         {
-          title: "Pandai mengekspresikan diri",
+          title: "Pandai mengekspresikan diri.",
           sub_indicators: [
             "Menyalurkan ide melalui seni, tulisan, desain, atau cara komunikasi yang berbeda.",
             "Menunjukkan ciri khas dalam karya atau tindakan.",
           ]
         },
         {
-          title: "Punya Rasa Ingin Tahu yang tinggi",
+          title: "Punya Rasa Ingin Tahu yang tinggi.",
           sub_indicators: [
             "Aktif mencari pengetahuan baru untuk memperkaya ide.",
             "Suka bereksperimen dan mencoba hal-hal yang belum pernah dilakukan.",
           ]
         },
         {
-          title: "Berani tampil beda",
+          title: "Berani tampil beda.",
           sub_indicators: [
             "Tidak takut dianggap “aneh” atau “tidak biasa”.",
             "Menjadikan perbedaan sebagai kekuatan, bukan kelemahan.",
@@ -593,46 +595,46 @@ export const mentalData = {
     {
       id: 12,
       group: "Niat",
-      title: "Inovatif / Daya rubah",
+      title: "Inovatif / Daya rubah.",
       explanation: "Kemampuan memodifikasi sesuatu yang sudah ada untuk menambah manfaatnya.",
       indicators: [
         {
-          title: "Peka terhadap Masalah & Peluang",
+          title: "Peka terhadap Masalah & Peluang.",
           sub_indicators: [
             "Pandai mengidentifikasi masalah.",
             "Pandai mengidentifikasi peluang.",
           ]
         },
         {
-          title: "Berani bereksperimen",
+          title: "Berani bereksperimen.",
           sub_indicators: [
             "Tidak takut mencoba cara baru meski belum ada jaminan berhasil.",
             "Menjadikan kegagalan sebagai bahan belajar, bukan penghalang.",
           ]
         },
         {
-          title: "Pandai menghasilkan Ide orisinal",
+          title: "Pandai menghasilkan Ide orisinal.",
           sub_indicators: [
             "Mampu melahirkan gagasan yang berbeda dari kebiasaan umum.",
             "Menunjukkan ciri khas dalam solusi atau karya yang dibuat.",
           ]
         },
         {
-          title: "Pandai beradaptasi dan fleksibel",
+          title: "Pandai beradaptasi dan fleksibel.",
           sub_indicators: [
             "Mudah menyesuaikan diri dengan perubahan.",
             "Mampu mengubah strategi ketika kondisi tidak sesuai rencana.",
           ]
         },
         {
-          title: "Pandai mengintegrasikan Ilmu & Kreativitas",
+          title: "Pandai mengintegrasikan Ilmu & Kreativitas.",
           sub_indicators: [
             "Menggabungkan pengetahuan, teknologi, dan imajinasi untuk menciptakan sesuatu yang baru.",
             "Tidak hanya berpikir kreatif, tetapi juga aplikatif.",
           ]
         },
         {
-          title: "Pandai menginspirasi",
+          title: "Pandai menginspirasi.",
           sub_indicators: [
             "Membuat orang lain ikut termotivasi untuk berinovasi.",
             "Menjadi teladan dalam berinovasi.",
@@ -643,11 +645,11 @@ export const mentalData = {
     {
       id: 13,
       group: "Niat",
-      title: "Mandiri",
+      title: "Mandiri.",
       explanation: "Kemandirian emosional (lepas ortu), perilaku (buat keputusan), dan nilai (tunduk agama).",
       indicators: [
         {
-          title: "Kemandirian Emosional",
+          title: "Kemandirian Emosional.",
           sub_indicators: [
             "Tidak bergantung pada orangtua atau orang lain untuk merasa aman.",
             "Mampu mengendalikan emosi tanpa harus selalu mencari validasi eksternal.",
@@ -655,7 +657,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Kemandirian Perilaku",
+          title: "Kemandirian Perilaku.",
           sub_indicators: [
             "Berani membuat keputusan sendiri dan siap menanggung konsekuensinya.",
             "Mampu menuntaskan pekerjaan tanpa harus selalu diarahkan.",
@@ -663,7 +665,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Kemandirian Nilai",
+          title: "Kemandirian Nilai.",
           sub_indicators: [
             "Menjadikan nilai agama sebagai pedoman utama dalam hidup.",
             "Tidak mudah terpengaruh oleh tren atau tekanan sosial yang bertentangan dengan syariat.",
@@ -671,7 +673,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Tanggung Jawab Pribadi",
+          title: "Tanggung Jawab Pribadi.",
           sub_indicators: [
             "Menyadari bahwa setiap tindakan membawa akibat, sehingga berhati-hati dalam bertindak.",
             "Tidak menyalahkan orang lain tanpa argumentasi logis dan syar’i",
@@ -682,53 +684,53 @@ export const mentalData = {
     {
       id: 14,
       group: "Niat",
-      title: "Punya action plan",
+      title: "Punya action plan.",
       explanation: "Rencana kehidupan rinci: Timeline (target usia), Stepline (aktivitas pencapaian), dan Minor routine (istiqomah harian).",
       indicators: [
         {
-          title: "Serius dengan cita-citanya",
+          title: "Serius dengan cita-citanya.",
           sub_indicators: [
             "Memiliki cita-cita yang jelas dengan alasan yang kuat.",
             "Memiliki rencana bagaimana merealisasikan cita-citanya.",
           ]
         },
         {
-          title: "Menyusun timeline cita-cita yang realistis",
+          title: "Menyusun timeline cita-cita yang realistis.",
           sub_indicators: [
             "Menentukan umur atau rentang waktu pencapaian cita-cita.",
             "Membagi perjalanan hidup ke dalam fase-fase yang terstruktur.",
           ]
         },
         {
-          title: "Menyusun tahapan (Stepline) cita-cita yang sistematis",
+          title: "Menyusun tahapan (Stepline) cita-cita yang sistematis.",
           sub_indicators: [
             "Membuat tahapan bertingkat dari awal hingga akhir.",
             "Menyusun urutan logis agar setiap langkah mendukung pencapaian berikutnya.",
           ]
         },
         {
-          title: "Memikirkan semua langkah",
+          title: "Memikirkan semua langkah.",
           sub_indicators: [
             "Membedakan antara langkah besar (strategis) dan langkah kecil (teknis).",
             "Menyadari bahwa cita-cita besar membutuhkan kombinasi keduanya.",
           ]
         },
         {
-          title: "Disiplin & Konsistensi",
+          title: "Disiplin & Konsistensi.",
           sub_indicators: [
             "Menjalankan rencana sesuai timeline yang ditetapkan.",
             "Tidak menyerah meski ada hambatan.",
           ]
         },
         {
-          title: "Evaluasi & Penyesuaian",
+          title: "Evaluasi & Penyesuaian.",
           sub_indicators: [
             "Meninjau kembali rencana secara berkala.",
             "Berani mengubah strategi bila ada kendala, tanpa kehilangan arah utama.",
           ]
         },
         {
-          title: "Integrasi Nilai & Spiritualitas",
+          title: "Integrasi Nilai & Spiritualitas.",
           sub_indicators: [
             "Tidak mengandalkan ikhtiar saja, tapi mengandalkan doa dan ibadah",
             "Fokus menyempurnakan dan menjaga kualitas proses (harus syar’i)",
@@ -743,28 +745,28 @@ export const mentalData = {
       explanation: "Dunia mirip game, bedanya taruhannya adalah surga atau neraka. Syariat Allah adalah aturan mainnya.",
       indicators: [
         {
-          title: "Sadar bahwa hidup = ujian",
+          title: "Sadar bahwa hidup adalah ujian.",
           sub_indicators: [
             "Menyadari bahwa setiap peristiwa adalah “level” yang harus dilewati.",
             "Tidak menganggap dunia sebagai tujuan akhir, tetapi sebagai arena ujian menuju akhirat.",
           ]
         },
         {
-          title: "Memahami aturan main",
+          title: "Memahami aturan main.",
           sub_indicators: [
             "Menjadikan syariat Allah sebagai “rule of the game.”",
             "Tidak mencari jalan pintas dengan cara haram, meski tampak menguntungkan.",
           ]
         },
         {
-          title: "Selalu punya strategi & perencanaan",
+          title: "Selalu punya strategi & perencanaan.",
           sub_indicators: [
             "Menyusun langkah hidup seperti strategi dalam permainan besar.",
             "Memahami bahwa setiap keputusan membawa konsekuensi.",
           ]
         },
         {
-          title: "Mental Kompetitif yang Sehat",
+          title: "Kompetitif yang Sehat.",
           sub_indicators: [
             "Berusaha yang terbaik dalam proses",
             "Berkompetisi melawan diri sendiri",
@@ -772,21 +774,21 @@ export const mentalData = {
           ]
         },
         {
-          title: "Ketekunan & Kesabaran",
+          title: "Ketekunan & Kesabaran.",
           sub_indicators: [
             "Tidak mudah putus asa ketika “jatuh atau gagal”",
             "Bangkit kembali dengan semangat baru, seperti pemain yang terus mencoba hingga berhasil.",
           ]
         },
         {
-          title: "Orientasi Akhirat",
+          title: "Orientasi Akhirat.",
           sub_indicators: [
             "Menyadari bahwa “game dunia” berakhir dengan kematian.",
             "Fokus pada “reward akhirat” sebagai kemenangan sejati.",
           ]
         },
         {
-          title: "Rasa Syukur & Tawakal",
+          title: "Rasa Syukur & Tawakal.",
           sub_indicators: [
             "Menikmati setiap tahap permainan dengan syukur.",
             "Berserah diri kepada Allah atas hasil, setelah berusaha maksimal.",
@@ -801,35 +803,35 @@ export const mentalData = {
       explanation: "Hidup dipenuhi pilihan. Apapun yang dipilih pasti ada dampaknya. Golput pun adalah pilihan.",
       indicators: [
         {
-          title: "Memahami makna “Risiko”",
+          title: "Memahami makna “Risiko”.",
           sub_indicators: [
             "Menyadari bahwa setiap pilihan membawa dampak positif maupun negatif (resiko).",
             "Tidak takut risiko namun tetap memperhitungkan dan mengukur besarannya.",
           ]
         },
         {
-          title: "Pertimbangan Matang",
+          title: "Pertimbangan Matang.",
           sub_indicators: [
             "Menimbang maslahat dan mudharat sebelum memilih.",
             "Menggunakan logika dan syariat dalam mengambil keputusan.",
           ]
         },
         {
-          title: "Tanggung Jawab atas Konsekuensi",
+          title: "Tanggung Jawab atas Konsekuensi.",
           sub_indicators: [
             "Berani menanggung akibat dari keputusan yang diambil.",
             "Tidak menyalahkan orang lain atau keadaan atas hasil pilihan.",
           ]
         },
         {
-          title: "Sikap Hati-hati",
+          title: "Sikap Hati-hati.",
           sub_indicators: [
             "Tidak tergesa-gesa dalam menentukan pilihan.",
             "Menghindari keputusan yang hanya didorong oleh emosi sesaat.",
           ]
         },
         {
-          title: "Terus menerus melakukan evaluasi dari setiap pilihan yang diambil di masa lalu",
+          title: "Terus menerus melakukan evaluasi dari setiap pilihan yang diambil di masa lalu.",
           sub_indicators: [
             "Belajar dari konsekuensi pilihan sebelumnya.",
             "Memperbaiki strategi agar pilihan berikutnya lebih bijak.",
@@ -840,46 +842,46 @@ export const mentalData = {
     {
       id: 17,
       group: "Jihad",
-      title: "Daya Juang..",
+      title: "Daya juang.",
       explanation: "Kemampuan terus berikhtiar, tidak menyerah, tidak putus asa meski gagal berkali-kali.",
       indicators: [
         {
-          title: "Ia memiliki ketangguhan",
+          title: "Ia memiliki ketangguhan.",
           sub_indicators: [
             "Tidak mudah goyah meski menghadapi kesulitan panjang.",
             "Tetap fokus pada tujuan meski hasil belum terlihat.",
           ]
         },
         {
-          title: "Terus berikhtiar",
+          title: "Terus berikhtiar.",
           sub_indicators: [
             "Terus berikhtiar setiap hari, tidak hanya semangat di awal.",
             "Menjadikan kegagalan sebagai bahan bakar untuk mencoba lagi.",
           ]
         },
         {
-          title: "Tetap optimisme dalam keadaan sulit",
+          title: "Tetap optimisme dalam keadaan sulit.",
           sub_indicators: [
             "Meyakini bahwa setiap rintangan pasti ada jalan keluar.",
             "Melihat ujian sebagai peluang untuk tumbuh lebih kuat.",
           ]
         },
         {
-          title: "Mampu bangkit dari kejatuhan",
+          title: "Mampu bangkit dari kejatuhan.",
           sub_indicators: [
             "Cepat pulih setelah jatuh atau gagal.",
             "Tidak membiarkan kegagalan menghentikan langkah (Putus asa).",
           ]
         },
         {
-          title: "Mampu berkerja keras dan disiplin",
+          title: "Mampu berkerja keras dan disiplin.",
           sub_indicators: [
             "Menjalankan usaha dengan tekun, bukan sekadar berharap hasil instan.",
             "Siap berkorban waktu, tenaga, dan kenyamanan demi cita-cita.",
           ]
         },
         {
-          title: "Ibadah menjadi sebagai sumber kekuatan",
+          title: "Ibadah menjadi sebagai sumber kekuatan.",
           sub_indicators: [
             "Menguatkan hati dengan doa, ibadah, dan tawakal kepada Allah.",
             "Meyakini bahwa perjuangan adalah bagian dari ibadah.",
@@ -890,11 +892,11 @@ export const mentalData = {
     {
       id: 18,
       group: "Jihad",
-      title: "Kompetitif (Daya saing)",
+      title: "Kompetitif (Daya saing).",
       explanation: "Ambisi memenangkan kebaikan (Fastabiqhul Khoirot). Merespon kemenangan dengan syukur, kekalahan dengan evaluasi.",
       indicators: [
         {
-          title: "Siap Bersaing",
+          title: "Siap Bersaing.",
           sub_indicators: [
             "Memiliki motivasi kuat untuk menjadi yang terbaik.",
             "Melihat persaingan sebagai sarana belajar dan meningkatkan kualitas diri.",
@@ -902,7 +904,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Merespons Kemenangan dengan Benar",
+          title: "Merespons Kemenangan dengan Benar.",
           sub_indicators: [
             "Bersyukur atas kemenangan tanpa sombong.",
             "Menghargai lawan yang kalah dengan sikap hormat.",
@@ -910,7 +912,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Merespons Kekalahan dengan Benar",
+          title: "Merespons Kekalahan dengan Benar.",
           sub_indicators: [
             "Menerima kekalahan dengan lapang dada tanpa menyalahkan orang lain.",
             "Menjadikan kekalahan sebagai bahan evaluasi dan motivasi untuk bangkit.",
@@ -918,18 +920,18 @@ export const mentalData = {
           ]
         },
         {
-          title: "Sportif",
+          title: "Sportif.",
           sub_indicators: [
             "Menjunjung tinggi aturan dan nilai keadilan dalam persaingan.",
             "Tidak menggunakan cara curang untuk menang.",
           ]
         },
         {
-          title: "Tangguh dan tawadlu",
+          title: "Tangguh dan tawadlu.",
           sub_indicators: [
             "Tidak mudah putus asa ketika kalah.",
-            "Tidak cepat puas ketika menang dan terus berusaha meningkatkan diri.",
-            "Tidak sombong ketika menang",
+            "Tidak cepat puas ketika menang.",
+            "Tidak sombong ketika menang.",
           ]
         },
         {
@@ -948,28 +950,35 @@ export const mentalData = {
       explanation: "Kemampuan menghasilkan uang dari karya/skill (literasi finansial). Paham pemasukan, pengeluaran, investasi, dan zakat.",
       indicators: [
         {
-          title: "Kreativitas Produktif",
+          title: "Pandai melihat nilai jual pada suatu produk.",
+          sub_indicators: [
+            "Mampu melihat potensi monetisasi pada suatu karya.",
+            "Tidak hanya berkarya untuk ekspresi, tetapi juga untuk mendapatkan uang.",
+          ]
+        },
+        {
+          title: "Kreativitas Produktif.",
           sub_indicators: [
             "Pandai menghasilkan karya yang unik, relevan, dan bermanfaat.",
             "Pandai membuat suatu karya sesuai dengan kebutuhan masyarakat.",
           ]
         },
         {
-          title: "Punya mental interpreneur",
+          title: "Punya mental interpreneur.",
           sub_indicators: [
             "Berani menawarkan karya kepada publik.",
             "Tidak malu menjadikan karya sebagai sumber penghasilan.",
           ]
         },
         {
-          title: "Kemampuan Branding & Promosi",
+          title: "Kemampuan Branding & Promosi.",
           sub_indicators: [
             "Mampu memperkenalkan karya dengan cara menarik.",
             "Pandai memanfaatkan media sosial untuk berjualan.",
           ]
         },
         {
-          title: "Konsistensi Produksi",
+          title: "Konsistensi Produksi.",
           sub_indicators: [
             "Tidak berhenti berkarya meski belum langsung menghasilkan.",
             "Menjadikan karya sebagai rutinitas yang berkelanjutan.",
@@ -987,7 +996,7 @@ export const mentalData = {
     {
       id: 20,
       group: "Jihad",
-      title: "3 Cara Belajar",
+      title: "3 Cara Belajar.",
       explanation: "Belajar dengan 3 cara: Tanya/Ditanya, Menulis Notes (Catat, Rangkum, Respon), dan Murajaah (Mengulang).",
       indicators: [
         {
@@ -1008,7 +1017,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Menjalankan prinsip “Murajaah (Mengulang)”",
+          title: "Menjalankan prinsip “Murajaah (Mengulang).”",
           sub_indicators: [
             "Konsisten mengulang materi agar tidak hilang dari ingatan.",
             "Menjadikan murajaah sebagai rutinitas harian, bukan hanya menjelang ujian.",
@@ -1016,21 +1025,21 @@ export const mentalData = {
           ]
         },
         {
-          title: "Sadar sepenuhnya bahwa belajar itu adalah Ibadah",
+          title: "Sadar sepenuhnya bahwa belajar itu adalah Ibadah.",
           sub_indicators: [
             "Memulai belajar dengan niat mencari ridha Allah.",
             "Menjadikan setiap aktivitas belajar sebagai bentuk pengabdian kepada Allah",
           ]
         },
         {
-          title: "Disiplin & Konsistensi",
+          title: "Disiplin & Konsistensi.",
           sub_indicators: [
             "Menjalankan tiga cara belajar ini secara berkesinambungan.",
             "Tidak mudah lalai atau menunda-nunda.",
           ]
         },
         {
-          title: "Integrasi Ilmu & Amal",
+          title: "Integrasi Ilmu & Amal.",
           sub_indicators: [
             "Menjadikan hasil belajar sebagai pedoman dalam akhlak, ibadah, dan dakwah.",
             "Tidak berhenti pada teori, tetapi mengamalkan ilmu.",
@@ -1041,11 +1050,11 @@ export const mentalData = {
     {
       id: 21,
       group: "Jihad",
-      title: "Mulai dari enol",
+      title: "Mulai dari enol.",
       explanation: "Kesuksesan dirintis, tidak instan. Butuh perjuangan, pengorbanan, dan jatuh bangun.",
       indicators: [
         {
-          title: "Menyadari makna dari kata “Proses”",
+          title: "Menyadari makna dari kata “Proses”.",
           sub_indicators: [
             "Menyadari bahwa kesuksesan itu butuh proses",
             "Menyadari bahwa proses itu adalah “waktu” dan “Pengorbanan”",
@@ -1053,14 +1062,14 @@ export const mentalData = {
           ]
         },
         {
-          title: "Tidak merasa hina untuk mulai dari enol",
+          title: "Tidak merasa hina untuk mulai dari enol.",
           sub_indicators: [
             "Mau menerima posisi awal yang kecil atau sederhana.",
             "Tidak gengsi memulai dari bawah.",
           ]
         },
         {
-          title: "Sabar & tekun",
+          title: "Sabar & tekun.",
           sub_indicators: [
             "Sabar menjalani proses panjang.",
             "Tekun berusaha meski hasilnya “Kecil” atau “belum terlihat sama sekali”.",
@@ -1074,7 +1083,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Endurance & Optimis",
+          title: "Endurance & Optimis.",
           sub_indicators: [
             "Yakin bahwa usaha kecil akan berbuah besar bila terus dijalankan.",
             "Melihat perjalanan sebagai bagian dari kesuksesan, bukan hanya hasil akhir.",
@@ -1082,7 +1091,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Selalu mengkoneksikannya dengan ibadah",
+          title: "Selalu mengkoneksikannya dengan ibadah.",
           sub_indicators: [
             "Menyadari bahwa semua jerih payah dalam proses adalah ibadah",
             "Menjadikan ikhtiar sebagai jalan pahala, bukan siksaan.",
@@ -1094,11 +1103,11 @@ export const mentalData = {
     {
       id: 22,
       group: "Jihad",
-      title: "Mental belajar.",
+      title: "Belajar.",
       explanation: "Semangat belajar dimanapun, kapanpun, dalam keadaan apapun. Menjadi pembelajar seumur hidup.",
       indicators: [
         {
-          title: "Belajar dimanapun",
+          title: "Belajar dimanapun.",
           sub_indicators: [
             "Mampu menjadikan setiap tempat sebagai ruang belajar.",
             "Tidak membatasi belajar hanya di kelas atau sekolah.",
@@ -1106,7 +1115,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Belajar kapanpun",
+          title: "Belajar kapanpun.",
           sub_indicators: [
             "Memanfaatkan setiap waktu untuk menambah ilmu, baik pagi, siang, maupun malam.",
             "Tidak menunda kesempatan belajar meski hanya sebentar.",
@@ -1114,7 +1123,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Belajar dalam Keadaan Apapun",
+          title: "Belajar dalam Keadaan Apapun.",
           sub_indicators: [
             "Tetap belajar meski dalam kondisi sulit, sibuk, atau lelah.",
             "Menjadikan ujian hidup sebagai bahan pelajaran.",
@@ -1122,21 +1131,21 @@ export const mentalData = {
           ]
         },
         {
-          title: "Rasa ingin tahu nya besar",
+          title: "Rasa ingin tahu nya besar.",
           sub_indicators: [
             "Selalu bertanya dan mencari jawaban atas hal-hal baru.",
             "Menjadikan rasa penasaran sebagai energi belajar.",
           ]
         },
         {
-          title: "Adaptif & Fleksibel",
+          title: "Adaptif & Fleksibel.",
           sub_indicators: [
             "Mampu menyesuaikan cara belajar dengan situasi.",
             "Menggunakan berbagai metode: membaca, berdiskusi, menonton, atau praktik langsung.",
           ]
         },
         {
-          title: "Merasa bahwa belajar itu menyenangkan",
+          title: "Merasa bahwa belajar itu menyenangkan.",
           sub_indicators: [
             "Menjadikan belajar sebagai kesenangan",
             "Tidak pernah bosan dalam belajar",
@@ -1147,25 +1156,25 @@ export const mentalData = {
     {
       id: 23,
       group: "Jihad",
-      title: "Kontrol Potensi.",
+      title: "Kontrol potensi.",
       explanation: "Tahu potensi diri (niat, minat, bakat), merawatnya dengan latihan, dan memanfaatkannya untuk tujuan.",
       indicators: [
         {
-          title: "Mampu melihat potensi dalam dirinya",
+          title: "Mampu melihat potensi dalam dirinya.",
           sub_indicators: [
             "Mengenali bakat, minat, dan kelebihan yang dimiliki.",
             "Mampu menilai potensi secara realistis, bukan sekadar angan-angan.",
           ]
         },
         {
-          title: "Mensyukuri potensi itu",
+          title: "Mensyukuri potensi itu.",
           sub_indicators: [
             "Mensyukuri potensi itu sebagai anugerah dan ujian dari Allah.",
             "Percaya diri menggunakan potensi tanpa merasa rendah diri atau sombong.",
           ]
         },
         {
-          title: "merawat potensi itu",
+          title: "merawat potensi itu.",
           sub_indicators: [
             "Memiliki kurikulum untuk merawat potensinya",
             "Merawat agar terus meningkat dan tidak mengerucut apalagi hilang",
@@ -1173,7 +1182,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Menggunakan potensi untuk kebaikan",
+          title: "Menggunakan potensi untuk kebaikan.",
           sub_indicators: [
             "Menggunakan potensi untuk mencapai tujuan yang baik dan syar’i",
             "Menjadikan potensi sebagai jalan ibadah dan kontribusi sosial.",
@@ -1184,11 +1193,11 @@ export const mentalData = {
     {
       id: 24,
       group: "Jihad",
-      title: "Tiga kekuatan internal",
+      title: "Tiga kekuatan internal.",
       explanation: "Punya tujuan (visi), bisa berubah (meninggalkan malas), dan bisa mempertahankan perubahan (istiqomah).",
       indicators: [
         {
-          title: "Punya Tujuan",
+          title: "Punya Tujuan.",
           sub_indicators: [
             "Memiliki visi misi hidup yang jelas dan terukur.",
             "Menjadikan tujuan sebagai dasar dari semua ikhtiarnya",
@@ -1196,14 +1205,14 @@ export const mentalData = {
           ]
         },
         {
-          title: "Bisa Berubah",
+          title: "Bisa berubah.",
           sub_indicators: [
             "Berani meninggalkan kebiasaan lama yang buruk demi tercapainya tujuan",
             "Berani meninggalkan kebiasaan lama yang tidak produktif demi tercapainya tujuan",
           ]
         },
         {
-          title: "Bisa Mempertahankan Perubahan",
+          title: "Bisa mempertahankan perubahan itu.",
           sub_indicators: [
             "Konsisten menjalankan kebiasaan baru meski godaan kembali ke pola lama muncul.",
             "Menjadikan perubahan sebagai bagian dari identitas diri.",
@@ -1211,7 +1220,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Selalu mengintegrasikan dengan agama",
+          title: "Selalu mengintegrasikan dengan agama.",
           sub_indicators: [
             "Menjadikan tujuan, perubahan, dan konsistensi sebagai bentuk ibadah.",
             "Meyakini bahwa istiqamah adalah kunci keberhasilan dunia dan akhirat.",
@@ -1226,14 +1235,14 @@ export const mentalData = {
       explanation: "Tidak menyalahkan keadaan/Tuhan. Musibah adalah hikmah dan alat koreksi diri.",
       indicators: [
         {
-          title: "Selalu mencari kebaikan dari peristiwa apapun",
+          title: "Selalu mencari kebaikan dari peristiwa apapun.",
           sub_indicators: [
             "Melihat segala hal dengan sudut pandang optimis.",
             "Tidak mudah mengeluh, tetapi mencari hikmah di balik kejadian.",
           ]
         },
         {
-          title: "Fleksibel tidak mudah patah",
+          title: "Fleksibel tidak mudah patah.",
           sub_indicators: [
             "Mampu menerima hal baik maupun buruk sebagai bagian dari proses belajar.",
             "Tidak putus așa dan tidak membabi buta (Kalap)",
@@ -1241,7 +1250,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Pandai muhasabah",
+          title: "Pandai muhasabah.",
           sub_indicators: [
             "Selalu mengambil pelajaran dari setiap pengalaman.",
             "Menjadikan kesalahan sebagai guru, bukan sebagai alasan putus asa.",
@@ -1255,14 +1264,14 @@ export const mentalData = {
           ]
         },
         {
-          title: "Punya tujuan untuk belajar seumur hidup",
+          title: "Punya tujuan untuk belajar seumur hidup.",
           sub_indicators: [
             "Menjadikan setiap interaksi, pekerjaan, atau ujian hidup sebagai bahan belajar.",
             "Tidak membatasi belajar hanya pada ruang kelas.",
           ]
         },
         {
-          title: "Menyadari semua dari Allah dan kembali kepada Allah",
+          title: "Menyadari semua dari Allah dan kembali kepada Allah.",
           sub_indicators: [
             "Meyakini bahwa semua yang terjadi adalah ketetapan Allah yang penuh hikmah.",
             "Menjadikan pengalaman sebagai sarana mendekatkan diri kepada-Nya.",
@@ -1277,28 +1286,28 @@ export const mentalData = {
       explanation: "Manusia makhluk sosial. Tak mungkin bermanfaat tanpa interaksi dan kontribusi di masyarakat.",
       indicators: [
         {
-          title: "Mampu melepaskan diri dari ego diri sendiri",
+          title: "Mampu melepaskan diri dari ego diri sendiri.",
           sub_indicators: [
             "Merasa dirinya bagian dari masyarakat, bukan individu yang terpisah.",
             "Menganggap keberhasilan dirinya harus bermanfaat untuk masyarakat.",
           ]
         },
         {
-          title: "Secara sadar melibatkan diri dalam kehidupan sosial / bermasyarakat",
+          title: "Secara sadar melibatkan diri dalam kehidupan sosial / bermasyarakat.",
           sub_indicators: [
             "Aktif berpartisipasi dalam kegiatan pondok.",
             "Tidak hanya hadir secara pasif, tetapi juga memberi kontribusi nyata.",
           ]
         },
         {
-          title: "Secara sadar merasa memiliki tanggung jawab sosial",
+          title: "Secara sadar merasa memiliki tanggung jawab sosial.",
           sub_indicators: [
             "Menjalankan peran sebagai santri dengan baik.",
             "Menjaga lingkungan, menaati aturan, dan ikut menjaga ketertiban pesantren.",
           ]
         },
         {
-          title: "Memiliki simpati dan empati empati",
+          title: "Memiliki simpati dan empati empati.",
           sub_indicators: [
             "Peduli terhadap kesulitan santri lain.",
             "Ikut merasakan suka dan duka pesantren.",
@@ -1306,7 +1315,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Kemampuan berkolaborasi",
+          title: "Kemampuan berkolaborasi.",
           sub_indicators: [
             "Mau bekerja sama demi kepentingan bersama.",
             "Menghargai perbedaan pendapat dan mencari solusi bersama.",
@@ -1314,7 +1323,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Sadar bahwa Islam mengajarkan untuk bermanfaat bagi umat dan masyarakat umum",
+          title: "Sadar bahwa Islam mengajarkan untuk bermanfaat bagi umat dan masyarakat umum.",
           sub_indicators: [
             "Tahu bedanya umman dengan masyarakat umum",
             "Menjadikan nilai agama sebagai pedoman dalam bermasyarakat.",
@@ -1330,21 +1339,21 @@ export const mentalData = {
       explanation: "Menyadari hidup dicatat malaikat. Mukmin cerdas membuat catatan hidup sendiri (diary/evaluasi).",
       indicators: [
         {
-          title: "Memiliki kendali diri yang kuat",
+          title: "Memiliki kendali diri yang kuat.",
           sub_indicators: [
             "Menyadari bahwa setiap tindakan adalah catatan dalam “kitab kehidupan.”",
             "Mampu mengenali kelebihan dan kelemahan diri dengan jujur.",
           ]
         },
         {
-          title: "Pandai introspeksi diri",
+          title: "Pandai introspeksi diri.",
           sub_indicators: [
             "Rutin melakukan muhasabah (evaluasi diri).",
             "Menuliskan pengalaman hidup sebagai bahan belajar dan perbaikan.",
           ]
         },
         {
-          title: "Memiliki tanggung jawab spiritual ang kuat",
+          title: "Memiliki tanggung jawab spiritual yang kuat.",
           sub_indicators: [
             "Meyakini bahwa catatan hidup kelak akan dipertanggungjawabkan di hadapan Allah.",
             "Menjadikan setiap amal sebagai bagian dari kitab yang ingin dibawa ke akhirat.",
@@ -1352,11 +1361,18 @@ export const mentalData = {
           ]
         },
         {
-          title: "Disiplin mengamati kehidupan",
+          title: "Disiplin mengamati kehidupan.",
           sub_indicators: [
             "Membiasakan diri menulis diary atau catatan pribadi yang fokus pada perjalanan iman, amal, dan akhlak.",
             "Tidak hanya mencatat keberhasilan, tetapi juga kegagalan sebagai bahan perbaikan.",
             "Disiplin terus memperbaiki pikiran perkataan dan perbuatannya",
+          ]
+        },
+        {
+          title: "Selalu mencari hikmah dari pengalaman hidupnya.",
+          sub_indicators: [
+            "Menuliskan bukan hanya pengalaman, tetapi juga hikmah dan pelajaran dari setiap peristiwa.",
+            "Menghubungkan catatan hidupnya dengan perintah agama.",
           ]
         },
       ]
@@ -1364,18 +1380,18 @@ export const mentalData = {
     {
       id: 28,
       group: "Sabar",
-      title: "Empat suara di dalam diri",
+      title: "Empat suara di dalam diri.",
       explanation: "Suara Malaikat (Hati), Syaithan (Hawa Nafsu), Diri Pro-Malaikat, Diri Pro-Syaithan. Harus dipimpin Akal & Hati.",
       indicators: [
         {
-          title: "Kecerdasan Spiritualnya tinggi",
+          title: "Kecerdasan Spiritualnya tinggi.",
           sub_indicators: [
             "Menyadari bahwa Allah menempatkan malaikat dan syaithan di dalam diri",
             "Selalu berhati-hati dalam berpikir, berkata dan bertindak.",
           ]
         },
         {
-          title: "Pandai membedakan empat suara",
+          title: "Pandai membedakan empat suara.",
           sub_indicators: [
             "Bisa mengenali suara dari akal atau logika",
             "Bisa mengenali suara dari hati / malaikat",
@@ -1384,28 +1400,28 @@ export const mentalData = {
           ]
         },
         {
-          title: "Kontrol Diri",
+          title: "Kontrol Diri.",
           sub_indicators: [
             "Berhati-hati dalam merespons apapun",
             "Berjuang keras menolak keburukan",
           ]
         },
         {
-          title: "Kecenderungan pada Kebaikan",
+          title: "Kecenderungan pada Kebaikan.",
           sub_indicators: [
             "Lebih sering mengikuti suara malaikat dan diri yang pro malaikat.",
             "Menjadikan kebaikan sebagai pilihan utama meski sulit.",
           ]
         },
         {
-          title: "Konsistensi dalam melatih diri agar peka dengan kebaikan",
+          title: "Konsistensi dalam melatih diri agar peka dengan kebaikan.",
           sub_indicators: [
             "Melatih diri agar suara pro malaikat semakin kuat.",
             "Melemahkan suara pro syaithan dengan dzikir, doa, dan ibadah.",
           ]
         },
         {
-          title: "Sering bermuhasabah (Introspeksi)",
+          title: "Sering bermuhasabah (Introspeksi).",
           sub_indicators: [
             "Rutin mengevaluasi diri terhadap apa yang sudah dipikirkan",
             "Rutin mengevaluasi diri terhadap apa yang sudah dikatakan",
@@ -1417,18 +1433,18 @@ export const mentalData = {
     {
       id: 29,
       group: "Sabar",
-      title: "Kontrol Diri",
+      title: "Kontrol Diri.",
       explanation: "Kemampuan menahan godaan/distraksi yang merusak fokus. Menunda kepuasan sesaat demi hasil besar.",
       indicators: [
         {
-          title: "Tenang, tidak mudah panik dan kalap",
+          title: "Tenang, tidak mudah panik dan kalap.",
           sub_indicators: [
             "Tidak mudah terbawa emosi atau dorongan sesaat.",
             "Mampu menahan diri dari keinginan yang merusak tujuan jangka panjang.",
           ]
         },
         {
-          title: "Mampu fokus",
+          title: "Mampu fokus.",
           sub_indicators: [
             "Mampu fokus pada tujuan yang lebih besar",
             "Mampu fokus pada tujuan jangka panjang",
@@ -1436,21 +1452,21 @@ export const mentalData = {
           ]
         },
         {
-          title: "Disiplin dalam rutinitas",
+          title: "Disiplin dalam rutinitas.",
           sub_indicators: [
             "Konsisten menjalankan kebiasaan baik meski ada godaan untuk malas.",
             "Menjadikan disiplin sebagai fondasi kesuksesan.",
           ]
         },
         {
-          title: "Mampu menunda kepuasan",
+          title: "Mampu menunda kepuasan.",
           sub_indicators: [
             "Rela menunda kesenangan sesaat demi hasil besar jangka panjang.",
             "Memahami bahwa kesuksesan butuh proses panjang.",
           ]
         },
         {
-          title: "Menjadikan agama sebagai alat kendali utama",
+          title: "Menjadikan agama sebagai alat kendali utama.",
           sub_indicators: [
             "Menjadikan ibadah, doa, dan dzikir sebagai cara menguatkan kontrol diri.",
             "Meyakini bahwa menahan godaan adalah bagian dari jihad melawan hawa nafsu.",
@@ -1461,7 +1477,7 @@ export const mentalData = {
     {
       id: 30,
       group: "Sabar",
-      title: "Mental Antisipatif (Daya tangkal)",
+      title: "Antisipatif (Daya tangkal).",
       explanation: "Ramalkan masalah masa depan, rancang pencegahan, dan rancang penanganan jika masalah muncul.",
       indicators: [
         {
@@ -1472,14 +1488,14 @@ export const mentalData = {
           ]
         },
         {
-          title: "Selalu punya rencana cadangan",
+          title: "Selalu punya rencana cadangan.",
           sub_indicators: [
             "Selalu menyiapkan rencana cadangan (plan B, bahkan plan C).",
             "Membuat strategi jangka pendek dan jangka panjang.",
           ]
         },
         {
-          title: "Siap menghadapi risiko",
+          title: "Siap menghadapi risiko.",
           sub_indicators: [
             "Menyadari bahwa setiap keputusan punya konsekuensi.",
             "Selalu membayangkan kemungkinan terbaik dan kemungkinan terburuk",
@@ -1487,28 +1503,28 @@ export const mentalData = {
           ]
         },
         {
-          title: "Tenang dan mudah beradaptasi",
+          title: "Tenang dan mudah beradaptasi.",
           sub_indicators: [
             "Mampu menyesuaikan diri dengan perubahan mendadak.",
             "Tidak panik ketika situasi berbeda dari perkiraan.",
           ]
         },
         {
-          title: "Lebih proaktif",
+          title: "Lebih proaktif.",
           sub_indicators: [
             "Bertindak lebih dulu sebelum masalah muncul.",
             "Tidak menunggu perintah, tetapi bergerak dengan inisiatif.",
           ]
         },
         {
-          title: "Terus melakukan evaluasi",
+          title: "Terus melakukan evaluasi.",
           sub_indicators: [
             "Rutin menilai kondisi dan memperbaiki strategi.",
             "Belajar dari pengalaman agar lebih siap menghadapi masa depan.",
           ]
         },
         {
-          title: "Berjuang untuk bisa menerima taqdir apapun",
+          title: "Berjuang untuk bisa menerima taqdir apapun.",
           sub_indicators: [
             "Meyakini bahwa ikhtiar adalah bagian dari ujian.",
             "Mengawali dengan Bismillah dan Ikhtiar, menengahi dengan doa dan mengakhiri dengan tawakal kepada Allah.",
@@ -1519,11 +1535,11 @@ export const mentalData = {
     {
       id: 31,
       group: "Sabar",
-      title: "Keseimbangan 4 waktu",
+      title: "Keseimbangan 4 waktu.",
       explanation: "Menyeimbangkan Time to Pray, Time to Learn, Time to Rest, dan Time to Play agar tercukupi asupan lahir batin.",
       indicators: [
         {
-          title: "Selalu berjuang menjaga waktu ibadahnya (Time to Pray)",
+          title: "Selalu berjuang menjaga waktu ibadahnya (Time to Pray).",
           sub_indicators: [
             "Menjadikan ibadah sebagai prioritas utama hariannya.",
             "Konsisten menjaga shalat tepat waktu dan ibadah lainnya.",
@@ -1531,7 +1547,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Selalu berjuang menjaga waktu belajarnya (Time to Learn)",
+          title: "Selalu berjuang menjaga waktu belajarnya (Time to Learn).",
           sub_indicators: [
             "Menyediakan waktu khusus untuk menambah ilmu setiap hari.",
             "Menjadikan belajar sebagai kebutuhan, bukan sekadar kewajiban.",
@@ -1539,7 +1555,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Selalu berjuang menjaga waktu istirahatnya (Time to Rest)",
+          title: "Selalu berjuang menjaga waktu istirahatnya (Time to Rest).",
           sub_indicators: [
             "Menjaga pola tidur yang sehat dan cukup.",
             "Memberi tubuh dan pikiran kesempatan untuk pulih.",
@@ -1547,7 +1563,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Selalu berjuang menjaga waktu mainnya (Time to Play)",
+          title: "Selalu berjuang menjaga waktu mainnya (Time to Play).",
           sub_indicators: [
             "Menyediakan waktu untuk bersenang-senang.",
             "Menjadikan permainan sebagai sarana kebahagiaan dan penyegaran, bukan pelarian.",
@@ -1555,14 +1571,14 @@ export const mentalData = {
           ]
         },
         {
-          title: "Tahu skala prioritas dari empat waktu tersebut",
+          title: "Tahu skala prioritas dari empat waktu tersebut.",
           sub_indicators: [
             "Mampu menyeimbangkan empat waktu tanpa mengorbankan salah satunya.",
             "Menjadikan keseimbangan sebagai gaya hidup, bukan sekadar teori.",
           ]
         },
         {
-          title: "Keseimbangan menjaga waktu adalah ibadah",
+          title: "Keseimbangan menjaga waktu adalah ibadah.",
           sub_indicators: [
             "Meyakini bahwa keseimbangan empat waktu adalah bagian dari amanah Allah.",
             "Menjadikan ibadah sebagai pusat, dan tiga waktu lainnya sebagai pendukung.",
@@ -1573,39 +1589,39 @@ export const mentalData = {
     {
       id: 32,
       group: "Sabar",
-      title: "Mental ITMI",
+      title: "Mental ITM.",
       explanation: "Teknologi adalah alat. Tepis mudorotnya, fokus pada manfaat untuk bisnis dan dakwah.",
       indicators: [
         {
-          title: "Menyadari manfaat teknologi",
+          title: "Menyadari manfaat teknologi.",
           sub_indicators: [
             "Menyadari bahwa teknologi hanyalah alat.",
             "Menggunakan teknologi untuk memperkuat ibadah, ilmu, dan produktivitas.",
           ]
         },
         {
-          title: "Menyadari mudhorot teknologi",
+          title: "Menyadari mudhorot teknologi.",
           sub_indicators: [
             "Memilih aplikasi, konten, dan platform yang bermanfaat.",
             "Menolak atau menghindari mudhorotnya (pornografi, hoaks, adiksi).",
           ]
         },
         {
-          title: "Menjadikan teknologi alat ibadah",
+          title: "Menjadikan teknologi alat ibadah.",
           sub_indicators: [
             "Menggunakan teknologi untuk memberi manfaat bagi diri dan masyarakat.",
             "Menjadikan teknologi sebagai sarana dakwah, pendidikan, dan kesejahteraan.",
           ]
         },
         {
-          title: "Punya kontrol diri yang kuat terhadap gadget",
+          title: "Punya kontrol diri yang kuat terhadap gadget.",
           sub_indicators: [
             "Tidak larut dalam penggunaan berlebihan yang merusak fokus.",
             "Menetapkan batas waktu dan aturan dalam menggunakan teknologi.",
           ]
         },
         {
-          title: "Produktif dan monetitatif dengan teknologi",
+          title: "Produktif dan monetitatif dengan teknologi.",
           sub_indicators: [
             "Orientasinya produktif, menghasilkan karya",
             "Orientasinya monetitatif, menghasilkan uang dari teknologi",
@@ -1620,7 +1636,7 @@ export const mentalData = {
       explanation: "Mensyukuri pencapaian, bangga dengan jerih payah. Anti-kufur nikmat dan perfeksionisme yang salah.",
       indicators: [
         {
-          title: "Pandai menghargai karya",
+          title: "Pandai menghargai karya.",
           sub_indicators: [
             "Menghargai karya orang lain.",
             "Menghargai karya sendiri.",
@@ -1628,7 +1644,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Tidak malu menunjukkan karya",
+          title: "Tidak malu menunjukkan karya.",
           sub_indicators: [
             "Berani menunjukkan karya kepada orang lain tanpa rasa minder.",
             "Meyakini bahwa karya nya selalu punya keunggulan.",
@@ -1636,28 +1652,28 @@ export const mentalData = {
           ]
         },
         {
-          title: "Punya dedikasi dalam menyelesaikan karya",
+          title: "Punya dedikasi dalam menyelesaikan karya.",
           sub_indicators: [
             "Sungguh-sungguh dalam mengerjakan.",
             "Menjaga kualitas karya dengan sungguh-sungguh.",
           ]
         },
         {
-          title: "Konsistensi berjuang meningkatkan kualitas karya",
+          title: "Konsistensi berjuang meningkatkan kualitas karya.",
           sub_indicators: [
             "Terus menghasilkan karya baru (produktif) memperbanyak portofolio.",
             "Tidak berhenti berkarya hanya karena kritik atau kegagalan.",
           ]
         },
         {
-          title: "Pandai mengevaluasi & memperbaiki",
+          title: "Pandai mengevaluasi & memperbaiki.",
           sub_indicators: [
             "Mampu melihat kekurangan karya tanpa merendahkannya.",
             "Menjadikan evaluasi sebagai jalan untuk meningkatkan kualitas karya.",
           ]
         },
         {
-          title: "Menjadikan karya sebagai ibadah",
+          title: "Menjadikan karya sebagai ibadah.",
           sub_indicators: [
             "Meyakini bahwa karya adalah amanah yang harus dijaga.",
             "Menjadikan karya sebagai sarana ibadah dan kontribusi sosial.",
@@ -1673,7 +1689,7 @@ export const mentalData = {
       explanation: "Mencegah & menangani konflik dengan Tabayun, Muhasabah, dan Ishlah. Berani berkonflik jika syariat dilanggar.",
       indicators: [
         {
-          title: "Mengamalkan Tabayun (Cek Kebenaran)",
+          title: "Mengamalkan Tabayun (Cek Kebenaran).",
           sub_indicators: [
             "Tidak langsung percaya pada informasi yang didengar.",
             "Memverifikasi sumber berita sebelum bereaksi.",
@@ -1681,7 +1697,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Mengamalkan Muhasabah (Introspeksi)",
+          title: "Mengamalkan Muhasabah (Introspeksi).",
           sub_indicators: [
             "Mencari kesalahan dalam diri terlebih dahulu",
             "Berani mengakui kesalahan dan meminta maaf",
@@ -1689,7 +1705,7 @@ export const mentalData = {
           ]
         },
         {
-          title: "Mengamalkan Islah (Berbaikan)",
+          title: "Mengamalkan Islah (Berbaikan).",
           sub_indicators: [
             "Berprinsip akhir dari konflik adalah berbaikan kembali",
             "Mengutamakan ukhuwah (persaudaraan) di atas ego pribadi.",
@@ -1697,16 +1713,16 @@ export const mentalData = {
           ]
         },
         {
-          title: "Tidak impulsif (reaktif)",
+          title: "Tidak impulsif (reaktif).",
           sub_indicators: [
             "Tidak mudah terpancing amarah.",
             "Menyikapi konflik dengan tenang dan bijak.",
           ]
         },
         {
-          title: "Integrasi Syariat",
+          title: "Integrasi Syariat.",
           sub_indicators: [
-            "Menganggap konflik adalah ujian dan nalat belajar",
+            "Menganggap konflik adalah ujian dan alat belajar.",
             "Menyelesaikan konflik sesuai tuntunan Al-Qur’an dan Sunnah.",
             "Mengutamakan ukhuwah dalam setiap konflik",
           ]
