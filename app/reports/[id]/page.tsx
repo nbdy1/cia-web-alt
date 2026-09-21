@@ -31,6 +31,7 @@ import {
 import { SmartBackButton } from "@/components/SmartBackButton";
 import { FulfilledSubsList } from "@/components/FulfilledSubsList";
 import { TreatmentPlanStatus } from "@/components/TreatmentPlanStatus";
+import { TreatmentFollowupControl } from "@/components/TreatmentFollowupControl";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { MarkdownText } from "@/components/MarkdownText";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
@@ -142,10 +143,10 @@ async function getReportDetails(id: string) {
     .single();
 
   if (report && !(await isTenantOrganization(db, report.organization_id))) {
-    return { report: null };
+    return { report: null, authorName: null, reminder: null };
   }
 
-  if (!report) return { report: null, authorName: null };
+  if (!report) return { report: null, authorName: null, reminder: null };
 
   const { data: studentDisplay, error: studentDisplayError } = await db.rpc(
     "get_report_student_for_view",
@@ -154,7 +155,7 @@ async function getReportDetails(id: string) {
 
   if (studentDisplayError || !studentDisplay) {
     console.error("Failed to load report student display:", studentDisplayError);
-    return { report: null, authorName: null };
+    return { report: null, authorName: null, reminder: null };
   }
 
   let authorName: string | null = null;
@@ -167,7 +168,13 @@ async function getReportDetails(id: string) {
     authorName = author?.name ?? null;
   }
 
-  return { report: { ...report, students: studentDisplay }, authorName };
+  const { data: reminder } = await db
+    .from("treatment_plan_reminders")
+    .select("id, next_check_at, is_active")
+    .eq("report_id", id)
+    .maybeSingle();
+
+  return { report: { ...report, students: studentDisplay }, authorName, reminder };
 }
 
 export default async function ReportDetailPage({
@@ -182,7 +189,7 @@ export default async function ReportDetailPage({
   const isEnglish = language === "en";
   const locale = isEnglish ? "en-US" : "id-ID";
   const resolvedSearchParams = await searchParams;
-  const { report, authorName } = await getReportDetails(id);
+  const { report, authorName, reminder } = await getReportDetails(id);
   const rawFrom = resolvedSearchParams?.from;
   const from = Array.isArray(rawFrom) ? rawFrom[0] : rawFrom;
 
@@ -406,12 +413,21 @@ export default async function ReportDetailPage({
                 <MarkdownText className="text-xs text-slate-700 leading-relaxed font-medium" children={analysis.treatment.action_plan} />
               </div>
 
-              <TreatmentPlanStatus
-                reportId={report.id}
-                status={analysis.treatment.status ?? (analysis.treatment.completed ? "completed" : "pending")}
-                resolvedAt={analysis.treatment.resolved_at ?? analysis.treatment.completed_at ?? null}
-                outcomeNote={analysis.treatment.outcome_note ?? null}
-              />
+              {reminder ? (
+                <TreatmentFollowupControl
+                  reminderId={reminder.id}
+                  nextCheckAt={reminder.next_check_at}
+                  isActive={reminder.is_active}
+                  checkins={Array.isArray(analysis.treatment.follow_up_checkins) ? analysis.treatment.follow_up_checkins : []}
+                />
+              ) : (
+                <TreatmentPlanStatus
+                  reportId={report.id}
+                  status={analysis.treatment.status ?? (analysis.treatment.completed ? "completed" : "pending")}
+                  resolvedAt={analysis.treatment.resolved_at ?? analysis.treatment.completed_at ?? null}
+                  outcomeNote={analysis.treatment.outcome_note ?? null}
+                />
+              )}
             </div>
           </section>
         )}

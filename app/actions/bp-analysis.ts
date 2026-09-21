@@ -142,6 +142,15 @@ function historyItems(value: unknown, limit = 3) {
     : [];
 }
 
+function followUpCheckinItems(value: unknown, limit = 3) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(-limit).map((item: any) => {
+    const status = item?.outcome === "done" ? "Sudah dicoba" : "Belum sempat";
+    const note = compactHistoryText(item?.reflection, 220);
+    return note ? `${status}: ${note}` : "";
+  }).filter(Boolean);
+}
+
 /**
  * Provides continuity without turning old notes into a permanent label. The
  * current conversation remains the source of truth; these are only prompts to
@@ -172,6 +181,7 @@ async function getBpHistoryContext(db: Awaited<ReturnType<typeof createClient>>,
       historyItems(analysis?.goals).length ? `Tujuan: ${historyItems(analysis.goals).join("; ")}` : null,
       historyItems(analysis?.recommended_actions).length ? `Langkah guru: ${historyItems(analysis.recommended_actions).join("; ")}` : null,
       analysis?.follow_up ? `Tindak lanjut: ${compactHistoryText(analysis.follow_up, 250)}` : null,
+      followUpCheckinItems(analysis?.follow_up_checkins).length ? `Catatan tindak lanjut guru: ${followUpCheckinItems(analysis.follow_up_checkins).join(" | ")}` : null,
       // A short excerpt preserves details that may not have made the final
       // summary, while keeping prompt growth bounded over many sessions.
       report.narrative ? `Cuplikan percakapan: ${compactHistoryText(report.narrative, 450)}` : null,

@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/context/auth-context";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 import { StudentAvatar } from "@/components/StudentAvatar";
+import { BpDueTreatmentReminders } from "@/components/BpDueTreatmentReminders";
 
 export default function BpHomePage() {
   const { activeOrganizationId, user } = useAuth();
@@ -40,6 +41,7 @@ export default function BpHomePage() {
         </div>
       </header>
       <main className="space-y-5 px-6 pt-6">
+        <BpDueTreatmentReminders />
         <div className="flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2 text-[11px] font-bold text-brand-900"><MessageSquareHeart className="h-4 w-4 shrink-0 text-brand-600" />{isEnglish ? "Counselling notes are separate from CMS progress." : "Catatan bimbingan terpisah dari progres CMS."}</div>
         <label className="relative block"><Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={isEnglish ? `Search ${t.santriLower}…` : `Cari ${t.santriLower}…`} className="h-14 w-full rounded-2xl border-2 border-slate-200 bg-white pl-12 pr-4 text-sm font-bold outline-none focus:border-brand-300" style={{ boxShadow: "0 3px 0 #e2e8f0" }} /></label>
         <div className="space-y-3">

@@ -362,6 +362,10 @@ export default function AssessmentPage() {
       recognitionRef.current?.stop();
     } else {
       setMicError(null);
+      if (!recognitionRef.current) {
+        setMicError(isEnglish ? 'Your browser does not support voice input. Try the latest Safari or Chrome, or use your keyboard microphone.' : 'Browser belum mendukung input suara. Coba Safari atau Chrome terbaru, atau gunakan mikrofon di keyboard.');
+        return;
+      }
       // Seed the accumulator with whatever the user has typed/edited so far,
       // so new speech appends to existing text instead of overwriting it.
       const existing = currentInput.trim();
@@ -370,10 +374,11 @@ export default function AssessmentPage() {
       shouldRecordRef.current = true;
       stopVoice();
       try {
-        recognitionRef.current?.start();
+        recognitionRef.current.start();
         setIsRecording(true);
       } catch {
         shouldRecordRef.current = false;
+        setMicError(isEnglish ? 'Voice input is unavailable right now. Please try again.' : 'Input suara belum tersedia saat ini. Silakan coba lagi.');
       }
     }
   };

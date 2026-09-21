@@ -74,6 +74,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CDS Portal",
   description: "Character Development System",
+  applicationName: "CDS untuk Guru",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "CDS Guru",
+    statusBarStyle: "default",
+  },
 };
 
 const appearanceScript = `
