@@ -1,10 +1,15 @@
 import type { NextConfig } from "next";
 
+const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "characterdev.systems";
+
 const nextConfig: NextConfig = {
   output: "standalone",
   experimental: {
     serverActions: {
-      allowedOrigins: ["ciadraft.portalsi.com"],
+      // Cloudflare Tunnel and its local reverse proxy must preserve the tenant
+      // host for Server Actions. Explicitly allow the apex and school subdomains
+      // while retaining the prior draft host during the infrastructure move.
+      allowedOrigins: ["ciadraft.portalsi.com", appDomain, `*.${appDomain}`],
     },
   },
   images: {
