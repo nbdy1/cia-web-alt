@@ -37,6 +37,11 @@ type PlanRow = {
 
 type FilterOption = 'all' | 'pending' | 'done' | 'declined';
 
+// Supabase/PostgREST caps one response at 1,000 rows by default. The admin
+// view is intentionally an all-time register, so fetch consecutive pages
+// instead of letting the first page quietly become the whole data set.
+const REPORT_PAGE_SIZE = 1_000;
+
 function parsePlan(raw: any) {
   if (!raw) return null;
   if (typeof raw === 'string') {
@@ -71,24 +76,35 @@ export default function TreatmentPlansPage() {
         : { data: [] as any[] };
       const nameById = new Map((profiles ?? []).map((p: any) => [p.id, p.name]));
 
-      const { data: reportsRaw, error } = await supabase
-        .from('reports')
-        .select(`
-          id,
-          created_at,
-          treatment_plan,
-          students!inner ( id, name, photo_url, assigned_ustadz_id, organization_id )
-        `)
-        .eq('students.organization_id', activeOrganizationId)
-        .order('created_at', { ascending: false });
+      const reportsRaw: any[] = [];
+      let offset = 0;
 
-      if (error) {
-        console.error('Failed to fetch treatment plans:', error);
-        setLoading(false);
-        return;
+      while (true) {
+        const { data: reportPage, error } = await supabase
+          .from('reports')
+          .select(`
+            id,
+            created_at,
+            treatment_plan,
+            students!inner ( id, name, photo_url, assigned_ustadz_id, organization_id )
+          `)
+          .eq('students.organization_id', activeOrganizationId)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + REPORT_PAGE_SIZE - 1);
+
+        if (error) {
+          console.error('Failed to fetch treatment plans:', error);
+          setLoading(false);
+          return;
+        }
+
+        const page = reportPage ?? [];
+        reportsRaw.push(...page);
+        if (page.length < REPORT_PAGE_SIZE) break;
+        offset += REPORT_PAGE_SIZE;
       }
 
-      const formatted: PlanRow[] = (reportsRaw ?? [])
+      const formatted: PlanRow[] = reportsRaw
         .map((r: any) => {
           const plan = parsePlan(r.treatment_plan);
           const treatment = plan?.treatment;
