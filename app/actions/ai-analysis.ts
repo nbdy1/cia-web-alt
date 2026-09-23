@@ -49,7 +49,6 @@
  */
 "use server";
 
-import { supabase } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { recordUsage, withUsageContext } from "@/lib/usage/usage-tracker";
@@ -375,6 +374,7 @@ async function embedText(text: string): Promise<number[]> {
 // ─── RAG: Retrieve the top-N most relevant criteria from Supabase ─────────────
 
 async function retrieveRelevantCriteria(
+  db: any,
   transcript: string,
   topK = 25,
   organizationId?: string | null
@@ -386,7 +386,7 @@ async function retrieveRelevantCriteria(
   // Cast a slightly wider net than topK — cheap (same query, higher
   // match_count) and gives hybridRescore below more to work with.
   const candidateCount = Math.min(topK * 3, 90);
-  const { data, error } = await supabase.rpc("match_cia_criteria", {
+  const { data, error } = await db.rpc("match_cia_criteria", {
     query_embedding: embedding,
     match_threshold: 0.15,
     match_count: candidateCount,
@@ -417,6 +417,7 @@ async function retrieveRelevantCriteria(
 // Only injected when similarity > threshold, so irrelevant queries cost nothing.
 
 async function retrieveRelevantKnowledge(
+  db: any,
   query: string,
   topK = 5,
   organizationId?: string | null,
@@ -431,7 +432,7 @@ async function retrieveRelevantKnowledge(
     // Cast a slightly wider net than topK — cheap (same query, higher
     // match_count) and gives hybridRescore below more to work with.
     const candidateCount = Math.min(topK * 3, 90);
-    const { data, error } = await supabase.rpc("match_pdf_knowledge", {
+    const { data, error } = await db.rpc("match_pdf_knowledge", {
       query_embedding: embedding,
       match_threshold: 0.15,  // same as criteria — let the prompt handle relevance
       match_count: candidateCount,
@@ -654,9 +655,9 @@ export async function processInterviewStep(
 
     // Run criteria RAG and knowledge RAG in parallel to save latency
     const [frontierRows, generalKnowledgeRows, diagnosticCandidates] = await Promise.all([
-      retrieveRelevantCriteria(recentWindow || transcript, 15, organizationId),
-      retrieveRelevantKnowledge(recentWindow || transcript, 3, organizationId),
-      retrieveRelevantKnowledge(recentWindow || transcript, 8, organizationId, "diagnostic_guidance"),
+      retrieveRelevantCriteria(db, recentWindow || transcript, 15, organizationId),
+      retrieveRelevantKnowledge(db, recentWindow || transcript, 3, organizationId),
+      retrieveRelevantKnowledge(db, recentWindow || transcript, 8, organizationId, "diagnostic_guidance"),
     ]);
     const diagnosticKnowledgeRows = selectDistinctDiagnosticGuidance(diagnosticCandidates);
     const knowledgeRows = [
@@ -822,9 +823,9 @@ PENTING: Prioritaskan Tema/Indikator pertama yang masih belum lengkap berdasarka
     // 2. RAG: run criteria and knowledge retrieval in parallel
     console.log("[RAG] Embedding transcript and retrieving relevant criteria + knowledge...");
     const [relevantRows, generalKnowledgeRows, diagnosticCandidates] = await Promise.all([
-      retrieveRelevantCriteria(transcript, 30, organizationId),
-      retrieveRelevantKnowledge(transcript, 4, organizationId),
-      retrieveRelevantKnowledge(transcript, 8, organizationId, "diagnostic_guidance"),
+      retrieveRelevantCriteria(db, transcript, 30, organizationId),
+      retrieveRelevantKnowledge(db, transcript, 4, organizationId),
+      retrieveRelevantKnowledge(db, transcript, 8, organizationId, "diagnostic_guidance"),
     ]);
     const diagnosticKnowledgeRows = selectDistinctDiagnosticGuidance(diagnosticCandidates);
     const knowledgeRows = [

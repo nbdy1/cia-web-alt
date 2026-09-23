@@ -10,7 +10,8 @@
 -- column back to vector(1536) IN PLACE (preserves existing rows), then recreate
 -- the match_* functions. Idempotent — safe to run repeatedly.
 --
--- These tables hold GLOBAL framework knowledge (not tenant data), so no RLS.
+-- These tables hold internal framework knowledge. Browser clients never query
+-- them directly: the scoped RPCs below enforce organization membership.
 -- Run the whole file in the Supabase SQL Editor.
 -- ─────────────────────────────────────────────────────────────────────────────
 
@@ -130,6 +131,8 @@ RETURNS TABLE (
   organization_id UUID
 )
 LANGUAGE SQL STABLE
+SECURITY DEFINER
+SET search_path = public, extensions
 AS $$
   SELECT
     cia_criteria.id,
@@ -140,7 +143,9 @@ AS $$
     1 - (cia_criteria.embedding <=> query_embedding) AS similarity,
     cia_criteria.organization_id
   FROM public.cia_criteria
-  WHERE 1 - (cia_criteria.embedding <=> query_embedding) > match_threshold
+  WHERE target_organization_id IS NOT NULL
+    AND public.is_organization_member(target_organization_id)
+    AND 1 - (cia_criteria.embedding <=> query_embedding) > match_threshold
     AND (cia_criteria.organization_id IS NULL OR cia_criteria.organization_id = target_organization_id)
   ORDER BY cia_criteria.embedding <=> query_embedding
   LIMIT match_count;
@@ -164,6 +169,8 @@ RETURNS TABLE (
   source_document TEXT
 )
 LANGUAGE SQL STABLE
+SECURITY DEFINER
+SET search_path = public, extensions
 AS $$
   SELECT
     pdf_knowledge.id,
@@ -175,7 +182,9 @@ AS $$
     pdf_knowledge.knowledge_type,
     pdf_knowledge.source_document
   FROM public.pdf_knowledge
-  WHERE 1 - (pdf_knowledge.embedding <=> query_embedding) > match_threshold
+  WHERE target_organization_id IS NOT NULL
+    AND public.is_organization_member(target_organization_id)
+    AND 1 - (pdf_knowledge.embedding <=> query_embedding) > match_threshold
     AND (pdf_knowledge.organization_id IS NULL OR pdf_knowledge.organization_id = target_organization_id)
     AND (target_knowledge_type IS NULL OR pdf_knowledge.knowledge_type = target_knowledge_type)
   ORDER BY pdf_knowledge.embedding <=> query_embedding
@@ -183,10 +192,16 @@ AS $$
 $$;
 
 -- ── Grants + reload PostgREST cache ───────────────────────────────────────────
-GRANT ALL ON public.cia_criteria, public.pdf_knowledge TO anon, authenticated, service_role;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.match_cia_criteria(vector, float, int, uuid) TO anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.match_pdf_knowledge(vector, float, int, uuid, text) TO anon, authenticated, service_role;
+ALTER TABLE public.cia_criteria ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pdf_knowledge ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.cia_criteria, public.pdf_knowledge FROM anon, authenticated;
+GRANT ALL ON public.cia_criteria, public.pdf_knowledge TO service_role;
+REVOKE ALL ON FUNCTION public.match_cia_criteria(vector, float, int, uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.match_pdf_knowledge(vector, float, int, uuid, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.match_cia_criteria(vector, float, int, uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.match_pdf_knowledge(vector, float, int, uuid, text) FROM anon;
+GRANT EXECUTE ON FUNCTION public.match_cia_criteria(vector, float, int, uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.match_pdf_knowledge(vector, float, int, uuid, text) TO authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';
 
