@@ -57,8 +57,8 @@ export async function saveBpTreatmentReminder(
       is_active: true,
     }, { onConflict: "report_id" });
     if (error) throw error;
-    revalidatePath(`/bp/reports/${report.id}`);
-    revalidatePath("/bp");
+    revalidatePath(`/bk/reports/${report.id}`);
+    revalidatePath("/bk");
     return { success: true, nextCheckAt };
   } catch (error: any) {
     return { success: false, error: error.message ?? "Pengingat belum dapat disimpan." };
@@ -152,8 +152,8 @@ export async function saveBpTreatmentCheckin(
     if (checkinError || updateReminderError || updateReportError) {
       throw checkinError ?? updateReminderError ?? updateReportError;
     }
-    revalidatePath(`/bp/reports/${reminder.report_id}`);
-    revalidatePath("/bp");
+    revalidatePath(`/bk/reports/${reminder.report_id}`);
+    revalidatePath("/bk");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message ?? "Tindak lanjut belum dapat disimpan." };

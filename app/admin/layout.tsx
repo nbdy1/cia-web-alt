@@ -52,7 +52,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isAdmin) return null;
 
   const navItems = [
-    { href: isBpMode ? '/admin/bp' : '/admin', label: isBpMode ? (isEnglish ? 'Counselling' : 'Bimbingan') : 'Overview', icon: isBpMode ? MessageSquareHeart : LayoutDashboard },
+    { href: isBpMode ? '/admin/bk' : '/admin', label: isBpMode ? (isEnglish ? 'Counselling' : 'Bimbingan') : 'Overview', icon: isBpMode ? MessageSquareHeart : LayoutDashboard },
     { href: '/admin/santri', label: isEnglish ? `Manage ${t.santri}s` : `Kelola ${t.santri}`, icon: GraduationCap },
     { href: '/admin/ustadz', label: isEnglish ? `Manage ${t.ustadz}s` : `Kelola ${t.ustadz}`, icon: Users },
     ...(isBpMode ? [] : [

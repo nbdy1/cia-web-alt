@@ -717,7 +717,7 @@ export default function HomePage() {
 
         {/* The organisation-wide mode decides which workflow teachers enter. */}
         <Link
-          href={isBpMode ? "/bp" : "/create-report"}
+          href={isBpMode ? "/bk" : "/create-report"}
           className="block active:translate-y-1 transition-transform"
         >
           <div
@@ -740,7 +740,7 @@ export default function HomePage() {
 
         {/* BP keeps history separate from CMS analytics. */}
         <Link
-          href={isBpMode ? "/bp/history" : "/students"}
+          href={isBpMode ? "/bk/history" : "/students"}
           className="block active:translate-y-1 transition-transform"
         >
           <div
@@ -764,7 +764,7 @@ export default function HomePage() {
         {/* Admin Portal */}
         {isAdmin && (
           <Link
-            href={isBpMode ? "/admin/bp" : "/admin"}
+            href={isBpMode ? "/admin/bk" : "/admin"}
             className="block active:translate-y-1 transition-transform"
           >
             <div

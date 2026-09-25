@@ -28,7 +28,7 @@ export async function saveBpReportAction(data: { studentId: string; narrative: s
     }).select("id").single();
     if (error) throw error;
 
-    revalidatePath("/bp");
+    revalidatePath("/bk");
     revalidatePath("/students");
     return { success: true, id: report.id };
   } catch (error: any) {
