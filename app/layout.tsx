@@ -25,6 +25,7 @@ import localFont from "next/font/local";
 import { AuthProvider } from "@/lib/context/auth-context";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { ClickSoundProvider } from "@/components/ClickSoundProvider";
+import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
 import { SettingsProvider } from "@/lib/context/settings-context";
 import "./globals.css";
 
@@ -158,6 +159,7 @@ export default function RootLayout({
         <ClickSoundProvider />
         <SettingsProvider>
           <AuthProvider>
+            <NotificationPermissionPrompt />
             <LayoutWrapper>
               {children}
             </LayoutWrapper>
