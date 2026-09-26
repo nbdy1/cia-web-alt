@@ -1,15 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CheckCircle2, ClipboardList, MessageSquareText, Target } from "lucide-react";
+import { ArrowLeft, MessageSquareText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { assertTenantOrganization } from "@/lib/tenant-server";
 import { MarkdownText } from "@/components/MarkdownText";
 import { BpTreatmentReminderControl } from "@/components/BpTreatmentReminderControl";
-
-function ReadList({ title, items, icon: Icon }: { title: string; items?: string[]; icon: typeof Target }) {
-  if (!items?.length) return null;
-  return <section className="rounded-2xl border-2 border-slate-100 bg-white p-5" style={{ boxShadow: "0 3px 0 #e2e8f0" }}><h2 className="mb-3 flex items-center gap-2 text-sm font-black text-slate-800"><Icon className="h-4 w-4 text-brand-600" />{title}</h2><ul className="space-y-2">{items.map((item, index) => <li key={index} className="flex gap-2 text-sm font-bold leading-relaxed text-slate-600"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" /><MarkdownText>{item}</MarkdownText></li>)}</ul></section>;
-}
+import { BkReportList, BkReportNote } from "@/components/BkReportSection";
 
 type TranscriptTurn = { role: "teacher" | "assistant"; text: string };
 
@@ -56,5 +52,25 @@ export default async function BpReportPage({ params }: { params: Promise<{ id: s
   if (!report) notFound(); await assertTenantOrganization(db, report.organization_id);
   const { data: reminder } = await db.from("bp_treatment_reminders").select("frequency_days, next_check_at").eq("report_id", report.id).maybeSingle();
   const analysis = typeof report.analysis === "string" ? JSON.parse(report.analysis) : report.analysis ?? {};
-  return <div className="min-h-screen bg-paper pb-10"><header className="border-b-2 border-slate-100 bg-white px-5 py-4" style={{ boxShadow: "0 3px 0 #e2e8f0" }}><Link href="/bk/history" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-slate-200 text-slate-500"><ArrowLeft className="h-4 w-4" /></Link></header><main className="space-y-5 px-5 py-6"><section className="rounded-[2rem] bg-brand-500 p-6 text-white" style={{ boxShadow: "0 5px 0 var(--brand-700)" }}><p className="text-[10px] font-black uppercase tracking-widest text-brand-100">Catatan bimbingan • {report.students?.name ?? "Siswa"}</p><h1 className="mt-2 text-2xl font-black leading-tight">{report.title}</h1><MarkdownText className="mt-4 text-sm font-bold leading-relaxed text-white/90">{analysis.summary}</MarkdownText></section><ReadList title="Hal yang perlu diperhatikan" items={analysis.presenting_concerns} icon={ClipboardList} /><ReadList title="Kekuatan yang dapat dikembangkan" items={analysis.strengths} icon={CheckCircle2} /><ReadList title="Tujuan jangka dekat" items={analysis.goals} icon={Target} /><ReadList title="Langkah yang disarankan untuk guru" items={analysis.recommended_actions} icon={CheckCircle2} /><ReadList title="Langkah kecil untuk siswa" items={analysis.student_actions} icon={Target} />{analysis.follow_up && <section className="rounded-2xl border-2 border-slate-100 bg-white p-5"><h2 className="text-sm font-black text-slate-800">Tindak lanjut</h2><MarkdownText className="mt-2 text-sm font-bold leading-relaxed text-slate-600">{analysis.follow_up}</MarkdownText></section>}<BpTreatmentReminderControl reportId={report.id} frequencyDays={reminder?.frequency_days} nextCheckAt={reminder?.next_check_at} checkins={Array.isArray(analysis.follow_up_checkins) ? analysis.follow_up_checkins : []} /><SessionTranscript narrative={report.narrative} /></main></div>;
+  return <div className="min-h-screen bg-paper pb-10">
+    <header className="border-b-2 border-slate-100 bg-white px-5 py-4" style={{ boxShadow: "0 3px 0 #e2e8f0" }}>
+      <Link href="/bk/history" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-slate-200 text-slate-500"><ArrowLeft className="h-4 w-4" /></Link>
+    </header>
+    <main className="space-y-5 px-5 py-6">
+      <section className="rounded-[2rem] bg-brand-500 p-6 text-white" style={{ boxShadow: "0 5px 0 var(--brand-700)" }}>
+        <p className="text-[10px] font-black uppercase tracking-widest text-brand-100">Catatan bimbingan • {report.students?.name ?? "Siswa"}</p>
+        <h1 className="mt-2 text-2xl font-black leading-tight">{report.title}</h1>
+        <MarkdownText className="mt-4 text-sm font-bold leading-relaxed text-white/90">{analysis.summary}</MarkdownText>
+      </section>
+      <BkReportList kind="concern" label="Pemetaan situasi" title="Hal yang perlu diperhatikan" items={analysis.presenting_concerns} />
+      <BkReportList kind="strength" label="Modal yang dimiliki" title="Kekuatan yang dapat dikembangkan" items={analysis.strengths} />
+      <BkReportList kind="goal" label="Arah perubahan" title="Tujuan jangka dekat" items={analysis.goals} />
+      <BkReportList kind="teacher-action" label="Peran guru" title="Langkah yang disarankan untuk guru" items={analysis.recommended_actions} />
+      <BkReportList kind="student-action" label="Langkah siswa" title="Langkah kecil untuk siswa" items={analysis.student_actions} />
+      <BkReportNote kind="family" label="Kolaborasi keluarga" title="Komunikasi dengan orang tua">{analysis.parent_communication}</BkReportNote>
+      <BkReportNote kind="follow-up" label="Pemantauan berikutnya" title="Tindak lanjut">{analysis.follow_up}</BkReportNote>
+      <BpTreatmentReminderControl reportId={report.id} frequencyDays={reminder?.frequency_days} nextCheckAt={reminder?.next_check_at} checkins={Array.isArray(analysis.follow_up_checkins) ? analysis.follow_up_checkins : []} />
+      <SessionTranscript narrative={report.narrative} />
+    </main>
+  </div>;
 }
