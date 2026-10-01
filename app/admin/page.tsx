@@ -387,7 +387,7 @@ export default function AdminOverviewPage() {
     return (
       <div className="flex items-center justify-center h-64 gap-3">
         <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
-        <span className="text-sm font-black text-slate-400 uppercase tracking-widest">{isEnglish ? "Loading…" : "Memuat…"}</span>
+        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">{isEnglish ? "Loading…" : "Memuat…"}</span>
       </div>
     );
   }
@@ -399,7 +399,7 @@ export default function AdminOverviewPage() {
 
       {/* ── Page title ───────────────────────────────────────────────────── */}
       <div>
-        <h2 className="text-2xl font-black text-slate-800">{isEnglish ? "Overview" : "Ringkasan"}</h2>
+        <h2 className="text-2xl font-bold text-slate-800">{isEnglish ? "Overview" : "Ringkasan"}</h2>
         <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? "A summary of assessment activity across your organisation" : "Ringkasan aktivitas CDS secara global"}</p>
       </div>
 
@@ -424,8 +424,8 @@ export default function AdminOverviewPage() {
               >
                 <Icon size={18} style={{ color: s.icon_color }} />
               </div>
-              <p className="text-3xl font-black text-slate-800">{s.value}</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{s.label}</p>
+              <p className="text-3xl font-bold text-slate-800">{s.value}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{s.label}</p>
             </div>
           );
         })}
@@ -438,11 +438,11 @@ export default function AdminOverviewPage() {
         <div className="bg-white rounded-[1.5rem] p-5 border-2 border-slate-100 flex flex-col" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <div>
-              <p className="font-black text-slate-800">{isEnglish ? "This week's activity" : "Aktivitas Minggu Ini"}</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? "Reports created each day" : "Laporan dibuat per hari"}</p>
+              <p className="font-bold text-slate-800">{isEnglish ? "This week's activity" : "Aktivitas Minggu Ini"}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? "Reports created each day" : "Laporan dibuat per hari"}</p>
             </div>
             <div
-              className="px-3 py-1.5 rounded-xl text-xs font-black text-brand-700 bg-brand-50"
+              className="px-3 py-1.5 rounded-xl text-xs font-bold text-brand-700 bg-brand-50"
               style={{ boxShadow: "0 2px 0 0 var(--brand-200)" }}
             >
               {totalWeek} total
@@ -457,8 +457,8 @@ export default function AdminOverviewPage() {
         <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
-              <p className="font-black text-slate-800">{isEnglish ? "Achievement coverage" : "Cakupan Ketercapaian"}</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? `${t.santri}s with the highest overall CMS score` : `${t.santri} dengan skor CMS keseluruhan tertinggi`}</p>
+              <p className="font-bold text-slate-800">{isEnglish ? "Achievement coverage" : "Cakupan Ketercapaian"}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? `${t.santri}s with the highest overall CMS score` : `${t.santri} dengan skor CMS keseluruhan tertinggi`}</p>
             </div>
             <Award size={16} className="text-brand-400" />
           </div>
@@ -466,7 +466,7 @@ export default function AdminOverviewPage() {
             {santriLeader.length === 0 ? (
               <div className="px-5 py-8 text-center text-slate-300">
                 <GraduationCap className="w-7 h-7 mx-auto mb-2" />
-                <p className="text-xs font-black">{isEnglish ? "No data yet" : "Belum ada data"}</p>
+                <p className="text-xs font-bold">{isEnglish ? "No data yet" : "Belum ada data"}</p>
               </div>
             ) : (() => {
               const medalColors = ["#f59e0b", "#94a3b8", "#b45309"];
@@ -477,7 +477,7 @@ export default function AdminOverviewPage() {
                   className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors"
                 >
                   <div
-                    className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0"
+                    className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
                     style={i < 3
                       ? { background: medalColors[i] + "22", color: medalColors[i], boxShadow: `0 2px 0 0 ${medalColors[i]}55` }
                       : { background: "#f1f5f9", color: "#94a3b8" }}
@@ -485,7 +485,7 @@ export default function AdminOverviewPage() {
                     {i + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-black text-slate-800 text-sm truncate leading-tight">{s.name}</p>
+                    <p className="font-bold text-slate-800 text-sm truncate leading-tight">{s.name}</p>
                     <div className="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full bg-brand-400 transition-all"
@@ -493,7 +493,7 @@ export default function AdminOverviewPage() {
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-black text-brand-600 flex-shrink-0">
+                  <span className="text-sm font-bold text-brand-600 flex-shrink-0">
                     {s.kmsPercentage.toFixed(1).replace(".", ",")}%
                   </span>
                 </Link>
@@ -510,10 +510,10 @@ export default function AdminOverviewPage() {
         <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
-              <p className="font-black text-slate-800">{isEnglish ? "Recent reports" : "Laporan Terbaru"}</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? "Last 8 reports" : "8 laporan terakhir"}</p>
+              <p className="font-bold text-slate-800">{isEnglish ? "Recent reports" : "Laporan Terbaru"}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? "Last 8 reports" : "8 laporan terakhir"}</p>
             </div>
-            <Link href="/admin/monitoring" className="text-[10px] font-black text-brand-600 uppercase tracking-wider hover:underline">
+            <Link href="/admin/monitoring" className="text-[10px] font-bold text-brand-600 uppercase tracking-wider hover:underline">
               {isEnglish ? "View all →" : "Lihat semua →"}
             </Link>
           </div>
@@ -521,7 +521,7 @@ export default function AdminOverviewPage() {
             {recentReports.length === 0 ? (
               <div className="px-5 py-8 text-center text-slate-300">
                 <BookOpen className="w-7 h-7 mx-auto mb-2" />
-                <p className="text-xs font-black">{isEnglish ? "No reports yet" : "Belum ada laporan"}</p>
+                <p className="text-xs font-bold">{isEnglish ? "No reports yet" : "Belum ada laporan"}</p>
               </div>
             ) : (
               recentReports.map((r) => (
@@ -539,9 +539,9 @@ export default function AdminOverviewPage() {
                       className="w-9 h-9 rounded-xl"
                     />
                     <div>
-                      <p className="font-black text-slate-800 text-sm leading-tight">{r.studentName}</p>
+                      <p className="font-bold text-slate-800 text-sm leading-tight">{r.studentName}</p>
                       {r.title && <p className="text-xs font-bold text-slate-600 truncate max-w-[180px] mt-0.5">{r.title}</p>}
-                      {r.createdByName && <p className="text-[10px] font-black text-brand-600 mt-0.5">{isEnglish ? "Created by" : "Dibuat oleh"} {r.createdByName}</p>}
+                      {r.createdByName && <p className="text-[10px] font-bold text-brand-600 mt-0.5">{isEnglish ? "Created by" : "Dibuat oleh"} {r.createdByName}</p>}
                       <div className="flex items-center gap-1 mt-0.5">
                         <Calendar size={9} className="text-slate-400" />
                         <span className="text-[10px] font-bold text-slate-400">{r.date}</span>
@@ -549,8 +549,8 @@ export default function AdminOverviewPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 text-[10px] font-black">{r.themesCount}T</span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 text-[10px] font-black">{r.siCount}SI</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 text-[10px] font-bold">{r.themesCount}T</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 text-[10px] font-bold">{r.siCount}SI</span>
                   </div>
                 </Link>
               ))
@@ -562,10 +562,10 @@ export default function AdminOverviewPage() {
         <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
-              <p className="font-black text-slate-800">{isEnglish ? `${t.ustadz} activity` : `Aktivitas ${t.ustadz}`}</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? "Top 12 by report count" : "Top 12 berdasarkan laporan"}</p>
+              <p className="font-bold text-slate-800">{isEnglish ? `${t.ustadz} activity` : `Aktivitas ${t.ustadz}`}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{isEnglish ? "Top 12 by report count" : "Top 12 berdasarkan laporan"}</p>
             </div>
-            <Link href="/admin/monitoring" className="text-[10px] font-black text-brand-600 uppercase tracking-wider hover:underline">
+            <Link href="/admin/monitoring" className="text-[10px] font-bold text-brand-600 uppercase tracking-wider hover:underline">
               {isEnglish ? "View all →" : "Lihat semua →"}
             </Link>
           </div>
@@ -573,7 +573,7 @@ export default function AdminOverviewPage() {
             {ustadzBoard.length === 0 ? (
               <div className="px-5 py-8 text-center text-slate-300">
                 <Users className="w-7 h-7 mx-auto mb-2" />
-                <p className="text-xs font-black">{isEnglish ? `No ${t.ustadz.toLowerCase()}s yet` : `Belum ada ${t.ustadz}`}</p>
+                <p className="text-xs font-bold">{isEnglish ? `No ${t.ustadz.toLowerCase()}s yet` : `Belum ada ${t.ustadz}`}</p>
               </div>
             ) : (
               ustadzBoard.slice(0, 12).map((u, i) => {
@@ -583,7 +583,7 @@ export default function AdminOverviewPage() {
                   <div key={u.id} className="flex items-center justify-between px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0"
+                        className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
                         style={topThree
                           ? { background: medalColors[i] + "22", color: medalColors[i], boxShadow: `0 2px 0 0 ${medalColors[i]}55` }
                           : { background: "#f1f5f9", color: "#94a3b8" }}
@@ -591,13 +591,13 @@ export default function AdminOverviewPage() {
                         {i + 1}
                       </div>
                       <div>
-                        <p className="font-black text-slate-800 text-sm leading-tight">{u.name}</p>
+                        <p className="font-bold text-slate-800 text-sm leading-tight">{u.name}</p>
                         <p className="text-[10px] font-bold text-slate-400">{u.studentCount} {t.santriLower}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-black text-slate-800 text-sm">{u.reportCount}</p>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{isEnglish ? "reports" : "laporan"}</p>
+                      <p className="font-bold text-slate-800 text-sm">{u.reportCount}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{isEnglish ? "reports" : "laporan"}</p>
                     </div>
                   </div>
                 );

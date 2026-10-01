@@ -224,7 +224,7 @@ export default function ManageSantriPage() {
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, photo_url: newUrl } : s));
   };
   const inputCls = "w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-brand-400 transition-colors";
-  const labelCls = "block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5";
+  const labelCls = "block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5";
 
   const displayList = showRemoved ? removedList : activeList;
   const sortedDisplayList = [...displayList].sort((a, b) => {
@@ -273,7 +273,7 @@ export default function ManageSantriPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">{isEnglish ? `${t.santri} management` : `Manajemen ${t.santri}`}</h2>
+          <h2 className="text-2xl font-bold text-slate-800">{isEnglish ? `${t.santri} management` : `Manajemen ${t.santri}`}</h2>
           <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `Add, view, or deactivate ${t.santriLower} records` : `Tambah, lihat, atau nonaktifkan data ${t.santriLower}`}</p>
         </div>
         {!showRemoved && (
@@ -281,7 +281,7 @@ export default function ManageSantriPage() {
             <AdminSpreadsheetImport kind="students" organizationId={activeOrganizationId ?? ""} onComplete={fetchStudents} />
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
+              className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm active:translate-y-px transition-transform"
               style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
             >
               <Plus size={15} /> {isEnglish ? `Add ${t.santri}` : `Tambah ${t.santri}`}
@@ -294,14 +294,14 @@ export default function ManageSantriPage() {
       <div className="flex gap-2">
         <button
           onClick={() => { setShowRemoved(false); setSearchQuery(''); }}
-          className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={!showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
         >
           {isEnglish ? 'Active' : 'Aktif'} ({students.length})
         </button>
         <button
           onClick={() => { setShowRemoved(true); setSearchQuery(''); }}
-          className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${showRemoved ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${showRemoved ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={showRemoved ? { boxShadow: "0 3px 0 0 #b91c1c" } : {}}
         >
           {isEnglish ? 'Deactivated' : 'Dinonaktifkan'} ({removedStudents.length})
@@ -323,8 +323,8 @@ export default function ManageSantriPage() {
 
       {!showRemoved && (
         <div className="flex items-center justify-between gap-3 bg-white border-2 border-slate-200 rounded-2xl p-3" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
-          <div className="flex items-center gap-2 text-xs font-black text-slate-600"><ArrowUpDown size={14} className="text-brand-500" /> {isEnglish ? 'Sort' : 'Urutkan'}</div>
-          <select value={sortOption} onChange={(e) => setSortOption(e.target.value as typeof sortOption)} className="bg-transparent text-xs font-black text-slate-700 outline-none">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-600"><ArrowUpDown size={14} className="text-brand-500" /> {isEnglish ? 'Sort' : 'Urutkan'}</div>
+          <select value={sortOption} onChange={(e) => setSortOption(e.target.value as typeof sortOption)} className="bg-transparent text-xs font-bold text-slate-700 outline-none">
             <option value="name">{isEnglish ? 'Name A-Z' : 'Nama A-Z'}</option>
             <option value="score">{isEnglish ? 'Highest CMS score' : 'Skor CMS tertinggi'}</option>
             <option value="reports">{isEnglish ? 'Most reports' : 'Laporan terbanyak'}</option>
@@ -333,7 +333,7 @@ export default function ManageSantriPage() {
       )}
 
       {!showRemoved && assignmentMessage && (
-        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-black">
+        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-bold">
           <UserCheck size={14} /> {assignmentMessage}
         </div>
       )}
@@ -351,7 +351,7 @@ export default function ManageSantriPage() {
             >
               {showRemoved ? (
                 <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base text-white shrink-0"
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-base text-white shrink-0"
                   style={{ background: '#94a3b8', boxShadow: '0 2px 0 0 #cbd5e1' }}
                 >
                   {student.name?.charAt(0).toUpperCase() ?? "?"}
@@ -373,21 +373,21 @@ export default function ManageSantriPage() {
                     <input value={editValues.name} onChange={(e) => setEditValues({ ...editValues, name: e.target.value })} className={inputCls} aria-label="Nama santri" />
                     <input value={editValues.nis} onChange={(e) => setEditValues({ ...editValues, nis: e.target.value })} className={inputCls} placeholder="NIS" aria-label="NIS santri" />
                   </div>
-                ) : <p className="font-black text-slate-800 text-sm truncate">{student.name}</p>}
+                ) : <p className="font-bold text-slate-800 text-sm truncate">{student.name}</p>}
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  {editingId !== student.id && <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{student.nis ? `NIS: ${student.nis}` : "—"}</span>}
+                  {editingId !== student.id && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{student.nis ? `NIS: ${student.nis}` : "—"}</span>}
                   {student.profiles?.name && (
-                    <span className="text-[10px] font-black text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">{student.profiles.name}</span>
+                    <span className="text-[10px] font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">{student.profiles.name}</span>
                   )}
                 </div>
                 {!showRemoved && (
                   <div className="flex items-center gap-2 mt-3">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 whitespace-nowrap">{isEnglish ? 'Supervisor' : 'Pembimbing'}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">{isEnglish ? 'Supervisor' : 'Pembimbing'}</span>
                     <select
                       value={student.assigned_ustadz_id ?? ''}
                       disabled={savingAssignmentId === student.id}
                       onChange={(event) => changeAssignment(student.id, event.target.value)}
-                      className="min-w-0 flex-1 max-w-xs bg-white border-2 border-brand-100 rounded-xl px-3 py-2 text-xs font-black text-brand-700 outline-none focus:border-brand-400 disabled:opacity-60"
+                      className="min-w-0 flex-1 max-w-xs bg-white border-2 border-brand-100 rounded-xl px-3 py-2 text-xs font-bold text-brand-700 outline-none focus:border-brand-400 disabled:opacity-60"
                     >
                       <option value="">{isEnglish ? 'Not assigned' : 'Belum ditugaskan'}</option>
                       {ustadzList.map((ustadz) => <option key={ustadz.id} value={ustadz.id}>{ustadz.name}</option>)}
@@ -397,14 +397,14 @@ export default function ManageSantriPage() {
                 )}
                 {!showRemoved && (
                   <div className="flex flex-wrap items-center gap-2 mt-3">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-black">CMS {student.cmsScore?.toFixed(1).replace('.', ',')}%</span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 text-[10px] font-black"><FileText size={10} /> {student.reportCount ?? 0} {isEnglish ? 'reports' : 'laporan'}</span>
-                    <Link href={`/students/${student.id}?from=${encodeURIComponent('/admin/santri')}`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black hover:bg-slate-200"><ExternalLink size={10} /> {isEnglish ? 'Profile' : 'Profil'}</Link>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100 text-[10px] font-bold">CMS {student.cmsScore?.toFixed(1).replace('.', ',')}%</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 text-[10px] font-bold"><FileText size={10} /> {student.reportCount ?? 0} {isEnglish ? 'reports' : 'laporan'}</span>
+                    <Link href={`/students/${student.id}?from=${encodeURIComponent('/admin/santri')}`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold hover:bg-slate-200"><ExternalLink size={10} /> {isEnglish ? 'Profile' : 'Profil'}</Link>
                   </div>
                 )}
                 {showRemoved && (
                   <div className="mt-2 p-2.5 bg-rose-50 border border-rose-100 rounded-xl">
-                    <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider mb-0.5">
+                    <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-0.5">
                       {isEnglish ? 'Deactivated' : 'Dinonaktifkan'} {student.removed_at ? new Date(student.removed_at).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" }) : ""}
                     </p>
                     <p className="text-xs font-bold text-rose-700 leading-snug">{student.removed_reason}</p>
@@ -435,7 +435,7 @@ export default function ManageSantriPage() {
           {showRemoved
             ? <ArchiveX className="w-8 h-8 mx-auto text-slate-200 mb-3" />
             : <GraduationCap className="w-8 h-8 mx-auto text-slate-200 mb-3" />}
-          <p className="text-slate-400 font-black text-sm">
+          <p className="text-slate-400 font-bold text-sm">
             {searchQuery
               ? (isEnglish ? 'No matching results' : 'Tidak ada hasil pencarian')
               : showRemoved ? (isEnglish ? `No deactivated ${t.santriLower}s yet` : `Belum ada ${t.santriLower} yang dinonaktifkan`) : (isEnglish ? `No ${t.santriLower} data yet` : `Belum ada data ${t.santriLower}`)}
@@ -454,11 +454,11 @@ export default function ManageSantriPage() {
               <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}>
                 <Plus size={20} className="text-brand-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">{isEnglish ? `Add ${t.santri}` : `Tambah ${t.santri}`}</h3>
+              <h3 className="text-xl font-bold text-slate-800">{isEnglish ? `Add ${t.santri}` : `Tambah ${t.santri}`}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `Enter the new ${t.santriLower}'s details.` : `Masukkan data ${t.santriLower} baru.`}</p>
             </div>
             {modalError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={16} />{modalError}</div>}
-            {modalSuccess && <div className="mb-4 p-3 bg-brand-50 border-2 border-brand-200 text-brand-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={16} />{modalSuccess}</div>}
+            {modalSuccess && <div className="mb-4 p-3 bg-brand-50 border-2 border-brand-200 text-brand-700 text-sm rounded-xl flex items-center gap-2 font-bold"><Sparkles size={16} />{modalSuccess}</div>}
             <form onSubmit={handleAddSantri} className="space-y-4">
               {/* Photo picker */}
               <div className="flex flex-col items-center gap-2">
@@ -472,7 +472,7 @@ export default function ManageSantriPage() {
                   ) : (
                     <div className="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1 text-slate-400 group-hover:border-brand-400 group-hover:text-brand-500 transition-colors">
                       <Camera size={22} />
-                      <span className="text-[9px] font-black uppercase tracking-wider">{isEnglish ? 'Photo' : 'Foto'}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider">{isEnglish ? 'Photo' : 'Foto'}</span>
                     </div>
                   )}
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white border-2 border-slate-200 rounded-lg flex items-center justify-center" style={{ boxShadow: '0 2px 0 0 #e2e8f0' }}>
@@ -491,7 +491,7 @@ export default function ManageSantriPage() {
                 <label className={labelCls}>{isEnglish ? `${t.santri} ID` : `NIS (Nomor Induk ${t.santri})`}</label>
                 <input type="text" value={formData.nis} onChange={e => setFormData({...formData, nis: e.target.value})} placeholder="2024001" className={inputCls} />
               </div>
-              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
+              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} {isEnglish ? `Save ${t.santri}` : `Simpan ${t.santri}`}
               </button>
             </form>
@@ -511,7 +511,7 @@ export default function ManageSantriPage() {
               <div className="w-11 h-11 bg-rose-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #fecaca" }}>
                 <UserX size={20} className="text-rose-500" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">{isEnglish ? `Deactivate ${t.santri}` : `Nonaktifkan ${t.santri}`}</h3>
+              <h3 className="text-xl font-bold text-slate-800">{isEnglish ? `Deactivate ${t.santri}` : `Nonaktifkan ${t.santri}`}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">
                 {isEnglish ? <><strong className="text-slate-700">{studentToRemove.name}</strong> will be hidden from the active list. Their report history will remain available.</> : <><strong className="text-slate-700">{studentToRemove.name}</strong> akan disembunyikan dari daftar aktif. Riwayat laporannya tetap tersimpan.</>}
               </p>
@@ -530,13 +530,13 @@ export default function ManageSantriPage() {
                 />
               </div>
               <div className="flex gap-3 pt-1">
-                <button onClick={() => setIsRemoveModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-black py-3 rounded-xl hover:bg-slate-200 transition-colors">
+                <button onClick={() => setIsRemoveModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors">
                   {isEnglish ? 'Cancel' : 'Batal'}
                 </button>
                 <button
                   onClick={handleRemoveSantri}
                   disabled={isRemoving || !removeReason.trim()}
-                  className="flex-1 bg-rose-500 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
+                  className="flex-1 bg-rose-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
                   style={{ boxShadow: "0 3px 0 0 #b91c1c" }}
                 >
                   {isRemoving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX size={14} />} {isEnglish ? 'Deactivate' : 'Nonaktifkan'}

@@ -39,7 +39,7 @@ export function OrganizationSwitcher() {
         <div className="w-6 h-6 bg-brand-100 rounded-lg flex items-center justify-center text-brand-600">
           <Building2 size={12} />
         </div>
-        <span className="text-xs font-black text-slate-700 truncate max-w-[120px]">
+        <span className="text-xs font-bold text-slate-700 truncate max-w-[120px]">
           {activeOrg?.name ?? "Pilih Organisasi"}
         </span>
         <ChevronDown size={14} className={`text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -51,7 +51,7 @@ export function OrganizationSwitcher() {
           style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}
         >
           <div className="px-3 py-2 mb-1 border-b-2 border-slate-50">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ganti Organisasi</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Ganti Organisasi</p>
           </div>
           <div className="space-y-1">
             {organizations.map((org) => {
@@ -74,7 +74,7 @@ export function OrganizationSwitcher() {
                       <Building2 size={14} />
                     </div>
                     <div className="min-w-0">
-                      <p className={`text-sm font-black truncate ${isSelected ? "text-brand-800" : "text-slate-700"}`}>
+                      <p className={`text-sm font-bold truncate ${isSelected ? "text-brand-800" : "text-slate-700"}`}>
                         {org.name}
                       </p>
                       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">

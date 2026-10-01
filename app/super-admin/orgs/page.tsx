@@ -135,7 +135,7 @@ export default function SuperAdminPage() {
     return (
       <div className="flex items-center justify-center h-64 gap-3">
         <Loader2 className="w-7 h-7 animate-spin text-rose-500" />
-        <span className="text-sm font-black text-slate-400 uppercase tracking-widest">Loading Orgs…</span>
+        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading Orgs…</span>
       </div>
     );
   }
@@ -144,11 +144,11 @@ export default function SuperAdminPage() {
     <div className="space-y-6 max-w-5xl mx-auto animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Organizations</h2>
+          <h2 className="text-2xl font-bold text-slate-800">Organizations</h2>
           <p className="text-slate-400 text-sm font-bold mt-0.5">Manage all tenants on the platform</p>
         </div>
         <button
-          className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl font-black text-sm transition-all active:translate-y-px"
+          className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all active:translate-y-px"
           style={{ boxShadow: "0 3px 0 0 #be123c" }}
           onClick={() => setIsCreateOrgOpen(true)}
         >
@@ -162,7 +162,7 @@ export default function SuperAdminPage() {
           {organizations.length === 0 ? (
             <div className="px-5 py-8 text-center text-slate-300">
               <Building2 className="w-7 h-7 mx-auto mb-2" />
-              <p className="text-xs font-black">No organizations found or RLS blocked</p>
+              <p className="text-xs font-bold">No organizations found or RLS blocked</p>
             </div>
           ) : (
             organizations.map((org) => (
@@ -172,7 +172,7 @@ export default function SuperAdminPage() {
                     <Building2 size={18} />
                   </div>
                   <div>
-                    <p className="font-black text-slate-800 text-base">{org.name}</p>
+                    <p className="font-bold text-slate-800 text-base">{org.name}</p>
                     <p className="text-[11px] font-bold text-slate-400 font-mono mt-0.5">
                       {org.slug}.characterdev.systems
                     </p>
@@ -180,19 +180,19 @@ export default function SuperAdminPage() {
                 </div>
                 <div className="flex items-center gap-6">
                   <div className="text-right">
-                    <p className="font-black text-slate-800 text-sm">{org.organization_members[0]?.count ?? 0}</p>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Members</p>
+                    <p className="font-bold text-slate-800 text-sm">{org.organization_members[0]?.count ?? 0}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Members</p>
                   </div>
                   <button
                     onClick={() => openManage({ id: org.id, name: org.name })}
-                    className="flex items-center gap-2 text-slate-600 hover:text-slate-800 font-black text-xs bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors"
+                    className="flex items-center gap-2 text-slate-600 hover:text-slate-800 font-bold text-xs bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors"
                   >
                     <Users size={14} />
                     Members
                   </button>
                   <button
                     onClick={() => setAssignOrgId(org.id)}
-                    className="flex items-center gap-2 text-rose-600 hover:text-rose-700 font-black text-xs bg-rose-50 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition-colors"
+                    className="flex items-center gap-2 text-rose-600 hover:text-rose-700 font-bold text-xs bg-rose-50 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition-colors"
                   >
                     <UserPlus size={14} />
                     Create Account
@@ -218,12 +218,12 @@ export default function SuperAdminPage() {
               <div className="w-11 h-11 bg-rose-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #fecaca" }}>
                 <Building2 size={20} className="text-rose-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Create Organization</h3>
+              <h3 className="text-xl font-bold text-slate-800">Create Organization</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">Add a new pesantren tenant to the platform.</p>
             </div>
             <form onSubmit={handleCreateOrg} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Organization Name *</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Organization Name *</label>
                 <input
                   type="text"
                   required
@@ -239,7 +239,7 @@ export default function SuperAdminPage() {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Slug *</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Slug *</label>
                 <input
                   type="text"
                   required
@@ -252,7 +252,7 @@ export default function SuperAdminPage() {
               <button
                 disabled={createLoading}
                 type="submit"
-                className="w-full mt-2 bg-rose-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
+                className="w-full mt-2 bg-rose-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
                 style={{ boxShadow: "0 3px 0 0 #be123c" }}
               >
                 {createLoading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" /> Creating…</> : "+ Create Organization"}
@@ -277,20 +277,20 @@ export default function SuperAdminPage() {
               <div className="w-11 h-11 bg-rose-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #fecaca" }}>
                 <UserPlus size={20} className="text-rose-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Add Organization Account</h3>
+              <h3 className="text-xl font-bold text-slate-800">Add Organization Account</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">Create a new account or add an existing account.</p>
             </div>
             <div className="grid grid-cols-2 gap-1 p-1 mb-5 bg-slate-100 rounded-xl">
-              <button type="button" onClick={() => setAssignMode("new")} className={`rounded-lg py-2 text-xs font-black transition-colors ${assignMode === "new" ? "bg-white text-rose-600 shadow-sm" : "text-slate-400"}`}>Akun Baru</button>
-              <button type="button" onClick={() => setAssignMode("existing")} className={`rounded-lg py-2 text-xs font-black transition-colors ${assignMode === "existing" ? "bg-white text-rose-600 shadow-sm" : "text-slate-400"}`}>Akun Sudah Ada</button>
+              <button type="button" onClick={() => setAssignMode("new")} className={`rounded-lg py-2 text-xs font-bold transition-colors ${assignMode === "new" ? "bg-white text-rose-600 shadow-sm" : "text-slate-400"}`}>Akun Baru</button>
+              <button type="button" onClick={() => setAssignMode("existing")} className={`rounded-lg py-2 text-xs font-bold transition-colors ${assignMode === "existing" ? "bg-white text-rose-600 shadow-sm" : "text-slate-400"}`}>Akun Sudah Ada</button>
             </div>
             <form onSubmit={handleAssignUser} className="space-y-4">
               {assignMode === "new" && <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Full Name *</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Full Name *</label>
                 <input type="text" required value={assignName} onChange={(e) => setAssignName(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-rose-400 transition-colors" placeholder="e.g. Ahmad Fauzi" />
               </div>}
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Email *</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email *</label>
                 <input
                   type="email"
                   required
@@ -301,12 +301,12 @@ export default function SuperAdminPage() {
                 />
               </div>
               {assignMode === "new" && <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Initial Password *</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Initial Password *</label>
                 <input type="password" required minLength={6} value={assignPassword} onChange={(e) => setAssignPassword(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-rose-400 transition-colors" placeholder="Minimum 6 characters" />
                 <p className="text-[10px] text-slate-400 font-bold mt-1">They can change this later in Settings.</p>
               </div>}
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Role</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Role</label>
                 <select
                   value={assignRole}
                   onChange={(e) => setAssignRole(e.target.value)}
@@ -320,7 +320,7 @@ export default function SuperAdminPage() {
               <button
                 disabled={assignLoading}
                 type="submit"
-                className="w-full mt-2 bg-rose-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
+                className="w-full mt-2 bg-rose-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
                 style={{ boxShadow: "0 3px 0 0 #be123c" }}
               >
                 {assignLoading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" /> Saving…</> : assignMode === "new" ? "Create Account" : "Assign Account"}
@@ -345,35 +345,35 @@ export default function SuperAdminPage() {
               <div className="w-11 h-11 bg-slate-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
                 <Users size={20} className="text-slate-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Members — {manageOrg.name}</h3>
+              <h3 className="text-xl font-bold text-slate-800">Members — {manageOrg.name}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">Owners, admins and ustadz in this organization.</p>
             </div>
 
             {membersLoading ? (
               <div className="flex items-center justify-center py-10 gap-3">
                 <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-                <span className="text-sm font-black text-slate-400 uppercase tracking-widest">Loading…</span>
+                <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading…</span>
               </div>
             ) : membersError ? (
               <div className="py-6 text-center text-rose-600 text-sm font-bold">{membersError}</div>
             ) : members.length === 0 ? (
               <div className="py-10 text-center text-slate-300">
                 <Users className="w-7 h-7 mx-auto mb-2" />
-                <p className="text-xs font-black">No members yet</p>
+                <p className="text-xs font-bold">No members yet</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-[22rem] overflow-y-auto">
                 {members.map((m) => (
                   <div key={m.user_id} className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100">
                     <div className="min-w-0">
-                      <p className="font-black text-slate-800 text-sm truncate flex items-center gap-1.5">
+                      <p className="font-bold text-slate-800 text-sm truncate flex items-center gap-1.5">
                         {m.role === "owner" && <Crown size={13} className="text-amber-500 flex-shrink-0" />}
                         {m.name || "—"}
                       </p>
                       <p className="text-[11px] font-bold text-slate-400 truncate">{m.email || m.user_id}</p>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
                         m.role === "owner" ? "bg-amber-100 text-amber-700"
                         : m.role === "admin" ? "bg-emerald-100 text-emerald-700"
                         : "bg-slate-200 text-slate-600"

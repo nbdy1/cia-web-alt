@@ -47,19 +47,19 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-black text-rose-400">Super Admin</h1>
+              <h1 className="text-base font-bold text-rose-400">Super Admin</h1>
             </div>
-            <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Global System Management</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Global System Management</p>
           </div>
         </div>
-        <div className="text-[10px] font-black bg-rose-500/20 px-3 py-1.5 rounded-xl border border-rose-500/30 text-rose-300">
+        <div className="text-[10px] font-bold bg-rose-500/20 px-3 py-1.5 rounded-xl border border-rose-500/30 text-rose-300">
           Super Admin Mode
         </div>
       </header>
 
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         <aside className="hidden md:flex flex-col w-56 bg-white border-r-2 border-slate-100 p-3 space-y-1 flex-shrink-0" style={{ boxShadow: "2px 0 0 0 #e2e8f0" }}>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 pb-1">Navigasi Global</p>
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pt-2 pb-1">Navigasi Global</p>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -67,7 +67,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-black text-sm ${
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-sm ${
                   isActive
                     ? 'bg-rose-500 text-white'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
@@ -99,7 +99,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 }`}
               >
                 <Icon size={15} className={isActive ? "text-rose-600" : "text-slate-400"} />
-                <span className="text-[8px] font-black uppercase tracking-tight leading-tight text-center whitespace-nowrap">
+                <span className="text-[8px] font-bold uppercase tracking-tight leading-tight text-center whitespace-nowrap">
                   {item.label}
                 </span>
               </Link>

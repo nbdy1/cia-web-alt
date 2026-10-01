@@ -263,7 +263,7 @@ export function SettingsDropdown() {
           style={{ boxShadow: "0 6px 0 0 #e2e8f0" }}
         >
           <div className="px-5 py-4 border-b-2 border-slate-100">
-            <h4 className="font-black text-slate-800 text-base">{isEnglish ? "Settings" : "Pengaturan"}</h4>
+            <h4 className="font-bold text-slate-800 text-base">{isEnglish ? "Settings" : "Pengaturan"}</h4>
             <p className="text-[11px] text-slate-400 font-bold mt-0.5">
               {activeTab === "mode"
                 ? (isEnglish ? "Your preferred application mode" : "Mode aplikasi pilihan Anda")
@@ -282,7 +282,7 @@ export function SettingsDropdown() {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-black transition-colors ${
+                    className={`flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-bold transition-colors ${
                       isSelected
                         ? "bg-white text-brand-700 shadow-sm"
                         : "text-slate-400 hover:text-slate-600"
@@ -308,7 +308,7 @@ export function SettingsDropdown() {
                       <UserRound className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                      <span className="block truncate text-sm font-black text-slate-800">
+                      <span className="block truncate text-sm font-bold text-slate-800">
                         {user?.user_metadata?.name ??
                           user?.email?.split("@")[0] ??
                           "Pengguna CDS"}
@@ -326,7 +326,7 @@ export function SettingsDropdown() {
                       <Building2 className="h-4 w-4" />
                     </div>
                     <div>
-                      <span className="block text-sm font-black text-slate-800">
+                      <span className="block text-sm font-bold text-slate-800">
                         {isEnglish ? "Organisation" : "Institusi Pengguna"}
                       </span>
                       <span className="block text-[10px] font-bold text-slate-400">
@@ -363,7 +363,7 @@ export function SettingsDropdown() {
                               </div>
                               <div className="min-w-0">
                                 <p
-                                  className={`truncate text-sm font-black ${
+                                  className={`truncate text-sm font-bold ${
                                     isSelected
                                       ? "text-brand-800"
                                       : "text-slate-700"
@@ -386,7 +386,7 @@ export function SettingsDropdown() {
                   ) : (
                     <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-slate-700">
+                        <p className="truncate text-sm font-bold text-slate-700">
                           {activeOrg?.name ?? (isEnglish ? "No organisation yet" : "Belum ada organisasi")}
                         </p>
                         <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">
@@ -407,7 +407,7 @@ export function SettingsDropdown() {
                       <LockKeyhole className="h-4 w-4" />
                     </div>
                     <div>
-                      <span className="block text-sm font-black text-slate-800">
+                      <span className="block text-sm font-bold text-slate-800">
                         {isEnglish ? "Change password" : "Ganti Password"}
                       </span>
                       <span className="block text-[10px] font-bold text-slate-400">
@@ -496,7 +496,7 @@ export function SettingsDropdown() {
                     disabled={
                       isUpdatingPassword || !newPassword || !confirmPassword
                     }
-                    className="mt-3 flex h-10 w-full items-center justify-center rounded-2xl bg-brand-500 text-xs font-black text-white transition-all hover:bg-brand-600 active:translate-y-px disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="mt-3 flex h-10 w-full items-center justify-center rounded-2xl bg-brand-500 text-xs font-bold text-white transition-all hover:bg-brand-600 active:translate-y-px disabled:cursor-not-allowed disabled:bg-slate-300"
                     style={{
                       boxShadow:
                         isUpdatingPassword || !newPassword || !confirmPassword
@@ -520,7 +520,7 @@ export function SettingsDropdown() {
                     <Sliders className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="block font-black text-slate-800 text-sm">
+                    <span className="block font-bold text-slate-800 text-sm">
                       {isEnglish ? "Appearance" : "Tampilan"}
                     </span>
                     <span className="block text-[10px] text-slate-400 font-bold">
@@ -533,7 +533,7 @@ export function SettingsDropdown() {
                   <div className="rounded-2xl bg-white border border-slate-100 px-3 py-3">
                     <div className="flex items-center gap-2 mb-2">
                       <Languages className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                         {isEnglish ? "Language" : "Bahasa / Language"}
                       </span>
                     </div>
@@ -545,7 +545,7 @@ export function SettingsDropdown() {
                             key={option}
                             type="button"
                             onClick={() => setLanguage(option)}
-                            className={`rounded-xl border px-3 py-2 text-left text-sm font-black transition-colors ${
+                            className={`rounded-xl border px-3 py-2 text-left text-sm font-bold transition-colors ${
                               selected
                                 ? "border-brand-300 bg-brand-50 text-brand-800"
                                 : "border-slate-100 bg-white text-slate-600 hover:border-slate-200"
@@ -564,7 +564,7 @@ export function SettingsDropdown() {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Type className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                         {isEnglish ? "Font family" : "Jenis Huruf"}
                       </span>
                     </div>
@@ -584,7 +584,7 @@ export function SettingsDropdown() {
                             }`}
                           >
                             <span
-                              className="block text-sm font-black leading-tight"
+                              className="block text-sm font-bold leading-tight"
                               style={{ fontFamily: option.preview }}
                             >
                               {option.label}
@@ -600,10 +600,10 @@ export function SettingsDropdown() {
 
                   <div className="rounded-2xl bg-white border border-slate-100 px-3 py-3">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                       {isEnglish ? "Text size" : "Ukuran Teks"}
                       </span>
-                      <span className="text-[11px] font-black text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
                         {Math.round(fontScale * 100)}%
                       </span>
                     </div>
@@ -633,7 +633,7 @@ export function SettingsDropdown() {
                       setFontFamily("din");
                       setFontScale(1);
                     }}
-                    className="w-full flex items-center justify-center gap-2 text-[11px] font-black text-slate-500 hover:text-brand-700 bg-white hover:bg-brand-50 border border-slate-100 hover:border-brand-100 rounded-2xl py-2 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 text-[11px] font-bold text-slate-500 hover:text-brand-700 bg-white hover:bg-brand-50 border border-slate-100 hover:border-brand-100 rounded-2xl py-2 transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     {isEnglish ? "Restore default appearance" : "Kembalikan Tampilan Awal"}
@@ -650,7 +650,7 @@ export function SettingsDropdown() {
                       <MessageSquareHeart className="h-4 w-4" />
                     </div>
                     <div>
-                      <span className="block text-sm font-black text-slate-800">{isEnglish ? "Application mode" : "Mode aplikasi"}</span>
+                      <span className="block text-sm font-bold text-slate-800">{isEnglish ? "Application mode" : "Mode aplikasi"}</span>
                       <span className="block text-[10px] font-bold text-slate-400">{isEnglish ? "This choice is saved for your account" : "Pilihan ini disimpan untuk akun Anda"}</span>
                     </div>
                   </div>
@@ -679,7 +679,7 @@ export function SettingsDropdown() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className={`text-sm font-black ${selected ? "text-brand-800" : "text-slate-800"}`}>{mode.title}</p>
+                          <p className={`text-sm font-bold ${selected ? "text-brand-800" : "text-slate-800"}`}>{mode.title}</p>
                           <p className="mt-1 text-[11px] font-bold leading-relaxed text-slate-500">{mode.description}</p>
                         </div>
                         {selected && <CheckCircle2 className="h-5 w-5 shrink-0 text-brand-600" />}
@@ -709,7 +709,7 @@ export function SettingsDropdown() {
                     <BookOpen className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="block font-black text-slate-800 text-sm">
+                    <span className="block font-bold text-slate-800 text-sm">
                       Panduan Kriteria
                     </span>
                     <span className="block text-[10px] text-slate-400 font-bold mt-0.5">
@@ -735,7 +735,7 @@ export function SettingsDropdown() {
                     <HelpCircle className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="block font-black text-slate-800 text-sm">
+                    <span className="block font-bold text-slate-800 text-sm">
                       Pusat Bantuan
                     </span>
                     <span className="block text-[10px] text-slate-400 font-bold mt-0.5">
@@ -748,7 +748,7 @@ export function SettingsDropdown() {
           </div>
 
           <div className="border-t-2 border-slate-100 px-5 py-3 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-[10px] text-slate-400 font-black">
+            <span className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
               <div
                 className="w-4 h-4 bg-brand-500 rounded-md flex items-center justify-center"
                 style={{ boxShadow: "0 1px 0 0 var(--brand-700)" }}
@@ -757,7 +757,7 @@ export function SettingsDropdown() {
               </div>
               CDS V0.1
             </span>
-            <span className="text-[10px] text-slate-400 font-black">
+            <span className="text-[10px] text-slate-400 font-bold">
               {languageName(language)}
             </span>
           </div>

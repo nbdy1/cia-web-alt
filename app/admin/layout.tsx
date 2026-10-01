@@ -83,16 +83,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   className="w-5 h-5 rounded-md object-cover"
                 />
               )}
-              <h1 className="text-base font-black text-white">Admin Portal</h1>
+              <h1 className="text-base font-bold text-white">Admin Portal</h1>
             </div>
-            <p className="text-[10px] text-brand-400 font-black uppercase tracking-wider">
+            <p className="text-[10px] text-brand-400 font-bold uppercase tracking-wider">
               {activeOrganization?.name || "CDS Management"}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <OrganizationSwitcher />
-          {/* <div className="text-[10px] font-black bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-slate-300">
+          {/* <div className="text-[10px] font-bold bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-slate-300">
             {user?.user_metadata?.name || 'Admin'}
           </div> */}
         </div>
@@ -104,7 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Desktop sidebar */}
         <aside className="hidden md:flex flex-col w-56 bg-white border-r-2 border-slate-100 p-3 space-y-1 flex-shrink-0" style={{ boxShadow: "2px 0 0 0 #e2e8f0" }}>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 pb-1">{isEnglish ? "Navigation" : "Navigasi"}</p>
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pt-2 pb-1">{isEnglish ? "Navigation" : "Navigasi"}</p>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -112,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-black text-sm ${
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-sm ${
                   isActive
                     ? 'bg-brand-500 text-white'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
@@ -147,7 +147,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }`}
               >
                 <Icon size={19} strokeWidth={isActive ? 2.5 : 2} className={isActive ? "text-brand-600" : "text-slate-400"} />
-                <span className="text-[8px] font-black uppercase tracking-tight leading-tight text-center truncate max-w-full">
+                <span className="text-[8px] font-bold uppercase tracking-tight leading-tight text-center truncate max-w-full">
                   {item.label}
                 </span>
               </Link>

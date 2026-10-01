@@ -545,8 +545,8 @@ export default function AssessmentPage() {
             colorIndex={0}
           />
           <div>
-            <h1 className="text-base font-black text-slate-900 leading-tight">{isEnglish ? "Discussion with CDS" : "Diskusi dengan CDS"}</h1>
-            <p className="text-[10px] text-brand-600 font-black uppercase tracking-widest leading-none">{studentName}</p>
+            <h1 className="text-base font-bold text-slate-900 leading-tight">{isEnglish ? "Discussion with CDS" : "Diskusi dengan CDS"}</h1>
+            <p className="text-[10px] text-brand-600 font-bold uppercase tracking-widest leading-none">{studentName}</p>
           </div>
         </div>
 
@@ -556,7 +556,7 @@ export default function AssessmentPage() {
           style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}
         >
           <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-          <span className="text-xs font-black text-brand-700">{discoveredCount} {isEnglish ? "Topics" : "Topik"}</span>
+          <span className="text-xs font-bold text-brand-700">{discoveredCount} {isEnglish ? "Topics" : "Topik"}</span>
         </div>
       </header>
 
@@ -569,7 +569,7 @@ export default function AssessmentPage() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
             </span>
             <p className="text-[11px] font-bold text-red-500">
-              {isEnglish ? "Recording is active — press " : "Rekaman aktif — tekan "}<span className="font-black">stop</span>{isEnglish ? " before sending a message" : " sebelum kirim pesan"}
+              {isEnglish ? "Recording is active — press " : "Rekaman aktif — tekan "}<span className="font-bold">stop</span>{isEnglish ? " before sending a message" : " sebelum kirim pesan"}
             </p>
           </div>
         </div>
@@ -585,7 +585,7 @@ export default function AssessmentPage() {
             >
               <Quote size={34} className="text-slate-300" />
             </div>
-            <p className="text-base font-black text-slate-400 max-w-[220px] leading-snug">
+            <p className="text-base font-bold text-slate-400 max-w-[220px] leading-snug">
               {isEnglish ? `Share an observation about ${studentName}…` : `Ceritakan observasi tentang ${studentName}…`}
             </p>
           </div>
@@ -644,7 +644,7 @@ export default function AssessmentPage() {
               style={{ boxShadow: "0 3px 0 0 #ddd6fe" }}
             >
               <Loader2 size={14} className="animate-spin text-violet-500" />
-              <span className="text-xs font-black text-violet-400 uppercase tracking-wider">Whisper…</span>
+              <span className="text-xs font-bold text-violet-400 uppercase tracking-wider">Whisper…</span>
             </div>
           </div>
         )}
@@ -656,7 +656,7 @@ export default function AssessmentPage() {
               style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
             >
               <Loader2 size={14} className="animate-spin text-brand-500" />
-              <span className="text-xs font-black text-slate-400 uppercase tracking-wider">{isEnglish ? "Thinking…" : "Berpikir…"}</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{isEnglish ? "Thinking…" : "Berpikir…"}</span>
             </div>
           </div>
         )}
@@ -723,7 +723,7 @@ export default function AssessmentPage() {
           <button
             onClick={() => setPendingNavigation('finalize')}
             disabled={isProcessing || isFinalizing}
-            className={`w-full mt-4 py-4 rounded-[1.4rem] text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+            className={`w-full mt-4 py-4 rounded-[1.4rem] text-white font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
               isFinalizing
                 ? "bg-slate-600 cursor-not-allowed"
                 : "bg-slate-900 active:translate-y-1"

@@ -121,7 +121,7 @@ export function StudentPhotoUpload({
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
       {error && (
-        <div className="absolute top-full left-0 mt-2 z-20 bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-black px-3 py-2 rounded-xl whitespace-nowrap shadow-lg">
+        <div className="absolute top-full left-0 mt-2 z-20 bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-bold px-3 py-2 rounded-xl whitespace-nowrap shadow-lg">
           {error}
         </div>
       )}

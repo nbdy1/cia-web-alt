@@ -42,8 +42,8 @@ function BkSectionFrame({ kind, label, title, children }: { kind: SectionKind; l
           <Icon className="h-5 w-5" />
         </span>
         <div className="min-w-0 pt-0.5">
-          <p className={`text-[10px] font-black uppercase tracking-widest ${style.eyebrow}`}>{label}</p>
-          <h2 className="mt-0.5 text-base font-black leading-tight text-slate-800">{title}</h2>
+          <p className={`text-[10px] font-bold uppercase tracking-widest ${style.eyebrow}`}>{label}</p>
+          <h2 className="mt-0.5 text-base font-bold leading-tight text-slate-800">{title}</h2>
         </div>
       </div>
       <div className="mt-4">{children}</div>

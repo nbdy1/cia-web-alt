@@ -114,7 +114,7 @@ function FulfillmentBars({
             return (
               <div key={i} className="flex items-center gap-3 py-1 min-w-0">
                 <span
-                  className="text-[10px] font-black w-5 text-right flex-shrink-0"
+                  className="text-[10px] font-bold w-5 text-right flex-shrink-0"
                   style={{ color: accentColor }}
                 >
                   {theme.id}
@@ -130,7 +130,7 @@ function FulfillmentBars({
                     />
                   </div>
                 </div>
-                <span className="text-[11px] font-black flex-shrink-0 tabular-nums" style={{ color: accentColor }}>
+                <span className="text-[11px] font-bold flex-shrink-0 tabular-nums" style={{ color: accentColor }}>
                   {fulfilled}/{total}
                 </span>
               </div>
@@ -153,7 +153,7 @@ function FulfillmentBars({
           <div className="space-y-1">
             {benihThemes.map((theme) => (
               <div key={theme.id} className="flex items-center gap-2 py-0.5">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex-shrink-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex-shrink-0">
                   {catTitle} no. {theme.id}
                 </span>
                 <span className="text-[11px] font-bold text-slate-600 leading-snug">
@@ -375,8 +375,8 @@ export default async function RecapPage({
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div className="text-center">
-          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest">{isEnglish ? "Recap" : "Rekapitulasi"}</p>
-          <h1 className="text-sm font-black text-slate-900">{student.name}</h1>
+          <p className="text-[10px] font-bold text-brand-600 uppercase tracking-widest">{isEnglish ? "Recap" : "Rekapitulasi"}</p>
+          <h1 className="text-sm font-bold text-slate-900">{student.name}</h1>
         </div>
         <div className="w-9" />
       </header>
@@ -388,18 +388,18 @@ export default async function RecapPage({
             <ShieldCheck size={120} />
           </div>
           <div className="relative z-10">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-400 mb-2">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-400 mb-2">
               {isEnglish ? "Total reports analysed" : "Total Laporan Dianalisis"}
             </h3>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black">{totalReports}</span>
+              <span className="text-5xl font-bold">{totalReports}</span>
               <span className="text-sm font-bold text-slate-400">
                 {isEnglish ? "Reports" : "Laporan"}
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-4 max-w-sm leading-relaxed">
               {isEnglish ? "This CMS growth percentage is based on " : "Persentase pertumbuhan CMS ini di simpulkan dari "}
-              <span className="text-white font-black">{totalReports}</span>{" "}
+              <span className="text-white font-bold">{totalReports}</span>{" "}
               {isEnglish ? " submitted reports." : " laporan yang masuk."}
             </p>
           </div>
@@ -459,7 +459,7 @@ export default async function RecapPage({
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className={`font-black ${cat.color} text-lg`}>
+                    <span className={`font-bold ${cat.color} text-lg`}>
                       {String(percentage).replace('.', ',')}%
                     </span>
                   </div>
@@ -469,14 +469,14 @@ export default async function RecapPage({
                   {recommendedFocus && (
                     <div className={`rounded-[1.5rem] border-2 p-4 ${cat.bg} ${cat.color} border-current/20`}>
                       <div className="flex items-start gap-3">
-                        <div className="shrink-0 rounded-xl bg-white/80 px-2.5 py-2 text-[9px] font-black uppercase tracking-widest">
+                        <div className="shrink-0 rounded-xl bg-white/80 px-2.5 py-2 text-[9px] font-bold uppercase tracking-widest">
                           {isEnglish ? `${getLocalizedTerminology(student.organization_id, language).ustadz} focus` : "Fokus Ustadz"}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[10px] font-black uppercase tracking-wider opacity-70">
+                          <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">
                             {isEnglish ? `Theme ${recommendedFocus.themeId} · ${recommendedFocus.indicatorTitle}` : `Tema ${recommendedFocus.themeId} · ${recommendedFocus.indicatorTitle}`}
                           </p>
-                          <p className="mt-1 text-sm font-black text-slate-800 leading-snug">
+                          <p className="mt-1 text-sm font-bold text-slate-800 leading-snug">
                             {recommendedFocus.subIndicator}
                           </p>
                           <p className="mt-1 text-[10px] font-bold text-slate-500">
@@ -535,11 +535,11 @@ export default async function RecapPage({
                         <div className={`bg-white p-5 rounded-[2rem] border shadow-sm ${isUnfulfilled ? "opacity-75 border-slate-200/60" : "border-slate-100"}`}>
                           <div className="mb-5 flex flex-col gap-1.5">
                             <div className="flex items-center gap-2">
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                                 {isEnglish ? `Theme ${theme.id}` : `Tema ${theme.id}`}
                               </span>
                               {themePhase && (
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-wider ${themePhase.bg} ${themePhase.border} ${themePhase.text}`}>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[8px] font-bold uppercase tracking-wider ${themePhase.bg} ${themePhase.border} ${themePhase.text}`}>
                                   {themePhase.index}. {themePhase.shortLabel}
                                 </span>
                               )}
@@ -555,7 +555,7 @@ export default async function RecapPage({
                               cat.label as "Karakter" | "Mental" | "Soft Skill",
                               theme.title,
                             ) && (
-                              <span className="inline-flex w-fit items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
+                              <span className="inline-flex w-fit items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
                                 BM400 · Tiga Pilar
                               </span>
                             )}
@@ -600,11 +600,11 @@ export default async function RecapPage({
                                             {sub}
                                           </span>
                                           {recommendedFocus?.subIndicator === sub && (
-                                            <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 bg-brand-600 text-white">
+                                            <span className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 bg-brand-600 text-white">
                                               {isEnglish ? "Focus" : "Fokus"}
                                             </span>
                                           )}
-                                          <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${badgeCls}`}>
+                                          <span className={`text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${badgeCls}`}>
                                             {label} ({subCount}×)
                                           </span>
                                         </div>
@@ -635,7 +635,7 @@ export default async function RecapPage({
                         {/* Unfulfilled Themes Toggle */}
                         {unfulfilledThemes.length > 0 && (
                           <details suppressHydrationWarning className="group/unfulfilled mt-6">
-                            <summary className="cursor-pointer flex items-center justify-center gap-2 bg-slate-200/50 hover:bg-slate-200 transition-colors py-4 px-6 rounded-2xl text-xs font-black text-slate-500 uppercase tracking-widest select-none">
+                            <summary className="cursor-pointer flex items-center justify-center gap-2 bg-slate-200/50 hover:bg-slate-200 transition-colors py-4 px-6 rounded-2xl text-xs font-bold text-slate-500 uppercase tracking-widest select-none">
                               <span className="group-open/unfulfilled:hidden">{isEnglish ? `Show ${unfulfilledThemes.length} unfulfilled themes` : `Tampilkan ${unfulfilledThemes.length} Tema Belum Terpenuhi`}</span>
                               <span className="hidden group-open/unfulfilled:inline">{isEnglish ? "Hide unfulfilled themes" : "Sembunyikan Tema Belum Terpenuhi"}</span>
                             </summary>

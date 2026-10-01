@@ -103,7 +103,7 @@ export function StudentAvatar({
 
   return (
     <div
-      className={`${base} font-black text-white ${text}`}
+      className={`${base} font-bold text-white ${text}`}
       style={{ background: color.bg, boxShadow: `0 3px 0 0 ${color.shadow}`, ...style }}
     >
       {initial}

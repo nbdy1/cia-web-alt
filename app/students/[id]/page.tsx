@@ -135,9 +135,9 @@ export default async function StudentProfile({
             style={{ boxShadow: "0 5px 0 0 var(--brand-700)" }}
           />
           <div>
-            <h1 className="text-2xl font-black text-slate-900 leading-tight">{student.name}</h1>
+            <h1 className="text-2xl font-bold text-slate-900 leading-tight">{student.name}</h1>
             <div className="flex items-center gap-1 mt-1">
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
                 <User size={9} /> {student.nis ? `NIS: ${student.nis}` : t.santri}
               </span>
             </div>
@@ -160,11 +160,11 @@ export default async function StudentProfile({
                 <UserCircle2 size={18} className="text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">{isEnglish ? `${t.santri} profile` : `Profil ${t.santri}`}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700">{isEnglish ? `${t.santri} profile` : `Profil ${t.santri}`}</p>
                 <p className="text-[9px] text-amber-500 font-bold">{isEnglish ? "Generated from report history" : "Dihasilkan dari riwayat laporan"}</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-amber-200 text-amber-800">
+                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-200 text-amber-800">
                   <BookOpen size={8} /> AI
                 </span>
                 <ChevronRight size={16} className="text-amber-400 transition-transform duration-200 group-open:rotate-90" />
@@ -234,7 +234,7 @@ export default async function StudentProfile({
 
         {/* Report count badge */}
         <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
+          <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
             <FileText size={9} /> {reports?.length || 0} {isEnglish ? "Reports" : "Laporan"}
           </div>
         </div>
@@ -272,7 +272,7 @@ export default async function StudentProfile({
                     }[status];
                     return (
                       <span
-                        className={`absolute right-3 -top-3 z-10 inline-flex items-center gap-1 rounded-full border-2 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${statusConfig.className}`}
+                        className={`absolute right-3 -top-3 z-10 inline-flex items-center gap-1 rounded-full border-2 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider ${statusConfig.className}`}
                         style={{ boxShadow: `0 2px 0 0 ${statusConfig.shadow}` }}
                       >
                         {statusConfig.icon} {statusConfig.label}
@@ -286,16 +286,16 @@ export default async function StudentProfile({
                       <FileText className="w-5 h-5 text-brand-600" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-black text-slate-900 text-sm leading-tight">
+                      <p className="font-bold text-slate-900 text-sm leading-tight">
                         {report.title || (isEnglish ? "Development report" : "Laporan Perkembangan")}
                       </p>
                       <div className="flex items-center gap-2 mt-1 min-w-0 flex-nowrap overflow-hidden">
-                        <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400">
+                        <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400">
                           <Calendar size={8} />
                           {new Date(report.created_at).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" })}
                         </span>
                         {report.created_by_name && (
-                          <span className="block min-w-0 max-w-[min(12rem,45vw)] overflow-hidden text-ellipsis whitespace-nowrap text-[10px] font-black text-brand-600">
+                          <span className="block min-w-0 max-w-[min(12rem,45vw)] overflow-hidden text-ellipsis whitespace-nowrap text-[10px] font-bold text-brand-600">
                             {isEnglish ? "Created by" : "Dibuat oleh"} {report.created_by_name}
                           </span>
                         )}
@@ -311,7 +311,7 @@ export default async function StudentProfile({
           ) : (
             <div className="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
               <FileText className="w-10 h-10 mx-auto mb-3 text-slate-200" />
-              <p className="text-sm font-black text-slate-400">{isEnglish ? "No reports yet" : "Belum ada laporan"}</p>
+              <p className="text-sm font-bold text-slate-400">{isEnglish ? "No reports yet" : "Belum ada laporan"}</p>
             </div>
           )}
         </div>

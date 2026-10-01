@@ -308,7 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen w-full bg-paper flex flex-col items-center justify-center p-6 animate-fade-in">
         <div className="text-center space-y-4">
           <div className="w-20 h-20 bg-brand-50 rounded-3xl border-2 border-brand-100 flex items-center justify-center mx-auto animate-pulse" style={{ boxShadow: "0 4px 0 0 var(--brand-200)" }}>
-            <span className="text-brand-600 font-black text-3xl tracking-tighter">CDS</span>
+            <span className="text-brand-600 font-bold text-3xl tracking-tighter">CDS</span>
           </div>
           <div className="flex items-center justify-center gap-2 text-brand-600 text-sm font-bold">
             <Loader2 className="w-4 h-4 animate-spin text-brand-500" />

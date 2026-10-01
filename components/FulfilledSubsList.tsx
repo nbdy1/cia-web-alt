@@ -84,14 +84,14 @@ export function FulfilledSubsList({
                 <button
                   onClick={() => setPendingDelete(null)}
                   disabled={isPending}
-                  className="px-2 py-0.5 text-[10px] font-black text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                  className="px-2 py-0.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   onClick={() => handleConfirm(si)}
                   disabled={isPending}
-                  className="px-2 py-0.5 text-[10px] font-black text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                  className="px-2 py-0.5 text-[10px] font-bold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
                 >
                   {isPending ? "…" : "Hapus"}
                 </button>

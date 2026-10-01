@@ -170,7 +170,7 @@ export default function ResultsPage() {
         >
           <Loader2 className="w-7 h-7 animate-spin text-brand-500" />
         </div>
-        <p className="text-brand-600 text-xs font-black uppercase tracking-widest">
+        <p className="text-brand-600 text-xs font-bold uppercase tracking-widest">
           {isEnglish ? "Loading results…" : "Memuat Hasil…"}
         </p>
       </div>
@@ -192,8 +192,8 @@ export default function ResultsPage() {
           <ArrowLeft size={16} />
         </button>
         <div className="text-center">
-          <h1 className="text-sm font-black text-slate-900">{studentName}</h1>
-          <p className="text-[10px] text-brand-600 font-black uppercase tracking-widest">
+          <h1 className="text-sm font-bold text-slate-900">{studentName}</h1>
+          <p className="text-[10px] text-brand-600 font-bold uppercase tracking-widest">
             {isEnglish ? "Development Assessment" : "Asesmen Perkembangan"}
           </p>
         </div>
@@ -212,8 +212,8 @@ export default function ResultsPage() {
             style={{ boxShadow: "0 5px 0 0 var(--brand-200)" }}
           />
           <div className="text-center">
-            <h2 className="text-lg font-black text-slate-900 leading-tight">{studentName}</h2>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{isEnglish ? "Assessment results" : "Hasil Asesmen"}</p>
+            <h2 className="text-lg font-bold text-slate-900 leading-tight">{studentName}</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{isEnglish ? "Assessment results" : "Hasil Asesmen"}</p>
           </div>
         </div>
 
@@ -227,7 +227,7 @@ export default function ResultsPage() {
           </div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white">
+              <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white">
                 <Sparkles size={9} /> {isEnglish ? "Overview" : "Kondisi Umum"}
               </div>
               {!isEditingSummary ? (
@@ -236,7 +236,7 @@ export default function ResultsPage() {
                     setEditedSummary(analysisData.status_summary);
                     setIsEditingSummary(true);
                   }}
-                  className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
                 >
                   <Pencil size={9} /> {isEnglish ? "Edit" : "Edit"}
                 </button>
@@ -250,13 +250,13 @@ export default function ResultsPage() {
                       }));
                       setIsEditingSummary(false);
                     }}
-                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white text-brand-700 hover:bg-brand-50 transition-colors"
+                    className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white text-brand-700 hover:bg-brand-50 transition-colors"
                   >
                     <Check size={9} /> {isEnglish ? "Save" : "Simpan"}
                   </button>
                   <button
                     onClick={() => setIsEditingSummary(false)}
-                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+                    className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
                   >
                     <X size={9} />
                   </button>
@@ -268,11 +268,11 @@ export default function ResultsPage() {
                 value={editedSummary}
                 onChange={(e) => setEditedSummary(e.target.value)}
                 rows={6}
-                className="w-full bg-white/15 border-2 border-white/30 rounded-2xl px-4 py-3 text-base font-black text-white placeholder-white/50 focus:outline-none focus:border-white/60 resize-none leading-snug mb-5"
+                className="w-full bg-white/15 border-2 border-white/30 rounded-2xl px-4 py-3 text-base font-bold text-white placeholder-white/50 focus:outline-none focus:border-white/60 resize-none leading-snug mb-5"
                 autoFocus
               />
             ) : (
-              <MarkdownText className="text-xl font-black leading-snug mb-5" children={analysisData.status_summary} />
+              <MarkdownText className="text-xl font-bold leading-snug mb-5" children={analysisData.status_summary} />
             )}
             <div className="grid grid-cols-3 gap-2">
               {Object.entries(analysisData.overall_stats || {}).map(
@@ -281,10 +281,10 @@ export default function ResultsPage() {
                     key={key}
                     className="bg-white/15 rounded-xl p-3 border border-white/20"
                   >
-                    <p className="text-[8px] font-black uppercase text-white/70 mb-1">
+                    <p className="text-[8px] font-bold uppercase text-white/70 mb-1">
                       {categoryDisplayLabel(key)}
                     </p>
-                    <span className="text-xl font-black">
+                    <span className="text-xl font-bold">
                       {stats.percentage}%
                     </span>
                     <div className="w-full h-1.5 bg-white/20 rounded-full mt-2 overflow-hidden">
@@ -310,15 +310,15 @@ export default function ResultsPage() {
               >
                 <Target className="text-amber-600" size={16} />
               </div>
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
                 {isEnglish ? "Priority support plan" : "Treatment Prioritas"}
               </span>
             </div>
             <div className="bg-brand-50 p-4 rounded-2xl border-2 border-brand-100">
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-200 text-brand-800 mb-2">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-200 text-brand-800 mb-2">
                 {analysisData.treatment.priority_theme}
               </span>
-              <h4 className="text-sm font-black text-slate-900 leading-snug mb-3">
+              <h4 className="text-sm font-bold text-slate-900 leading-snug mb-3">
                 {analysisData.treatment.priority_indicator}
               </h4>
               <div className="space-y-1.5 mb-4">
@@ -343,7 +343,7 @@ export default function ResultsPage() {
 
         {/* 3. Detailed Fulfillment */}
         <section className="space-y-3">
-          <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
+          <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
             <Bookmark size={9} /> {isEnglish ? "Assessment details" : "Detail Ketercapaian"}
           </div>
           {(() => {
@@ -416,10 +416,10 @@ export default function ResultsPage() {
                           />
                         )}
                       </div>
-                      <span className="font-black text-slate-900 text-sm">
+                      <span className="font-bold text-slate-900 text-sm">
                         {categoryDisplayLabel(cat)}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
                         {items.length}
                       </span>
                     </div>
@@ -436,7 +436,7 @@ export default function ResultsPage() {
                         <div key={i} className="space-y-2">
                           <div className="flex justify-between items-start gap-2">
                             <div>
-                              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400 block w-fit mb-1">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-400 block w-fit mb-1">
                                 {item.theme}
                               </span>
                               {isSupplementaryTheme(
@@ -444,15 +444,15 @@ export default function ResultsPage() {
                                 item.category as "Karakter" | "Mental" | "Soft Skill",
                                 item.theme,
                               ) && (
-                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 mb-1">
+                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-700 ring-1 ring-amber-200 mb-1">
                                   BM400 · {isEnglish ? "Three Pillars" : "Tiga Pilar"}
                                 </span>
                               )}
-                              <span className="font-black text-xs text-slate-800 leading-snug">
+                              <span className="font-bold text-xs text-slate-800 leading-snug">
                                 {item.indicator}
                               </span>
                             </div>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700 flex-shrink-0">
                               {item.fulfillment_fraction}
                             </span>
                           </div>
@@ -463,7 +463,7 @@ export default function ResultsPage() {
                                 (si: string, idx: number) => (
                                   <div
                                     key={idx}
-                                    className="flex items-start gap-2 text-[10px] text-brand-700 font-black"
+                                    className="flex items-start gap-2 text-[10px] text-brand-700 font-bold"
                                   >
                                     <CheckCircle2
                                       size={10}
@@ -476,14 +476,14 @@ export default function ResultsPage() {
                             </div>
                             {item.declined_sub_indicators?.length > 0 && (
                               <div className="space-y-1 pt-2 border-t border-slate-200">
-                                <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">
+                                <p className="text-[9px] font-bold text-rose-500 uppercase tracking-widest">
                                   {isEnglish ? "Regression detected" : "Kemunduran Terdeteksi"}
                                 </p>
                                 {item.declined_sub_indicators.map(
                                   (si: string, idx: number) => (
                                     <div
                                       key={idx}
-                                      className="flex items-start gap-2 text-[10px] text-rose-600 font-black"
+                                      className="flex items-start gap-2 text-[10px] text-rose-600 font-bold"
                                     >
                                       <TrendingDown
                                         size={10}
@@ -530,7 +530,7 @@ export default function ResultsPage() {
           <button
             onClick={() => setPendingNavigation("save")}
           disabled={isSaving}
-          className={`w-full max-w-sm rounded-2xl font-black text-base flex items-center justify-center gap-3 py-5 pointer-events-auto active:translate-y-1 transition-transform ${
+          className={`w-full max-w-sm rounded-2xl font-bold text-base flex items-center justify-center gap-3 py-5 pointer-events-auto active:translate-y-1 transition-transform ${
             isSaving
               ? "bg-slate-300 text-slate-400 cursor-not-allowed"
               : "bg-brand-500 text-white"

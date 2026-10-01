@@ -208,8 +208,8 @@ export default function ScoresPage() {
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div>
-          <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">{isEnglish ? "Enter CMS scores" : "Input Nilai CMS"}</p>
-          <h1 className="text-sm font-black text-slate-900">{studentName}</h1>
+          <p className="text-[10px] font-bold text-sky-600 uppercase tracking-widest">{isEnglish ? "Enter CMS scores" : "Input Nilai CMS"}</p>
+          <h1 className="text-sm font-bold text-slate-900">{studentName}</h1>
         </div>
         <div className="ml-auto">
           <div className="w-9 h-9 bg-sky-100 rounded-xl flex items-center justify-center" style={{ boxShadow: "0 3px 0 0 #bae6fd" }}>
@@ -222,14 +222,14 @@ export default function ScoresPage() {
 
         {/* Period selector */}
         <section className="bg-white rounded-[2rem] border-2 border-slate-100 p-5 space-y-3" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isEnglish ? "Period / semester" : "Periode / Semester"}</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isEnglish ? "Period / semester" : "Periode / Semester"}</p>
           {periods.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {periods.map((p) => (
                 <button
                   key={p}
                   onClick={() => setSelectedPeriod(p)}
-                  className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${
+                  className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
                     selectedPeriod === p
                       ? "bg-sky-500 text-white"
                       : "bg-slate-100 text-slate-500 hover:bg-slate-200"
@@ -258,14 +258,14 @@ export default function ScoresPage() {
               <button
                 onClick={handleAddPeriod}
                 disabled={!newPeriodInput.trim()}
-                className="bg-sky-500 text-white px-4 py-2 rounded-xl font-black text-sm disabled:opacity-50"
+                className="bg-sky-500 text-white px-4 py-2 rounded-xl font-bold text-sm disabled:opacity-50"
                 style={{ boxShadow: "0 3px 0 0 #0284c7" }}
               >
                 OK
               </button>
               <button
                 onClick={() => { setShowNewPeriod(false); setNewPeriodInput(""); }}
-                className="bg-slate-100 text-slate-500 px-4 py-2 rounded-xl font-black text-sm hover:bg-slate-200"
+                className="bg-slate-100 text-slate-500 px-4 py-2 rounded-xl font-bold text-sm hover:bg-slate-200"
               >
                 {isEnglish ? "Cancel" : "Batal"}
               </button>
@@ -273,7 +273,7 @@ export default function ScoresPage() {
           ) : (
             <button
               onClick={() => setShowNewPeriod(true)}
-              className="flex items-center gap-2 text-sky-600 font-black text-sm hover:text-sky-700"
+              className="flex items-center gap-2 text-sky-600 font-bold text-sm hover:text-sky-700"
             >
               <Plus size={14} /> {isEnglish ? "Add new period" : "Tambah Periode Baru"}
             </button>
@@ -286,17 +286,17 @@ export default function ScoresPage() {
             {/* Subject header */}
             <div className="px-5 py-4 bg-slate-900 flex items-center gap-3">
               <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                <span className="text-white font-black text-sm">{subject}</span>
+                <span className="text-white font-bold text-sm">{subject}</span>
               </div>
-              <h2 className="text-white font-black text-base">{subject}</h2>
+              <h2 className="text-white font-bold text-base">{subject}</h2>
             </div>
 
             {/* Table header */}
             <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2 px-4 py-2 border-b-2 border-slate-100 bg-slate-50">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{isEnglish ? "Score type" : "Jenis Nilai"}</span>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">{isEnglish ? "Daily" : "Nilai Harian"}</span>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">{isEnglish ? "Monthly" : "Nilai Bulanan"}</span>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center">{isEnglish ? "Final" : "Nilai Akhir"}</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{isEnglish ? "Score type" : "Jenis Nilai"}</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-center">{isEnglish ? "Daily" : "Nilai Harian"}</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-center">{isEnglish ? "Monthly" : "Nilai Bulanan"}</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-center">{isEnglish ? "Final" : "Nilai Akhir"}</span>
             </div>
 
             {/* Score rows */}
@@ -356,19 +356,19 @@ export default function ScoresPage() {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-100 px-5 py-4 z-50" style={{ boxShadow: "0 -4px 0 0 #f1f5f9" }}>
           <div className="max-w-2xl mx-auto space-y-2">
             {saveStatus === "success" && (
-              <div className="flex items-center gap-2 text-brand-700 text-sm font-black bg-brand-50 border-2 border-brand-100 rounded-xl px-4 py-2">
+              <div className="flex items-center gap-2 text-brand-700 text-sm font-bold bg-brand-50 border-2 border-brand-100 rounded-xl px-4 py-2">
                 <CheckCircle2 size={15} /> {isEnglish ? "Scores saved successfully!" : "Nilai berhasil disimpan!"}
               </div>
             )}
             {saveStatus === "error" && (
-              <div className="flex items-center gap-2 text-rose-700 text-sm font-black bg-rose-50 border-2 border-rose-100 rounded-xl px-4 py-2">
+              <div className="flex items-center gap-2 text-rose-700 text-sm font-bold bg-rose-50 border-2 border-rose-100 rounded-xl px-4 py-2">
                 <AlertCircle size={15} /> {saveError}
               </div>
             )}
             <button
               onClick={handleSave}
               disabled={saving || !selectedPeriod}
-              className="w-full bg-sky-500 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60 text-sm"
+              className="w-full bg-sky-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60 text-sm"
               style={{ boxShadow: "0 4px 0 0 #0284c7" }}
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={16} />}

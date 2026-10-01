@@ -98,7 +98,7 @@ function BentoFeatureCard({
         <div className="w-10 h-10 rounded-xl bg-black/70 backdrop-blur-sm text-brand-300 flex items-center justify-center mb-3 border border-white/10">
           <Icon size={18} />
         </div>
-        <h3 className="font-black text-lg leading-snug text-brand-700">
+        <h3 className="font-bold text-lg leading-snug text-brand-700">
           {title}
         </h3>
         <p className="text-sm text-black/75 font-bold leading-relaxed mt-2 max-w-[26rem]">
@@ -118,14 +118,14 @@ function MarketingPage() {
             className="w-12 h-auto"
             src="/img/landing/characterdev_logo.png"
           />
-          {/* <span className="w-10 h-10 rounded-[1.1rem] bg-brand-500 text-white flex items-center justify-center font-black shadow-[0_3px_0_var(--brand-700)]">C</span> */}
+          {/* <span className="w-10 h-10 rounded-[1.1rem] bg-brand-500 text-white flex items-center justify-center font-bold shadow-[0_3px_0_var(--brand-700)]">C</span> */}
           {/* <img className="w-36 h-auto" src="/img/landing/characterdev_logomark.png" /> */}
 
-          <span className="font-black tracking-tight text-lg">
+          <span className="font-bold tracking-tight text-lg">
             character<span className="text-brand-600">dev</span>
           </span>
         </Link>
-        <nav className="hidden md:flex items-center gap-7 text-sm font-black text-slate-500">
+        <nav className="hidden md:flex items-center gap-7 text-sm font-bold text-slate-500">
           <a href="#tentang" className="hover:text-brand-700 transition-colors">
             Tentang
           </a>
@@ -138,7 +138,7 @@ function MarketingPage() {
         </nav>
         <Link
           href="/login"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-slate-200 text-sm font-black text-slate-700 shadow-[0_3px_0_#dbe2e8] hover:border-brand-300 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-slate-200 text-sm font-bold text-slate-700 shadow-[0_3px_0_#dbe2e8] hover:border-brand-300 transition-colors"
         >
           Masuk <ArrowUpRight size={15} />
         </Link>
@@ -146,10 +146,10 @@ function MarketingPage() {
 
       <section className="max-w-6xl mx-auto px-5 sm:px-8 pt-10 pb-20 lg:pt-20 lg:pb-28 grid lg:grid-cols-[1.02fr_.98fr] gap-14 items-center">
         <div>
-          <p className="text-brand-700 text-xs font-black uppercase tracking-[.22em] mb-6">
+          <p className="text-brand-700 text-xs font-bold uppercase tracking-[.22em] mb-6">
             Ruang tumbuh untuk sekolah
           </p>
-          <h1 className="font-black text-[clamp(2.7rem,6vw,5.5rem)] leading-[.96] tracking-[-.04em] max-w-3xl">
+          <h1 className="font-bold text-[clamp(2.7rem,6vw,5.5rem)] leading-[.96] tracking-[-.04em] max-w-3xl">
             Melihat manusia,{" "}
             <span className="text-brand-600">bukan sekadar nilai.</span>
           </h1>
@@ -159,18 +159,18 @@ function MarketingPage() {
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <a
               href="https://wa.me/6285770661868?text=Assalamualaikum%20Admin%20Characterdev.%20Saya%20ingin%20bertanya%20tentang%20"
-              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-brand-500 text-white font-black shadow-[0_4px_0_var(--brand-700)] hover:translate-y-px transition-transform"
+              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-brand-500 text-white font-bold shadow-[0_4px_0_var(--brand-700)] hover:translate-y-px transition-transform"
             >
               Hubungi Kami <ArrowUpRight size={17} />
             </a>
             <a
               href="#tentang"
-              className="px-5 py-3.5 rounded-2xl text-slate-600 font-black hover:text-brand-700 transition-colors"
+              className="px-5 py-3.5 rounded-2xl text-slate-600 font-bold hover:text-brand-700 transition-colors"
             >
               Lihat cara kerja
             </a>
           </div>
-          <p className="mt-7 text-xs font-black text-slate-400">
+          <p className="mt-7 text-xs font-bold text-slate-400">
             Untuk sekolah, pesantren, dan komunitas belajar yang ingin bertumbuh
             bersama.
           </p>
@@ -184,7 +184,7 @@ function MarketingPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
                 <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
                 <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
-                <span className="ml-2 text-[10px] font-black text-white/40 uppercase tracking-widest">
+                <span className="ml-2 text-[10px] font-bold text-white/40 uppercase tracking-widest">
                   Video perkenalan characterdev
                 </span>
               </div>
@@ -200,10 +200,10 @@ function MarketingPage() {
             </div>
           </div>
           <div className="absolute right-0 bottom-7 sm:right-[-10px] bg-slate-900 text-white p-4 rounded-2xl shadow-[0_4px_0_#cbd5e1] rotate-[-5deg] max-w-[170px]">
-            <p className="text-[10px] uppercase tracking-widest text-brand-300 font-black">
+            <p className="text-[10px] uppercase tracking-widest text-brand-300 font-bold">
               Yang penting
             </p>
-            <p className="text-sm font-black leading-snug mt-2">
+            <p className="text-sm font-bold leading-snug mt-2">
               Setiap anak punya cerita yang layak didengar.
             </p>
           </div>
@@ -223,10 +223,10 @@ function MarketingPage() {
           />
 
           <div className="relative">
-            <p className="text-brand-600 text-xs font-black uppercase tracking-[.2em]">
+            <p className="text-brand-600 text-xs font-bold uppercase tracking-[.2em]">
               Tentang characterdev
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight mt-3 leading-[1.05]">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 leading-[1.05]">
               Character Development System (CDS) untuk guru.
             </h2>
           </div>
@@ -260,10 +260,10 @@ function MarketingPage() {
       <section className="bg-[#fbfcf8] relative z-10 border-b-2 border-slate-100">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-20">
           <div className="max-w-xl mb-12">
-            <p className="text-brand-600 text-xs font-black uppercase tracking-[.2em]">
+            <p className="text-brand-600 text-xs font-bold uppercase tracking-[.2em]">
               Dibuat untuk ritme sekolah
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight mt-3">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3">
               Pendampingan yang terasa dekat, data yang tetap berguna.
             </h2>
           </div>
@@ -294,7 +294,7 @@ function MarketingPage() {
                   <div className="w-11 h-11 rounded-2xl bg-brand-100 text-brand-700 flex items-center justify-center mb-6">
                     <ItemIcon size={20} />
                   </div>
-                  <h3 className="font-black text-lg">{title as string}</h3>
+                  <h3 className="font-bold text-lg">{title as string}</h3>
                   <p className="text-sm text-slate-500 font-bold leading-relaxed mt-3">
                     {text as string}
                   </p>
@@ -309,10 +309,10 @@ function MarketingPage() {
       <section id="fitur" className="bg-white border-b-2 border-slate-100">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-20">
           <div className="max-w-xl mb-12">
-            <p className="text-brand-600 text-xs font-black uppercase tracking-[.2em]">
+            <p className="text-brand-600 text-xs font-bold uppercase tracking-[.2em]">
               Sisi guru
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight mt-3">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3">
               Semua yang guru butuhkan untuk mendampingi santri.
             </h2>
             <p className="mt-4 text-slate-500 font-bold leading-relaxed">
@@ -385,10 +385,10 @@ function MarketingPage() {
       <section className="bg-[#fbfcf8] border-b-2 border-slate-100">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-20">
           <div className="max-w-xl mb-12">
-            <p className="text-brand-600 text-xs font-black uppercase tracking-[.2em]">
+            <p className="text-brand-600 text-xs font-bold uppercase tracking-[.2em]">
               Sisi admin sekolah
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight mt-3">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3">
               Kendali penuh untuk pimpinan sekolah.
             </h2>
             <p className="mt-4 text-slate-500 font-bold leading-relaxed">
@@ -453,7 +453,7 @@ function MarketingPage() {
                   <div className="w-10 h-10 rounded-xl bg-black/70 backdrop-blur-sm text-brand-300 flex items-center justify-center mb-3 border border-white/10">
                     <Icon size={18} />
                   </div>
-                  <h3 className="font-black text-lg leading-snug text-brand-700">
+                  <h3 className="font-bold text-lg leading-snug text-brand-700">
                     {title}
                   </h3>
                   <p className="text-sm text-black/75 font-bold leading-relaxed mt-2 max-w-[26rem]">
@@ -479,10 +479,10 @@ function MarketingPage() {
           />
 
           <div className="relative">
-            <p className="text-brand-600 text-xs font-black uppercase tracking-[.2em]">
+            <p className="text-brand-600 text-xs font-bold uppercase tracking-[.2em]">
               Tidak menghakimi
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight mt-3 leading-[1.05]">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 leading-[1.05]">
               Pertumbuhan bukan perlombaan.
             </h2>
           </div>
@@ -523,10 +523,10 @@ function MarketingPage() {
       <section id="harga" className="bg-slate-900 relative z-10 text-white">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-20">
           <div className="max-w-xl mb-12">
-            <p className="text-brand-300 text-xs font-black uppercase tracking-[.2em]">
+            <p className="text-brand-300 text-xs font-bold uppercase tracking-[.2em]">
               Investasi pembinaan karakter santri
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight mt-3">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3">
               Pilih paket sesuai jumlah santri yang dibina.
             </h2>
           </div>
@@ -569,10 +569,10 @@ function MarketingPage() {
                     <ItemIcon size={20} />
                   </div>
                   <div>
-                    <p className="text-xs font-black uppercase tracking-widest opacity-70">
+                    <p className="text-xs font-bold uppercase tracking-widest opacity-70">
                       {tier as string}
                     </p>
-                    <p className="text-3xl font-black mt-2 leading-none">
+                    <p className="text-3xl font-bold mt-2 leading-none">
                       {price as string}
                     </p>
                     {(unit as string) && (
@@ -600,7 +600,7 @@ function MarketingPage() {
       <footer className="bg-slate-900 text-white border-t border-white/10">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10 flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between">
           <div>
-            <p className="font-black text-lg">
+            <p className="font-bold text-lg">
               character<span className="text-brand-400">dev</span>
             </p>
             <p className="text-xs text-slate-400 font-bold mt-1">
@@ -630,7 +630,7 @@ function MarketingPage() {
             </div>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-sm font-black text-brand-300 hover:text-white"
+              className="inline-flex items-center gap-2 text-sm font-bold text-brand-300 hover:text-white"
             >
               Masuk ke portal <ArrowUpRight size={15} />
             </Link>
@@ -673,7 +673,7 @@ export default function HomePage() {
               className="w-9 h-9 rounded-2xl object-cover"
             />
           )}
-          <span className="text-brand-700 font-black text-sm tracking-tight">
+          <span className="text-brand-700 font-bold text-sm tracking-tight">
             {activeOrganization?.name || "CDS"}
           </span>
         </div>
@@ -681,7 +681,7 @@ export default function HomePage() {
           <SettingsDropdown />
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-black text-rose-500 bg-white border-2 border-rose-100 rounded-2xl hover:bg-rose-50 active:translate-y-px transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-rose-500 bg-white border-2 border-rose-100 rounded-2xl hover:bg-rose-50 active:translate-y-px transition-all"
             style={{ boxShadow: "0 3px 0 0 #fecaca" }}
             title={isEnglish ? "Sign out" : "Keluar"}
           >
@@ -707,10 +707,10 @@ export default function HomePage() {
       <main className="flex-1 px-6 pt-8 pb-10 flex flex-col gap-8 animate-fade-in">
         {/* Welcome */}
         <section>
-          <p className="text-brand-600 font-black text-sm uppercase tracking-widest mb-1">
+          <p className="text-brand-600 font-bold text-sm uppercase tracking-widest mb-1">
             {isEnglish ? "Assalamualaikum" : "Assalamualaikum"}
           </p>
-          <h1 className="text-4xl font-black text-slate-800 leading-tight">
+          <h1 className="text-4xl font-bold text-slate-800 leading-tight">
             {userName}
           </h1>
         </section>
@@ -728,10 +728,10 @@ export default function HomePage() {
               {isBpMode ? <HeartHandshake className="w-10 h-10 text-white" /> : <Mic className="w-10 h-10 text-white" />}
             </div>
             <div>
-              <p className="text-brand-100 text-xs font-black uppercase tracking-widest mb-1">
+              <p className="text-brand-100 text-xs font-bold uppercase tracking-widest mb-1">
                 {isBpMode ? (isEnglish ? "Counselling workspace" : "Ruang bimbingan") : (isEnglish ? "Start now" : "Mulai Sekarang")}
               </p>
-              <span className="text-white text-2xl font-black leading-tight">
+              <span className="text-white text-2xl font-bold leading-tight">
                 {isBpMode ? (isEnglish ? `Guide a ${t.santriLower}` : `Bimbing ${t.santriLower}`) : (isEnglish ? `Add ${t.santri} Notes` : `Input Data ${t.santri}`)}
               </span>
             </div>
@@ -751,10 +751,10 @@ export default function HomePage() {
               {isBpMode ? <ClipboardList className="w-8 h-8 text-brand-600" /> : <BarChart3 className="w-8 h-8 text-brand-600" />}
             </div>
             <div>
-              <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">
                 {isBpMode ? (isEnglish ? "Review & continue" : "Tinjau & lanjutkan") : (isEnglish ? "Track & analyse" : "Pantau & Analisis")}
               </p>
-              <span className="text-slate-800 text-xl font-black leading-tight">
+              <span className="text-slate-800 text-xl font-bold leading-tight">
                 {isBpMode ? (isEnglish ? "Counselling notes" : "Catatan bimbingan") : (isEnglish ? `${t.santri} CMS Profile` : `Profil CMS ${t.santri}`)}
               </span>
             </div>
@@ -774,7 +774,7 @@ export default function HomePage() {
               <div className="w-14 h-14 bg-white/10 rounded-[1.1rem] flex items-center justify-center">
                 <ShieldCheck className="w-7 h-7 text-brand-400" />
               </div>
-              <span className="text-white text-lg font-black">
+              <span className="text-white text-lg font-bold">
                 {isEnglish ? "Admin Portal" : "Portal Admin"}
               </span>
             </div>

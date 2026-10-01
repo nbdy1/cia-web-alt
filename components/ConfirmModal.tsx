@@ -41,7 +41,7 @@ export function ConfirmModal({
             <ConfirmIcon className={`w-6 h-6 ${isSuccess ? "text-brand-500" : "text-rose-500"}`} />
           </div>
           <div>
-            <h2 className="text-lg font-black text-slate-800 leading-tight">{title}</h2>
+            <h2 className="text-lg font-bold text-slate-800 leading-tight">{title}</h2>
             {description && (
               <p className="text-xs font-bold text-slate-400 mt-1">{description}</p>
             )}
@@ -51,13 +51,13 @@ export function ConfirmModal({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3.5 rounded-2xl font-black text-sm text-slate-500 bg-slate-100 active:translate-y-px transition-all"
+            className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-slate-500 bg-slate-100 active:translate-y-px transition-all"
           >
             {resolvedCancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-3.5 rounded-2xl font-black text-sm text-white active:translate-y-1 transition-transform ${isSuccess ? "bg-brand-500" : "bg-rose-500"}`}
+            className={`flex-1 py-3.5 rounded-2xl font-bold text-sm text-white active:translate-y-1 transition-transform ${isSuccess ? "bg-brand-500" : "bg-rose-500"}`}
             style={{ boxShadow: isSuccess ? "0 4px 0 0 var(--brand-700)" : "0 4px 0 0 #be123c" }}
           >
             {resolvedConfirmLabel}

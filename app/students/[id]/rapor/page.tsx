@@ -598,13 +598,13 @@ export default function RaporPage() {
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div className="flex-1">
-          <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">{isEnglish ? "Print report card" : "Cetak Rapor"}</p>
-          <h1 className="text-sm font-black text-slate-900">{displayName}</h1>
+          <p className="text-[10px] font-bold text-violet-600 uppercase tracking-widest">{isEnglish ? "Print report card" : "Cetak Rapor"}</p>
+          <h1 className="text-sm font-bold text-slate-900">{displayName}</h1>
         </div>
         <button
           onClick={handlePrint}
           disabled={!selectedPeriod || loading}
-          className="flex items-center gap-2 bg-violet-600 text-white px-4 py-2.5 rounded-xl font-black text-sm disabled:opacity-50"
+          className="flex items-center gap-2 bg-violet-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm disabled:opacity-50"
           style={{ boxShadow: "0 3px 0 0 #5b21b6" }}
         >
           <Printer size={15} /> {isEnglish ? "Print" : "Cetak"}
@@ -615,13 +615,13 @@ export default function RaporPage() {
       {periods.length > 0 && (
         <div className="px-5 py-3 bg-white border-b-2 border-slate-100">
           <div className="flex items-center gap-3 max-w-3xl mx-auto">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">{isEnglish ? "Period:" : "Periode:"}</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">{isEnglish ? "Period:" : "Periode:"}</span>
             <div className="flex flex-wrap gap-2">
               {periods.map((p) => (
                 <button
                   key={p}
                   onClick={() => setSelectedPeriod(p)}
-                  className={`px-3 py-1.5 rounded-xl font-black text-xs transition-colors ${
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-colors ${
                     selectedPeriod === p
                       ? "bg-violet-600 text-white"
                       : "bg-slate-100 text-slate-500 hover:bg-slate-200"
@@ -645,14 +645,14 @@ export default function RaporPage() {
         >
           <div className="bg-slate-800 px-8 py-5 flex justify-between items-center">
             <div>
-              <p className="text-xs font-black text-brand-400">{isEnglish ? "Assessment report card" : "Sekolah Impian — Laporan Nilai"}</p>
-              <p className="text-base font-black text-white">{displayName}</p>
+              <p className="text-xs font-bold text-brand-400">{isEnglish ? "Assessment report card" : "Sekolah Impian — Laporan Nilai"}</p>
+              <p className="text-base font-bold text-white">{displayName}</p>
             </div>
             <p className="text-sm text-slate-300 font-bold">{selectedPeriod}</p>
           </div>
 
           <div className="px-8 py-6 space-y-6">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
               {isEnglish ? "Scores by subject" : "Nilai Per Mata Pelajaran"} — {selectedPeriod || "—"}
             </p>
 
@@ -662,7 +662,7 @@ export default function RaporPage() {
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-violet-600 border-2 border-violet-100">
                   <ClipboardList size={22} />
                 </div>
-                <h2 className="text-base font-black text-slate-900">
+                <h2 className="text-base font-bold text-slate-900">
                   {isEnglish ? "CMS scores have not been entered" : "Nilai CMS belum diisi"}
                 </h2>
                 <p className="mt-2 text-sm font-bold leading-relaxed text-slate-500">
@@ -670,7 +670,7 @@ export default function RaporPage() {
                 </p>
                 <Link
                   href={`/students/${studentId}/scores`}
-                  className="mt-5 inline-flex items-center justify-center rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-black text-white"
+                  className="mt-5 inline-flex items-center justify-center rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-bold text-white"
                   style={{ boxShadow: "0 3px 0 0 #5b21b6" }}
                 >
                   {isEnglish ? "Enter CMS scores" : "Input Nilai CMS"}
@@ -686,13 +686,13 @@ export default function RaporPage() {
                 return (
                   <div key={subj} className="overflow-hidden rounded-2xl border-2 border-slate-100">
                     <div className="bg-slate-800 px-5 py-3">
-                      <span className="text-white font-black text-sm">{subj}</span>
+                      <span className="text-white font-bold text-sm">{subj}</span>
                     </div>
                     <div className="grid grid-cols-[2fr_1fr_1fr_1fr] border-b-2 border-slate-100 bg-slate-50">
                       {(isEnglish ? ["Score type", "Daily", "Monthly", "Final"] : ["Jenis Nilai", "Nilai Harian", "Nilai Bulanan", "Nilai Akhir"]).map((h, i) => (
                         <div
                           key={h}
-                          className={`px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-wider ${i > 0 ? "text-center" : ""}`}
+                          className={`px-4 py-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider ${i > 0 ? "text-center" : ""}`}
                         >
                           {h}
                         </div>
@@ -706,13 +706,13 @@ export default function RaporPage() {
                       return (
                         <div key={key} className="grid grid-cols-[2fr_1fr_1fr_1fr] border-b border-slate-50 last:border-0">
                           <div className="px-4 py-3 text-sm font-bold text-slate-700">{label}</div>
-                          <div className={`px-2 py-3 text-center text-sm font-black ${col === "harian" ? "text-slate-900" : "text-slate-200"}`}>
+                          <div className={`px-2 py-3 text-center text-sm font-bold ${col === "harian" ? "text-slate-900" : "text-slate-200"}`}>
                             {col === "harian" ? (h != null ? h : "—") : ""}
                           </div>
-                          <div className={`px-2 py-3 text-center text-sm font-black ${col === "bulanan" ? "text-slate-900" : "text-slate-200"}`}>
+                          <div className={`px-2 py-3 text-center text-sm font-bold ${col === "bulanan" ? "text-slate-900" : "text-slate-200"}`}>
                             {col === "bulanan" ? (b != null ? b : "—") : ""}
                           </div>
-                          <div className={`px-2 py-3 text-center text-sm font-black ${col === "akhir" ? "text-slate-900" : "text-slate-200"}`}>
+                          <div className={`px-2 py-3 text-center text-sm font-bold ${col === "akhir" ? "text-slate-900" : "text-slate-200"}`}>
                             {col === "akhir" ? (a != null ? a : "—") : ""}
                           </div>
                         </div>
@@ -726,7 +726,7 @@ export default function RaporPage() {
             {/* ── CDS Recap Section ───────────────────────────────────────── */}
             {!loading && !hasNoScorePeriods && (
               <div className="border-t-2 border-slate-100 pt-6 space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                   {isEnglish ? "CDS recap — sub-indicator achievement" : "Rekapitulasi CDS — Ketercapaian Sub-Indikator"}
                 </p>
 
@@ -749,10 +749,10 @@ export default function RaporPage() {
                         key={cat.label}
                         className={`${cat.twBg} border-2 ${cat.twBorder} rounded-xl p-3`}
                       >
-                        <p className={`text-[9px] font-black uppercase tracking-wide ${cat.twColor}`}>
+                        <p className={`text-[9px] font-bold uppercase tracking-wide ${cat.twColor}`}>
                           {categoryDisplayLabel(cat.label)}
                         </p>
-                        <p className={`text-xl font-black ${cat.twColor} mt-1`}>
+                        <p className={`text-xl font-bold ${cat.twColor} mt-1`}>
                           {String(pct).replace(".", ",")}%
                         </p>
                         <p className="text-[10px] text-slate-500 font-bold mt-0.5">
@@ -788,11 +788,11 @@ export default function RaporPage() {
                   return (
                     <div key={cat.label} className="border-2 border-slate-100 rounded-2xl overflow-hidden">
                       <div className="bg-slate-800 px-4 py-2.5">
-                        <span className="text-white font-black text-xs">{categoryDisplayLabel(cat.label)}</span>
+                        <span className="text-white font-bold text-xs">{categoryDisplayLabel(cat.label)}</span>
                       </div>
                       <div className="p-4 space-y-1.5">
                         {/* Theme bars */}
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">
                           {isEnglish ? "Fulfillment by theme" : "Pemenuhan Per Tema"}
                         </p>
                         {cat.data.themes.map((theme, i) => {
@@ -800,21 +800,21 @@ export default function RaporPage() {
                           if (pct === 0) return null;
                           return (
                             <div key={i} className="flex items-center gap-2 py-0.5">
-                              <span className="text-[10px] font-black w-4 text-right flex-shrink-0" style={{ color: cat.color }}>{i + 1}</span>
+                              <span className="text-[10px] font-bold w-4 text-right flex-shrink-0" style={{ color: cat.color }}>{i + 1}</span>
                               <div className="flex-1 min-w-0">
                                 <p className="text-[11px] font-bold text-slate-600 mb-1 truncate">{theme.title}</p>
                                 <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                   <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: cat.color, opacity: 0.8 }} />
                                 </div>
                               </div>
-                              <span className="text-[10px] font-black flex-shrink-0 tabular-nums" style={{ color: cat.color }}>{fulfilled}/{total}</span>
+                              <span className="text-[10px] font-bold flex-shrink-0 tabular-nums" style={{ color: cat.color }}>{fulfilled}/{total}</span>
                             </div>
                           );
                         })}
 
                         {/* Sub-indicator details per theme */}
                         <div className="border-t-2 border-slate-100 mt-4 pt-4 space-y-3">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                             {isEnglish ? "Fulfilled sub-indicators" : "Sub-Indikator Terpenuhi"}
                           </p>
                           {cat.data.themes.map((theme, i) => {
@@ -839,9 +839,9 @@ export default function RaporPage() {
                             return (
                               <div key={i} className="border border-slate-100 rounded-xl overflow-hidden">
                                 <div className="bg-slate-50 px-3 py-2 border-b border-slate-100 flex items-center gap-2">
-                                  <span className="text-[11px] font-black text-slate-700 flex-1">{theme.title}</span>
+                                  <span className="text-[11px] font-bold text-slate-700 flex-1">{theme.title}</span>
                                   {themePhase && (
-                                    <span className={`shrink-0 text-[8px] font-black px-2 py-0.5 rounded-full border ${themePhase.bg} ${themePhase.border} ${themePhase.text}`}>
+                                    <span className={`shrink-0 text-[8px] font-bold px-2 py-0.5 rounded-full border ${themePhase.bg} ${themePhase.border} ${themePhase.text}`}>
                                       {themePhase.index}. {themePhase.shortLabel}
                                     </span>
                                   )}
@@ -850,7 +850,7 @@ export default function RaporPage() {
                                 <div className="p-3 space-y-3">
                                   {visibleInds.map((ind, iIdx) => (
                                     <div key={iIdx}>
-                                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">
+                                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-1">
                                         {ind.title}
                                       </p>
                                       <div className="space-y-1">
@@ -867,7 +867,7 @@ export default function RaporPage() {
                                               <span className="flex-1 text-xs font-medium leading-snug text-slate-800">
                                                 {sub}
                                               </span>
-                                              <span className={`text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0 ${badgeCls}`}>
+                                              <span className={`text-[7px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0 ${badgeCls}`}>
                                                 {label} ({subCount}×)
                                               </span>
                                             </div>
@@ -893,7 +893,7 @@ export default function RaporPage() {
               <div className="grid grid-cols-2 gap-8">
                 {[`${t.ustadz} / ${isEnglish ? "Class advisor" : "Wali Kelas"}`, isEnglish ? "Parent / Guardian" : "Orang Tua / Wali"].map((label) => (
                   <div key={label} className="text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-12">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-12">
                       {label}
                     </p>
                     <div className="border-b-2 border-slate-300 mb-2" />

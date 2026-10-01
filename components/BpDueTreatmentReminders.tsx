@@ -68,14 +68,14 @@ export function BpDueTreatmentReminders() {
       <div className="flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white" style={{ boxShadow: "0 3px 0 var(--brand-700)" }}><BellRing className="h-5 w-5" /></span>
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-brand-700">{isEnglish ? "Time to review" : "Waktunya meninjau"}</p>
-          <h2 className="mt-0.5 truncate text-base font-black text-slate-800">{active.studentName} — {active.title}</h2>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-brand-700">{isEnglish ? "Time to review" : "Waktunya meninjau"}</p>
+          <h2 className="mt-0.5 truncate text-base font-bold text-slate-800">{active.studentName} — {active.title}</h2>
           {active.summary && <p className="mt-1 text-xs font-medium leading-relaxed text-slate-600">{active.summary}</p>}
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => setOutcome("done")} className={`rounded-xl border-2 px-3 py-2.5 text-xs font-black ${outcome === "done" ? "border-brand-500 bg-brand-500 text-white" : "border-brand-200 bg-white text-brand-700"}`}>{isEnglish ? "Tried it" : "Sudah dicoba"}</button>
-        <button type="button" onClick={() => setOutcome("not_done")} className={`rounded-xl border-2 px-3 py-2.5 text-xs font-black ${outcome === "not_done" ? "border-slate-600 bg-slate-600 text-white" : "border-slate-200 bg-white text-slate-600"}`}>{isEnglish ? "Not yet" : "Belum sempat"}</button>
+        <button type="button" onClick={() => setOutcome("done")} className={`rounded-xl border-2 px-3 py-2.5 text-xs font-bold ${outcome === "done" ? "border-brand-500 bg-brand-500 text-white" : "border-brand-200 bg-white text-brand-700"}`}>{isEnglish ? "Tried it" : "Sudah dicoba"}</button>
+        <button type="button" onClick={() => setOutcome("not_done")} className={`rounded-xl border-2 px-3 py-2.5 text-xs font-bold ${outcome === "not_done" ? "border-slate-600 bg-slate-600 text-white" : "border-slate-200 bg-white text-slate-600"}`}>{isEnglish ? "Not yet" : "Belum sempat"}</button>
       </div>
       <label className="mt-3 block text-xs font-bold text-slate-600">
         {outcome === "done" ? (isEnglish ? "What was tried and how did the student respond?" : "Apa yang dicoba dan bagaimana respons siswa?") : (isEnglish ? "What made it difficult to do?" : "Apa yang membuatnya belum dapat dilakukan?")}
@@ -83,7 +83,7 @@ export function BpDueTreatmentReminders() {
       </label>
       <div className="mt-3 flex items-center justify-between gap-3">
         <p className="text-[11px] font-medium leading-relaxed text-slate-500">{isEnglish ? "Your note helps the next session adapt the plan." : "Catatan ini membantu sesi berikutnya menyesuaikan rencana."}</p>
-        <button type="button" onClick={submit} disabled={pending} className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-brand-500 px-3 text-xs font-black text-white disabled:bg-slate-300" style={{ boxShadow: "0 3px 0 var(--brand-700)" }}>{pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{isEnglish ? "Save" : "Simpan"}</button>
+        <button type="button" onClick={submit} disabled={pending} className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-brand-500 px-3 text-xs font-bold text-white disabled:bg-slate-300" style={{ boxShadow: "0 3px 0 var(--brand-700)" }}>{pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{isEnglish ? "Save" : "Simpan"}</button>
       </div>
       {error && <p role="alert" className="mt-2 text-xs font-bold text-rose-600">{error}</p>}
     </section>

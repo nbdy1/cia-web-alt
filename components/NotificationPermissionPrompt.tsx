@@ -59,7 +59,7 @@ export function NotificationPermissionPrompt() {
             <X className="h-4 w-4" />
           </button>
         </div>
-        <h2 id="notification-consent-title" className="mt-4 text-lg font-black text-slate-800">
+        <h2 id="notification-consent-title" className="mt-4 text-lg font-bold text-slate-800">
           {isEnglish ? "Keep treatment follow-ups on track" : "Jangan lewatkan tindak lanjut treatment"}
         </h2>
         <p className="mt-1.5 text-sm font-medium leading-relaxed text-slate-600">
@@ -68,10 +68,10 @@ export function NotificationPermissionPrompt() {
             : "Izinkan notifikasi CDS agar Anda diingatkan saat tindak lanjut treatment sudah jatuh tempo. Anda tetap akan diminta mencatat hasilnya."}
         </p>
         <div className="mt-5 flex gap-2">
-          <button type="button" onClick={dismiss} className="h-11 flex-1 rounded-xl border-2 border-slate-200 bg-white px-3 text-xs font-black text-slate-600">
+          <button type="button" onClick={dismiss} className="h-11 flex-1 rounded-xl border-2 border-slate-200 bg-white px-3 text-xs font-bold text-slate-600">
             {isEnglish ? "Not now" : "Nanti saja"}
           </button>
-          <button type="button" onClick={allow} disabled={requesting} className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-3 text-xs font-black text-white disabled:bg-slate-300" style={{ boxShadow: "0 3px 0 var(--brand-700)" }}>
+          <button type="button" onClick={allow} disabled={requesting} className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-3 text-xs font-bold text-white disabled:bg-slate-300" style={{ boxShadow: "0 3px 0 var(--brand-700)" }}>
             <BellRing className="h-4 w-4" />
             {requesting ? (isEnglish ? "Opening..." : "Membuka...") : (isEnglish ? "Allow" : "Izinkan")}
           </button>

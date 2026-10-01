@@ -80,11 +80,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative z-10 animate-fade-in">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-black mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-bold mb-4">
             <ShieldCheck className="w-4 h-4 text-brand-600" />
             <span>{isEnglish ? "Mentor assessment portal" : "Portal Evaluasi Pembimbing"}</span>
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 flex items-center justify-center gap-2 font-serif">
+          <h1 className="text-4xl font-bold tracking-tight text-slate-900 flex items-center justify-center gap-2 font-serif">
             <span className="text-brand-600">CDS</span> Portal
           </h1>
           <p className="text-slate-400 text-sm mt-2 font-bold">
@@ -112,7 +112,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                 {isEnglish ? "Email address" : "Alamat Email"}
               </label>
               <div className="relative flex items-center">
@@ -130,7 +130,7 @@ export default function LoginPage() {
             </div>
 
             {!isForgotPassword && <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                 {isEnglish ? "Password" : "Kata Sandi"}
               </label>
               <div className="relative flex items-center">
@@ -157,7 +157,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => { setIsForgotPassword(true); setError(null); setSuccess(null); }}
-                    className="text-xs font-black text-brand-600 hover:text-brand-700 hover:underline"
+                    className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline"
                   >
                     {isEnglish ? "Forgot password?" : "Lupa kata sandi?"}
                   </button>
@@ -168,7 +168,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full mt-6 py-4 px-6 rounded-2xl font-black text-sm text-white flex items-center justify-center gap-3 transition-all active:translate-y-1 ${
+              className={`w-full mt-6 py-4 px-6 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-3 transition-all active:translate-y-1 ${
                 loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand-500'
               }`}
               style={loading ? {} : { boxShadow: "0 4px 0 0 var(--brand-700)" }}
@@ -191,7 +191,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => { setIsForgotPassword(false); setError(null); setSuccess(null); }}
-              className="w-full mt-4 text-xs font-black text-slate-500 hover:text-slate-700"
+              className="w-full mt-4 text-xs font-bold text-slate-500 hover:text-slate-700"
             >
               {isEnglish ? 'Back to sign in' : 'Kembali ke halaman masuk'}
             </button>

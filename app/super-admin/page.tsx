@@ -291,7 +291,7 @@ export default function SuperAdminUsagePage() {
     return (
       <div className="flex items-center justify-center h-64 gap-3">
         <Loader2 className="w-7 h-7 animate-spin text-rose-500" />
-        <span className="text-sm font-black text-slate-400 uppercase tracking-widest">Loading usage…</span>
+        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading usage…</span>
       </div>
     );
   }
@@ -302,12 +302,12 @@ export default function SuperAdminUsagePage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto animate-fade-in">
       <div>
-        <h2 className="text-2xl font-black text-slate-800">Usage &amp; Billing</h2>
+        <h2 className="text-2xl font-bold text-slate-800">Usage &amp; Billing</h2>
         <p className="text-slate-400 text-sm font-bold mt-0.5">Pantau kesehatan pemakaian, biaya, kuota, dan margin semua institusi — {monthLabel}</p>
       </div>
 
       <div className="bg-rose-50 border-2 border-rose-100 rounded-2xl px-4 py-3 text-xs font-bold text-rose-800 leading-relaxed">
-        <span className="font-black">Cara membaca halaman ini:</span> mulai dari ringkasan bulan berjalan, lalu gunakan analitik periode untuk melihat pola biaya. Klik baris institusi untuk melihat rincian event AI.
+        <span className="font-bold">Cara membaca halaman ini:</span> mulai dari ringkasan bulan berjalan, lalu gunakan analitik periode untuk melihat pola biaya. Klik baris institusi untuk melihat rincian event AI.
       </div>
 
       <SectionHeading title="Ringkasan Bulan Berjalan" description="Status langganan, pendapatan, biaya AI, dan margin saat ini." />
@@ -330,26 +330,26 @@ export default function SuperAdminUsagePage() {
           range toggle below, so "does the total add up to what we bought"
           questions (e.g. ElevenLabs credits) have one stable answer. */}
       <div className="bg-slate-900 rounded-[1.5rem] p-5" style={{ boxShadow: "0 4px 0 0 #0f172a" }}>
-        <div className="flex items-center gap-2 mb-4 text-slate-300"><History size={15} /><h3 className="font-black text-sm text-white">Sepanjang Waktu (sejak awal tercatat)</h3></div>
+        <div className="flex items-center gap-2 mb-4 text-slate-300"><History size={15} /><h3 className="font-bold text-sm text-white">Sepanjang Waktu (sejak awal tercatat)</h3></div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total biaya AI</p>
-            <p className="text-xl font-black text-white mt-1">{formatIDR(allTimeCost)}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total biaya AI</p>
+            <p className="text-xl font-bold text-white mt-1">{formatIDR(allTimeCost)}</p>
             <p className="text-[11px] font-bold text-slate-400">≈ {formatUSD(allTimeCostUsd)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1"><Cpu size={11} /> OpenRouter token</p>
-            <p className="text-sm font-black text-white mt-1">{formatNum(allTimeByProvider.openrouter?.inputTokens)} in / {formatNum(allTimeByProvider.openrouter?.outputTokens)} out</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1"><Cpu size={11} /> OpenRouter token</p>
+            <p className="text-sm font-bold text-white mt-1">{formatNum(allTimeByProvider.openrouter?.inputTokens)} in / {formatNum(allTimeByProvider.openrouter?.outputTokens)} out</p>
             <p className="text-[11px] font-bold text-slate-400">{formatIDR(allTimeByProvider.openrouter?.cost)} · ≈ {formatUSD(allTimeByProvider.openrouter?.costUsd ?? 0)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1"><Mic size={11} /> ElevenLabs karakter</p>
-            <p className="text-sm font-black text-white mt-1">{formatNum(allTimeByProvider.elevenlabs?.chars)} karakter</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1"><Mic size={11} /> ElevenLabs karakter</p>
+            <p className="text-sm font-bold text-white mt-1">{formatNum(allTimeByProvider.elevenlabs?.chars)} karakter</p>
             <p className="text-[11px] font-bold text-slate-400">{formatIDR(allTimeByProvider.elevenlabs?.cost)} · ≈ {formatUSD(allTimeByProvider.elevenlabs?.costUsd ?? 0)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total events tercatat</p>
-            <p className="text-xl font-black text-white mt-1">{formatNum(allTime.reduce((s, r) => s + Number(r.event_count ?? 0), 0))}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total events tercatat</p>
+            <p className="text-xl font-bold text-white mt-1">{formatNum(allTime.reduce((s, r) => s + Number(r.event_count ?? 0), 0))}</p>
           </div>
         </div>
         <p className="text-[11px] font-bold text-slate-500 mt-4 leading-relaxed">
@@ -368,7 +368,7 @@ export default function SuperAdminUsagePage() {
           <button
             key={opt.key}
             onClick={() => setRange(opt.key)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border-2 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border-2 ${
               range === opt.key
                 ? "bg-rose-500 text-white border-rose-400"
                 : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
@@ -413,7 +413,7 @@ export default function SuperAdminUsagePage() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider text-right mt-1">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right mt-1">
                 Total: {formatIDR(breakdownTotalCost)}
               </p>
             </>
@@ -431,20 +431,20 @@ export default function SuperAdminUsagePage() {
           ) : (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Input tokens</p>
-                <p className="text-lg font-black text-slate-800 mt-1">{formatNum(byProvider.openrouter?.inputTokens)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Input tokens</p>
+                <p className="text-lg font-bold text-slate-800 mt-1">{formatNum(byProvider.openrouter?.inputTokens)}</p>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Output tokens</p>
-                <p className="text-lg font-black text-slate-800 mt-1">{formatNum(byProvider.openrouter?.outputTokens)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Output tokens</p>
+                <p className="text-lg font-bold text-slate-800 mt-1">{formatNum(byProvider.openrouter?.outputTokens)}</p>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Biaya</p>
-                <p className="text-lg font-black text-amber-700 mt-1">{formatIDR(byProvider.openrouter?.cost)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Biaya</p>
+                <p className="text-lg font-bold text-amber-700 mt-1">{formatIDR(byProvider.openrouter?.cost)}</p>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">≈ USD</p>
-                <p className="text-lg font-black text-slate-600 mt-1">{formatUSD(byProvider.openrouter?.costUsd ?? 0)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">≈ USD</p>
+                <p className="text-lg font-bold text-slate-600 mt-1">{formatUSD(byProvider.openrouter?.costUsd ?? 0)}</p>
               </div>
             </div>
           )}
@@ -456,17 +456,17 @@ export default function SuperAdminUsagePage() {
           ) : (
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Karakter teks terkirim (TTS, mentah)</p>
-                <p className="text-lg font-black text-slate-800 mt-1">{formatNum(byProvider.elevenlabs?.chars)} <span className="text-xs font-bold text-slate-400">karakter</span></p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Karakter teks terkirim (TTS, mentah)</p>
+                <p className="text-lg font-bold text-slate-800 mt-1">{formatNum(byProvider.elevenlabs?.chars)} <span className="text-xs font-bold text-slate-400">karakter</span></p>
                 <p className="text-[10px] font-bold text-slate-400 mt-1">≈ {formatNum(Math.round((byProvider.elevenlabs?.chars ?? 0) / ELEVENLABS_FLASH_V25_BILLED_CHAR_DIVISOR))} karakter tertagih ElevenLabs (flash-v2.5 menagih 1:4 dari teks mentah)</p>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Biaya</p>
-                <p className="text-lg font-black text-amber-700 mt-1">{formatIDR(byProvider.elevenlabs?.cost)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Biaya</p>
+                <p className="text-lg font-bold text-amber-700 mt-1">{formatIDR(byProvider.elevenlabs?.cost)}</p>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">≈ USD</p>
-                <p className="text-lg font-black text-slate-600 mt-1">{formatUSD(byProvider.elevenlabs?.costUsd ?? 0)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">≈ USD</p>
+                <p className="text-lg font-bold text-slate-600 mt-1">{formatUSD(byProvider.elevenlabs?.costUsd ?? 0)}</p>
               </div>
             </div>
           )}
@@ -488,7 +488,7 @@ export default function SuperAdminUsagePage() {
               <button
                 key={c}
                 onClick={() => setDailyCurrency(c)}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${
                   dailyCurrency === c ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-600"
                 }`}
               >
@@ -546,7 +546,7 @@ export default function SuperAdminUsagePage() {
                   <button
                     key={c}
                     onClick={() => setOrgChartCurrency(c)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${
                       orgChartCurrency === c ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-600"
                     }`}
                   >
@@ -585,7 +585,7 @@ export default function SuperAdminUsagePage() {
                   {orgChartLegend.map((series) => (
                     <div key={series.key} className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: series.color }} />
-                      <span className="text-[10px] font-black text-slate-500 truncate max-w-[140px]">{series.label}</span>
+                      <span className="text-[10px] font-bold text-slate-500 truncate max-w-[140px]">{series.label}</span>
                     </div>
                   ))}
                 </div>
@@ -626,7 +626,7 @@ export default function SuperAdminUsagePage() {
       <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 p-5" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
         <div className="flex items-center gap-2 mb-4 text-slate-600">
           <SatelliteDish size={15} className="text-rose-500" />
-          <h3 className="font-black text-sm text-slate-800">Live Check — Dibanding Dashboard Provider</h3>
+          <h3 className="font-bold text-sm text-slate-800">Live Check — Dibanding Dashboard Provider</h3>
         </div>
         <div className="grid md:grid-cols-2 gap-4">
           <LiveCheckCard
@@ -656,12 +656,12 @@ export default function SuperAdminUsagePage() {
       <SectionHeading title="Detail Kuota Institusi" description="Klik satu baris untuk melihat 50 event AI terbaru dan rincian biaya sepanjang waktu." />
       <div className="bg-white rounded-[1.5rem] border-2 border-slate-100 overflow-hidden" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
         <div className="px-5 py-3 border-b-2 border-slate-50">
-          <h3 className="font-black text-slate-800 text-sm">Kuota &amp; margin per institusi</h3>
+          <h3 className="font-bold text-slate-800 text-sm">Kuota &amp; margin per institusi</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">
+              <tr className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-left">
                 <th className="px-4 py-2">Institusi</th>
                 <th className="px-4 py-2">Paket</th>
                 <th className="px-4 py-2">Laporan</th>
@@ -673,11 +673,11 @@ export default function SuperAdminUsagePage() {
             </thead>
             <tbody className="divide-y-2 divide-slate-50">
               {rows.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-300 font-black text-xs">No organizations</td></tr>
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-300 font-bold text-xs">No organizations</td></tr>
               ) : rows.map((r) => (
                 <tr key={r.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => setDetailOrg(r)}>
                   <td className="px-4 py-3">
-                    <p className="font-black text-slate-800">{r.name}</p>
+                    <p className="font-bold text-slate-800">{r.name}</p>
                     <StatusBadge status={r.status} />
                   </td>
                   <td className="px-4 py-3 font-bold text-slate-600">{r.plan}</td>
@@ -686,8 +686,8 @@ export default function SuperAdminUsagePage() {
                   <td className="px-4 py-3 text-right font-bold text-amber-700 whitespace-nowrap">{formatIDR(r.cost)}</td>
                   <td className="px-4 py-3 text-right font-bold text-slate-700 whitespace-nowrap">{formatIDR(r.revenue)}</td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <span className={`font-black ${r.margin >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{formatIDR(r.margin)}</span>
-                    <span className="text-[10px] font-black text-slate-400 ml-1">{r.marginPct == null ? "" : formatPct(r.marginPct)}</span>
+                    <span className={`font-bold ${r.margin >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{formatIDR(r.margin)}</span>
+                    <span className="text-[10px] font-bold text-slate-400 ml-1">{r.marginPct == null ? "" : formatPct(r.marginPct)}</span>
                   </td>
                 </tr>
               ))}
@@ -711,9 +711,9 @@ function Kpi({ icon, label, value, sub, tone }: { icon: React.ReactNode; label: 
   return (
     <div className="bg-white rounded-2xl border-2 border-slate-100 p-4" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${toneMap}`}>{icon}</div>
-      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="text-lg font-black text-slate-800 leading-tight">{value}</p>
-      {sub && <p className="text-[11px] font-black text-slate-400">{sub}</p>}
+      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="text-lg font-bold text-slate-800 leading-tight">{value}</p>
+      {sub && <p className="text-[11px] font-bold text-slate-400">{sub}</p>}
     </div>
   );
 }
@@ -721,7 +721,7 @@ function Kpi({ icon, label, value, sub, tone }: { icon: React.ReactNode; label: 
 function SectionHeading({ title, description }: { title: string; description: string }) {
   return (
     <div className="pt-2">
-      <h3 className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{title}</h3>
+      <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{title}</h3>
       <p className="text-xs font-bold text-slate-400 mt-1">{description}</p>
     </div>
   );
@@ -731,7 +731,7 @@ function Panel({ title, icon, headerRight, children }: { title: string; icon: Re
   return (
     <div className="bg-white rounded-2xl border-2 border-slate-100 p-4" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
       <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2 text-slate-600"><span className="text-rose-500">{icon}</span><h3 className="font-black text-sm text-slate-800">{title}</h3></div>
+        <div className="flex items-center gap-2 text-slate-600"><span className="text-rose-500">{icon}</span><h3 className="font-bold text-sm text-slate-800">{title}</h3></div>
         {headerRight}
       </div>
       {children}
@@ -740,7 +740,7 @@ function Panel({ title, icon, headerRight, children }: { title: string; icon: Re
 }
 
 function Empty() {
-  return <div className="h-[200px] flex items-center justify-center text-slate-300 font-black text-xs">Belum ada data</div>;
+  return <div className="h-[200px] flex items-center justify-center text-slate-300 font-bold text-xs">Belum ada data</div>;
 }
 
 // Turns a computeDrift() verdict (see lib/super-admin/usage-helpers.ts) into
@@ -752,10 +752,10 @@ function driftBadge(appValue: number, liveValue: number) {
   const drift = computeDrift(appValue, liveValue);
   if (drift.status === "no-baseline") return null;
   if (drift.status === "aligned") {
-    return <span className="text-[10px] font-black text-emerald-600">✓ selaras</span>;
+    return <span className="text-[10px] font-bold text-emerald-600">✓ selaras</span>;
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600">
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600">
       <AlertTriangle size={10} /> beda {formatPct(drift.diffPct!)}
     </span>
   );
@@ -776,7 +776,7 @@ function LiveCheckCard({
 }) {
   return (
     <div className="rounded-2xl border-2 border-slate-100 p-4">
-      <div className="flex items-center gap-2 mb-3 text-slate-600">{icon}<h4 className="font-black text-xs uppercase tracking-wider">{title}</h4></div>
+      <div className="flex items-center gap-2 mb-3 text-slate-600">{icon}<h4 className="font-bold text-xs uppercase tracking-wider">{title}</h4></div>
       {loading ? (
         <div className="h-20 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-slate-300" /></div>
       ) : !live || !live.ok ? (
@@ -784,20 +784,20 @@ function LiveCheckCard({
       ) : (
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Hari ini</p>
-            <p className="text-sm font-black text-slate-800 mt-1">{formatUSD(live.usageDaily)}</p>
+            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Hari ini</p>
+            <p className="text-sm font-bold text-slate-800 mt-1">{formatUSD(live.usageDaily)}</p>
             <p className="text-[10px] font-bold text-slate-400">app: {formatUSD(appWindow.today)}</p>
             {driftBadge(appWindow.today, live.usageDaily)}
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Minggu ini</p>
-            <p className="text-sm font-black text-slate-800 mt-1">{formatUSD(live.usageWeekly)}</p>
+            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Minggu ini</p>
+            <p className="text-sm font-bold text-slate-800 mt-1">{formatUSD(live.usageWeekly)}</p>
             <p className="text-[10px] font-bold text-slate-400">app: {formatUSD(appWindow.week)}</p>
             {driftBadge(appWindow.week, live.usageWeekly)}
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Bulan ini</p>
-            <p className="text-sm font-black text-slate-800 mt-1">{formatUSD(live.usageMonthly)}</p>
+            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Bulan ini</p>
+            <p className="text-sm font-bold text-slate-800 mt-1">{formatUSD(live.usageMonthly)}</p>
             <p className="text-[10px] font-bold text-slate-400">app: {formatUSD(appWindow.month)}</p>
             {driftBadge(appWindow.month, live.usageMonthly)}
           </div>
@@ -818,7 +818,7 @@ function ElevenLabsLiveCheckCard({
 }) {
   return (
     <div className="rounded-2xl border-2 border-slate-100 p-4">
-      <div className="flex items-center gap-2 mb-3 text-slate-600"><Mic size={14} /><h4 className="font-black text-xs uppercase tracking-wider">ElevenLabs</h4></div>
+      <div className="flex items-center gap-2 mb-3 text-slate-600"><Mic size={14} /><h4 className="font-bold text-xs uppercase tracking-wider">ElevenLabs</h4></div>
       {loading ? (
         <div className="h-20 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-slate-300" /></div>
       ) : !live || !live.ok ? (
@@ -829,20 +829,20 @@ function ElevenLabsLiveCheckCard({
         <>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Hari ini</p>
-              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(live.charsDaily)} <span className="text-[10px] font-bold text-slate-400">karakter</span></p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Hari ini</p>
+              <p className="text-sm font-bold text-slate-800 mt-1">{formatNum(live.charsDaily)} <span className="text-[10px] font-bold text-slate-400">karakter</span></p>
               <p className="text-[10px] font-bold text-slate-400">app: {formatNum(Math.round(appWindow.charsToday))} karakter</p>
               {driftBadge(appWindow.charsToday, live.charsDaily)}
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Minggu ini</p>
-              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(live.charsWeekly)} <span className="text-[10px] font-bold text-slate-400">karakter</span></p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Minggu ini</p>
+              <p className="text-sm font-bold text-slate-800 mt-1">{formatNum(live.charsWeekly)} <span className="text-[10px] font-bold text-slate-400">karakter</span></p>
               <p className="text-[10px] font-bold text-slate-400">app: {formatNum(Math.round(appWindow.charsWeek))} karakter</p>
               {driftBadge(appWindow.charsWeek, live.charsWeekly)}
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Bulan ini</p>
-              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(live.charsMonthly)} <span className="text-[10px] font-bold text-slate-400">karakter</span></p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Bulan ini</p>
+              <p className="text-sm font-bold text-slate-800 mt-1">{formatNum(live.charsMonthly)} <span className="text-[10px] font-bold text-slate-400">karakter</span></p>
               <p className="text-[10px] font-bold text-slate-400">app: {formatNum(Math.round(appWindow.charsMonth))} karakter</p>
               {driftBadge(appWindow.charsMonth, live.charsMonthly)}
             </div>
@@ -863,7 +863,7 @@ function StatusBadge({ status }: { status: string }) {
     canceled: "bg-slate-200 text-slate-500",
     none: "bg-slate-100 text-slate-400",
   };
-  return <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${map[status] ?? map.none}`}>{status}</span>;
+  return <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${map[status] ?? map.none}`}>{status}</span>;
 }
 
 function QuotaBar({ used, limit, unit }: { used: number; limit: number | null; unit?: string }) {
@@ -872,7 +872,7 @@ function QuotaBar({ used, limit, unit }: { used: number; limit: number | null; u
   const over = used >= limit;
   return (
     <div>
-      <div className="flex justify-between text-[10px] font-black mb-1">
+      <div className="flex justify-between text-[10px] font-bold mb-1">
         <span className="text-slate-500">{formatNum(used)}{unit ? "" : ""}</span>
         <span className="text-slate-300">/ {formatNum(limit)}</span>
       </div>
@@ -915,39 +915,39 @@ function OrgDetailModal({ org, onClose }: { org: OrgRow; onClose: () => void }) 
       <div className="bg-white rounded-[2rem] p-6 w-full max-w-2xl relative max-h-[85vh] flex flex-col" style={{ boxShadow: "0 8px 0 0 #e2e8f0" }}>
         <button onClick={onClose} className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 transition-colors"><X size={16} /></button>
         <div className="mb-4">
-          <h3 className="text-xl font-black text-slate-800">{org.name}</h3>
+          <h3 className="text-xl font-bold text-slate-800">{org.name}</h3>
           <p className="text-slate-400 text-sm font-bold mt-0.5">{org.plan} · cost bulan ini {formatIDR(org.cost)} · margin {formatIDR(org.margin)} {org.marginPct == null ? "" : `(${formatPct(org.marginPct)})`}</p>
         </div>
 
         {!loading && (
           <div className="grid grid-cols-3 gap-3 mb-5 shrink-0">
             <div className="bg-slate-50 rounded-xl p-3">
-              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Total sepanjang waktu</p>
-              <p className="text-sm font-black text-slate-800 mt-1">{formatIDR(orgAllTimeCost)}</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Total sepanjang waktu</p>
+              <p className="text-sm font-bold text-slate-800 mt-1">{formatIDR(orgAllTimeCost)}</p>
               <p className="text-[10px] font-bold text-slate-400">≈ {formatUSD(orgAllTimeCostUsd)}</p>
             </div>
             <div className="bg-slate-50 rounded-xl p-3">
-              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">OpenRouter token</p>
-              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(orgAllTimeByProvider.openrouter?.inputTokens)} in</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">OpenRouter token</p>
+              <p className="text-sm font-bold text-slate-800 mt-1">{formatNum(orgAllTimeByProvider.openrouter?.inputTokens)} in</p>
               <p className="text-[10px] font-bold text-slate-400">{formatNum(orgAllTimeByProvider.openrouter?.outputTokens)} out</p>
             </div>
             <div className="bg-slate-50 rounded-xl p-3">
-              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">ElevenLabs karakter</p>
-              <p className="text-sm font-black text-slate-800 mt-1">{formatNum(orgAllTimeByProvider.elevenlabs?.chars)}</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">ElevenLabs karakter</p>
+              <p className="text-sm font-bold text-slate-800 mt-1">{formatNum(orgAllTimeByProvider.elevenlabs?.chars)}</p>
             </div>
           </div>
         )}
 
-        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">50 event AI terbaru</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">50 event AI terbaru</p>
         {loading ? (
           <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
         ) : events.length === 0 ? (
-          <div className="py-10 text-center text-slate-300 font-black text-xs">No events yet</div>
+          <div className="py-10 text-center text-slate-300 font-bold text-xs">No events yet</div>
         ) : (
           <div className="overflow-y-auto -mx-2 px-2">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-white">
-                <tr className="text-[9px] font-black uppercase tracking-wider text-slate-400 text-left">
+                <tr className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-left">
                   <th className="py-1.5">When</th><th className="py-1.5">Purpose</th>
                   <th className="py-1.5 text-right">In</th><th className="py-1.5 text-right">Out</th>
                   <th className="py-1.5 text-right">Chars</th><th className="py-1.5 text-right">Cost</th>
@@ -957,7 +957,7 @@ function OrgDetailModal({ org, onClose }: { org: OrgRow; onClose: () => void }) 
                 {events.map((e, i) => (
                   <tr key={i}>
                     <td className="py-1.5 text-slate-500 font-bold whitespace-nowrap">{new Date(e.created_at).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
-                    <td className="py-1.5 font-black text-slate-700">{PURPOSE_LABELS[e.purpose] ?? e.purpose}</td>
+                    <td className="py-1.5 font-bold text-slate-700">{PURPOSE_LABELS[e.purpose] ?? e.purpose}</td>
                     <td className="py-1.5 text-right text-slate-500">{formatNum(e.input_tokens)}</td>
                     <td className="py-1.5 text-right text-slate-500">{formatNum(e.output_tokens)}</td>
                     <td className="py-1.5 text-right text-slate-500">{formatNum(e.char_count)}</td>

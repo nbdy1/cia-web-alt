@@ -209,7 +209,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
 
         {/* Category Definition Bar */}
         <div className="bg-brand-50/50 px-3 sm:px-8 py-2.5 sm:py-3 border-b border-brand-100 flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-          <span className="text-[10px] font-black uppercase tracking-wider bg-brand-600 text-white px-2.5 py-1 rounded-lg whitespace-nowrap shrink-0">{definisiLabel}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-600 text-white px-2.5 py-1 rounded-lg whitespace-nowrap shrink-0">{definisiLabel}</span>
           <p className="text-xs font-semibold text-brand-950 font-serif italic flex-1 min-w-0">{currentData.definition}</p>
           <span className="text-xs font-bold text-slate-500 whitespace-nowrap shrink-0">
             {filteredThemes.length} Kriteria
@@ -238,12 +238,12 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
                         onClick={() => toggleRow(theme.id)}
                         className="w-full text-left p-4 flex items-start gap-3"
                       >
-                        <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                           {index + 1}
                         </span>
                         <div className="flex-1 min-w-0">
                           {theme.badge && (
-                            <span className="inline-block text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 border border-brand-200 mb-1.5">
+                            <span className="inline-block text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 border border-brand-200 mb-1.5">
                               {theme.badge}
                             </span>
                           )}
@@ -266,7 +266,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
                       {expanded && (
                         <div className="px-4 pb-4 bg-brand-50/40 border-t border-brand-100/60">
                           <div className="pt-3 space-y-3">
-                            <h4 className="text-xs font-black uppercase tracking-wider text-brand-800 flex items-center gap-2">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-brand-800 flex items-center gap-2">
                               <span className="w-2 h-2 rounded-full bg-brand-600" />
                               Rincian Sub-Indikator
                             </h4>
@@ -299,7 +299,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
               <div className="hidden md:block bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-100/80 text-slate-600 text-[11px] font-black uppercase tracking-wider border-b border-slate-200">
+                    <tr className="bg-slate-100/80 text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
                       <th className="py-4 px-6 w-16 text-center">No</th>
                       <th className="py-4 px-6 w-1/3">Kriteria / Tema</th>
                       <th className="py-4 px-6">Penjelasan & Indikator Penilaian</th>
@@ -315,13 +315,13 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
                             onClick={() => toggleRow(theme.id)}
                             className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                           >
-                            <td className="py-5 px-6 font-black text-slate-400 text-center">
+                            <td className="py-5 px-6 font-bold text-slate-400 text-center">
                               {index + 1}
                             </td>
                             <td className="py-5 px-6 align-top">
                               <div className="flex flex-col gap-1.5">
                                 {theme.badge && (
-                                  <span className="w-fit text-[9px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-md bg-brand-100 text-brand-800 border border-brand-200">
+                                  <span className="w-fit text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-md bg-brand-100 text-brand-800 border border-brand-200">
                                     {theme.badge}
                                   </span>
                                 )}
@@ -352,7 +352,7 @@ export function CriteriaGlossaryModal({ isOpen, onClose }: CriteriaGlossaryModal
                             <tr className="bg-brand-50/30">
                               <td colSpan={4} className="py-6 px-8 border-t border-b border-brand-100/60">
                                 <div className="space-y-4 max-w-4xl mx-auto">
-                                  <h4 className="text-xs font-black uppercase tracking-wider text-brand-800 flex items-center gap-2">
+                                  <h4 className="text-xs font-bold uppercase tracking-wider text-brand-800 flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-brand-600" />
                                     Rincian Sub-Indikator Penilaian
                                   </h4>

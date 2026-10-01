@@ -50,11 +50,11 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen w-full bg-paper text-slate-800 flex items-center justify-center p-4 font-sans">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-black mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-bold mb-4">
             <ShieldCheck className="w-4 h-4 text-brand-600" />
             <span>{isEnglish ? "Mentor assessment portal" : "Portal Evaluasi Ustadz"}</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 flex items-center justify-center gap-2 font-serif">
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center justify-center gap-2 font-serif">
             <KeyRound className="w-7 h-7 text-brand-600" />
             {isEnglish ? "Reset password" : "Atur Ulang Kata Sandi"}
           </h1>
@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
               { label: isEnglish ? "Confirm password" : "Konfirmasi Kata Sandi", value: confirmation, setValue: setConfirmation, shown: showConfirmation, toggle: () => setShowConfirmation(!showConfirmation) },
             ].map((field) => (
               <div key={field.label}>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">{field.label}</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{field.label}</label>
                 <div className="relative flex items-center">
                   <Lock className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
                   <input
@@ -100,7 +100,7 @@ export default function ResetPasswordPage() {
               </div>
             ))}
 
-            <button type="submit" disabled={loading} className={`w-full mt-2 py-4 px-6 rounded-2xl font-black text-sm text-white flex items-center justify-center gap-3 ${loading ? "bg-slate-300" : "bg-brand-500"}`} style={loading ? {} : { boxShadow: "0 4px 0 0 var(--brand-700)" }}>
+            <button type="submit" disabled={loading} className={`w-full mt-2 py-4 px-6 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-3 ${loading ? "bg-slate-300" : "bg-brand-500"}`} style={loading ? {} : { boxShadow: "0 4px 0 0 var(--brand-700)" }}>
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><span>{isEnglish ? "Save password" : "Simpan Kata Sandi"}</span><ArrowRight className="w-5 h-5" /></>}
             </button>
           </form>

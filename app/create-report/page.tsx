@@ -229,10 +229,10 @@ export default function CreateReport() {
             <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500" style={{ boxShadow: "0 3px 0 0 #e2e8f0", minWidth: 32 }}>
               <ChevronLeft className="w-4 h-4" />
             </div>
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">{isEnglish ? "Home" : "Beranda"}</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest group-hover:text-brand-600 transition-colors">{isEnglish ? "Home" : "Beranda"}</span>
           </Link>
         </div>
-        <h1 className="text-3xl font-black text-slate-800">Pilih {t.santri}</h1>
+        <h1 className="text-3xl font-bold text-slate-800">Pilih {t.santri}</h1>
         <p className="text-slate-400 text-sm font-bold mt-1">
           {searchingOthers ? (isEnglish ? `Searching outside your assigned ${t.santriLower}s` : `Mencari di luar ${t.santriLower} bimbingan Anda`) : (isEnglish ? "Who would you like to assess today?" : "Siapa yang akan dinilai hari ini?")}
         </p>
@@ -273,7 +273,7 @@ export default function CreateReport() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
               </span>
-              <span className="text-[10px] text-red-500 font-black uppercase tracking-widest">{isEnglish ? "Voice active" : "Suara Aktif"}</span>
+              <span className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{isEnglish ? "Voice active" : "Suara Aktif"}</span>
             </div>
           )}
         </div>
@@ -286,14 +286,14 @@ export default function CreateReport() {
             {searchingOthers ? (
               <button
                 onClick={() => { setSearchingOthers(false); setSearchQuery(''); setSelectedStudent(null); }}
-                className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors px-1"
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors px-1"
               >
                 <ArrowLeft className="w-3.5 h-3.5" /> {isEnglish ? `Back to my ${t.santriLower}s` : `Kembali ke ${t.santriLower} saya`}
               </button>
             ) : (
               <button
                 onClick={() => { setSearchingOthers(true); setSearchQuery(''); setSelectedStudent(null); loadOtherStudents(); }}
-                className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-brand-500 hover:text-brand-700 transition-colors px-1"
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-brand-500 hover:text-brand-700 transition-colors px-1"
               >
                 <UserSearch className="w-3.5 h-3.5" /> {isEnglish ? `Find another ${t.santriLower} (outside your assignment)` : `Cari ${t.santriLower} lain (di luar bimbingan Anda)`}
               </button>
@@ -311,7 +311,7 @@ export default function CreateReport() {
 
         {/* Student list */}
         <div className="mt-2 flex-1 overflow-y-auto pb-28">
-          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-3">
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-3">
             {searchQuery ? (isEnglish ? "Search results" : "Hasil Pencarian") : searchingOthers ? (isEnglish ? `All ${t.santri}s` : `Semua ${t.santri}`) : (isEnglish ? `My ${t.santri}s` : `${t.santri} Saya`)}
           </p>
           {loading || (searchingOthers && otherStudentsLoading) ? (
@@ -320,7 +320,7 @@ export default function CreateReport() {
             </div>
           ) : filteredStudents.length === 0 ? (
             <div className="p-8 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
-              <p className="text-sm font-black text-slate-400">
+              <p className="text-sm font-bold text-slate-400">
                 {searchingOthers ? (isEnglish ? `No ${t.santriLower}s found` : `${t.santri} tidak ditemukan`) : (isEnglish ? `No assigned ${t.santriLower}s yet` : `Belum ada ${t.santriLower} yang dibimbing`)}
               </p>
             </div>
@@ -337,7 +337,7 @@ export default function CreateReport() {
                   <button
                     key={student.id}
                     onClick={() => setSelectedStudent(student)}
-                    className={`w-full flex items-start justify-between p-4 rounded-2xl font-black text-left transition-all ${
+                    className={`w-full flex items-start justify-between p-4 rounded-2xl font-bold text-left transition-all ${
                       isSelected
                         ? "card-3d-selected"
                         : "card-3d"
@@ -345,7 +345,7 @@ export default function CreateReport() {
                   >
                     <div className="flex items-center gap-3 pr-2 min-w-0">
                       {isSelected ? (
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black bg-brand-500 text-white flex-shrink-0">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold bg-brand-500 text-white flex-shrink-0">
                           {student.name.charAt(0)}
                         </div>
                       ) : (
@@ -359,7 +359,7 @@ export default function CreateReport() {
                       <div className="flex flex-col min-w-0">
                         <span className={`truncate ${isSelected ? "text-brand-800" : "text-slate-700"}`}>{student.name}</span>
                         {isOther && (
-                          <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 mt-0.5">
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-amber-500 mt-0.5">
                             {isEnglish ? "Not assigned to you" : "Bukan bimbingan Anda"}
                           </span>
                         )}
@@ -367,7 +367,7 @@ export default function CreateReport() {
                     </div>
 
                     <div className="flex flex-col items-end gap-1.5 shrink-0 ml-2">
-                      <span className={`text-[10px] font-black tracking-wide px-2 py-0.5 rounded-lg border ${
+                      <span className={`text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-lg border ${
                         studentLastReport 
                           ? isOverAWeek
                             ? "bg-amber-100 text-amber-800 border-amber-300"
@@ -404,7 +404,7 @@ export default function CreateReport() {
         >
           <button
             disabled={!selectedStudent}
-            className={`w-full py-5 rounded-2xl font-black text-lg active:translate-y-1 transition-transform ${
+            className={`w-full py-5 rounded-2xl font-bold text-lg active:translate-y-1 transition-transform ${
               selectedStudent
                 ? "bg-brand-500 text-white"
                 : "bg-slate-100 text-slate-300 cursor-not-allowed"

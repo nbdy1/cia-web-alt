@@ -155,20 +155,20 @@ export default function TreatmentPlansPage() {
   return (
     <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
       <div>
-        <h2 className="text-2xl font-black text-slate-800">{isEnglish ? 'Support plans' : 'Rencana Penanganan'}</h2>
+        <h2 className="text-2xl font-bold text-slate-800">{isEnglish ? 'Support plans' : 'Rencana Penanganan'}</h2>
         <p className="text-slate-400 text-sm font-bold mt-0.5">
           {isEnglish ? `All support plans created by ${t.ustadzLower}s and their completion status` : `Semua rencana penanganan yang dibuat ${t.ustadzLower}, dan status penyelesaiannya`}
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
+        <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
           <Lightbulb size={10} /> {rows.length} {isEnglish ? 'Plans' : 'Rencana'}
         </div>
-        <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+        <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
           <CheckCircle2 size={10} /> {doneCount} {isEnglish ? 'Completed' : 'Selesai'}
         </div>
-        <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
+        <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
           <XCircle size={10} /> {declinedCount} {isEnglish ? 'Declined' : 'Ditolak'}
         </div>
       </div>
@@ -195,7 +195,7 @@ export default function TreatmentPlansPage() {
             <button
               key={opt.id}
               onClick={() => setFilter(opt.id)}
-              className={`px-3 py-2 rounded-xl text-[11px] font-black transition-all whitespace-nowrap ${
+              className={`px-3 py-2 rounded-xl text-[11px] font-bold transition-all whitespace-nowrap ${
                 filter === opt.id ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -227,29 +227,29 @@ export default function TreatmentPlansPage() {
                     colorIndex={0}
                   />
                   <div className="min-w-0">
-                    <p className="font-black text-slate-800 text-sm truncate">{row.studentName}</p>
+                    <p className="font-bold text-slate-800 text-sm truncate">{row.studentName}</p>
                     <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 truncate">
                       <Users size={10} /> {row.ustadzName}
                     </div>
                   </div>
                 </div>
                 {row.status === 'completed' ? (
-                  <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                  <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
                     <CheckCircle2 size={10} /> {isEnglish ? 'Completed' : 'Selesai'}
                   </span>
                 ) : row.status === 'declined' ? (
-                  <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
+                  <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
                     <XCircle size={10} /> {isEnglish ? 'Declined' : 'Ditolak'}
                   </span>
                 ) : (
-                  <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
+                  <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
                     <Clock size={10} /> {isEnglish ? 'Pending' : 'Belum'}
                   </span>
                 )}
               </div>
 
               {row.priorityTheme && (
-                <p className="text-[10px] font-black text-brand-600 uppercase tracking-tighter mb-1">
+                <p className="text-[10px] font-bold text-brand-600 uppercase tracking-tighter mb-1">
                   {row.priorityTheme}
                 </p>
               )}
@@ -280,7 +280,7 @@ export default function TreatmentPlansPage() {
       ) : (
         <div className="text-center py-16 bg-white rounded-[1.5rem] border-2 border-dashed border-slate-200">
           <Lightbulb className="w-8 h-8 mx-auto text-slate-200 mb-3" />
-          <p className="text-slate-400 font-black text-sm">
+          <p className="text-slate-400 font-bold text-sm">
             {searchQuery || filter !== 'all' ? (isEnglish ? 'No matching results' : 'Tidak ada hasil') : (isEnglish ? 'No support plans yet' : 'Belum ada rencana penanganan')}
           </p>
         </div>

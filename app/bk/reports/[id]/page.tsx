@@ -34,10 +34,10 @@ function SessionTranscript({ narrative }: { narrative: string }) {
   const turns = parseTranscript(narrative);
   if (!turns.length) return null;
   return <section className="rounded-2xl border-2 border-slate-100 bg-white p-5" style={{ boxShadow: "0 3px 0 #e2e8f0" }}>
-    <h2 className="mb-4 flex items-center gap-2 text-sm font-black text-slate-800"><MessageSquareText className="h-4 w-4 text-brand-600" />Percakapan sesi</h2>
+    <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800"><MessageSquareText className="h-4 w-4 text-brand-600" />Percakapan sesi</h2>
     <div className="space-y-3">
       {turns.map((turn, index) => <div key={index} className={turn.role === "teacher" ? "ml-auto max-w-[88%]" : "w-full"}>
-        <p className={`mb-1 text-[9px] font-black uppercase tracking-widest ${turn.role === "teacher" ? "text-right text-brand-600" : "text-slate-400"}`}>{turn.role === "teacher" ? "Guru" : "Asisten BK"}</p>
+        <p className={`mb-1 text-[9px] font-bold uppercase tracking-widest ${turn.role === "teacher" ? "text-right text-brand-600" : "text-slate-400"}`}>{turn.role === "teacher" ? "Guru" : "Asisten BK"}</p>
         <div className={turn.role === "teacher" ? "rounded-2xl rounded-br-md bg-brand-500 px-3 py-2.5 text-sm font-bold leading-relaxed text-white" : "rounded-2xl rounded-bl-md border border-slate-100 bg-slate-50 px-3 py-2.5 text-sm font-bold leading-relaxed text-slate-700"}>
           <MarkdownText>{turn.text}</MarkdownText>
         </div>
@@ -58,8 +58,8 @@ export default async function BpReportPage({ params }: { params: Promise<{ id: s
     </header>
     <main className="space-y-5 px-5 py-6">
       <section className="rounded-[2rem] bg-brand-500 p-6 text-white" style={{ boxShadow: "0 5px 0 var(--brand-700)" }}>
-        <p className="text-[10px] font-black uppercase tracking-widest text-brand-100">Catatan bimbingan • {report.students?.name ?? "Siswa"}</p>
-        <h1 className="mt-2 text-2xl font-black leading-tight">{report.title}</h1>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-100">Catatan bimbingan • {report.students?.name ?? "Siswa"}</p>
+        <h1 className="mt-2 text-2xl font-bold leading-tight">{report.title}</h1>
         <MarkdownText className="mt-4 text-sm font-bold leading-relaxed text-white/90">{analysis.summary}</MarkdownText>
       </section>
       <BkReportList kind="concern" label="Pemetaan situasi" title="Hal yang perlu diperhatikan" items={analysis.presenting_concerns} />

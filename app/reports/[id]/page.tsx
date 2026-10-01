@@ -221,8 +221,8 @@ export default async function ReportDetailPage({
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
         <div className="text-center">
-          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest">{isEnglish ? "Report" : "Laporan"}</p>
-          <h1 className="text-sm font-black text-slate-900">{report.students.name}</h1>
+          <p className="text-[10px] font-bold text-brand-600 uppercase tracking-widest">{isEnglish ? "Report" : "Laporan"}</p>
+          <h1 className="text-sm font-bold text-slate-900">{report.students.name}</h1>
           {authorName && (
             <p className="text-[9px] font-bold text-slate-400 mt-1">{isEnglish ? "Created by" : "Dibuat oleh"} {authorName}</p>
           )}
@@ -242,11 +242,11 @@ export default async function ReportDetailPage({
             style={{ boxShadow: "0 6px 0 0 var(--brand-200)" }}
           />
           <div className="text-center">
-            <h2 className="text-xl font-black text-slate-900 leading-tight">{report.students.name}</h2>
+            <h2 className="text-xl font-bold text-slate-900 leading-tight">{report.students.name}</h2>
             {report.title && (
               <p className="text-sm font-bold text-slate-500 mt-1 max-w-xs">{report.title}</p>
             )}
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
               {new Date(report.created_at).toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               {" · "}
               {new Date(report.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
@@ -260,7 +260,7 @@ export default async function ReportDetailPage({
             <BarChart3 size={80} />
           </div>
           <div className="relative z-10">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-400 mb-3">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-400 mb-3">
               {isEnglish ? "Overall development" : "Perkembangan Keseluruhan"}
             </h3>
             <div className="grid grid-cols-3 gap-3">
@@ -270,7 +270,7 @@ export default async function ReportDetailPage({
                     key={key}
                     className="bg-white/10 rounded-2xl p-3 border border-white/10"
                   >
-                    <p className="text-[8px] font-black uppercase text-brand-300 mb-1">
+                    <p className="text-[8px] font-bold uppercase text-brand-300 mb-1">
                       {categoryDisplayLabel(key)}
                     </p>
                     <div className="flex items-baseline gap-1">
@@ -296,7 +296,7 @@ export default async function ReportDetailPage({
 
         <section className="bg-white p-6 rounded-[2rem] border-2 border-slate-100 relative" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
           {/* <Quote className="absolute top-6 left-6 w-8 h-8 text-slate-50" /> */}
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
             {isEnglish ? "Observation narrative" : "Narasi Observasi"}
           </h3>
 
@@ -345,7 +345,7 @@ export default async function ReportDetailPage({
                         }`}
                         style={isGuru ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
                       >
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">
                           {isGuru ? t.ustadz : (isEnglish ? "CDS Assistant" : "Asisten CDS")}
                         </p>
                         <MarkdownText className="text-sm leading-relaxed font-bold" children={msg.text} />
@@ -381,13 +381,13 @@ export default async function ReportDetailPage({
           <section className="bg-white rounded-[2rem] p-6 border-2 border-slate-100 space-y-4" style={{ boxShadow: "0 4px 0 0 #e2e8f0" }}>
             <div className="flex items-center gap-2">
               <Lightbulb className="text-brand-600" size={18} />
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 {isEnglish ? "Support plan" : "Rencana Penanganan"}
               </h3>
             </div>
             <div className="bg-brand-50 p-5 rounded-[2rem] border border-brand-100">
               <div className="flex flex-col mb-4">
-                <span className="text-[10px] font-black text-brand-600 uppercase tracking-tighter">
+                <span className="text-[10px] font-bold text-brand-600 uppercase tracking-tighter">
                   {analysis.treatment.priority_theme}
                 </span>
                 <h4 className="text-base font-bold text-slate-900 font-serif leading-tight">
@@ -434,7 +434,7 @@ export default async function ReportDetailPage({
 
         {/* 4. DETAILED ANALYSIS */}
         <section className="space-y-4">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">
             {isEnglish ? "Achievement details" : "Detail Pencapaian"}
           </h3>
 
@@ -496,11 +496,11 @@ export default async function ReportDetailPage({
                         <div key={i} className="space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="flex flex-col">
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
                                 {item.theme}
                               </span>
                               {isBm400Theme && (
-                                <span className="mt-1 inline-flex w-fit items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
+                                <span className="mt-1 inline-flex w-fit items-center rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
                                   BM400 · Tiga Pilar
                                 </span>
                               )}
@@ -526,7 +526,7 @@ export default async function ReportDetailPage({
 
                             {Array.isArray(item.declined_sub_indicators) && item.declined_sub_indicators.length > 0 && (
                               <div className="pt-2 border-t border-slate-200 space-y-1.5">
-                                <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">
+                                <p className="text-[9px] font-bold text-rose-500 uppercase tracking-widest">
                                   {isEnglish ? "Regression detected" : "Kemunduran Terdeteksi"}
                                 </p>
                                 {item.declined_sub_indicators.map((sub: string, si: number) => (

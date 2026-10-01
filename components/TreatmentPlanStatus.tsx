@@ -67,12 +67,12 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-emerald-700">
             <CheckCircle2 size={16} />
-            <span className="text-xs font-black uppercase tracking-wider">{isEnglish ? "Completed" : "Sudah Ditangani"}</span>
+            <span className="text-xs font-bold uppercase tracking-wider">{isEnglish ? "Completed" : "Sudah Ditangani"}</span>
           </div>
           <button
             onClick={handleUndo}
             disabled={isPending}
-            className="text-[10px] font-black text-emerald-600 hover:text-emerald-800 uppercase tracking-wider flex items-center gap-1"
+            className="text-[10px] font-bold text-emerald-600 hover:text-emerald-800 uppercase tracking-wider flex items-center gap-1"
           >
             <RotateCcw size={11} /> {isEnglish ? "Change" : "Ubah"}
           </button>
@@ -97,12 +97,12 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-rose-700">
             <XCircle size={16} />
-            <span className="text-xs font-black uppercase tracking-wider">{isEnglish ? "Not applied" : "Tidak Diterapkan"}</span>
+            <span className="text-xs font-bold uppercase tracking-wider">{isEnglish ? "Not applied" : "Tidak Diterapkan"}</span>
           </div>
           <button
             onClick={handleUndo}
             disabled={isPending}
-            className="text-[10px] font-black text-rose-600 hover:text-rose-800 uppercase tracking-wider flex items-center gap-1"
+            className="text-[10px] font-bold text-rose-600 hover:text-rose-800 uppercase tracking-wider flex items-center gap-1"
           >
             <RotateCcw size={11} /> {isEnglish ? "Change" : "Ubah"}
           </button>
@@ -124,7 +124,7 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
   // Pending — show the two action buttons, and a note field once one is chosen.
   return (
     <div className="mt-4 bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 space-y-3">
-      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
         {isEnglish ? "Support status" : "Status Penanganan"}
       </span>
 
@@ -144,7 +144,7 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
           <button
             onClick={() => submit("completed")}
             disabled={isPending}
-            className="w-full py-3 rounded-xl bg-brand-500 text-white text-xs font-black flex items-center justify-center gap-1.5 active:translate-y-px transition-all disabled:opacity-60"
+            className="w-full py-3 rounded-xl bg-brand-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:translate-y-px transition-all disabled:opacity-60"
             style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
           >
             {isPending ? <Loader2 size={14} className="shrink-0 animate-spin" /> : <CheckCircle2 size={14} className="shrink-0" />}
@@ -152,7 +152,7 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
           </button>
           <button
             onClick={() => setDraftAction(null)}
-            className="w-full py-2.5 rounded-xl bg-slate-200 text-slate-500 text-xs font-black"
+            className="w-full py-2.5 rounded-xl bg-slate-200 text-slate-500 text-xs font-bold"
           >
             {isEnglish ? "Cancel" : "Batal"}
           </button>
@@ -162,7 +162,7 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
           <button
             onClick={() => submit("declined")}
             disabled={isPending}
-            className="w-full py-3 rounded-xl bg-rose-500 text-white text-xs font-black flex items-center justify-center gap-1.5 active:translate-y-px transition-all disabled:opacity-60"
+            className="w-full py-3 rounded-xl bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:translate-y-px transition-all disabled:opacity-60"
             style={{ boxShadow: "0 3px 0 0 #be123c" }}
           >
             {isPending ? <Loader2 size={14} className="shrink-0 animate-spin" /> : <XCircle size={14} className="shrink-0" />}
@@ -170,7 +170,7 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
           </button>
           <button
             onClick={() => setDraftAction(null)}
-            className="w-full py-2.5 rounded-xl bg-slate-200 text-slate-500 text-xs font-black"
+            className="w-full py-2.5 rounded-xl bg-slate-200 text-slate-500 text-xs font-bold"
           >
             {isEnglish ? "Cancel" : "Batal"}
           </button>
@@ -179,14 +179,14 @@ export function TreatmentPlanStatus({ reportId, status, resolvedAt, outcomeNote 
         <div className="flex gap-2">
           <button
             onClick={() => { setDraftAction("declined"); setNote(""); }}
-            className="flex-1 py-3 rounded-xl bg-white border-2 border-rose-200 text-rose-600 text-xs font-black flex items-center justify-center gap-1.5 active:translate-y-px transition-all"
+            className="flex-1 py-3 rounded-xl bg-white border-2 border-rose-200 text-rose-600 text-xs font-bold flex items-center justify-center gap-1.5 active:translate-y-px transition-all"
             style={{ boxShadow: "0 3px 0 0 #fecdd3" }}
           >
             <XCircle size={14} className="shrink-0" /> {isEnglish ? "Decline" : "Tolak"}
           </button>
           <button
             onClick={() => { setDraftAction("completed"); setNote(""); }}
-            className="flex-1 py-3 rounded-xl bg-brand-500 text-white text-xs font-black flex items-center justify-center gap-1.5 active:translate-y-px transition-all"
+            className="flex-1 py-3 rounded-xl bg-brand-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:translate-y-px transition-all"
             style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
           >
             <CheckCircle2 size={14} className="shrink-0" /> {isEnglish ? "Mark complete" : "Tandai Selesai"}

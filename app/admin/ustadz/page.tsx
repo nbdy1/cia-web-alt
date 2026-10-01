@@ -239,14 +239,14 @@ export default function ManageUstadzPage() {
   const displayList = showRemoved ? removedFiltered : activeFiltered;
 
   const inputCls = "w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-brand-400 transition-colors";
-  const labelCls = "block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5";
+  const labelCls = "block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5";
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">{isEnglish ? "User management" : "Manajemen Pengguna"}</h2>
+          <h2 className="text-2xl font-bold text-slate-800">{isEnglish ? "User management" : "Manajemen Pengguna"}</h2>
           <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `Manage ${t.ustadz.toLowerCase()}s and administrators` : `Kelola daftar ${t.ustadz} dan Admin`}</p>
         </div>
         {!showRemoved && (
@@ -254,7 +254,7 @@ export default function ManageUstadzPage() {
             <AdminSpreadsheetImport kind="teachers" organizationId={organizationId ?? ""} onComplete={fetchUstadz} />
             <button
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-black text-sm active:translate-y-px transition-transform"
+              className="inline-flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm active:translate-y-px transition-transform"
               style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
             >
               <UserPlus size={15} /> {isEnglish ? "Add user" : "Tambah Pengguna"}
@@ -267,14 +267,14 @@ export default function ManageUstadzPage() {
       <div className="flex gap-2">
         <button
           onClick={() => { setShowRemoved(false); setSearchQuery(''); }}
-          className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={!showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
         >
           {isEnglish ? "Active" : "Aktif"} ({ustadzList.length})
         </button>
         <button
           onClick={() => { setShowRemoved(true); setSearchQuery(''); }}
-          className={`px-4 py-2 rounded-xl font-black text-sm transition-colors ${showRemoved ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${showRemoved ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={showRemoved ? { boxShadow: "0 3px 0 0 #b91c1c" } : {}}
         >
           {isEnglish ? "Deactivated" : "Dinonaktifkan"} ({removedList.length})
@@ -306,32 +306,32 @@ export default function ManageUstadzPage() {
               style={{ boxShadow: showRemoved ? "0 3px 0 0 #fee2e2" : "0 3px 0 0 #e2e8f0" }}
             >
               <div
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 ${showRemoved ? 'bg-slate-200 text-slate-500' : isAdminTier(user.role) ? "bg-slate-900 text-white" : "bg-brand-100 text-brand-700"}`}
+                className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-base shrink-0 ${showRemoved ? 'bg-slate-200 text-slate-500' : isAdminTier(user.role) ? "bg-slate-900 text-white" : "bg-brand-100 text-brand-700"}`}
                 style={!showRemoved && isAdminTier(user.role) ? { boxShadow: "0 3px 0 0 #000" } : !showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-200)" } : {}}
               >
                 {user.name?.charAt(0).toUpperCase() ?? "?"}
               </div>
               <div className="flex-1 overflow-hidden">
                 <div className="flex items-center gap-2">
-                  <p className="font-black text-slate-800 text-sm truncate">{user.name}</p>
+                  <p className="font-bold text-slate-800 text-sm truncate">{user.name}</p>
                   {!showRemoved && user.role === "owner" && (
-                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md shrink-0">
+                    <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md shrink-0">
                       <Crown size={9} /> Pemilik
                     </span>
                   )}
                   {!showRemoved && user.role === "admin" && (
-                    <span className="text-[9px] font-black uppercase tracking-widest bg-slate-900 text-white px-2 py-0.5 rounded-md shrink-0">Admin</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest bg-slate-900 text-white px-2 py-0.5 rounded-md shrink-0">Admin</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-400 font-bold">
                   <Mail size={11} /><span className="truncate">{user.email}</span>
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-400 font-black uppercase tracking-wider">
+                <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                   <Calendar size={10} /> {new Date(user.created_at).toLocaleDateString("id-ID")}
                 </div>
                 {showRemoved && (
                   <div className="mt-2 p-2.5 bg-rose-50 border border-rose-100 rounded-xl">
-                    <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider mb-0.5">
+                    <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-0.5">
                       {isEnglish ? "Deactivated" : "Dinonaktifkan"} {user.removed_at ? new Date(user.removed_at).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" }) : ""}
                     </p>
                     <p className="text-xs font-bold text-rose-700 leading-snug">{user.removed_reason}</p>
@@ -369,7 +369,7 @@ export default function ManageUstadzPage() {
           {showRemoved
             ? <ArchiveX className="w-8 h-8 mx-auto text-slate-200 mb-3" />
             : <Users className="w-8 h-8 mx-auto text-slate-200 mb-3" />}
-          <p className="text-slate-400 font-black text-sm">
+          <p className="text-slate-400 font-bold text-sm">
             {searchQuery
               ? (isEnglish ? "No matching results" : "Tidak ada hasil pencarian")
               : showRemoved ? (isEnglish ? "No deactivated users yet" : "Belum ada pengguna yang dinonaktifkan") : (isEnglish ? "No users yet" : "Belum ada data pengguna")}
@@ -388,11 +388,11 @@ export default function ManageUstadzPage() {
               <div className="w-11 h-11 bg-brand-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 var(--brand-200)" }}>
                 <UserPlus size={20} className="text-brand-600" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">{isEnglish ? "Add user" : "Tambah Pengguna"}</h3>
+              <h3 className="text-xl font-bold text-slate-800">{isEnglish ? "Add user" : "Tambah Pengguna"}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">Daftarkan akun {t.ustadz} atau Admin baru.</p>
             </div>
             {modalError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={15} />{modalError}</div>}
-            {modalSuccess && <div className="mb-4 p-3 bg-brand-50 border-2 border-brand-200 text-brand-700 text-sm rounded-xl flex items-center gap-2 font-black"><Sparkles size={15} />{modalSuccess}</div>}
+            {modalSuccess && <div className="mb-4 p-3 bg-brand-50 border-2 border-brand-200 text-brand-700 text-sm rounded-xl flex items-center gap-2 font-bold"><Sparkles size={15} />{modalSuccess}</div>}
             <form onSubmit={handleAddUstadz} className="space-y-4">
               <div><label className={labelCls}>Nama Lengkap *</label><input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ustaz Abdullah" className={inputCls} /></div>
               <div><label className={labelCls}>Email *</label><input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="ustadz@pesantren.com" className={inputCls} /></div>
@@ -412,7 +412,7 @@ export default function ManageUstadzPage() {
                   <option value="admin">Admin</option>
                 </select>
               </div>
-              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
+              <button type="submit" disabled={isSubmitting || !!modalSuccess} className="w-full mt-2 bg-brand-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />} {isEnglish ? "Save user" : "Simpan Pengguna"}
               </button>
             </form>
@@ -432,10 +432,10 @@ export default function ManageUstadzPage() {
               <div className="w-11 h-11 bg-indigo-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #c7d2fe" }}>
                 <ShieldCheck size={20} className="text-indigo-500" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">{isEnglish ? "Change role" : "Ubah Role"}</h3>
+              <h3 className="text-xl font-bold text-slate-800">{isEnglish ? "Change role" : "Ubah Role"}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">
                 <strong className="text-slate-700">{userToChangeRole.name}</strong> saat ini adalah{' '}
-                <span className={`font-black ${userToChangeRole.role === 'admin' ? 'text-slate-900' : 'text-brand-600'}`}>
+                <span className={`font-bold ${userToChangeRole.role === 'admin' ? 'text-slate-900' : 'text-brand-600'}`}>
                   {userToChangeRole.role === 'admin' ? 'Admin' : t.ustadz}
                 </span>.
               </p>
@@ -443,31 +443,31 @@ export default function ManageUstadzPage() {
             {roleError && <div className="mb-4 p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 text-sm rounded-xl flex items-center gap-2 font-bold"><AlertCircle size={15} />{roleError}</div>}
             <div className="flex items-center justify-center gap-4 mb-6 p-4 bg-slate-50 rounded-2xl border-2 border-slate-100">
               <div className="text-center">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-slate-900 text-white' : 'bg-brand-100 text-brand-700'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-slate-900 text-white' : 'bg-brand-100 text-brand-700'}`}>
                   {userToChangeRole.name?.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                   {userToChangeRole.role === 'admin' ? 'Admin' : t.ustadz}
                 </span>
               </div>
               <ArrowLeftRight size={18} className="text-indigo-400 shrink-0" />
               <div className="text-center">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-slate-900 text-white'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-base mx-auto mb-1.5 ${userToChangeRole.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-slate-900 text-white'}`}>
                   {userToChangeRole.name?.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                   {userToChangeRole.role === 'admin' ? t.ustadz : 'Admin'}
                 </span>
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setIsRoleModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-black py-3 rounded-xl hover:bg-slate-200 transition-colors">
+              <button onClick={() => setIsRoleModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors">
                 {isEnglish ? "Cancel" : "Batal"}
               </button>
               <button
                 onClick={handleChangeRole}
                 disabled={isChangingRole}
-                className="flex-1 bg-indigo-500 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
+                className="flex-1 bg-indigo-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
                 style={{ boxShadow: "0 3px 0 0 #4338ca" }}
               >
                 {isChangingRole ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck size={14} />}
@@ -490,7 +490,7 @@ export default function ManageUstadzPage() {
               <div className="w-11 h-11 bg-rose-100 rounded-2xl flex items-center justify-center mb-3" style={{ boxShadow: "0 3px 0 0 #fecaca" }}>
                 <UserX size={20} className="text-rose-500" />
               </div>
-              <h3 className="text-xl font-black text-slate-800">{isEnglish ? "Deactivate user" : "Nonaktifkan Pengguna"}</h3>
+              <h3 className="text-xl font-bold text-slate-800">{isEnglish ? "Deactivate user" : "Nonaktifkan Pengguna"}</h3>
               <p className="text-slate-400 text-sm font-bold mt-0.5">
                 <strong className="text-slate-700">{userToRemove.name}</strong> akan disembunyikan dari daftar aktif. Data dan riwayatnya tetap tersimpan.
               </p>
@@ -509,13 +509,13 @@ export default function ManageUstadzPage() {
                 />
               </div>
               <div className="flex gap-3 pt-1">
-                <button onClick={() => setIsRemoveModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-black py-3 rounded-xl hover:bg-slate-200 transition-colors">
+                <button onClick={() => setIsRemoveModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors">
                   {isEnglish ? "Cancel" : "Batal"}
                 </button>
                 <button
                   onClick={handleRemoveUstadz}
                   disabled={isRemoving || !removeReason.trim()}
-                  className="flex-1 bg-rose-500 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
+                  className="flex-1 bg-rose-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:translate-y-px transition-transform disabled:opacity-60"
                   style={{ boxShadow: "0 3px 0 0 #b91c1c" }}
                 >
                   {isRemoving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX size={14} />} Nonaktifkan

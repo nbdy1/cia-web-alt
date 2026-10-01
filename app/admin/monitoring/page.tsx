@@ -433,7 +433,7 @@ export default function MonitoringPage() {
   return (
     <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
       <div>
-        <h2 className="text-2xl font-black text-slate-800">{isEnglish ? 'Report monitoring' : 'Monitor Laporan'}</h2>
+        <h2 className="text-2xl font-bold text-slate-800">{isEnglish ? 'Report monitoring' : 'Monitor Laporan'}</h2>
         <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `${t.santri} report progress by supervising ${t.ustadz.toLowerCase()}` : `Progres laporan ${t.santriLower} per ${t.ustadzLower} pembimbing`}</p>
       </div>
 
@@ -457,7 +457,7 @@ export default function MonitoringPage() {
             <button
               key={p.key}
               onClick={() => setPreset(p.key)}
-              className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-black transition-all border-2 whitespace-nowrap ${
+              className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border-2 whitespace-nowrap ${
                 preset === p.key
                   ? "bg-brand-500 text-white border-brand-400"
                   : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
@@ -472,7 +472,7 @@ export default function MonitoringPage() {
         {preset === 'custom' && (
           <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-2xl p-3" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
             <div className="flex-1">
-              <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">{isEnglish ? 'From' : 'Dari'}</label>
+              <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">{isEnglish ? 'From' : 'Dari'}</label>
               <input
                 type="date"
                 value={customFrom}
@@ -482,7 +482,7 @@ export default function MonitoringPage() {
             </div>
             <div className="w-px h-8 bg-slate-100" />
             <div className="flex-1">
-              <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">{isEnglish ? 'To (optional)' : 'Sampai (opsional)'}</label>
+              <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">{isEnglish ? 'To (optional)' : 'Sampai (opsional)'}</label>
               <input
                 type="date"
                 value={customTo}
@@ -497,12 +497,12 @@ export default function MonitoringPage() {
 
       <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-2xl p-3" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
         <BarChart3 size={15} className="text-brand-500 shrink-0" />
-        <label htmlFor="monitoring-sort" className="text-xs font-black text-slate-600 whitespace-nowrap">{isEnglish ? 'Sort:' : 'Urutkan:'}</label>
+        <label htmlFor="monitoring-sort" className="text-xs font-bold text-slate-600 whitespace-nowrap">{isEnglish ? 'Sort:' : 'Urutkan:'}</label>
         <select
           id="monitoring-sort"
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as SortKey)}
-          className="min-w-0 flex-1 bg-transparent text-xs font-black text-slate-700 outline-none"
+          className="min-w-0 flex-1 bg-transparent text-xs font-bold text-slate-700 outline-none"
         >
           <option value="az">{isEnglish ? 'Name A-Z' : 'Nama A-Z'}</option>
           <option value="za">{isEnglish ? 'Name Z-A' : 'Nama Z-A'}</option>
@@ -523,8 +523,8 @@ export default function MonitoringPage() {
             <React.Fragment key={group.label || 'all'}>
               {group.label && group.items.length > 0 && (
                 <div className="flex items-center gap-2 pt-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-500">{group.label}</span>
-                  <span className="text-[10px] font-black text-slate-400">{group.items.length}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{group.label}</span>
+                  <span className="text-[10px] font-bold text-slate-400">{group.items.length}</span>
                 </div>
               )}
               {group.items.map((ustadz) => {
@@ -543,20 +543,20 @@ export default function MonitoringPage() {
                   className="w-full p-5 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-brand-500 text-white rounded-2xl flex items-center justify-center font-black text-base shrink-0" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
+                    <div className="w-11 h-11 bg-brand-500 text-white rounded-2xl flex items-center justify-center font-bold text-base shrink-0" style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}>
                       {ustadz.name ? ustadz.name.charAt(0).toUpperCase() : "?"}
                     </div>
                     <div>
-                      <h3 className="font-black text-slate-800 text-sm">{ustadz.name}</h3>
+                      <h3 className="font-bold text-slate-800 text-sm">{ustadz.name}</h3>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 text-[10px] font-black border border-brand-100">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 text-[10px] font-bold border border-brand-100">
                           <Users size={9} /> {totalStudents} {t.santri}
                         </span>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black border border-blue-100">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-100">
                           <BookOpen size={9} /> {ustadz.periodReportCount} {isEnglish ? 'reports' : 'Laporan'}
                         </span>
                         {showInactive && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black border border-amber-100">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-100">
                             {isEnglish ? 'Inactive' : 'Tidak aktif'}
                           </span>
                         )}
@@ -574,7 +574,7 @@ export default function MonitoringPage() {
                         {student.isCrossAssignment && (studentIndex === 0 || !ustadz.students[studentIndex - 1].isCrossAssignment) && (
                           <div className="flex items-center gap-2 pt-1 pb-0">
                             <div className="h-px flex-1 bg-amber-100" />
-                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 whitespace-nowrap">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 whitespace-nowrap">
                               {isEnglish ? 'Reports outside your assigned roster' : 'Laporan dari luar bimbingan Anda'}
                             </span>
                             <div className="h-px flex-1 bg-amber-100" />
@@ -589,13 +589,13 @@ export default function MonitoringPage() {
                               colorIndex={0}
                               className="w-7 h-7 rounded-xl"
                             />
-                            <span className="font-black text-slate-700 text-sm">{student.name}</span>
+                            <span className="font-bold text-slate-700 text-sm">{student.name}</span>
                             {student.isCrossAssignment && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-black">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-bold">
                                 {isEnglish ? 'Not assigned to you' : 'Bukan bimbingan Anda'}
                               </span>
                             )}
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
                               {student.periodReports.length} {isEnglish ? 'reports' : 'laporan'}
                             </span>
                           </div>
@@ -611,15 +611,15 @@ export default function MonitoringPage() {
                                       {new Date(report.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                      <Link href={`/students/${student.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-black text-slate-600 bg-white px-2.5 py-1 rounded-lg border-2 border-slate-200 hover:border-slate-300 transition-colors flex items-center gap-1">
+                                      <Link href={`/students/${student.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border-2 border-slate-200 hover:border-slate-300 transition-colors flex items-center gap-1">
                                         <Users size={10} /> {isEnglish ? 'Profile' : 'Profil'}
                                       </Link>
-                                      <Link href={`/reports/${report.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-black text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg border-2 border-brand-200 hover:bg-brand-100 transition-colors flex items-center gap-1">
+                                      <Link href={`/reports/${report.id}?from=${encodeURIComponent("/admin/monitoring")}`} className="text-[10px] font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg border-2 border-brand-200 hover:bg-brand-100 transition-colors flex items-center gap-1">
                                         <FileText size={10} /> {isEnglish ? 'Details' : 'Detail'}
                                       </Link>
                                     </div>
                                   </div>
-                                  {report.title && <p className="text-xs font-black text-slate-700 line-clamp-1 mb-1">{report.title}</p>}
+                                  {report.title && <p className="text-xs font-bold text-slate-700 line-clamp-1 mb-1">{report.title}</p>}
                                   <p className="text-xs text-slate-500 italic line-clamp-2 leading-relaxed font-bold">"{report.narrative?.slice(0, 120)}…"</p>
                                 </div>
                               ))}
@@ -635,7 +635,7 @@ export default function MonitoringPage() {
                     ) : (
                       <div className="text-center py-6">
                         <AlertCircle className="w-7 h-7 mx-auto text-amber-300 mb-2" />
-                        <p className="text-sm text-slate-400 font-black">{isEnglish ? `No ${t.santri.toLowerCase()}s assigned yet.` : `Belum ada ${t.santriLower} yang ditugaskan.`}</p>
+                        <p className="text-sm text-slate-400 font-bold">{isEnglish ? `No ${t.santri.toLowerCase()}s assigned yet.` : `Belum ada ${t.santriLower} yang ditugaskan.`}</p>
                       </div>
                     )}
                   </div>
@@ -649,7 +649,7 @@ export default function MonitoringPage() {
       ) : (
         <div className="text-center py-16 bg-white rounded-[1.5rem] border-2 border-dashed border-slate-200">
           <BookOpen className="w-8 h-8 mx-auto text-slate-200 mb-3" />
-          <p className="text-slate-400 font-black text-sm">
+          <p className="text-slate-400 font-bold text-sm">
             {searchQuery ? (isEnglish ? "No matching results" : "Tidak ada hasil pencarian") : (isEnglish ? "No monitoring data yet" : "Belum ada data monitoring")}
           </p>
         </div>

@@ -15,7 +15,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="mb-2">
-        <h2 className="text-xl font-black text-slate-800">{isEnglish ? "System settings" : "Pengaturan Sistem"}</h2>
+        <h2 className="text-xl font-bold text-slate-800">{isEnglish ? "System settings" : "Pengaturan Sistem"}</h2>
         <p className="text-sm font-semibold text-slate-500 mt-1">
           {isEnglish ? "Global configuration for the CDS application" : "Konfigurasi global untuk aplikasi CDS"}
         </p>
@@ -121,7 +121,7 @@ function BrandingCard({ organization, isEnglish }: { organization: OrgForBrandin
           <Palette className="w-5 h-5" />
         </div>
         <div>
-          <span className="block font-black text-slate-800 text-base">{isEnglish ? "Organisation branding" : "Branding Organisasi"}</span>
+          <span className="block font-bold text-slate-800 text-base">{isEnglish ? "Organisation branding" : "Branding Organisasi"}</span>
           <span className="block text-xs text-slate-400 font-bold">
             {isEnglish ? `Logo and color scheme for ${organization.name}` : `Logo dan skema warna untuk ${organization.name}`}
           </span>
@@ -131,7 +131,7 @@ function BrandingCard({ organization, isEnglish }: { organization: OrgForBrandin
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Logo upload */}
         <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-100">
-          <span className="block font-black text-slate-700 text-sm mb-3">Logo</span>
+          <span className="block font-bold text-slate-700 text-sm mb-3">Logo</span>
           <div className="flex items-center gap-4">
             <div
               className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0"
@@ -141,7 +141,7 @@ function BrandingCard({ organization, isEnglish }: { organization: OrgForBrandin
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt={organization.name} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-brand-600 font-black text-xl">
+                <span className="text-brand-600 font-bold text-xl">
                   {organization.name.charAt(0).toUpperCase()}
                 </span>
               )}
@@ -157,7 +157,7 @@ function BrandingCard({ organization, isEnglish }: { organization: OrgForBrandin
               />
               <label
                 htmlFor="org-logo-input"
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-black text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 active:translate-y-px transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 active:translate-y-px transition-all cursor-pointer"
                 style={{ boxShadow: "0 2px 0 0 #cbd5e1" }}
               >
                 {uploading ? (
@@ -174,7 +174,7 @@ function BrandingCard({ organization, isEnglish }: { organization: OrgForBrandin
 
         {/* Color scheme */}
         <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-100">
-          <span className="block font-black text-slate-700 text-sm mb-3">{isEnglish ? "Color scheme" : "Skema Warna"}</span>
+          <span className="block font-bold text-slate-700 text-sm mb-3">{isEnglish ? "Color scheme" : "Skema Warna"}</span>
           <div className="flex flex-wrap gap-2 mb-3">
             {COLOR_PRESETS.map((preset) => {
               const isActive = activePreset?.id === preset.id;

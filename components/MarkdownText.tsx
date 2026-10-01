@@ -31,7 +31,7 @@ export function MarkdownText({ children, className = "" }: MarkdownTextProps) {
     if (!trimmed) return;
     const heading = trimmed.match(/^#{1,3}\s+(.+)$/);
     blocks.push(heading
-      ? <p key={`heading-${index}`} className="mt-2 font-black">{inlineMarkdown(heading[1])}</p>
+      ? <p key={`heading-${index}`} className="mt-2 font-bold">{inlineMarkdown(heading[1])}</p>
       : <p key={`paragraph-${index}`}>{inlineMarkdown(trimmed)}</p>);
   });
   flushList();
