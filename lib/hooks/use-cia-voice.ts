@@ -29,12 +29,22 @@
  *   short delay to let the audio session settle after recording.
  *
  * Note: Voice input (microphone / speech recognition) is handled separately
- * in each page via the SpeechRecognition Web API (Chrome only).
+ * in each page via the SpeechRecognition Web API (Chrome only) and is NOT
+ * affected by the settings toggle below.
+ *
+ * OPT-IN OUTPUT (ElevenLabs credit saving):
+ *   Reading replies aloud is off unless the user turns on "Suara AI" in
+ *   Settings (`voiceEnabled` in lib/context/settings-context.tsx, stored as
+ *   "cia:voice-enabled"). While it is off, speak() returns immediately — no
+ *   request is made to the ElevenLabs server action at all, which is the point:
+ *   the cost is incurred by generating the audio, not by playing it. The
+ *   browser SpeechSynthesis fallback stays silent too, so "off" means silent.
  */
 "use client";
 
 import { useCallback, useState, useRef } from "react";
 import { generateSpeech } from "@/app/actions/speech";
+import { useSettings } from "@/lib/context/settings-context";
 import type { AppLanguage } from "@/lib/data/language";
 
 // Master kill switch — when false, speak() is a no-op regardless of backend
@@ -77,6 +87,7 @@ const SILENT_WAV = (() => {
 })();
 
 export function useCDSVoice(language: AppLanguage = "id") {
+  const { voiceEnabled } = useSettings();
   const [isSpeaking, setIsSpeaking] = useState(false);
   // ONE reusable audio element for the whole session. Reusing (instead of
   // `new Audio()` per call) is what keeps playback allowed after mic use.
@@ -97,6 +108,8 @@ export function useCDSVoice(language: AppLanguage = "id") {
   // Plays a silent clip so the browser marks this audio element as user-approved,
   // which lets a later play() succeed even after the microphone has been used.
   const unlock = useCallback(() => {
+    // Nothing to unlock while voice output is off — we will never play audio.
+    if (!voiceEnabled) return;
     const el = getAudioEl();
     if (!el || unlockedRef.current || !SILENT_WAV) return;
     try {
@@ -122,11 +135,14 @@ export function useCDSVoice(language: AppLanguage = "id") {
     } catch {
       el.muted = false;
     }
-  }, [getAudioEl]);
+  }, [getAudioEl, voiceEnabled]);
 
   const speak = useCallback(
     async (text: string) => {
-      if (!text || !TTS_ENABLED) return;
+      // Gate BEFORE any network work: with voice off we must not call the
+      // ElevenLabs server action, since generating the audio is what costs
+      // credits regardless of whether it is ever heard.
+      if (!text || !TTS_ENABLED || !voiceEnabled) return;
 
       const el = getAudioEl();
 
@@ -185,7 +201,7 @@ export function useCDSVoice(language: AppLanguage = "id") {
         setIsSpeaking(false);
       }
     },
-    [getAudioEl, language]
+    [getAudioEl, language, voiceEnabled]
   );
 
   const stop = useCallback(() => {

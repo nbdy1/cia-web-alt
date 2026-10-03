@@ -11,6 +11,13 @@ interface SettingsContextType {
   setTemperature: (temperature: number) => void;
   language: AppLanguage;
   setLanguage: (language: AppLanguage) => void;
+  /**
+   * Whether AI replies are read aloud. OFF by default — speaking every reply
+   * costs ElevenLabs credits, and most users keep their phone muted anyway, so
+   * voice output is opt-in per device (see lib/hooks/use-cia-voice.ts).
+   */
+  voiceEnabled: boolean;
+  setVoiceEnabled: (enabled: boolean) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -26,10 +33,15 @@ const MIN_TEMPERATURE = 0;
 const MAX_TEMPERATURE = 2;
 const LANGUAGE_STORAGE_KEY = "cia:language";
 
+const VOICE_ENABLED_STORAGE_KEY = "cia:voice-enabled";
+// Opt-in: an unset (or unparseable) preference means no audio is generated.
+const DEFAULT_VOICE_ENABLED = false;
+
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL);
   const [temperature, setTemperatureState] = useState<number>(DEFAULT_TEMPERATURE);
   const [language, setLanguageState] = useState<AppLanguage>("id");
+  const [voiceEnabled, setVoiceEnabledState] = useState<boolean>(DEFAULT_VOICE_ENABLED);
 
   useEffect(() => {
     try {
@@ -53,6 +65,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLanguageState(normalizeAppLanguage(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)));
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      // Only the explicit string "true" turns voice on, so a missing or
+      // corrupted value keeps us on the credit-saving default.
+      setVoiceEnabledState(
+        window.localStorage.getItem(VOICE_ENABLED_STORAGE_KEY) === "true",
+      );
     } catch (e) {
       // ignore
     }
@@ -96,6 +118,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleSetVoiceEnabled = (enabled: boolean) => {
+    setVoiceEnabledState(enabled);
+    try {
+      window.localStorage.setItem(VOICE_ENABLED_STORAGE_KEY, String(enabled));
+    } catch (e) {
+      // ignore
+    }
+  };
+
   return (
     <SettingsContext.Provider
       value={{
@@ -105,6 +136,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setTemperature: handleSetTemperature,
         language,
         setLanguage: handleSetLanguage,
+        voiceEnabled,
+        setVoiceEnabled: handleSetVoiceEnabled,
       }}
     >
       {children}

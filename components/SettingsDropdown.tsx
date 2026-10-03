@@ -5,7 +5,7 @@
  * popover with:
  *
  *   1. Akun — current org, multi-org switching, and password change.
- *   2. Tampilan — font family picker + font scale slider.
+ *   2. Tampilan — language, AI voice toggle, font family picker + font scale slider.
  *   3. Panduan — criteria glossary and help entry point.
  *
  * Font storage keys:  "cia:font-family"  and  "cia:font-scale"
@@ -31,6 +31,8 @@ import {
   Sliders,
   Type,
   UserRound,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { CriteriaGlossaryModal } from "./CriteriaGlossaryModal";
 import { useAuth } from "@/lib/context/auth-context";
@@ -164,7 +166,7 @@ export function SettingsDropdown() {
   const [isUpdatingMode, setIsUpdatingMode] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { language, setLanguage } = useSettings();
+  const { language, setLanguage, voiceEnabled, setVoiceEnabled } = useSettings();
   const isEnglish = language === "en";
 
   async function confirmModeChange() {
@@ -524,7 +526,7 @@ export function SettingsDropdown() {
                       {isEnglish ? "Appearance" : "Tampilan"}
                     </span>
                     <span className="block text-[10px] text-slate-400 font-bold">
-                      {isEnglish ? "Font & text size" : "Huruf & ukuran teks"}
+                      {isEnglish ? "Language, sound & text" : "Bahasa, suara & teks"}
                     </span>
                   </div>
                 </div>
@@ -559,6 +561,64 @@ export function SettingsDropdown() {
                     <p className="mt-2 text-[10px] font-bold text-slate-400">
                       {language === "en" ? "New AI conversations and reports will be written in English." : "Percakapan dan laporan AI baru akan ditulis dalam Bahasa Indonesia."}
                     </p>
+                  </div>
+
+                  {/* AI voice output is opt-in: generating speech costs
+                      ElevenLabs credits, and most users keep the phone muted.
+                      While off, no audio request is made at all. */}
+                  <div className="rounded-2xl bg-white border border-slate-100 px-3 py-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      {voiceEnabled ? (
+                        <Volume2 className="w-3.5 h-3.5 text-slate-400" />
+                      ) : (
+                        <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                      )}
+                      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                        {isEnglish ? "AI voice" : "Suara AI"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={voiceEnabled}
+                      onClick={() => setVoiceEnabled(!voiceEnabled)}
+                      className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition-colors ${
+                        voiceEnabled
+                          ? "border-brand-300 bg-brand-50"
+                          : "border-slate-100 bg-white hover:border-slate-200"
+                      }`}
+                    >
+                      <span className="min-w-0">
+                        <span
+                          className={`block text-sm font-bold leading-tight ${
+                            voiceEnabled ? "text-brand-800" : "text-slate-600"
+                          }`}
+                        >
+                          {isEnglish ? "Read AI replies aloud" : "Bacakan jawaban AI"}
+                        </span>
+                        <span className="mt-0.5 block text-[10px] font-bold leading-tight text-slate-400">
+                          {voiceEnabled
+                            ? isEnglish
+                              ? "On — replies are spoken during the interview."
+                              : "Aktif — jawaban dibacakan saat wawancara."
+                            : isEnglish
+                              ? "Off — saves voice credits. Typing and the mic still work."
+                              : "Nonaktif — menghemat kuota suara. Mengetik & mikrofon tetap bisa."}
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+                          voiceEnabled ? "bg-brand-500" : "bg-slate-200"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${
+                            voiceEnabled ? "left-[18px]" : "left-0.5"
+                          }`}
+                        />
+                      </span>
+                    </button>
                   </div>
 
                   <div>
