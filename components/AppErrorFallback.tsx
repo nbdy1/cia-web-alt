@@ -50,6 +50,13 @@ export function AppErrorFallback({ error, reset, scope }: AppErrorFallbackProps)
             Kembali
           </button>
         </div>
+        {/* Full navigation (not <Link>) so the cookie-clearing route handler runs. */}
+        <a
+          href="/api/reset-session"
+          className="mt-4 block text-xs font-bold text-slate-500 underline underline-offset-2"
+        >
+          Masih bermasalah? Masuk ulang (reset sesi)
+        </a>
         {error.digest && <p className="mt-5 text-[10px] font-bold text-slate-400">Kode bantuan: {error.digest}</p>}
       </section>
     </main>

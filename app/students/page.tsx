@@ -440,6 +440,10 @@ export default function StudentsAnalyticsPage() {
         <Link href="/" className="text-xs font-bold text-slate-400 uppercase tracking-widest">
           {isEnglish ? "Home" : "Beranda"}
         </Link>
+        {/* Full navigation so the cookie-clearing route handler runs. */}
+        <a href="/api/reset-session" className="text-xs font-bold text-slate-500 underline underline-offset-2">
+          {isEnglish ? "Still stuck? Sign in again (reset session)" : "Masih bermasalah? Masuk ulang (reset sesi)"}
+        </a>
       </div>
     );
   }
@@ -589,6 +593,9 @@ export default function StudentsAnalyticsPage() {
                   <Link
                     key={student.id}
                     href={`/students/${student.id}?from=${encodeURIComponent("/students")}`}
+                    // Each detail page is a dynamic server render; prefetching every
+                    // visible card fires ~10 at once and competes with this page's data.
+                    prefetch={false}
                     className="card-3d-link block"
                   >
                     <div className="card-3d p-5">
@@ -702,6 +709,7 @@ export default function StudentsAnalyticsPage() {
                 return (
                   <Link
                     href={`/reports/${report.id}?from=${encodeURIComponent("/students")}`}
+                    prefetch={false}
                     key={report.id}
                     className={`flex items-center justify-between gap-3 px-5 py-4 hover:bg-brand-50 transition-colors ${
                       idx !== recentReports.length - 1 ? "border-b-2 border-slate-50" : ""
@@ -771,6 +779,7 @@ export default function StudentsAnalyticsPage() {
                     {otherReports.map((report, idx) => (
                       <Link
                         href={`/reports/${report.id}?from=${encodeURIComponent("/students")}`}
+                        prefetch={false}
                         key={report.id}
                         className={`flex items-center justify-between gap-3 px-5 py-4 hover:bg-amber-50 transition-colors ${
                           idx !== otherReports.length - 1 ? "border-b-2 border-slate-50" : ""

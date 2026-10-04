@@ -108,8 +108,12 @@ export default async function StudentProfile({
 
   if (!student)
     return (
-      <div className="p-10 text-center text-slate-500 font-medium">
-        {isEnglish ? "Student not found." : "Santri tidak ditemukan."}
+      <div className="p-10 text-center text-slate-500 font-medium space-y-3">
+        <p>{isEnglish ? "Student not found." : "Santri tidak ditemukan."}</p>
+        {/* A stale browser session also lands here (RLS returns no row), so offer a way out. */}
+        <a href="/api/reset-session" className="block text-xs font-bold text-slate-500 underline underline-offset-2">
+          {isEnglish ? "Should be here? Sign in again (reset session)" : "Seharusnya ada? Masuk ulang (reset sesi)"}
+        </a>
       </div>
     );
 
