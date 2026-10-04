@@ -104,8 +104,114 @@ type OtherReport = {
   treatment_plan: any;
 };
 
+const parsePlan = (planRaw: any) => {
+  if (!planRaw) return null;
+  if (typeof planRaw === "string") {
+    try {
+      return JSON.parse(planRaw);
+    } catch {
+      return null;
+    }
+  }
+  return planRaw;
+};
+
+// Preferred path: one small aggregate row per student, computed in Postgres
+// (scripts/migrations/20261004_student_list_stats.sql). RLS still applies.
+async function loadStudentListFromStats(
+  organizationId: string,
+  ustadzId: string | null,
+): Promise<StudentWithStats[]> {
+  const { data, error } = await supabase.rpc("get_student_list_stats", {
+    target_organization_id: organizationId,
+    target_ustadz_id: ustadzId,
+  });
+  if (error) throw error;
+
+  return ((data ?? []) as any[]).map((row) => ({
+    id: row.id,
+    name: row.name ?? "",
+    nis: row.nis ?? null,
+    photo_url: row.photo_url ?? null,
+    assigned_ustadz_id: row.assigned_ustadz_id ?? null,
+    reportsCount: row.reports_count ?? 0,
+    themesExplored: row.themes_explored ?? 0,
+    fulfilledSubIndicators: row.fulfilled_sub_indicators ?? 0,
+    lastReportAt: row.last_report_at ?? null,
+  }));
+}
+
+// Fallback for databases where the stats function has not been created yet.
+// Heavy: it downloads every report's treatment_plan, so it is only a safety net.
+async function loadStudentListLegacy(
+  organizationId: string,
+  ustadzId: string | null,
+): Promise<StudentWithStats[]> {
+  let query = supabase
+    .from("students")
+    .select("id, name, nis, photo_url, assigned_ustadz_id, reports (id, treatment_plan, created_at)")
+    .or("is_removed.is.null,is_removed.eq.false")
+    .eq("organization_id", organizationId);
+
+  if (ustadzId) query = query.eq("assigned_ustadz_id", ustadzId);
+
+  const { data, error } = await query.order("name", { ascending: true });
+  if (error) throw error;
+
+  return ((data ?? []) as any[]).map((student) => {
+    const themeSet = new Set<string>();
+    let fulfilledSubIndicators = 0;
+    const reports = student.reports ?? [];
+    let lastReportAt: string | null = null;
+
+    reports.forEach((r: any) => {
+      if (r.created_at && (!lastReportAt || r.created_at > lastReportAt)) {
+        lastReportAt = r.created_at;
+      }
+      const plan = parsePlan(r.treatment_plan);
+      const assessments = Array.isArray(plan?.detailed_assessments)
+        ? plan.detailed_assessments
+        : [];
+      assessments.forEach((a: any) => {
+        if (a?.theme) themeSet.add(String(a.theme).trim().toLowerCase());
+        fulfilledSubIndicators += Array.isArray(a?.fulfilled_sub_indicators)
+          ? a.fulfilled_sub_indicators.length
+          : 0;
+        // A declined_sub_indicators entry undoes one prior fulfillment.
+        fulfilledSubIndicators -= Array.isArray(a?.declined_sub_indicators)
+          ? a.declined_sub_indicators.length
+          : 0;
+      });
+    });
+
+    return {
+      id: student.id,
+      name: student.name ?? "",
+      nis: student.nis ?? null,
+      photo_url: student.photo_url ?? null,
+      assigned_ustadz_id: student.assigned_ustadz_id ?? null,
+      reportsCount: reports.length,
+      themesExplored: themeSet.size,
+      fulfilledSubIndicators: Math.max(0, fulfilledSubIndicators),
+      lastReportAt,
+    };
+  });
+}
+
+async function loadStudentList(
+  organizationId: string,
+  ustadzId: string | null,
+): Promise<StudentWithStats[]> {
+  try {
+    return await loadStudentListFromStats(organizationId, ustadzId);
+  } catch (error) {
+    console.warn("get_student_list_stats unavailable, using legacy query:", error);
+    return loadStudentListLegacy(organizationId, ustadzId);
+  }
+}
+
 export default function StudentsAnalyticsPage() {
-  const { user, activeOrganizationId } = useAuth();
+  const { user, loading: authLoading, activeOrganizationId } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const t = useTerminology();
   const isEnglish = t.language === "en";
@@ -117,6 +223,8 @@ export default function StudentsAnalyticsPage() {
   const [otherReports, setOtherReports] = useState<OtherReport[]>([]);
   const [otherReportsOpen, setOtherReportsOpen] = useState(true);
   const [dataLoading, setDataLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>(getInitialSort);
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -141,169 +249,117 @@ export default function StudentsAnalyticsPage() {
   }, [isSortOpen]);
 
   useEffect(() => {
-    if (roleLoading || !user) return;
+    if (roleLoading || !user || !activeOrganizationId) return;
+
+    // Ignore results of a superseded run (org switch, retry, unmount) so a slow
+    // phone connection can't overwrite newer state with stale data.
+    let cancelled = false;
 
     const fetchData = async () => {
       setDataLoading(true);
+      setLoadError(false);
       const isAdmin = role === "admin" || role === "owner";
       const ustadzId = isAdmin ? null : user.id;
 
-      // ── 1. Fetch students (with optional ustadz filter) ──────────────────
-      let studentsQuery = supabase.from("students").select(`
-        *,
-        reports (
-          id,
-          treatment_plan,
-          created_at
-        )
-      `).or('is_removed.is.null,is_removed.eq.false');
-      
-      // Filter by active organization
-      if (activeOrganizationId) {
-        studentsQuery = studentsQuery.eq("organization_id", activeOrganizationId);
-      }
+      try {
+        // ── 1. Student list + stats ─────────────────────────────────────────
+        const processed = await loadStudentList(activeOrganizationId, ustadzId);
+        if (cancelled) return;
+        setStudents(processed);
 
-      if (ustadzId) {
-        studentsQuery = studentsQuery.eq("assigned_ustadz_id", ustadzId);
-      }
-      const { data: studentsRaw } = await studentsQuery.order("name", { ascending: true });
+        const studentIds = processed.map((s) => s.id);
 
-      const studentIds = studentsRaw?.map((s) => s.id) ?? [];
+        // ── 2. Recent reports (filtered by student IDs) ─────────────────────
+        // Do not return early when an ustadz has no assigned students. They may
+        // still have authored reports for students outside their roster, which
+        // are loaded separately below. This section is secondary: if it fails
+        // the student list is still shown rather than failing the whole page.
+        if (isAdmin || studentIds.length > 0) {
+          let recentQuery = supabase
+            .from("reports")
+            .select(`
+              id,
+              title,
+              created_at,
+              created_by,
+              students (name, photo_url),
+              treatment_plan
+            `)
+            .order("created_at", { ascending: false })
+            .limit(8)
+            // Without this, an admin/owner of multiple orgs would see recent
+            // reports from every org they administer, not just the active one.
+            .eq("organization_id", activeOrganizationId);
 
-      const parsePlan = (planRaw: any) => {
-        if (!planRaw) return null;
-        if (typeof planRaw === "string") {
-          try {
-            return JSON.parse(planRaw);
-          } catch {
-            return null;
+          if (!isAdmin) {
+            recentQuery = recentQuery.in("student_id", studentIds);
           }
-        }
-        return planRaw;
-      };
 
-      const processed: StudentWithStats[] = (studentsRaw ?? []).map((student) => {
-        const themeSet = new Set<string>();
-        let fulfilledSubIndicators = 0;
-        const reports = student.reports ?? [];
-        let lastReportAt: string | null = null;
+          const { data: recentRaw, error: recentError } = await recentQuery;
+          if (recentError) console.error("Failed to load recent reports:", recentError);
 
-        reports.forEach((r: any) => {
-          if (r.created_at && (!lastReportAt || r.created_at > lastReportAt)) {
-            lastReportAt = r.created_at;
-          }
-          const plan = parsePlan(r.treatment_plan);
-          const assessments = Array.isArray(plan?.detailed_assessments)
-            ? plan.detailed_assessments
-            : [];
-          assessments.forEach((a: any) => {
-            if (a?.theme) themeSet.add(String(a.theme).trim().toLowerCase());
-            fulfilledSubIndicators += Array.isArray(a?.fulfilled_sub_indicators)
-              ? a.fulfilled_sub_indicators.length
-              : 0;
-            // A declined_sub_indicators entry undoes one prior fulfillment.
-            fulfilledSubIndicators -= Array.isArray(a?.declined_sub_indicators)
-              ? a.declined_sub_indicators.length
-              : 0;
-          });
-        });
-        fulfilledSubIndicators = Math.max(0, fulfilledSubIndicators);
-
-        return {
-          id: student.id,
-          name: student.name,
-          nis: student.nis,
-          photo_url: student.photo_url ?? null,
-          assigned_ustadz_id: student.assigned_ustadz_id,
-          reportsCount: reports.length,
-          themesExplored: themeSet.size,
-          fulfilledSubIndicators,
-          lastReportAt,
-        };
-      });
-      setStudents(processed);
-
-      // ── 2. Recent reports (filtered by student IDs) ───────────────────────
-      // Do not return early when an ustadz has no assigned students. They may
-      // still have authored reports for students outside their roster, which
-      // are loaded separately below.
-      let recentQuery = supabase
-        .from("reports")
-        .select(`
-          id,
-          title,
-          created_at,
-          created_by,
-          students (name, photo_url),
-          treatment_plan
-        `)
-        .order("created_at", { ascending: false })
-        .limit(8);
-
-      // Without this, an admin/owner of multiple orgs would see recent
-      // reports from every org they administer, not just the active one.
-      if (activeOrganizationId) {
-        recentQuery = recentQuery.eq("organization_id", activeOrganizationId);
-      }
-
-      if (!isAdmin && studentIds.length > 0) {
-        recentQuery = recentQuery.in("student_id", studentIds);
-      } else if (!isAdmin) {
-        setRecentReports([]);
-        // Skip the broad recent-activity query for an ustadz with no roster;
-        // the author-owned cross-assignment query below remains available.
-        recentQuery = null as any;
-      }
-
-      if (recentQuery) {
-        const { data: recentRaw } = await recentQuery;
-      const authorIds = Array.from(new Set(((recentRaw ?? []) as any[]).map((report) => report.created_by).filter(Boolean)));
-      const { data: authors } = authorIds.length > 0
-        ? await supabase.from("profiles").select("id, name").in("id", authorIds)
-        : { data: [] as any[] };
-      const authorNames = new Map((authors ?? []).map((author: any) => [author.id, author.name]));
-      setRecentReports(
-        ((recentRaw ?? []) as any[]).map((report) => ({
-          ...report,
-          studentPhotoUrl: report.students?.photo_url ?? null,
-          createdByName: report.created_by ? (authorNames.get(report.created_by) ?? null) : null,
-        })) as RecentReport[],
-      );
-      }
-
-      // ── 3. Reports this ustadz made for students NOT assigned to them ────
-      // Scoped to reports they personally authored (not every report on that
-      // student) so following up doesn't leak the rest of the student's file.
-      if (!isAdmin && user) {
-        const { data: crossAssignmentRaw, error: otherReportsError } = await supabase.rpc(
-          "get_my_cross_assignment_reports",
-          { target_organization_id: activeOrganizationId ?? "" },
-        );
-
-        if (otherReportsError) {
-          console.error("Failed to load cross-assignment reports:", otherReportsError);
+          const recentList = (recentError ? [] : (recentRaw ?? [])) as any[];
+          const authorIds = Array.from(new Set(recentList.map((report) => report.created_by).filter(Boolean)));
+          const { data: authors } = authorIds.length > 0
+            ? await supabase.from("profiles").select("id, name").in("id", authorIds)
+            : { data: [] as any[] };
+          const authorNames = new Map((authors ?? []).map((author: any) => [author.id, author.name]));
+          if (cancelled) return;
+          setRecentReports(
+            recentList.map((report) => ({
+              ...report,
+              studentPhotoUrl: report.students?.photo_url ?? null,
+              createdByName: report.created_by ? (authorNames.get(report.created_by) ?? null) : null,
+            })) as RecentReport[],
+          );
+        } else {
+          setRecentReports([]);
         }
 
-        const filtered = ((crossAssignmentRaw ?? []) as any[]).map((r) => ({
-          id: r.id,
-          title: r.title,
-          created_at: r.created_at,
-          students: {
-            name: r.student_name,
-            assigned_ustadz_id: r.assigned_ustadz_id,
-          },
-          treatment_plan: null,
-        }));
-        setOtherReports(filtered as OtherReport[]);
-      } else {
-        setOtherReports([]);
-      }
+        // ── 3. Reports this ustadz made for students NOT assigned to them ──
+        // Scoped to reports they personally authored (not every report on that
+        // student) so following up doesn't leak the rest of the student's file.
+        if (!isAdmin) {
+          const { data: crossAssignmentRaw, error: otherReportsError } = await supabase.rpc(
+            "get_my_cross_assignment_reports",
+            { target_organization_id: activeOrganizationId },
+          );
 
-      setDataLoading(false);
+          if (otherReportsError) {
+            console.error("Failed to load cross-assignment reports:", otherReportsError);
+          }
+
+          const filtered = ((crossAssignmentRaw ?? []) as any[]).map((r) => ({
+            id: r.id,
+            title: r.title,
+            created_at: r.created_at,
+            students: {
+              name: r.student_name,
+              assigned_ustadz_id: r.assigned_ustadz_id,
+            },
+            treatment_plan: null,
+          }));
+          if (cancelled) return;
+          setOtherReports(filtered as OtherReport[]);
+        } else {
+          setOtherReports([]);
+        }
+      } catch (error) {
+        // The student list itself failed (network drop, timeout, expired
+        // session). Show a retry state instead of an empty list or a spinner
+        // that never ends.
+        console.error("Failed to load student list:", error);
+        if (!cancelled) setLoadError(true);
+      } finally {
+        if (!cancelled) setDataLoading(false);
+      }
     };
 
     fetchData();
-  }, [user, role, roleLoading, activeOrganizationId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, role, roleLoading, activeOrganizationId, reloadKey]);
 
   const filteredSortedStudents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -352,6 +408,41 @@ export default function StudentsAnalyticsPage() {
     setDragDirection(next > page ? 1 : -1);
     setPage(next);
   };
+
+  // useUserRole reports "loading" for as long as there is no active organization,
+  // so an account whose memberships could not be resolved would sit on the
+  // spinner forever. Detect that case and explain it instead.
+  const hasNoOrganization = !authLoading && !!user && !activeOrganizationId;
+
+  if (hasNoOrganization || loadError) {
+    return (
+      <div className="min-h-screen bg-paper flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-slate-800 text-lg font-bold">
+          {hasNoOrganization
+            ? (isEnglish ? "Your account is not linked to an organization yet." : "Akun Anda belum terhubung ke organisasi.")
+            : (isEnglish ? "Could not load the data." : "Data belum bisa dimuat.")}
+        </p>
+        <p className="text-slate-500 text-sm font-medium max-w-xs">
+          {hasNoOrganization
+            ? (isEnglish ? "Please contact your administrator." : "Silakan hubungi admin Anda.")
+            : (isEnglish ? "Check your connection and try again." : "Periksa koneksi internet Anda lalu coba lagi.")}
+        </p>
+        {!hasNoOrganization && (
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="px-5 py-3 rounded-2xl bg-brand-500 text-white text-sm font-bold active:translate-y-px"
+            style={{ boxShadow: "0 3px 0 0 var(--brand-700)" }}
+          >
+            {isEnglish ? "Try again" : "Coba lagi"}
+          </button>
+        )}
+        <Link href="/" className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          {isEnglish ? "Home" : "Beranda"}
+        </Link>
+      </div>
+    );
+  }
 
   // ── Loading state ────────────────────────────────────────────────────────
   if (roleLoading || dataLoading) {

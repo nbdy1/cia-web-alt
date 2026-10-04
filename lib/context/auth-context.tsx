@@ -121,15 +121,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
     }
 
-    const mappedOrgs: Organization[] = (orgsData ?? []).map((row: any) => ({
-      id: row.organizations.id,
-      name: row.organizations.name,
-      slug: row.organizations.slug,
-      role: row.role,
-      logoUrl: row.organizations.logo_url ?? null,
-      primaryColor: row.organizations.primary_color ?? '#10b981',
-      appMode: (row.app_mode === "bp" ? "bp" : "cds") as "cds" | "bp",
-    }));
+    // A membership whose organization row is not readable (null join) used to
+    // throw here, which aborted org loading and left the user with no active
+    // organization. Skip such rows instead so the remaining orgs still load.
+    const mappedOrgs: Organization[] = (orgsData ?? [])
+      .filter((row: any) => row.organizations)
+      .map((row: any) => ({
+        id: row.organizations.id,
+        name: row.organizations.name,
+        slug: row.organizations.slug,
+        role: row.role,
+        logoUrl: row.organizations.logo_url ?? null,
+        primaryColor: row.organizations.primary_color ?? '#10b981',
+        appMode: (row.app_mode === "bp" ? "bp" : "cds") as "cds" | "bp",
+      }));
 
     setOrganizations(mappedOrgs);
 
