@@ -39,7 +39,7 @@ export function BpDueTreatmentReminders() {
       body: isEnglish ? `Time to review ${active.studentName}'s support plan.` : `Saatnya meninjau rencana bimbingan ${active.studentName}.`,
       icon: "/icon.png",
       tag: `bk-reminder-${active.id}`,
-      onClick: () => window.focus(),
+      url: "/bk",
     });
   }, [active, isEnglish]);
 

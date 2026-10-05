@@ -26,6 +26,7 @@ import { AuthProvider } from "@/lib/context/auth-context";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { ClickSoundProvider } from "@/components/ClickSoundProvider";
 import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { SettingsProvider } from "@/lib/context/settings-context";
 import "./globals.css";
 
@@ -157,6 +158,7 @@ export default function RootLayout({
           {appearanceScript}
         </Script>
         <ClickSoundProvider />
+        <ServiceWorkerRegistration />
         <SettingsProvider>
           <AuthProvider>
             <NotificationPermissionPrompt />

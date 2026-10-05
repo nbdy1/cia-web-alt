@@ -39,7 +39,7 @@ export function DueTreatmentFollowups() {
       body: isEnglish ? `Time to record ${active.studentName}'s treatment follow-up.` : `Saatnya mencatat tindak lanjut treatment ${active.studentName}.`,
       icon: "/icon.png",
       tag: `treatment-followup-${active.id}`,
-      onClick: () => window.focus(),
+      url: "/students",
     });
   }, [active, isEnglish]);
 

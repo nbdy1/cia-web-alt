@@ -4,6 +4,19 @@ const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "characterdev.systems";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async headers() {
+    return [
+      {
+        // The worker must never be cached, or a bad version could stick on
+        // teachers' phones. Content-Type must be JS for registration to succeed.
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       // BK replaced the earlier BP name. Keep historic links usable while

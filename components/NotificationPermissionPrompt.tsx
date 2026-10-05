@@ -41,9 +41,22 @@ export function NotificationPermissionPrompt() {
   async function allow() {
     if (!("Notification" in window)) return;
     setRequesting(true);
-    await Notification.requestPermission();
+    let result: NotificationPermission = "default";
+    try {
+      result = await Notification.requestPermission();
+    } catch {
+      // Some browsers/in-app webviews refuse to ask ("this site can't ask for
+      // permission"). Treat it like a refusal instead of an unhandled error.
+    }
     setRequesting(false);
     setVisible(false);
+    // If it did not end up granted the permission is still "default" in these
+    // browsers, which would re-open this modal on the next page load. Snooze it.
+    if (result !== "granted" && user) {
+      try {
+        window.localStorage.setItem(`${SNOOZE_KEY_PREFIX}${user.id}`, String(Date.now() + SNOOZE_MS));
+      } catch {}
+    }
   }
 
   if (!visible) return null;

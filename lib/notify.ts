@@ -3,39 +3,48 @@
  *
  * Safe wrapper around browser notifications. Never throws.
  *
- * Why: Chrome on Android does not allow `new Notification(...)` — the
- * constructor throws "Illegal constructor … use ServiceWorkerRegistration
- * .showNotification()" once permission is granted. Called from a React effect,
- * that uncaught TypeError unmounts the whole page (it surfaced as the
- * /students "profile" page failing for phone users who had allowed
- * notifications and had a follow-up due). A reminder notification is
- * best-effort; the in-page reminder card is the real UI, so on any failure we
- * simply skip the system notification.
+ * Android Chrome does not allow `new Notification(...)` — the constructor throws
+ * "Illegal constructor … use ServiceWorkerRegistration.showNotification()". Called
+ * from a React effect that uncaught TypeError used to unmount the whole page (it
+ * surfaced as /students failing for phone users who had allowed notifications and
+ * had a follow-up due). So we prefer the service worker (public/sw.js, registered
+ * by components/ServiceWorkerRegistration.tsx), fall back to the constructor for
+ * browsers without a worker, and swallow every failure: a system notification is
+ * best-effort, the in-page reminder card is the real UI.
  */
-export function showLocalNotification(
+export type LocalNotificationOptions = NotificationOptions & {
+  /** Same-origin path opened when the notification is tapped. */
+  url?: string;
+};
+
+const WORKER_WAIT_MS = 2000;
+
+async function getRegistration(): Promise<ServiceWorkerRegistration | undefined> {
+  if (!("serviceWorker" in navigator)) return undefined;
+  // `ready` never settles when no worker is registered, so cap the wait.
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<undefined>((resolve) => window.setTimeout(resolve, WORKER_WAIT_MS)),
+  ]).catch(() => undefined);
+}
+
+export async function showLocalNotification(
   title: string,
-  options: NotificationOptions & { onClick?: () => void } = {},
-) {
+  { url = "/", ...options }: LocalNotificationOptions = {},
+): Promise<void> {
   try {
     if (typeof window === "undefined" || !("Notification" in window)) return;
     if (Notification.permission !== "granted") return;
 
-    const { onClick, ...notificationOptions } = options;
-    try {
-      const notification = new Notification(title, notificationOptions);
-      if (onClick) notification.onclick = onClick;
+    const registration = await getRegistration();
+    if (registration) {
+      await registration.showNotification(title, { ...options, data: { url } });
       return;
-    } catch {
-      // Android Chrome: the constructor is blocked. Fall through to the
-      // service-worker route if (and only if) one is registered.
     }
 
-    if ("serviceWorker" in navigator) {
-      void navigator.serviceWorker
-        .getRegistration()
-        .then((registration) => registration?.showNotification(title, notificationOptions))
-        .catch(() => undefined);
-    }
+    // No worker available: desktop-style constructor (blocked on Android, hence try/catch).
+    const notification = new Notification(title, options);
+    notification.onclick = () => window.focus();
   } catch {
     // Notifications are optional — never let them break the page.
   }
