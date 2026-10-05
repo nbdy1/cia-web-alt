@@ -5,6 +5,7 @@ import { BellRing, Check, Loader2 } from "lucide-react";
 import { getDueTreatmentFollowups, recordTreatmentFollowup } from "@/app/actions/treatment-followups";
 import { useAuth } from "@/lib/context/auth-context";
 import { useTerminology } from "@/lib/hooks/use-terminology";
+import { showLocalNotification } from "@/lib/notify";
 
 type DueReminder = { id: string; reportId: string; studentName: string; title: string; actionPlan: string };
 
@@ -22,17 +23,24 @@ export function DueTreatmentFollowups() {
 
   useEffect(() => {
     if (!activeOrganizationId) return;
-    void getDueTreatmentFollowups(activeOrganizationId).then((items) => {
-      setReminders(items);
-      setActive(items[0] ?? null);
-    });
+    void getDueTreatmentFollowups(activeOrganizationId)
+      .then((items) => {
+        setReminders(items);
+        setActive(items[0] ?? null);
+      })
+      // A failed reminder lookup must never break the page it is embedded in.
+      .catch((error) => console.error("Treatment follow-up load failed:", error));
   }, [activeOrganizationId]);
 
   useEffect(() => {
-    if (!active || !("Notification" in window) || Notification.permission !== "granted" || notified.current.has(active.id)) return;
+    if (!active || notified.current.has(active.id)) return;
     notified.current.add(active.id);
-    const notification = new Notification("CDS", { body: isEnglish ? `Time to record ${active.studentName}'s treatment follow-up.` : `Saatnya mencatat tindak lanjut treatment ${active.studentName}.`, icon: "/icon.png", tag: `treatment-followup-${active.id}` });
-    notification.onclick = () => window.focus();
+    showLocalNotification("CDS", {
+      body: isEnglish ? `Time to record ${active.studentName}'s treatment follow-up.` : `Saatnya mencatat tindak lanjut treatment ${active.studentName}.`,
+      icon: "/icon.png",
+      tag: `treatment-followup-${active.id}`,
+      onClick: () => window.focus(),
+    });
   }, [active, isEnglish]);
 
   if (!active) return null;

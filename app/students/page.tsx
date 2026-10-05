@@ -46,6 +46,7 @@ import Link from "next/link";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 import { DueTreatmentFollowups } from "@/components/DueTreatmentFollowups";
+import { SilentErrorBoundary } from "@/components/SilentErrorBoundary";
 
 type StudentWithStats = {
   id: string;
@@ -488,7 +489,9 @@ export default function StudentsAnalyticsPage() {
       </header>
 
       <main className="px-6 space-y-8">
-        <DueTreatmentFollowups />
+        <SilentErrorBoundary label="DueTreatmentFollowups">
+          <DueTreatmentFollowups />
+        </SilentErrorBoundary>
         {/* 1. STUDENT DIRECTORY */}
         <section>
           <div className="flex items-center gap-2 mb-4">

@@ -5,6 +5,7 @@ import { BellRing, Check, Loader2 } from "lucide-react";
 import { getDueBpTreatmentReminders, saveBpTreatmentCheckin } from "@/app/actions/bp-treatment-reminders";
 import { useAuth } from "@/lib/context/auth-context";
 import { useSettings } from "@/lib/context/settings-context";
+import { showLocalNotification } from "@/lib/notify";
 
 type DueReminder = { id: string; reportId: string; title: string; studentName: string; summary: string };
 
@@ -22,21 +23,24 @@ export function BpDueTreatmentReminders() {
 
   useEffect(() => {
     if (!activeOrganizationId) return;
-    void getDueBpTreatmentReminders(activeOrganizationId).then((items) => {
-      setReminders(items);
-      setActive(items[0] ?? null);
-    });
+    void getDueBpTreatmentReminders(activeOrganizationId)
+      .then((items) => {
+        setReminders(items);
+        setActive(items[0] ?? null);
+      })
+      // A failed reminder lookup must never break the page it is embedded in.
+      .catch((error) => console.error("BK reminder load failed:", error));
   }, [activeOrganizationId]);
 
   useEffect(() => {
-    if (!active || !("Notification" in window) || Notification.permission !== "granted" || notified.current.has(active.id)) return;
+    if (!active || notified.current.has(active.id)) return;
     notified.current.add(active.id);
-    const notification = new Notification("CDS", {
+    showLocalNotification("CDS", {
       body: isEnglish ? `Time to review ${active.studentName}'s support plan.` : `Saatnya meninjau rencana bimbingan ${active.studentName}.`,
       icon: "/icon.png",
       tag: `bk-reminder-${active.id}`,
+      onClick: () => window.focus(),
     });
-    notification.onclick = () => window.focus();
   }, [active, isEnglish]);
 
   if (!active) return null;
