@@ -45,13 +45,24 @@ export async function getTreatmentReminderForReport(reportId: string) {
   return data ?? null;
 }
 
-export async function getDueTreatmentFollowups(organizationId: string): Promise<Array<{
+export type DueTreatmentFollowup = {
   id: string;
   reportId: string;
   studentName: string;
   title: string;
   actionPlan: string;
-}>> {
+  /** When the follow-up became due (ISO). */
+  nextCheckAt: string;
+  /** When the report that produced the plan was written (ISO). */
+  reportCreatedAt: string | null;
+  priorityTheme: string;
+  priorityIndicator: string;
+  targetSubIndicators: string[];
+  /** Most recent earlier check-ins on this plan, newest last. */
+  previousCheckins: Array<{ outcome: "done" | "not_done"; reflection: string; createdAt: string }>;
+};
+
+export async function getDueTreatmentFollowups(organizationId: string): Promise<DueTreatmentFollowup[]> {
   try {
     const db = await createClient();
     const { data: { user } } = await db.auth.getUser();
@@ -59,7 +70,7 @@ export async function getDueTreatmentFollowups(organizationId: string): Promise<
     await assertTenantOrganization(db, organizationId);
     const { data, error } = await db
       .from("treatment_plan_reminders")
-      .select("id, report_id, reports!inner(id, title, treatment_plan, students(name))")
+      .select("id, report_id, next_check_at, reports!inner(id, title, created_at, treatment_plan, students(name))")
       .eq("organization_id", organizationId)
       .eq("responsible_user_id", user.id)
       .eq("is_active", true)
@@ -69,12 +80,26 @@ export async function getDueTreatmentFollowups(organizationId: string): Promise<
     return (data ?? []).map((row: any) => {
       const report = row.reports;
       const plan = parsePlan(report?.treatment_plan);
+      const treatment = plan?.treatment && typeof plan.treatment === "object" ? plan.treatment : {};
+      const checkins = Array.isArray(treatment.follow_up_checkins) ? treatment.follow_up_checkins : [];
       return {
         id: row.id,
         reportId: row.report_id,
         studentName: String(report?.students?.name ?? "Santri"),
         title: String(report?.title ?? "Laporan Perkembangan"),
-        actionPlan: String(plan?.treatment?.action_plan ?? ""),
+        actionPlan: String(treatment.action_plan ?? ""),
+        nextCheckAt: String(row.next_check_at),
+        reportCreatedAt: report?.created_at ? String(report.created_at) : null,
+        priorityTheme: String(treatment.priority_theme ?? ""),
+        priorityIndicator: String(treatment.priority_indicator ?? ""),
+        targetSubIndicators: Array.isArray(treatment.target_sub_indicators)
+          ? treatment.target_sub_indicators.map((item: unknown) => String(item)).filter(Boolean)
+          : [],
+        previousCheckins: checkins.slice(-2).map((item: any) => ({
+          outcome: item?.outcome === "done" ? "done" : "not_done",
+          reflection: String(item?.reflection ?? ""),
+          createdAt: String(item?.created_at ?? ""),
+        })),
       };
     });
   } catch (error) {
