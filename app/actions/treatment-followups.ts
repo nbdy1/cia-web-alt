@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertTenantOrganization } from "@/lib/tenant-server";
+import { evaluateTreatmentWindow } from "@/lib/treatment-followup-rules";
 
 type TreatmentOutcome = "done" | "not_done";
 
@@ -45,14 +46,25 @@ export async function getTreatmentReminderForReport(reportId: string) {
   return data ?? null;
 }
 
-export type DueTreatmentFollowup = {
+/**
+ * Treatment follow-up rule: every teacher records AT LEAST ONE treatment per
+ * rolling two weeks, on whichever student/report they judge needs it most.
+ *
+ * (Earlier design: every report carried its own 14-day deadline. The
+ * treatment_plan_reminders row per report, created by the trigger in
+ * scripts/migrations/20260921_cds_treatment_followups.sql, still exists, but is
+ * now only the teacher's list of still-pending treatment plans; its
+ * next_check_at no longer drives anything.)
+ *
+ * A treatment counts as "done" when it was recorded through a "done" check-in or
+ * the plan was marked completed on the report page.
+ */
+export type TreatmentCandidate = {
   id: string;
   reportId: string;
   studentName: string;
   title: string;
   actionPlan: string;
-  /** When the follow-up became due (ISO). */
-  nextCheckAt: string;
   /** When the report that produced the plan was written (ISO). */
   reportCreatedAt: string | null;
   priorityTheme: string;
@@ -62,33 +74,59 @@ export type DueTreatmentFollowup = {
   previousCheckins: Array<{ outcome: "done" | "not_done"; reflection: string; createdAt: string }>;
 };
 
-export async function getDueTreatmentFollowups(organizationId: string): Promise<DueTreatmentFollowup[]> {
+export type TreatmentFollowupStatus = {
+  /** True when the two-week window has lapsed and there is something to treat. */
+  isDue: boolean;
+  /** When the teacher fell due (ISO); null when not due. */
+  dueSince: string | null;
+  /** Latest recorded treatment by this teacher (ISO), if any. */
+  lastDoneAt: string | null;
+  /** Pending treatment plans the teacher may choose from, oldest report first. */
+  candidates: TreatmentCandidate[];
+};
+
+const NOT_DUE: TreatmentFollowupStatus = { isDue: false, dueSince: null, lastDoneAt: null, candidates: [] };
+
+export async function getTreatmentFollowupStatus(organizationId: string): Promise<TreatmentFollowupStatus> {
   try {
     const db = await createClient();
     const { data: { user } } = await db.auth.getUser();
-    if (!user) return [];
+    if (!user) return NOT_DUE;
     await assertTenantOrganization(db, organizationId);
+
+    // All of this teacher's reminder rows (active and finished): finished ones
+    // are needed to know when they last completed a treatment.
     const { data, error } = await db
       .from("treatment_plan_reminders")
-      .select("id, report_id, next_check_at, reports!inner(id, title, created_at, treatment_plan, students(name))")
+      .select("id, report_id, is_active, reports!inner(id, title, created_at, treatment_plan, students(name))")
       .eq("organization_id", organizationId)
-      .eq("responsible_user_id", user.id)
-      .eq("is_active", true)
-      .lte("next_check_at", new Date().toISOString())
-      .order("next_check_at", { ascending: true });
+      .eq("responsible_user_id", user.id);
     if (error) throw error;
-    return (data ?? []).map((row: any) => {
+
+    const doneTimes: Array<string | null> = [];
+    const candidates: TreatmentCandidate[] = [];
+
+    for (const row of (data ?? []) as any[]) {
       const report = row.reports;
       const plan = parsePlan(report?.treatment_plan);
       const treatment = plan?.treatment && typeof plan.treatment === "object" ? plan.treatment : {};
-      const checkins = Array.isArray(treatment.follow_up_checkins) ? treatment.follow_up_checkins : [];
-      return {
+      const checkins: any[] = Array.isArray(treatment.follow_up_checkins) ? treatment.follow_up_checkins : [];
+      const status = treatment.status ?? (treatment.completed ? "completed" : "pending");
+
+      if (status === "completed") doneTimes.push(treatment.resolved_at ?? treatment.completed_at ?? null);
+      for (const checkin of checkins) {
+        if (checkin?.outcome === "done") doneTimes.push(checkin.created_at ?? null);
+      }
+
+      const actionPlan = String(treatment.action_plan ?? "").trim();
+      if (!row.is_active || status !== "pending" || !actionPlan) continue;
+
+      candidates.push({
         id: row.id,
         reportId: row.report_id,
         studentName: String(report?.students?.name ?? "Santri"),
         title: String(report?.title ?? "Laporan Perkembangan"),
-        actionPlan: String(treatment.action_plan ?? ""),
-        nextCheckAt: String(row.next_check_at),
+        actionPlan,
         reportCreatedAt: report?.created_at ? String(report.created_at) : null,
         priorityTheme: String(treatment.priority_theme ?? ""),
         priorityIndicator: String(treatment.priority_indicator ?? ""),
@@ -100,11 +138,13 @@ export async function getDueTreatmentFollowups(organizationId: string): Promise<
           reflection: String(item?.reflection ?? ""),
           createdAt: String(item?.created_at ?? ""),
         })),
-      };
-    });
+      });
+    }
+
+    return evaluateTreatmentWindow(doneTimes, candidates);
   } catch (error) {
     console.error("Treatment follow-up load error:", error);
-    return [];
+    return NOT_DUE;
   }
 }
 

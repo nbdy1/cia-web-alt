@@ -416,7 +416,6 @@ export default async function ReportDetailPage({
               {reminder ? (
                 <TreatmentFollowupControl
                   reminderId={reminder.id}
-                  nextCheckAt={reminder.next_check_at}
                   isActive={reminder.is_active}
                   checkins={Array.isArray(analysis.treatment.follow_up_checkins) ? analysis.treatment.follow_up_checkins : []}
                 />
