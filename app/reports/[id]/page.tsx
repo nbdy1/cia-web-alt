@@ -38,6 +38,7 @@ import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { getLocalizedTerminology } from "@/lib/data/terminology";
 import { getServerAppLanguage } from "@/lib/server/language";
 import { isTenantOrganization } from "@/lib/tenant-server";
+import { getOrganizationRequirements } from "@/lib/org-requirements-server";
 import { getFrameworkForOrganization, isSupplementaryTheme } from "@/lib/data/framework";
 
 // ─── Framework lookup helpers ──────────────────────────────────────────────
@@ -143,10 +144,10 @@ async function getReportDetails(id: string) {
     .single();
 
   if (report && !(await isTenantOrganization(db, report.organization_id))) {
-    return { report: null, authorName: null, reminder: null };
+    return { report: null, authorName: null, reminder: null, treatmentWindowDays: 14 };
   }
 
-  if (!report) return { report: null, authorName: null, reminder: null };
+  if (!report) return { report: null, authorName: null, reminder: null, treatmentWindowDays: 14 };
 
   const { data: studentDisplay, error: studentDisplayError } = await db.rpc(
     "get_report_student_for_view",
@@ -155,7 +156,7 @@ async function getReportDetails(id: string) {
 
   if (studentDisplayError || !studentDisplay) {
     console.error("Failed to load report student display:", studentDisplayError);
-    return { report: null, authorName: null, reminder: null };
+    return { report: null, authorName: null, reminder: null, treatmentWindowDays: 14 };
   }
 
   let authorName: string | null = null;
@@ -174,7 +175,9 @@ async function getReportDetails(id: string) {
     .eq("report_id", id)
     .maybeSingle();
 
-  return { report: { ...report, students: studentDisplay }, authorName, reminder };
+  const treatmentWindowDays = (await getOrganizationRequirements(db, report.organization_id)).treatmentWindowDays;
+
+  return { report: { ...report, students: studentDisplay }, authorName, reminder, treatmentWindowDays };
 }
 
 export default async function ReportDetailPage({
@@ -189,7 +192,7 @@ export default async function ReportDetailPage({
   const isEnglish = language === "en";
   const locale = isEnglish ? "en-US" : "id-ID";
   const resolvedSearchParams = await searchParams;
-  const { report, authorName, reminder } = await getReportDetails(id);
+  const { report, authorName, reminder, treatmentWindowDays } = await getReportDetails(id);
   const rawFrom = resolvedSearchParams?.from;
   const from = Array.isArray(rawFrom) ? rawFrom[0] : rawFrom;
 
@@ -417,6 +420,7 @@ export default async function ReportDetailPage({
                 <TreatmentFollowupControl
                   reminderId={reminder.id}
                   isActive={reminder.is_active}
+                  windowDays={treatmentWindowDays}
                   checkins={Array.isArray(analysis.treatment.follow_up_checkins) ? analysis.treatment.follow_up_checkins : []}
                 />
               ) : (

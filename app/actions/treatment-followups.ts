@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertTenantOrganization } from "@/lib/tenant-server";
-import { evaluateTreatmentWindow } from "@/lib/treatment-followup-rules";
+import { evaluateTreatmentWindow, latestIso, normalizeWindowDays } from "@/lib/treatment-followup-rules";
+import { getOrganizationRequirements } from "@/lib/org-requirements-server";
+import { requireOrganizationAdmin } from "@/lib/server/require-admin";
+import { dateKeyInZone, isDateInPause, pauseRestartAt, type PauseWindow } from "@/lib/requirement-rules";
 
 type TreatmentOutcome = "done" | "not_done";
 
@@ -75,6 +78,8 @@ export type TreatmentCandidate = {
 };
 
 export type TreatmentFollowupStatus = {
+  /** The organization's required cadence, in days. */
+  windowDays: number;
   /** True when the two-week window has lapsed and there is something to treat. */
   isDue: boolean;
   /** When the teacher fell due (ISO); null when not due. */
@@ -85,7 +90,7 @@ export type TreatmentFollowupStatus = {
   candidates: TreatmentCandidate[];
 };
 
-const NOT_DUE: TreatmentFollowupStatus = { isDue: false, dueSince: null, lastDoneAt: null, candidates: [] };
+const NOT_DUE: TreatmentFollowupStatus = { windowDays: 14, isDue: false, dueSince: null, lastDoneAt: null, candidates: [] };
 
 export async function getTreatmentFollowupStatus(organizationId: string): Promise<TreatmentFollowupStatus> {
   try {
@@ -93,6 +98,12 @@ export async function getTreatmentFollowupStatus(organizationId: string): Promis
     const { data: { user } } = await db.auth.getUser();
     if (!user) return NOT_DUE;
     await assertTenantOrganization(db, organizationId);
+    const requirements = await getOrganizationRequirements(db, organizationId);
+    const windowDays = requirements.treatmentWindowDays;
+
+    // An admin-granted pause means nothing is due, whatever the history says.
+    const today = dateKeyInZone(Date.now());
+    if (today && isDateInPause(requirements.treatmentPause, today)) return { ...NOT_DUE, windowDays };
 
     // All of this teacher's reminder rows (active and finished): finished ones
     // are needed to know when they last completed a treatment.
@@ -141,10 +152,176 @@ export async function getTreatmentFollowupStatus(organizationId: string): Promis
       });
     }
 
-    return evaluateTreatmentWindow(doneTimes, candidates);
+    return { windowDays, ...evaluateTreatmentWindow(doneTimes, candidates, windowDays, Date.now(), pauseRestartAt(requirements.treatmentPause)) };
   } catch (error) {
     console.error("Treatment follow-up load error:", error);
     return NOT_DUE;
+  }
+}
+
+// ─── Admin: cadence setting + teacher compliance ─────────────────────────────
+
+export type TeacherCompliance = {
+  userId: string;
+  name: string;
+  /** Latest recorded treatment (ISO) and the student it was for. */
+  lastDoneAt: string | null;
+  lastDoneStudent: string | null;
+  /** Oldest report (ISO) among still-pending plans; null when none are pending. */
+  oldestPendingAt: string | null;
+  pendingCount: number;
+  /** Treatments recorded all-time (check-ins marked done + plans completed). */
+  totalDone: number;
+};
+
+export type TeacherComplianceResult =
+  | {
+      success: true;
+      windowDays: number;
+      teachers: TeacherCompliance[];
+      /** Admin-granted pause on this requirement (none when from is null). */
+      pause: PauseWindow;
+      /** When the last pause ended; the treatment clock restarts there. */
+      restartAt: string | null;
+    }
+  | { success: false; error: string };
+
+/**
+ * Raw per-teacher facts for the admin compliance tab. The state (met / overdue /
+ * ...) is deliberately NOT decided here: the browser classifies with the shared
+ * rules so the admin can preview a different cadence before saving it.
+ */
+export async function getTeacherTreatmentCompliance(organizationId: string): Promise<TeacherComplianceResult> {
+  try {
+    const db = await requireOrganizationAdmin(organizationId);
+    const requirements = await getOrganizationRequirements(db, organizationId);
+    const windowDays = requirements.treatmentWindowDays;
+
+    const { data: memberRows, error: memberError } = await db
+      .from("organization_members")
+      .select("user_id, role")
+      .eq("organization_id", organizationId);
+    if (memberError) throw memberError;
+    const memberIds = (memberRows ?? []).map((row: any) => row.user_id);
+
+    const { data: profiles } = memberIds.length > 0
+      ? await db.from("profiles").select("id, name").in("id", memberIds)
+      : { data: [] as any[] };
+    const nameById = new Map((profiles ?? []).map((profile: any) => [profile.id, profile.name as string | null]));
+
+    // PostgREST returns at most 1,000 rows per request; page so a large
+    // organization is never silently truncated.
+    const reminders: any[] = [];
+    for (let offset = 0; ; offset += 1000) {
+      const { data: page, error } = await db
+        .from("treatment_plan_reminders")
+        .select("responsible_user_id, is_active, reports!inner(created_at, treatment_plan, students(name))")
+        .eq("organization_id", organizationId)
+        .range(offset, offset + 999);
+      if (error) throw error;
+      reminders.push(...(page ?? []));
+      if ((page ?? []).length < 1000) break;
+    }
+
+    const byUser = new Map<string, TeacherCompliance>();
+    const ensure = (userId: string): TeacherCompliance => {
+      let entry = byUser.get(userId);
+      if (!entry) {
+        entry = {
+          userId,
+          name: nameById.get(userId) ?? "Tanpa nama",
+          lastDoneAt: null,
+          lastDoneStudent: null,
+          oldestPendingAt: null,
+          pendingCount: 0,
+          totalDone: 0,
+        };
+        byUser.set(userId, entry);
+      }
+      return entry;
+    };
+
+    // Teachers with no plans at all still belong on the list ("nothing pending").
+    for (const row of (memberRows ?? []) as any[]) {
+      if (row.role === "ustadz") ensure(row.user_id);
+    }
+
+    for (const row of reminders) {
+      if (!row.responsible_user_id) continue;
+      const entry = ensure(row.responsible_user_id);
+      const report = row.reports;
+      const plan = parsePlan(report?.treatment_plan);
+      const treatment = plan?.treatment && typeof plan.treatment === "object" ? plan.treatment : {};
+      const status = treatment.status ?? (treatment.completed ? "completed" : "pending");
+      const studentName = String(report?.students?.name ?? "");
+
+      const doneAtThisPlan: string[] = [];
+      if (status === "completed") {
+        const at = treatment.resolved_at ?? treatment.completed_at;
+        if (at) doneAtThisPlan.push(String(at));
+      }
+      const checkins: any[] = Array.isArray(treatment.follow_up_checkins) ? treatment.follow_up_checkins : [];
+      for (const checkin of checkins) {
+        if (checkin?.outcome === "done" && checkin.created_at) doneAtThisPlan.push(String(checkin.created_at));
+      }
+      entry.totalDone += doneAtThisPlan.length;
+      for (const at of doneAtThisPlan) {
+        const best = latestIso([entry.lastDoneAt, at]);
+        if (best !== entry.lastDoneAt) {
+          entry.lastDoneAt = best;
+          entry.lastDoneStudent = studentName || null;
+        }
+      }
+
+      const actionPlan = String(treatment.action_plan ?? "").trim();
+      if (row.is_active && status === "pending" && actionPlan) {
+        entry.pendingCount += 1;
+        const createdAt = report?.created_at ? String(report.created_at) : null;
+        if (createdAt && (!entry.oldestPendingAt || createdAt < entry.oldestPendingAt)) entry.oldestPendingAt = createdAt;
+      }
+    }
+
+    const teachers = Array.from(byUser.values());
+    return { success: true, windowDays, teachers, pause: requirements.treatmentPause, restartAt: pauseRestartAt(requirements.treatmentPause) };
+  } catch (error: any) {
+    console.error("Teacher treatment compliance load error:", error);
+    return { success: false, error: error?.message ?? "Data kepatuhan belum dapat dimuat." };
+  }
+}
+
+export async function setTreatmentFollowupWindow(
+  organizationId: string,
+  days: number,
+): Promise<{ success: true; windowDays: number } | { success: false; error: string }> {
+  try {
+    if (!Number.isInteger(days) || days !== normalizeWindowDays(days)) {
+      return { success: false, error: "Isi jumlah hari antara 1 sampai 90." };
+    }
+    const db = await requireOrganizationAdmin(organizationId);
+    const { data, error } = await db
+      .from("organizations")
+      .update({ treatment_followup_days: days })
+      .eq("id", organizationId)
+      .select("treatment_followup_days")
+      .maybeSingle();
+
+    if (error) {
+      const missingColumn = /treatment_followup_days/.test(error.message ?? "");
+      return {
+        success: false,
+        error: missingColumn
+          ? "Pengaturan ini belum aktif di database. Jalankan migrasi 20261007_treatment_followup_window.sql terlebih dahulu."
+          : error.message,
+      };
+    }
+    // RLS filters a forbidden update down to zero rows instead of raising.
+    if (!data) return { success: false, error: "Perubahan ditolak. Pastikan Anda admin organisasi ini." };
+
+    revalidatePath("/admin/treatment-plans");
+    revalidatePath("/students");
+    return { success: true, windowDays: normalizeWindowDays(data.treatment_followup_days) };
+  } catch (error: any) {
+    return { success: false, error: error?.message ?? "Pengaturan belum dapat disimpan." };
   }
 }
 

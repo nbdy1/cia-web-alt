@@ -2,7 +2,7 @@
  * components/DueTreatmentFollowups.tsx
  *
  * Card at the top of /students. Rule: each teacher records AT LEAST ONE
- * treatment every two weeks, on whichever student/report needs it most (see
+ * treatment every N days (N is set by admins, default 14), on whichever student/report needs it most (see
  * getTreatmentFollowupStatus in app/actions/treatment-followups.ts).
  *
  * The card appears only once two weeks have passed without a recorded
@@ -26,7 +26,6 @@ import { useTerminology } from "@/lib/hooks/use-terminology";
 import { showLocalNotification } from "@/lib/notify";
 
 const DAY_MS = 86_400_000;
-const WINDOW_DAYS = 14;
 
 export function DueTreatmentFollowups() {
   const { activeOrganizationId } = useAuth();
@@ -35,6 +34,7 @@ export function DueTreatmentFollowups() {
   const locale = isEnglish ? "en-US" : "id-ID";
   const [candidates, setCandidates] = useState<TreatmentCandidate[]>([]);
   const [dueSince, setDueSince] = useState<string | null>(null);
+  const [windowDays, setWindowDays] = useState(14);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [reflection, setReflection] = useState("");
@@ -52,13 +52,14 @@ export function DueTreatmentFollowups() {
         if (cancelled || !status.isDue || status.candidates.length === 0) return;
         setCandidates(status.candidates);
         setDueSince(status.dueSince);
+        setWindowDays(status.windowDays);
         setActiveId(status.candidates[0].id);
         setLoadedAt(Date.now());
         // Once per page load; switching students never re-fires it.
         void showLocalNotification("CDS", {
           body: isEnglish
-            ? "No treatment recorded in the last 2 weeks. Pick a student to follow up."
-            : "Belum ada treatment tercatat 2 minggu terakhir. Pilih satu anak untuk ditindaklanjuti.",
+            ? `No treatment recorded in the last ${status.windowDays} days. Pick a student to follow up.`
+            : `Belum ada treatment tercatat ${status.windowDays} hari terakhir. Pilih satu anak untuk ditindaklanjuti.`,
           icon: "/icon.png",
           tag: "treatment-followup-due",
           url: "/students",
@@ -82,7 +83,7 @@ export function DueTreatmentFollowups() {
             {isEnglish ? `Treatment for ${recordedName} recorded. Thank you!` : `Treatment ${recordedName} tercatat. Terima kasih!`}
           </p>
           <p className="mt-0.5 text-xs font-medium text-slate-600">
-            {isEnglish ? `Your next treatment is due within ${WINDOW_DAYS} days.` : `Treatment berikutnya dicatat paling lambat ${WINDOW_DAYS} hari lagi.`}
+            {isEnglish ? `Your next treatment is due within ${windowDays} days.` : `Treatment berikutnya dicatat paling lambat ${windowDays} hari lagi.`}
           </p>
         </div>
       </section>
@@ -110,10 +111,10 @@ export function DueTreatmentFollowups() {
   const daysPast = dueSince ? Math.max(0, Math.floor((loadedAt - new Date(dueSince).getTime()) / DAY_MS)) : 0;
   const statusLine =
     daysPast <= 0
-      ? isEnglish ? "No treatment recorded in 2 weeks" : "Belum ada treatment dalam 2 minggu"
+      ? isEnglish ? `No treatment recorded in ${windowDays} days` : `Belum ada treatment dalam ${windowDays} hari`
       : isEnglish
-        ? `No treatment recorded for ${WINDOW_DAYS + daysPast} days`
-        : `Belum ada treatment selama ${WINDOW_DAYS + daysPast} hari`;
+        ? `No treatment recorded for ${windowDays + daysPast} days`
+        : `Belum ada treatment selama ${windowDays + daysPast} hari`;
 
   function submit() {
     const chosen = active;
@@ -157,8 +158,8 @@ export function DueTreatmentFollowups() {
           <span className="mt-0.5 block text-base font-bold leading-snug text-slate-800">{statusLine}</span>
           <span className="mt-1 block text-xs font-medium leading-relaxed text-slate-600">
             {isEnglish
-              ? "Record at least one treatment every 2 weeks. Choose whichever student needs it most."
-              : "Catat minimal satu treatment setiap 2 minggu. Pilih anak yang paling membutuhkan."}
+              ? `Record at least one treatment every ${windowDays} days. Choose whichever student needs it most.`
+              : `Catat minimal satu treatment setiap ${windowDays} hari. Pilih anak yang paling membutuhkan.`}
           </span>
           <span className="mt-1.5 block text-[11px] font-bold text-brand-700">
             {expanded
@@ -264,7 +265,7 @@ export function DueTreatmentFollowups() {
             </label>
             <div className="mt-3 flex items-center justify-between gap-3">
               <p className="text-[11px] font-medium leading-relaxed text-slate-500">
-                {isEnglish ? "Recording one treatment completes your 2-week target." : "Mencatat satu treatment sudah memenuhi target 2 minggu Anda."}
+                {isEnglish ? `Recording one treatment completes your ${windowDays}-day target.` : `Mencatat satu treatment sudah memenuhi target ${windowDays} hari Anda.`}
               </p>
               <button
                 type="button"

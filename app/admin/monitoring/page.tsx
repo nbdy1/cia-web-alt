@@ -28,6 +28,11 @@
  *     fetched data actually differs from what's cached, so an admin sitting on
  *     this page doesn't get jolted by a re-render for no reason.
  *
+ * Two tabs: "Daftar Laporan" (everything above) and "Target Laporan" — the
+ * admin-configurable weekly report target, who met it, and a pause for easing
+ * off (components/admin/ReportTargetPanel.tsx). The target tab reuses the data
+ * fetched here, so switching tabs costs no extra report query.
+ *
  * Also serves as the fallback destination for ReportBackButton / SmartBackButton
  * when the admin navigates from a report detail page.
  */
@@ -35,11 +40,12 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { BookOpen, Search, Loader2, Users, FileText, ChevronRight, Calendar, AlertCircle, BarChart3 } from 'lucide-react';
+import { BookOpen, Search, Loader2, Users, FileText, ChevronRight, Calendar, AlertCircle, BarChart3, ClipboardCheck, ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { useAuth } from '@/lib/context/auth-context';
 import { useTerminology } from '@/lib/hooks/use-terminology';
+import { ReportTargetPanel } from '@/components/admin/ReportTargetPanel';
 
 // ─── Date range filter ────────────────────────────────────────────────────────
 
@@ -179,6 +185,7 @@ export default function MonitoringPage() {
   const [customFrom, setCustomFrom] = useState(initialFilters.customFrom);
   const [customTo, setCustomTo] = useState(initialFilters.customTo);
   const [sortKey, setSortKey] = useState<SortKey>(initialFilters.sortKey);
+  const [tab, setTab] = useState<'list' | 'target'>('list');
 
   // Persist filter/search/sort choices so they survive navigating away and back.
   useEffect(() => {
@@ -437,6 +444,27 @@ export default function MonitoringPage() {
         <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `${t.santri} report progress by supervising ${t.ustadz.toLowerCase()}` : `Progres laporan ${t.santriLower} per ${t.ustadzLower} pembimbing`}</p>
       </div>
 
+      <div role="tablist" className="flex bg-slate-100 p-1 rounded-2xl w-full sm:w-fit">
+        {([
+          { id: 'list', label: isEnglish ? 'Report list' : 'Daftar Laporan', icon: <ListChecks size={14} /> },
+          { id: 'target', label: isEnglish ? 'Report target' : 'Target Laporan', icon: <ClipboardCheck size={14} /> },
+        ] as const).map((item) => (
+          <button
+            key={item.id}
+            role="tab"
+            aria-selected={tab === item.id}
+            onClick={() => setTab(item.id)}
+            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              tab === item.id ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            {item.icon}
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <div className={tab === 'list' ? 'space-y-5' : 'hidden'}>
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -654,6 +682,9 @@ export default function MonitoringPage() {
           </p>
         </div>
       )}
+      </div>
+
+      {tab === 'target' && <ReportTargetPanel data={data} dataLoading={loading} />}
     </div>
   );
 }

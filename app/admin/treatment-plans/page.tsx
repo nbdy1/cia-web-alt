@@ -8,16 +8,23 @@
  * Flat list sorted by most recent report first, with a completion filter and
  * search — simplest layout that scales to hundreds of reports without forcing
  * the admin to drill into per-student or per-ustadz pages first.
+ *
+ * Two tabs:
+ *   - "Daftar Rencana"   — the register above (unchanged).
+ *   - "Kepatuhan Guru"   — admins set how often each teacher must record a
+ *     treatment (N days) and see who has met it
+ *     (components/admin/TeacherCompliancePanel.tsx).
  */
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Search, Lightbulb, CheckCircle2, XCircle, Clock, FileText, Users } from 'lucide-react';
+import { Loader2, Search, Lightbulb, CheckCircle2, XCircle, Clock, FileText, Users, ClipboardCheck, ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import { StudentAvatar } from '@/components/StudentAvatar';
 import { useAuth } from '@/lib/context/auth-context';
 import { useTerminology } from '@/lib/hooks/use-terminology';
+import { TeacherCompliancePanel } from '@/components/admin/TeacherCompliancePanel';
 
 type TreatmentStatus = 'pending' | 'completed' | 'declined';
 
@@ -50,7 +57,7 @@ function parsePlan(raw: any) {
   return raw;
 }
 
-export default function TreatmentPlansPage() {
+function PlansTab() {
   const { activeOrganizationId } = useAuth();
   const t = useTerminology();
   const isEnglish = t.language === 'en';
@@ -153,14 +160,7 @@ export default function TreatmentPlansPage() {
   const declinedCount = rows.filter((r) => r.status === 'declined').length;
 
   return (
-    <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-800">{isEnglish ? 'Support plans' : 'Rencana Penanganan'}</h2>
-        <p className="text-slate-400 text-sm font-bold mt-0.5">
-          {isEnglish ? `All support plans created by ${t.ustadzLower}s and their completion status` : `Semua rencana penanganan yang dibuat ${t.ustadzLower}, dan status penyelesaiannya`}
-        </p>
-      </div>
-
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
         <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">
           <Lightbulb size={10} /> {rows.length} {isEnglish ? 'Plans' : 'Rencana'}
@@ -285,6 +285,64 @@ export default function TreatmentPlansPage() {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+type PageTab = 'compliance' | 'plans';
+
+export default function TreatmentPlansPage() {
+  const t = useTerminology();
+  const isEnglish = t.language === 'en';
+  const [tab, setTab] = useState<PageTab>('plans');
+  const [overdueCount, setOverdueCount] = useState<number | null>(null);
+
+  const tabs: { id: PageTab; label: string; icon: React.ReactNode; badge?: number | null }[] = [
+    { id: 'plans', label: isEnglish ? 'Plan list' : 'Daftar Rencana', icon: <ListChecks size={14} /> },
+    { id: 'compliance', label: isEnglish ? `${t.ustadz} compliance` : `Kepatuhan ${t.ustadz}`, icon: <ClipboardCheck size={14} />, badge: overdueCount },
+  ];
+
+  return (
+    <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
+      <div>
+        <h2 className="text-2xl font-bold text-slate-800">{isEnglish ? 'Support plans' : 'Rencana Penanganan'}</h2>
+        <p className="text-slate-400 text-sm font-bold mt-0.5">
+          {tab === 'plans'
+            ? (isEnglish ? `All support plans created by ${t.ustadzLower}s and their completion status` : `Semua rencana penanganan yang dibuat ${t.ustadzLower}, dan status penyelesaiannya`)
+            : (isEnglish ? `Set the follow-up target and see which ${t.ustadzLower}s have met it` : `Atur target tindak lanjut dan lihat ${t.ustadzLower} mana yang sudah memenuhi`)}
+        </p>
+      </div>
+
+      <div role="tablist" className="flex bg-slate-100 p-1 rounded-2xl w-full sm:w-fit">
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            role="tab"
+            aria-selected={tab === item.id}
+            onClick={() => setTab(item.id)}
+            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              tab === item.id ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            {item.icon}
+            {item.label}
+            {item.badge ? (
+              <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold inline-flex items-center justify-center">
+                {item.badge}
+              </span>
+            ) : null}
+          </button>
+        ))}
+      </div>
+
+      {/* The compliance tab stays mounted (just hidden) so its data loads once
+          and the badge above is accurate while the admin browses the plan list. */}
+      <div className={tab === 'plans' ? '' : 'hidden'}>
+        <PlansTab />
+      </div>
+      <div className={tab === 'compliance' ? '' : 'hidden'}>
+        <TeacherCompliancePanel onOverdueCount={setOverdueCount} />
+      </div>
     </div>
   );
 }

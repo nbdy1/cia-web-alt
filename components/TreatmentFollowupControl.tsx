@@ -16,10 +16,13 @@ type Checkin = { outcome?: string; reflection?: string; created_at?: string };
 export function TreatmentFollowupControl({
   reminderId,
   isActive,
+  windowDays = 14,
   checkins = [],
 }: {
   reminderId: string;
   isActive: boolean;
+  /** The organization's required cadence, shown in the helper text. */
+  windowDays?: number;
   checkins?: Checkin[];
 }) {
   const { language } = useSettings();
@@ -66,7 +69,7 @@ export function TreatmentFollowupControl({
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white" style={{ boxShadow: "0 3px 0 var(--brand-700)" }}>{currentActive ? <Bell className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}</span>
         <div>
           <h4 className="text-sm font-bold text-slate-800">{currentActive ? (isEnglish ? "Treatment follow-up" : "Tindak lanjut treatment") : (isEnglish ? "Treatment recorded" : "Treatment telah dicatat")}</h4>
-          <p className="mt-0.5 text-xs font-medium leading-relaxed text-slate-600">{currentActive ? (isEnglish ? "Once you have tried this plan, record it here. One recorded treatment every 2 weeks meets your target." : "Setelah mencoba rencana ini, catat di sini. Satu treatment tercatat setiap 2 minggu sudah memenuhi target Anda.") : (isEnglish ? "Thank you. This outcome will inform later assessments." : "Terima kasih. Hasil ini akan menjadi konteks asesmen berikutnya.")}</p>
+          <p className="mt-0.5 text-xs font-medium leading-relaxed text-slate-600">{currentActive ? (isEnglish ? `Once you have tried this plan, record it here. One recorded treatment every ${windowDays} days meets your target.` : `Setelah mencoba rencana ini, catat di sini. Satu treatment tercatat setiap ${windowDays} hari sudah memenuhi target Anda.`) : (isEnglish ? "Thank you. This outcome will inform later assessments." : "Terima kasih. Hasil ini akan menjadi konteks asesmen berikutnya.")}</p>
         </div>
       </div>
 
