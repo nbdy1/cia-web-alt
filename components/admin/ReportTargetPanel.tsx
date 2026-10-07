@@ -9,7 +9,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { getReportRequirementSettings, saveReportRequirement, setRequirementPause } from "@/app/actions/requirements";
+import { getReportRequirementSettings, saveReportRequirement, setRequirementPause, setTeacherTargetExemption } from "@/app/actions/requirements";
 import { DEFAULT_REPORT_REQUIREMENT, type ReportRequirement } from "@/lib/report-requirement-rules";
 import { NO_PAUSE, type DateKey, type PauseWindow } from "@/lib/requirement-rules";
 import { useAuth } from "@/lib/context/auth-context";
@@ -34,6 +34,7 @@ export function ReportTargetPanel({ data, dataLoading }: { data: MonitoringTeach
   const isEnglish = t.language === "en";
   const [requirement, setRequirement] = useState<ReportRequirement>(DEFAULT_REPORT_REQUIREMENT);
   const [pause, setPause] = useState<PauseWindow>(NO_PAUSE);
+  const [exemptUserIds, setExemptUserIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -49,6 +50,7 @@ export function ReportTargetPanel({ data, dataLoading }: { data: MonitoringTeach
       if (result.success) {
         setRequirement(result.requirement);
         setPause(result.pause);
+        setExemptUserIds(result.exemptUserIds);
       } else {
         setLoadError(result.error);
       }
@@ -90,6 +92,15 @@ export function ReportTargetPanel({ data, dataLoading }: { data: MonitoringTeach
     [activeOrganizationId],
   );
 
+  const changeExempt = useCallback(
+    async (userId: string, exempt: boolean): Promise<string | null> => {
+      if (!activeOrganizationId) return "Organisasi belum dipilih.";
+      const result = await setTeacherTargetExemption(activeOrganizationId, userId, exempt);
+      return result.success ? null : result.error;
+    },
+    [activeOrganizationId],
+  );
+
   if (loading || dataLoading) {
     return (
       <div className="flex justify-center py-16">
@@ -119,6 +130,8 @@ export function ReportTargetPanel({ data, dataLoading }: { data: MonitoringTeach
       pause={pause}
       onSave={save}
       onPauseChange={changePause}
+      exemptUserIds={exemptUserIds}
+      onExemptChange={changeExempt}
       labels={{ isEnglish, ustadz: t.ustadz, ustadzLower: t.ustadzLower, santri: t.santri, santriLower: t.santriLower }}
     />
   );

@@ -48,3 +48,18 @@ export async function getOrganizationRequirements(db: SupabaseClient, organizati
     reportPause: normalizePause(row.report_pause_from, row.report_pause_until),
   };
 }
+
+/**
+ * Is this member exempt from the report / treatment targets? Reads the whole row
+ * so a missing column (migration 20261009 not applied) simply means "not exempt".
+ */
+export async function isMemberExempt(db: SupabaseClient, organizationId: string, userId: string): Promise<boolean> {
+  const { data, error } = await db
+    .from("organization_members")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error || !data) return false;
+  return (data as Record<string, unknown>).targets_exempt === true;
+}

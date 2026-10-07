@@ -18,7 +18,7 @@ import { DEFAULT_TREATMENT_WINDOW_DAYS } from "@/lib/treatment-followup-rules";
 import { useAuth } from "@/lib/context/auth-context";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 import { TeacherComplianceView, type SaveResult } from "@/components/admin/TeacherComplianceView";
-import { setRequirementPause } from "@/app/actions/requirements";
+import { setRequirementPause, setTeacherTargetExemption } from "@/app/actions/requirements";
 import { NO_PAUSE, type DateKey, type PauseWindow } from "@/lib/requirement-rules";
 
 /** Loads the data and wires saving; presentation lives in TeacherComplianceView. */
@@ -68,6 +68,15 @@ export function TeacherCompliancePanel({ onOverdueCount }: { onOverdueCount?: (c
     [activeOrganizationId],
   );
 
+  const changeExempt = useCallback(
+    async (userId: string, exempt: boolean): Promise<string | null> => {
+      if (!activeOrganizationId) return "Organisasi belum dipilih.";
+      const result = await setTeacherTargetExemption(activeOrganizationId, userId, exempt);
+      return result.success ? null : result.error;
+    },
+    [activeOrganizationId],
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center py-16">
@@ -104,6 +113,7 @@ export function TeacherCompliancePanel({ onOverdueCount }: { onOverdueCount?: (c
       onOverdueCount={onOverdueCount}
       pause={pause}
       onPauseChange={changePause}
+      onExemptChange={changeExempt}
       labels={{ isEnglish, ustadz: t.ustadz, ustadzLower: t.ustadzLower, santriLower: t.santriLower }}
     />
   );

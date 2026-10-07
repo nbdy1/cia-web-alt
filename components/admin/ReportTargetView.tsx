@@ -16,6 +16,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, Loader2, Minus, PauseCircle, Plus, RotateCcw, Search, Settings2, Users } from "lucide-react";
 import { PauseControl, type PauseSaveResult } from "@/components/admin/PauseControl";
+import { ExcludeAction, ExcludedSection } from "@/components/admin/ExemptionControls";
 import {
   evaluateTeacherCycle,
   getCycles,
@@ -35,6 +36,10 @@ export type ReportTargetViewProps = {
   pause: PauseWindow;
   onSave: (requirement: ReportRequirement) => Promise<RequirementSaveResult>;
   onPauseChange: (from: DateKey | null, until: DateKey | null) => Promise<PauseSaveResult>;
+  /** Teachers an admin excluded from the targets. */
+  exemptUserIds: string[];
+  /** Exempts / re-includes a teacher; resolves with an error message or null. */
+  onExemptChange: (userId: string, exempt: boolean) => Promise<string | null>;
   labels: { isEnglish: boolean; ustadz: string; ustadzLower: string; santri: string; santriLower: string };
   /** Injectable clock (defaults to the current time). */
   now?: number;
@@ -83,7 +88,7 @@ function Stepper({ value, min, max, onChange, label, suffix }: { value: number; 
   );
 }
 
-export function ReportTargetView({ teachers, requirement: savedProp, pause: pauseProp, onSave, onPauseChange, labels, now: nowProp }: ReportTargetViewProps) {
+export function ReportTargetView({ teachers: allTeachers, requirement: savedProp, pause: pauseProp, onSave, onPauseChange, exemptUserIds, onExemptChange, labels, now: nowProp }: ReportTargetViewProps) {
   const { isEnglish } = labels;
   const t = labels;
   const locale = isEnglish ? "en-US" : "id-ID";
@@ -91,6 +96,10 @@ export function ReportTargetView({ teachers, requirement: savedProp, pause: paus
   const [saved, setSaved] = useState<ReportRequirement>(savedProp);
   const [draft, setDraft] = useState<ReportRequirement>(savedProp);
   const [pause, setPause] = useState(pauseProp);
+  const [exemptIds, setExemptIds] = useState<Set<string>>(() => new Set(exemptUserIds));
+  // Exempt teachers are not judged: they leave every count and tile.
+  const teachers = useMemo(() => allTeachers.filter((teacher) => !exemptIds.has(teacher.id)), [allTeachers, exemptIds]);
+  const excluded = useMemo(() => allTeachers.filter((teacher) => exemptIds.has(teacher.id)), [allTeachers, exemptIds]);
   const [saveError, setSaveError] = useState("");
   const [savedNotice, setSavedNotice] = useState(false);
   const [cycleView, setCycleView] = useState<"current" | "previous">("current");
@@ -152,6 +161,18 @@ export function ReportTargetView({ teachers, requirement: savedProp, pause: paus
           : rank[a.result.status] - rank[b.result.status] || ratio(a) - ratio(b) || a.name.localeCompare(b.name, "id"),
       );
   }, [rows, filter, sort, query]);
+
+  async function changeExempt(userId: string, exempt: boolean): Promise<string | null> {
+    const message = await onExemptChange(userId, exempt);
+    if (message) return message;
+    setExemptIds((current) => {
+      const next = new Set(current);
+      if (exempt) next.add(userId);
+      else next.delete(userId);
+      return next;
+    });
+    return null;
+  }
 
   function update(patch: Partial<ReportRequirement>) {
     setSavedNotice(false);
@@ -466,11 +487,22 @@ export function ReportTargetView({ teachers, requirement: savedProp, pause: paus
                     </ul>
                   </details>
                 )}
+
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <ExcludeAction isEnglish={isEnglish} onConfirm={() => changeExempt(row.id, true)} />
+                </div>
               </article>
             );
           })}
         </div>
       )}
+
+      <ExcludedSection
+        teachers={excluded.map((teacher) => ({ id: teacher.id, name: teacher.name }))}
+        isEnglish={isEnglish}
+        ustadzLower={t.ustadzLower}
+        onRestore={(id) => changeExempt(id, false)}
+      />
     </div>
   );
 }

@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertTenantOrganization } from "@/lib/tenant-server";
 import { evaluateTreatmentWindow, latestIso, normalizeWindowDays } from "@/lib/treatment-followup-rules";
-import { getOrganizationRequirements } from "@/lib/org-requirements-server";
+import { getOrganizationRequirements, isMemberExempt } from "@/lib/org-requirements-server";
 import { requireOrganizationAdmin } from "@/lib/server/require-admin";
+import { selectTrackedTeachers } from "@/lib/target-teachers";
 import { dateKeyInZone, isDateInPause, pauseRestartAt, type PauseWindow } from "@/lib/requirement-rules";
 
 type TreatmentOutcome = "done" | "not_done";
@@ -101,6 +102,9 @@ export async function getTreatmentFollowupStatus(organizationId: string): Promis
     const requirements = await getOrganizationRequirements(db, organizationId);
     const windowDays = requirements.treatmentWindowDays;
 
+    // Exempt teachers (test accounts, non-supervisors) are never reminded.
+    if (await isMemberExempt(db, organizationId, user.id)) return { ...NOT_DUE, windowDays };
+
     // An admin-granted pause means nothing is due, whatever the history says.
     const today = dateKeyInZone(Date.now());
     if (today && isDateInPause(requirements.treatmentPause, today)) return { ...NOT_DUE, windowDays };
@@ -164,6 +168,8 @@ export async function getTreatmentFollowupStatus(organizationId: string): Promis
 export type TeacherCompliance = {
   userId: string;
   name: string;
+  /** An admin excluded this teacher from the targets (test account, not supervising, ...). */
+  exempt: boolean;
   /** Latest recorded treatment (ISO) and the student it was for. */
   lastDoneAt: string | null;
   lastDoneStudent: string | null;
@@ -197,17 +203,18 @@ export async function getTeacherTreatmentCompliance(organizationId: string): Pro
     const requirements = await getOrganizationRequirements(db, organizationId);
     const windowDays = requirements.treatmentWindowDays;
 
+    // select("*") so a missing targets_exempt column (migration not applied yet)
+    // just means "nobody is exempt" instead of failing the whole screen.
     const { data: memberRows, error: memberError } = await db
       .from("organization_members")
-      .select("user_id, role")
+      .select("*")
       .eq("organization_id", organizationId);
     if (memberError) throw memberError;
     const memberIds = (memberRows ?? []).map((row: any) => row.user_id);
 
     const { data: profiles } = memberIds.length > 0
-      ? await db.from("profiles").select("id, name").in("id", memberIds)
+      ? await db.from("profiles").select("id, name, is_removed").in("id", memberIds)
       : { data: [] as any[] };
-    const nameById = new Map((profiles ?? []).map((profile: any) => [profile.id, profile.name as string | null]));
 
     // PostgREST returns at most 1,000 rows per request; page so a large
     // organization is never silently truncated.
@@ -223,32 +230,33 @@ export async function getTeacherTreatmentCompliance(organizationId: string): Pro
       if ((page ?? []).length < 1000) break;
     }
 
-    const byUser = new Map<string, TeacherCompliance>();
-    const ensure = (userId: string): TeacherCompliance => {
-      let entry = byUser.get(userId);
-      if (!entry) {
-        entry = {
-          userId,
-          name: nameById.get(userId) ?? "Tanpa nama",
+    // Who is judged at all: every teacher (even with no plans yet) plus anyone who
+    // owns plans, minus deactivated accounts. See lib/target-teachers.ts.
+    const tracked = selectTrackedTeachers(
+      (memberRows ?? []) as any[],
+      (profiles ?? []) as any[],
+      reminders.map((row) => row.responsible_user_id).filter(Boolean),
+    );
+    const byUser = new Map<string, TeacherCompliance>(
+      tracked.map((teacher) => [
+        teacher.userId,
+        {
+          userId: teacher.userId,
+          name: teacher.name,
+          exempt: teacher.exempt,
           lastDoneAt: null,
           lastDoneStudent: null,
           oldestPendingAt: null,
           pendingCount: 0,
           totalDone: 0,
-        };
-        byUser.set(userId, entry);
-      }
-      return entry;
-    };
-
-    // Teachers with no plans at all still belong on the list ("nothing pending").
-    for (const row of (memberRows ?? []) as any[]) {
-      if (row.role === "ustadz") ensure(row.user_id);
-    }
+        },
+      ]),
+    );
 
     for (const row of reminders) {
-      if (!row.responsible_user_id) continue;
-      const entry = ensure(row.responsible_user_id);
+      // Reminders owned by a deactivated account are deliberately ignored.
+      const entry = row.responsible_user_id ? byUser.get(row.responsible_user_id) : undefined;
+      if (!entry) continue;
       const report = row.reports;
       const plan = parsePlan(report?.treatment_plan);
       const treatment = plan?.treatment && typeof plan.treatment === "object" ? plan.treatment : {};

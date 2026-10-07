@@ -20,20 +20,29 @@ export type RequirementKind = "report" | "treatment";
 
 const MIGRATION_HINT =
   "Pengaturan ini belum aktif di database. Jalankan migrasi 20261008_report_requirement_and_pauses.sql terlebih dahulu.";
+const EXEMPT_MIGRATION_HINT =
+  "Fitur pengecualian belum aktif di database. Jalankan migrasi 20261009_member_targets_exempt.sql terlebih dahulu.";
 
 function failure(error: any, fallback: string) {
   const message: string = error?.message ?? fallback;
   // PostgREST reports an unknown column in the message; point admins at the fix.
+  if (/targets_exempt/i.test(message)) return { success: false as const, error: EXEMPT_MIGRATION_HINT };
   return { success: false as const, error: /report_|treatment_pause|column/i.test(message) ? MIGRATION_HINT : message };
 }
 
 export async function getReportRequirementSettings(
   organizationId: string,
-): Promise<{ success: true; requirement: ReportRequirement; pause: PauseWindow } | { success: false; error: string }> {
+): Promise<
+  | { success: true; requirement: ReportRequirement; pause: PauseWindow; exemptUserIds: string[] }
+  | { success: false; error: string }
+> {
   try {
     const db = await requireOrganizationAdmin(organizationId);
     const requirements = await getOrganizationRequirements(db, organizationId);
-    return { success: true, requirement: requirements.report, pause: requirements.reportPause };
+    // select("*"): a missing targets_exempt column just means nobody is exempt yet.
+    const { data: members } = await db.from("organization_members").select("*").eq("organization_id", organizationId);
+    const exemptUserIds = ((members ?? []) as any[]).filter((member) => member.targets_exempt === true).map((member) => String(member.user_id));
+    return { success: true, requirement: requirements.report, pause: requirements.reportPause, exemptUserIds };
   } catch (error: any) {
     return { success: false, error: error?.message ?? "Pengaturan belum dapat dimuat." };
   }
@@ -108,5 +117,40 @@ export async function setRequirementPause(
     return { success: true, pause: normalizePause(from, until) };
   } catch (error: any) {
     return failure(error, "Jeda belum dapat disimpan.");
+  }
+}
+
+/**
+ * Exempt (or re-include) one teacher from BOTH targets: the weekly report target
+ * and the treatment follow-up target. Used for test accounts and anyone not
+ * actually tasked with supervising students.
+ */
+export async function setTeacherTargetExemption(
+  organizationId: string,
+  userId: string,
+  exempt: boolean,
+): Promise<{ success: true; exempt: boolean } | { success: false; error: string }> {
+  try {
+    if (typeof userId !== "string" || userId.length === 0 || typeof exempt !== "boolean") {
+      return { success: false, error: "Permintaan tidak valid." };
+    }
+    const db = await requireOrganizationAdmin(organizationId);
+    const { data, error } = await db
+      .from("organization_members")
+      .update({ targets_exempt: exempt })
+      .eq("organization_id", organizationId)
+      .eq("user_id", userId)
+      .select("user_id")
+      .maybeSingle();
+    if (error) return failure(error, "Pengecualian belum dapat disimpan.");
+    // RLS (or a wrong id) filters the update down to zero rows instead of raising.
+    if (!data) return { success: false, error: "Pengguna tidak ditemukan di organisasi ini, atau perubahan ditolak." };
+
+    revalidatePath("/admin/monitoring");
+    revalidatePath("/admin/treatment-plans");
+    revalidatePath("/students");
+    return { success: true, exempt };
+  } catch (error: any) {
+    return failure(error, "Pengecualian belum dapat disimpan.");
   }
 }

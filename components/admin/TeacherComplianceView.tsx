@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import type { TeacherCompliance } from "@/app/actions/treatment-followups";
 import { PauseControl, type PauseSaveResult } from "@/components/admin/PauseControl";
+import { ExcludeAction, ExcludedSection } from "@/components/admin/ExemptionControls";
 import { dateKeyInZone, isDateInPause, pauseRestartAt, type DateKey, type PauseWindow } from "@/lib/requirement-rules";
 import {
   MAX_TREATMENT_WINDOW_DAYS,
@@ -64,6 +65,8 @@ export type TeacherComplianceViewProps = {
   /** Admin-granted pause on this requirement (from === null means none). */
   pause: PauseWindow;
   onPauseChange: (from: DateKey | null, until: DateKey | null) => Promise<PauseSaveResult>;
+  /** Exempts / re-includes a teacher; resolves with an error message or null. */
+  onExemptChange: (userId: string, exempt: boolean) => Promise<string | null>;
   /** Display wording, resolved by the caller from the organization's terminology. */
   labels: { isEnglish: boolean; ustadz: string; ustadzLower: string; santriLower: string };
   /** Injectable clock (defaults to the current time). */
@@ -71,7 +74,7 @@ export type TeacherComplianceViewProps = {
 };
 
 /** Pure presentation + local what-if state; no data fetching, so it renders in isolation. */
-export function TeacherComplianceView({ teachers, savedDays: savedDaysProp, onSave, onOverdueCount, pause: pauseProp, onPauseChange, labels, now: nowProp }: TeacherComplianceViewProps) {
+export function TeacherComplianceView({ teachers, savedDays: savedDaysProp, onSave, onOverdueCount, pause: pauseProp, onPauseChange, onExemptChange, labels, now: nowProp }: TeacherComplianceViewProps) {
   const { isEnglish } = labels;
   const t = labels;
   const locale = isEnglish ? "en-US" : "id-ID";
@@ -87,6 +90,22 @@ export function TeacherComplianceView({ teachers, savedDays: savedDaysProp, onSa
   const [now] = useState(() => nowProp ?? Date.now());
   const [saving, startSaving] = useTransition();
   const [pause, setPause] = useState(pauseProp);
+  const [exemptIds, setExemptIds] = useState<Set<string>>(() => new Set(teachers.filter((teacher) => teacher.exempt).map((teacher) => teacher.userId)));
+  // Exempt teachers are not judged: they leave every count, tile and the badge.
+  const judged = useMemo(() => teachers.filter((teacher) => !exemptIds.has(teacher.userId)), [teachers, exemptIds]);
+  const excluded = useMemo(() => teachers.filter((teacher) => exemptIds.has(teacher.userId)), [teachers, exemptIds]);
+
+  async function changeExempt(userId: string, exempt: boolean): Promise<string | null> {
+    const message = await onExemptChange(userId, exempt);
+    if (message) return message;
+    setExemptIds((current) => {
+      const next = new Set(current);
+      if (exempt) next.add(userId);
+      else next.delete(userId);
+      return next;
+    });
+    return null;
+  }
   const today = dateKeyInZone(now) ?? "1970-01-01";
   const paused = isDateInPause(pause, today);
   // A pause that has ended restarts everyone's clock instead of leaving them overdue.
@@ -94,7 +113,7 @@ export function TeacherComplianceView({ teachers, savedDays: savedDaysProp, onSa
 
   const classify = useCallback(
     (days: number): Row[] =>
-      teachers.map((teacher) => ({
+      judged.map((teacher) => ({
         ...teacher,
         verdict: classifyTeacherWindow({
           lastDoneAt: teacher.lastDoneAt,
@@ -105,7 +124,7 @@ export function TeacherComplianceView({ teachers, savedDays: savedDaysProp, onSa
           now,
         }),
       })),
-    [teachers, now, restartAt],
+    [judged, now, restartAt],
   );
 
   const rows = useMemo(() => classify(draftDays), [classify, draftDays]);
@@ -467,11 +486,22 @@ export function TeacherComplianceView({ teachers, savedDays: savedDaysProp, onSa
                     isEnglish ? "Has not recorded a treatment yet" : "Belum pernah mencatat treatment"
                   )}
                 </p>
+
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <ExcludeAction isEnglish={isEnglish} onConfirm={() => changeExempt(row.userId, true)} />
+                </div>
               </article>
             );
           })}
         </div>
       )}
+
+      <ExcludedSection
+        teachers={excluded.map((teacher) => ({ id: teacher.userId, name: teacher.name }))}
+        isEnglish={isEnglish}
+        ustadzLower={t.ustadzLower}
+        onRestore={(id) => changeExempt(id, false)}
+      />
     </div>
   );
 }
