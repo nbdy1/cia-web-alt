@@ -32,6 +32,7 @@ import { ChevronLeft, Mic, MicOff, Send, Sparkles, User, Brain, Quote, Loader2 }
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCDSVoice } from '@/lib/hooks/use-cia-voice';
+import { saveAssessmentBackup } from "@/lib/assessment-backup";
 import { processInterviewStep, finalizeAssessment } from '@/app/actions/ai-analysis';
 import { transcribeAudio } from '@/app/actions/whisper';
 import { useSettings } from '@/lib/context/settings-context';
@@ -484,6 +485,10 @@ export default function AssessmentPage() {
         return;
       }
 
+      // Backup copy that survives a discarded/reopened tab (see lib/assessment-backup.ts).
+      // Written first and best-effort so the results page can still recover.
+      if (studentId) saveAssessmentBackup(studentId, { analysis, narrative: fullTranscript, model: selectedModel });
+
       // Save large JSON payload to sessionStorage to avoid URL length limits
       sessionStorage.setItem('current_analysis', JSON.stringify(analysis));
       sessionStorage.setItem('current_narrative', fullTranscript);
@@ -499,6 +504,8 @@ export default function AssessmentPage() {
       console.error("Finalization Error:", error);
       setIsFinalizing(false);
       setIsProcessing(false);
+      // Previously silent: the button just stopped spinning with no explanation.
+      alert(isEnglish ? "Could not finish the assessment. Please try again." : "Gagal menyelesaikan asesmen. Coba lagi.");
     }
   };
 

@@ -18,6 +18,11 @@
  * The "Simpan Asesmen" button calls saveAssessmentAction() which persists the
  * full analysis to the `reports` table. On success it clears sessionStorage and
  * redirects to /students.
+ *
+ * Robustness: if the analysis is not in sessionStorage (tab discarded by the phone,
+ * page reopened from history, or browser Back after saving) we try a short-lived
+ * localStorage backup (lib/assessment-backup.ts), and otherwise show an explanation
+ * with a way out. This page must never spin forever or trap the Back button.
  */
 "use client";
 
@@ -50,6 +55,7 @@ import { useTerminology } from "@/lib/hooks/use-terminology";
 import { isSupplementaryTheme } from "@/lib/data/framework";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { MarkdownText } from "@/components/MarkdownText";
+import { clearAssessmentBackup, loadAssessmentBackup } from "@/lib/assessment-backup";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
@@ -70,6 +76,10 @@ export default function ResultsPage() {
   const [studentOrganizationId, setStudentOrganizationId] = useState<string | null>(null);
   const [narrative, setNarrative] = useState("");
   const [analysisData, setAnalysisData] = useState<any>(null);
+  // True once we have looked for the analysis, so "still looking" and "nothing to
+  // show" are different states instead of one endless spinner.
+  const [analysisChecked, setAnalysisChecked] = useState(false);
+  const [restoredFromBackup, setRestoredFromBackup] = useState(false);
   const [modelUsed, setModelUsed] = useState<string>(
     "google/gemini-3-flash-preview",
   );
@@ -78,7 +88,10 @@ export default function ResultsPage() {
 
   // Keep browser back/swipe-back on the review screen behind the same
   // confirmation as the visible back button.
+  // Only guard Back while there is an unsaved analysis to protect. With nothing
+  // to show, trapping Back would leave the user stuck on this page.
   useEffect(() => {
+    if (!analysisData) return;
     const guardState = { resultsNavigationGuard: true };
     window.history.pushState(guardState, "", window.location.href);
     const onPopState = () => {
@@ -87,7 +100,7 @@ export default function ResultsPage() {
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+  }, [analysisData]);
 
   useEffect(() => {
     if (!studentId) return;
@@ -103,26 +116,43 @@ export default function ResultsPage() {
   }, [studentId]);
 
   useEffect(() => {
-    const storedAnalysis = sessionStorage.getItem("current_analysis");
-    const storedNarrative = sessionStorage.getItem("current_narrative");
-    const storedModel = sessionStorage.getItem("current_model");
+    let storedAnalysis: string | null = null;
+    let storedNarrative: string | null = null;
+    let storedModel: string | null = null;
+    try {
+      storedAnalysis = sessionStorage.getItem("current_analysis");
+      storedNarrative = sessionStorage.getItem("current_narrative");
+      storedModel = sessionStorage.getItem("current_model");
+    } catch (e) {
+      // Storage can be blocked (private mode / webview); fall through to the backup.
+      console.error("sessionStorage unavailable", e);
+    }
 
+    let found = false;
     if (storedAnalysis) {
       try {
         setAnalysisData(JSON.parse(storedAnalysis));
+        found = true;
       } catch (e) {
         console.error("Failed to parse stored analysis", e);
       }
     }
-
-    if (storedNarrative) {
-      setNarrative(storedNarrative);
+    if (found) {
+      if (storedNarrative) setNarrative(storedNarrative);
+      if (storedModel) setModelUsed(storedModel);
+    } else if (studentId) {
+      // The tab's own copy is gone (discarded tab, reopened page). Recover the
+      // analysis from the backup instead of making the teacher redo it.
+      const backup = loadAssessmentBackup(studentId);
+      if (backup) {
+        setAnalysisData(backup.analysis);
+        setNarrative(backup.narrative);
+        if (backup.model) setModelUsed(backup.model);
+        setRestoredFromBackup(true);
+      }
     }
-
-    if (storedModel) {
-      setModelUsed(storedModel);
-    }
-  }, []);
+    setAnalysisChecked(true);
+  }, [studentId]);
 
   const categories = ["Karakter", "Mental", "Soft Skill"];
 
@@ -151,7 +181,9 @@ export default function ResultsPage() {
       sessionStorage.removeItem("current_model");
       if (studentId) sessionStorage.removeItem(`assessment_draft_${studentId}`);
       sessionStorage.removeItem("assessment_return_url");
-      router.push("/students");
+      clearAssessmentBackup(studentId);
+      // replace, not push: this review screen must not stay as a Back target.
+      router.replace("/students");
     } else {
       alert((isEnglish ? "Could not save: " : "Gagal menyimpan: ") + result.error);
       setIsSaving(false);
@@ -159,6 +191,48 @@ export default function ResultsPage() {
   };
 
   if (!analysisData) {
+    // Still looking: brief spinner. Looked and found nothing: explain and offer a way out.
+    if (analysisChecked) {
+      return (
+        <div className="min-h-screen bg-paper flex flex-col items-center justify-center font-sans gap-5 p-6 text-center">
+          <div
+            className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center"
+            style={{ boxShadow: "0 4px 0 0 var(--brand-200)", border: "2px solid var(--brand-100)" }}
+          >
+            <Bookmark className="w-7 h-7 text-brand-500" />
+          </div>
+          <div className="max-w-xs space-y-2">
+            <h1 className="text-lg font-bold text-slate-800">
+              {isEnglish ? "This assessment result is no longer here" : "Hasil asesmen ini sudah tidak ada"}
+            </h1>
+            <p className="text-sm font-medium leading-relaxed text-slate-500">
+              {isEnglish
+                ? `Results are only kept on your device until saved. If you already pressed Save, the report is in the ${t.santriLower} list. If not, please run the assessment again.`
+                : `Hasil hanya disimpan sementara di perangkat sampai disimpan. Jika Anda sudah menekan Simpan, laporannya sudah ada di daftar ${t.santriLower}. Jika belum, silakan ulangi asesmennya.`}
+            </p>
+          </div>
+          <div className="flex w-full max-w-xs flex-col gap-2.5">
+            <button
+              type="button"
+              onClick={() => router.replace("/students")}
+              className="h-12 rounded-2xl bg-brand-500 text-sm font-bold text-white active:translate-y-px"
+              style={{ boxShadow: "0 4px 0 0 var(--brand-700)" }}
+            >
+              {isEnglish ? `View ${t.santriLower} list` : `Lihat daftar ${t.santriLower}`}
+            </button>
+            {studentId && (
+              <button
+                type="button"
+                onClick={() => router.replace(returnUrl)}
+                className="h-12 rounded-2xl border-2 border-slate-200 bg-white text-sm font-bold text-slate-600 active:translate-y-px"
+              >
+                {isEnglish ? `Assess ${studentName} again` : `Ulangi asesmen ${studentName}`}
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-paper flex flex-col items-center justify-center font-sans gap-4">
         <div
@@ -201,6 +275,13 @@ export default function ResultsPage() {
       </header>
 
       <main className="flex-1 overflow-y-auto px-5 pt-5 pb-36 space-y-5">
+        {restoredFromBackup && (
+          <div role="status" className="rounded-2xl border-2 border-amber-100 bg-amber-50 px-4 py-3 text-xs font-bold leading-relaxed text-amber-800">
+            {isEnglish
+              ? "Your earlier assessment was restored because this page was reopened. Review it, then save."
+              : "Asesmen Anda sebelumnya dipulihkan karena halaman ini dibuka kembali. Periksa lalu simpan."}
+          </div>
+        )}
         {/* 0. Student hero */}
         <div className="flex flex-col items-center gap-2 pt-1 pb-1">
           <StudentAvatar
