@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The Android app shell (Capacitor) is not part of the web app.
+    "native/**",
   ]),
 ]);
 

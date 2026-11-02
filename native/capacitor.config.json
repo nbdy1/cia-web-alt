@@ -1,0 +1,34 @@
+{
+  "appId": "systems.characterdev.cds",
+  "appName": "CDS untuk Guru",
+  "webDir": "www",
+  "server": {
+    "url": "https://characterdev.systems",
+    "androidScheme": "https",
+    "cleartext": false,
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "characterdev.systems",
+      "*.characterdev.systems"
+    ]
+  },
+  "android": {
+    "appendUserAgent": "CDSApp/1.0",
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#f4fbf8"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#ffffff",
+      "androidScaleType": "CENTER_INSIDE",
+      "showSpinner": false
+    },
+    "SystemBars": {
+      "insetsHandling": "native",
+      "style": "DEFAULT"
+    }
+  }
+}

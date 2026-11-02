@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Android app (native/)
+/native/node_modules
+/native/android/local.properties
+/native/android/app/build
+/native/android/build
+/native/android/.gradle
+# Release signing keys must NEVER be committed
+*.jks
+*.keystore
+keystore.properties
