@@ -51,6 +51,7 @@ export type UsagePurpose =
   | 'interview_step'
   | 'finalize'
   | 'profile_summary'
+  | 'bk_monthly'
   | 'rapor'
   | 'embedding'
   | 'tts'

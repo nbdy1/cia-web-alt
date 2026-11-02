@@ -61,6 +61,7 @@ const PURPOSE_LABELS: Record<string, string> = {
   interview_step: "Interview",
   finalize: "Laporan final",
   profile_summary: "Profil santri",
+  bk_monthly: "Rapor bulanan BK",
   rapor: "Rapor",
   embedding: "Embedding",
   tts: "Suara (TTS)",
