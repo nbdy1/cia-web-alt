@@ -26,6 +26,7 @@ import { getFrameworkForOrganization, type Framework } from "@/lib/data/framewor
 import { getCDSPhase } from "@/lib/cia-phases";
 import { categoryDisplayLabel } from "@/lib/data/category-labels";
 import { useTerminology } from "@/lib/hooks/use-terminology";
+import { useNativeApp } from "@/lib/hooks/use-native-app";
 import type { Terminology } from "@/lib/data/terminology";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -470,6 +471,8 @@ function buildPrintHTML(opts: {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function RaporPage() {
+  // Android WebView cannot open the print popup, so the print button is hidden in the app.
+  const inApp = useNativeApp();
   const params = useParams<{ id: string }>();
   const studentId = params.id;
   const t = useTerminology();
@@ -601,14 +604,20 @@ export default function RaporPage() {
           <p className="text-[10px] font-bold text-violet-600 uppercase tracking-widest">{isEnglish ? "Print report card" : "Cetak Rapor"}</p>
           <h1 className="text-sm font-bold text-slate-900">{displayName}</h1>
         </div>
-        <button
-          onClick={handlePrint}
-          disabled={!selectedPeriod || loading}
-          className="flex items-center gap-2 bg-violet-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm disabled:opacity-50"
-          style={{ boxShadow: "0 3px 0 0 #5b21b6" }}
-        >
-          <Printer size={15} /> {isEnglish ? "Print" : "Cetak"}
-        </button>
+        {inApp ? (
+          <p className="max-w-[9rem] text-right text-[10px] font-bold leading-snug text-slate-400">
+            {isEnglish ? "Printing is available on the website." : "Cetak tersedia di versi website."}
+          </p>
+        ) : (
+          <button
+            onClick={handlePrint}
+            disabled={!selectedPeriod || loading}
+            className="flex items-center gap-2 bg-violet-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm disabled:opacity-50"
+            style={{ boxShadow: "0 3px 0 0 #5b21b6" }}
+          >
+            <Printer size={15} /> {isEnglish ? "Print" : "Cetak"}
+          </button>
+        )}
       </header>
 
       {/* Period selector */}

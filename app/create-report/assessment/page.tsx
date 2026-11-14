@@ -41,10 +41,14 @@ import { StudentAvatar } from '@/components/StudentAvatar';
 import { MarkdownText } from '@/components/MarkdownText';
 import { useTerminology } from '@/lib/hooks/use-terminology';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { shouldUseWhisperVoice } from '@/lib/native';
 
 // Set to true to use OpenRouter Whisper instead of the browser Web Speech API.
 // Flip this during testing; the UI toggle is intentionally removed.
 const USE_WHISPER = false;
+// The Android app (a WebView) and browsers without the Web Speech API cannot use
+// SpeechRecognition, so they use the Whisper recording path automatically.
+const useWhisperNow = () => USE_WHISPER || shouldUseWhisperVoice();
 
 interface Message {
   role: 'teacher' | 'ai';
@@ -220,7 +224,7 @@ export default function AssessmentPage() {
 
   // Initialize Speech Recognition (skipped when USE_WHISPER is true)
   useEffect(() => {
-    if (USE_WHISPER) return;
+    if (useWhisperNow()) return;
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
@@ -344,7 +348,7 @@ export default function AssessmentPage() {
     // audible afterwards (see WHY unlock() in use-cia-voice.ts).
     unlockVoice();
 
-    if (USE_WHISPER) {
+    if (useWhisperNow()) {
       if (isRecording) {
         mediaRecorderRef.current?.stop();
         setIsRecording(false);

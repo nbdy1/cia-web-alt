@@ -43,6 +43,7 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { useTerminology } from "@/lib/hooks/use-terminology";
 import { getTenantHost, isLocalHostname } from "@/lib/tenant";
+import { isNativeApp } from "@/lib/native";
 
 // lucide-react in this project doesn't ship brand/logo icons (Instagram,
 // YouTube, etc.) — minimal inline glyphs for the footer's social links.
@@ -655,6 +656,8 @@ export default function HomePage() {
   if (
     !user &&
     typeof window !== "undefined" &&
+    // The Android app is not a marketing visitor: it goes to login (AuthProvider).
+    !isNativeApp() &&
     (getTenantHost(window.location.host).isApex ||
       isLocalHostname(window.location.host))
   ) {

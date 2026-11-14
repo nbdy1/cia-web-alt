@@ -21,6 +21,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import Cookies from 'js-cookie';
+import { isNativeApp } from '@/lib/native';
 import { applyBrandScale, generateBrandScale, BRAND_SCALE_STORAGE_KEY } from '@/lib/theme/colors';
 import {
   ACTIVE_ORG_COOKIE,
@@ -237,6 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isApexLanding =
       typeof window !== 'undefined' &&
       pathname === '/' &&
+      !isNativeApp() &&
       (getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host));
     if (!loading && !user && pathname !== '/login' && !isApexLanding) {
       router.push('/login');
@@ -303,6 +305,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isPublicMarketingHost =
     typeof window !== 'undefined' &&
     pathname === '/' &&
+    // Inside the Android app the apex root is not public marketing: anonymous users go to login.
+    !isNativeApp() &&
     (getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host));
 
   // The apex/local root is public marketing. Render it immediately while the

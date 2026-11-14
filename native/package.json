@@ -1,0 +1,22 @@
+{
+  "name": "cds-android",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Android app (Capacitor WebView) for CDS untuk Guru. Loads the live site; see README.md.",
+  "scripts": {
+    "sync": "cap sync android",
+    "assets": "capacitor-assets generate --android --assetPath assets",
+    "open": "cap open android",
+    "doctor": "cap doctor"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.0.0"
+  }
+}

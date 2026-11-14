@@ -20,12 +20,13 @@ import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { getTenantHost, isLocalHostname } from '@/lib/tenant';
 import { useAuth } from '@/lib/context/auth-context';
+import { isNativeApp } from '@/lib/native';
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const isAdmin = pathname?.startsWith('/admin') || pathname?.startsWith('/super-admin');
-  const isMarketingLanding = !user && pathname === '/' && typeof window !== 'undefined' && (
+  const isMarketingLanding = !user && pathname === '/' && typeof window !== 'undefined' && !isNativeApp() && (
     getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host)
   );
 

@@ -13,6 +13,7 @@ import { CheckCircle2, Loader2, Lock, Pencil, Printer, RefreshCw, Save, Unlock }
 import { generateBpMonthlySummary, updateBpMonthlySummary } from "@/app/actions/bp-monthly";
 import { useSettings } from "@/lib/context/settings-context";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { useNativeApp } from "@/lib/hooks/use-native-app";
 
 type Props = {
   id: string;
@@ -37,6 +38,8 @@ export function BkMonthlySummaryActions({ id, studentId, month, status, overview
   const [confirmRefresh, setConfirmRefresh] = useState(false);
   const [pending, startTransition] = useTransition();
   const isFinal = status === "final";
+  // Android WebView has no window.print(); the button is hidden inside the app.
+  const inApp = useNativeApp();
 
   function save(patch: Parameters<typeof updateBpMonthlySummary>[1], doneMessage?: string) {
     setError("");
@@ -144,10 +147,12 @@ export function BkMonthlySummaryActions({ id, studentId, month, status, overview
             {isEnglish ? "Mark as final" : "Jadikan final"}
           </button>
         )}
-        <button type="button" onClick={() => window.print()} className="inline-flex h-10 items-center gap-1.5 rounded-xl border-2 border-slate-200 px-3.5 text-xs font-bold text-slate-600">
-          <Printer className="h-4 w-4" />
-          {isEnglish ? "Print" : "Cetak"}
-        </button>
+        {!inApp && (
+          <button type="button" onClick={() => window.print()} className="inline-flex h-10 items-center gap-1.5 rounded-xl border-2 border-slate-200 px-3.5 text-xs font-bold text-slate-600">
+            <Printer className="h-4 w-4" />
+            {isEnglish ? "Print" : "Cetak"}
+          </button>
+        )}
         {!isFinal && (
           <button type="button" disabled={pending} onClick={() => (newSessionsCount > 0 ? refreshWithAi() : setConfirmRefresh(true))} className={`inline-flex h-10 items-center gap-1.5 rounded-xl border-2 px-3.5 text-xs font-bold disabled:opacity-50 ${newSessionsCount > 0 ? "border-sky-300 bg-sky-50 text-sky-700" : "border-slate-200 text-slate-600"}`}>
             <RefreshCw className="h-4 w-4" />
