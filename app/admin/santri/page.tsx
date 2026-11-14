@@ -46,6 +46,11 @@ export default function ManageSantriPage() {
   const [ustadzList, setUstadzList] = useState<any[]>([]);
   const [savingAssignmentId, setSavingAssignmentId] = useState<string | null>(null);
   const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
+  // Mentor filter ('all' | 'none' | ustadz id) and bulk-selection state
+  const [mentorFilter, setMentorFilter] = useState<string>('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkTarget, setBulkTarget] = useState('');
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   // Add Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -209,15 +214,62 @@ export default function ManageSantriPage() {
     }
   };
 
-  const activeList = students.filter(s =>
-    s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.nis?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const q = searchQuery.trim().toLowerCase();
+  const matchesSearch = (s: any) =>
+    !q ||
+    s.name?.toLowerCase().includes(q) ||
+    s.nis?.toLowerCase().includes(q) ||
+    s.profiles?.name?.toLowerCase().includes(q);
 
-  const removedList = removedStudents.filter(s =>
-    s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.nis?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const matchesMentor = (s: any) =>
+    mentorFilter === 'all' ? true : mentorFilter === 'none' ? !s.assigned_ustadz_id : s.assigned_ustadz_id === mentorFilter;
+
+  const activeList = students.filter(s => matchesSearch(s) && matchesMentor(s));
+  const removedList = removedStudents.filter(matchesSearch);
+
+  // Counts for the mentor filter chips (independent of search so they stay stable)
+  const unassignedCount = students.filter(s => !s.assigned_ustadz_id).length;
+  const countByUstadz = students.reduce<Record<string, number>>((acc, s) => {
+    if (s.assigned_ustadz_id) acc[s.assigned_ustadz_id] = (acc[s.assigned_ustadz_id] ?? 0) + 1;
+    return acc;
+  }, {});
+  // Ustazah whose name matches what the admin is typing -> one-tap shortcut
+  const matchedUstadz = q.length >= 2 && mentorFilter === 'all'
+    ? ustadzList.filter(u => u.name?.toLowerCase().includes(q))
+    : [];
+  const selectedUstadz = ustadzList.find(u => u.id === mentorFilter);
+
+  const toggleSelect = (id: string) => setSelectedIds(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+
+  const bulkAssign = async (ustadzId: string) => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkSaving(true);
+    setAssignmentMessage(null);
+    const { error } = await supabase
+      .from('students')
+      .update({ assigned_ustadz_id: ustadzId || null })
+      .in('id', ids);
+    setBulkSaving(false);
+    if (error) {
+      setAssignmentMessage(`Gagal menyimpan penugasan: ${error.message}`);
+      return;
+    }
+    const target = ustadzList.find(u => u.id === ustadzId) ?? null;
+    setStudents(rows => rows.map(row => selectedIds.has(row.id) ? { ...row, assigned_ustadz_id: ustadzId || null, profiles: target } : row));
+    setAssignmentMessage(
+      ustadzId
+        ? (isEnglish ? `${ids.length} students assigned to ${target?.name}` : `${ids.length} ${t.santriLower} ditugaskan ke ${target?.name}`)
+        : (isEnglish ? `${ids.length} students unassigned` : `${ids.length} ${t.santriLower} dilepas dari pembimbing`)
+    );
+    setSelectedIds(new Set());
+    setBulkTarget('');
+    window.setTimeout(() => setAssignmentMessage(null), 2500);
+  };
 
   // Update photo_url in local state after upload (avoids full refetch)
   const handlePhotoUploaded = (studentId: string, newUrl: string) => {
@@ -293,14 +345,14 @@ export default function ManageSantriPage() {
       {/* Active / Removed tab toggle */}
       <div className="flex gap-2">
         <button
-          onClick={() => { setShowRemoved(false); setSearchQuery(''); }}
+          onClick={() => { setShowRemoved(false); setSearchQuery(''); setSelectedIds(new Set()); }}
           className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${!showRemoved ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={!showRemoved ? { boxShadow: "0 3px 0 0 var(--brand-700)" } : {}}
         >
           {isEnglish ? 'Active' : 'Aktif'} ({students.length})
         </button>
         <button
-          onClick={() => { setShowRemoved(true); setSearchQuery(''); }}
+          onClick={() => { setShowRemoved(true); setSearchQuery(''); setSelectedIds(new Set()); }}
           className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${showRemoved ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           style={showRemoved ? { boxShadow: "0 3px 0 0 #b91c1c" } : {}}
         >
@@ -313,13 +365,104 @@ export default function ManageSantriPage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
-          placeholder={showRemoved ? (isEnglish ? `Search deactivated ${t.santriLower}s…` : `Cari ${t.santriLower} yang dinonaktifkan…`) : (isEnglish ? 'Search name or student ID…' : 'Cari nama atau NIS…')}
+          placeholder={showRemoved ? (isEnglish ? `Search deactivated ${t.santriLower}s…` : `Cari ${t.santriLower} yang dinonaktifkan…`) : (isEnglish ? 'Search name, student ID, or supervisor…' : `Cari nama, NIS, atau nama pembimbing…`)}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
+          className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pl-11 pr-11 text-sm font-bold focus:outline-none focus:border-brand-400 transition-all"
           style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}
         />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} aria-label="Hapus pencarian" className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100">
+            <X size={14} />
+          </button>
+        )}
       </div>
+
+      {/* Supervisor quick-match: typing "Adi" offers Ust. Adi's students in one tap */}
+      {!showRemoved && matchedUstadz.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{isEnglish ? 'Supervisor match' : 'Pembimbing cocok'}</span>
+          {matchedUstadz.slice(0, 5).map(u => (
+            <button
+              key={u.id}
+              onClick={() => { setMentorFilter(u.id); setSearchQuery(''); }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border-2 border-brand-100 text-brand-700 text-xs font-bold hover:bg-brand-100 transition-colors"
+            >
+              <UserCheck size={12} /> {u.name} · {countByUstadz[u.id] ?? 0} {t.santriLower}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Mentor filter chips */}
+      {!showRemoved && (
+        <div className="-mx-1 px-1 overflow-x-auto pb-1">
+          <div className="flex gap-2 w-max">
+            <button
+              onClick={() => setMentorFilter('all')}
+              className={`px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap border-2 transition-colors ${mentorFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
+            >
+              {isEnglish ? 'All' : 'Semua'} ({students.length})
+            </button>
+            <button
+              onClick={() => setMentorFilter(mentorFilter === 'none' ? 'all' : 'none')}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap border-2 transition-colors ${mentorFilter === 'none' ? 'bg-amber-500 text-white border-amber-500' : unassignedCount > 0 ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' : 'bg-white text-slate-400 border-slate-200'}`}
+            >
+              <AlertCircle size={12} /> {isEnglish ? 'No supervisor yet' : 'Belum ada pembimbing'} ({unassignedCount})
+            </button>
+            {ustadzList.map(u => (
+              <button
+                key={u.id}
+                onClick={() => setMentorFilter(mentorFilter === u.id ? 'all' : u.id)}
+                className={`px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap border-2 transition-colors ${mentorFilter === u.id ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-slate-600 border-slate-200 hover:border-brand-200 hover:bg-brand-50'}`}
+              >
+                {u.name} ({countByUstadz[u.id] ?? 0})
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Context banner for the active supervisor filter */}
+      {!showRemoved && mentorFilter !== 'all' && (
+        <div className={`flex items-center justify-between gap-3 rounded-2xl border-2 px-4 py-3 ${mentorFilter === 'none' ? 'bg-amber-50 border-amber-200' : 'bg-brand-50 border-brand-100'}`}>
+          <div className="min-w-0">
+            <p className={`text-sm font-bold truncate ${mentorFilter === 'none' ? 'text-amber-800' : 'text-brand-800'}`}>
+              {mentorFilter === 'none'
+                ? (isEnglish ? `${unassignedCount} ${t.santriLower} without a supervisor` : `${unassignedCount} ${t.santriLower} belum punya pembimbing`)
+                : `${selectedUstadz?.name ?? ''} · ${countByUstadz[mentorFilter] ?? 0} ${t.santriLower}`}
+            </p>
+            <p className="text-[11px] font-bold text-slate-500 mt-0.5">
+              {mentorFilter === 'none'
+                ? (isEnglish ? 'Tick students, then choose a supervisor below.' : 'Centang santri lalu pilih pembimbing di bawah untuk langsung menugaskan.')
+                : (isEnglish ? 'Tick students to reassign them, e.g. when a supervisor resigns.' : 'Centang santri untuk dipindahkan, misalnya jika pembimbing resign.')}
+            </p>
+          </div>
+          <button onClick={() => setMentorFilter('all')} className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border-2 border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50">
+            <X size={12} /> {isEnglish ? 'Clear' : 'Reset'}
+          </button>
+        </div>
+      )}
+
+      {/* Select-all row */}
+      {!showRemoved && !loading && activeList.length > 0 && (
+        <div className="flex items-center justify-between px-1">
+          <label className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="w-4 h-4 accent-emerald-600"
+              checked={activeList.length > 0 && activeList.every(s => selectedIds.has(s.id))}
+              onChange={(e) => setSelectedIds(prev => {
+                const next = new Set(prev);
+                activeList.forEach(s => e.target.checked ? next.add(s.id) : next.delete(s.id));
+                return next;
+              })}
+            />
+            {isEnglish ? `Select all ${activeList.length} shown` : `Pilih semua ${activeList.length} yang tampil`}
+          </label>
+          <span className="text-[11px] font-bold text-slate-400">{activeList.length} {t.santriLower}</span>
+        </div>
+      )}
 
       {!showRemoved && (
         <div className="flex items-center justify-between gap-3 bg-white border-2 border-slate-200 rounded-2xl p-3" style={{ boxShadow: "0 3px 0 0 #e2e8f0" }}>
@@ -346,9 +489,18 @@ export default function ManageSantriPage() {
           {sortedDisplayList.map((student, i) => (
             <div
               key={student.id}
-              className={`bg-white rounded-[1.5rem] border-2 p-4 flex items-start gap-3 group ${showRemoved ? 'border-rose-100 opacity-80' : 'border-slate-100'}`}
+              className={`bg-white rounded-[1.5rem] border-2 p-4 flex items-start gap-3 group transition-colors ${showRemoved ? 'border-rose-100 opacity-80' : selectedIds.has(student.id) ? 'border-brand-300 bg-brand-50/40' : 'border-slate-100'}`}
               style={{ boxShadow: showRemoved ? "0 3px 0 0 #fee2e2" : "0 3px 0 0 #e2e8f0" }}
             >
+              {!showRemoved && (
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(student.id)}
+                  onChange={() => toggleSelect(student.id)}
+                  aria-label={`Pilih ${student.name}`}
+                  className="w-4 h-4 mt-3.5 accent-emerald-600 shrink-0 cursor-pointer"
+                />
+              )}
               {showRemoved ? (
                 <div
                   className="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-base text-white shrink-0"
@@ -376,8 +528,10 @@ export default function ManageSantriPage() {
                 ) : <p className="font-bold text-slate-800 text-sm truncate">{student.name}</p>}
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {editingId !== student.id && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{student.nis ? `NIS: ${student.nis}` : "—"}</span>}
-                  {student.profiles?.name && (
+                  {student.profiles?.name ? (
                     <span className="text-[10px] font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">{student.profiles.name}</span>
+                  ) : !showRemoved && (
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">{isEnglish ? 'No supervisor' : 'Belum ada pembimbing'}</span>
                   )}
                 </div>
                 {!showRemoved && (
@@ -436,10 +590,48 @@ export default function ManageSantriPage() {
             ? <ArchiveX className="w-8 h-8 mx-auto text-slate-200 mb-3" />
             : <GraduationCap className="w-8 h-8 mx-auto text-slate-200 mb-3" />}
           <p className="text-slate-400 font-bold text-sm">
-            {searchQuery
+            {(searchQuery || (!showRemoved && mentorFilter !== 'all'))
               ? (isEnglish ? 'No matching results' : 'Tidak ada hasil pencarian')
               : showRemoved ? (isEnglish ? `No deactivated ${t.santriLower}s yet` : `Belum ada ${t.santriLower} yang dinonaktifkan`) : (isEnglish ? `No ${t.santriLower} data yet` : `Belum ada data ${t.santriLower}`)}
           </p>
+        </div>
+      )}
+
+      {/* Bulk assign bar */}
+      {!showRemoved && selectedIds.size > 0 && (
+        <div className="sticky bottom-4 z-30">
+          <div className="bg-slate-900 text-white rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 shadow-xl">
+            <div className="flex items-center justify-between sm:justify-start gap-3 sm:flex-1">
+              <p className="text-sm font-bold">{selectedIds.size} {t.santriLower} {isEnglish ? 'selected' : 'dipilih'}</p>
+              <button onClick={() => setSelectedIds(new Set())} className="text-xs font-bold text-slate-300 underline underline-offset-2 hover:text-white">{isEnglish ? 'Clear' : 'Batal pilih'}</button>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={bulkTarget}
+                onChange={(e) => setBulkTarget(e.target.value)}
+                disabled={bulkSaving}
+                className="flex-1 sm:w-56 bg-white text-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold outline-none"
+              >
+                <option value="">{isEnglish ? 'Choose supervisor…' : 'Pilih pembimbing…'}</option>
+                {ustadzList.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+              </select>
+              <button
+                onClick={() => bulkAssign(bulkTarget)}
+                disabled={!bulkTarget || bulkSaving}
+                className="inline-flex items-center gap-1.5 bg-brand-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50 whitespace-nowrap"
+              >
+                {bulkSaving ? <Loader2 size={13} className="animate-spin" /> : <UserCheck size={13} />} {isEnglish ? 'Assign' : 'Tugaskan'}
+              </button>
+              <button
+                onClick={() => bulkAssign('')}
+                disabled={bulkSaving}
+                title={isEnglish ? 'Remove supervisor' : 'Lepas pembimbing'}
+                className="p-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+              >
+                <UserX size={14} />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
