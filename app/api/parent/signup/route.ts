@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: exists
-          ? "Email ini sudah terdaftar. Silakan masuk, lalu tambahkan kode santri dari menu Anak."
+          ? "Email ini sudah terdaftar. Jika ini akun orang tua Anda, masuk lalu tambahkan kode dari menu Anak. Jika email ini dipakai sebagai guru/staf, daftar dengan email lain (mis. nama+ortu@gmail.com)."
           : "Gagal membuat akun. Coba lagi.",
       },
       { status: exists ? 409 : 500 },

@@ -133,7 +133,7 @@ export default function ParentSignupPage() {
           </form>
 
           <p className="mt-6 text-center text-xs font-bold text-slate-500">
-            Sudah punya akun? <Link href="/login" className="text-brand-600 underline">Masuk</Link>
+            Sudah punya akun? <Link href="/parent/login" className="text-brand-600 underline">Masuk</Link>
           </p>
         </div>
       </div>

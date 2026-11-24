@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 export default async function LinkPage() {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/parent/login");
   const { data: memberships } = await db.from("organization_members").select("role").eq("user_id", user.id);
   if ((memberships ?? []).length > 0) redirect("/");
   return (

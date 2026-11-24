@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   if (code) {
     const db = await createClient();
     const { error } = await db.auth.exchangeCodeForSession(code);
-    if (error) return NextResponse.redirect(`${origin}/login?error=google`);
+    if (error) return NextResponse.redirect(`${origin}/parent/login?error=google`);
   }
   return NextResponse.redirect(`${origin}/`);
 }

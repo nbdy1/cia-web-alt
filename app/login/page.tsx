@@ -16,7 +16,6 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useSettings } from '@/lib/context/settings-context';
-import { GoogleButton } from '@/components/parent/GoogleButton';
 
 export default function LoginPage() {
   const { language } = useSettings();
@@ -44,12 +43,21 @@ export default function LoginPage() {
         if (resetError) throw resetError;
         setSuccess(isEnglish ? "If the email is registered, a password reset link has been sent." : "Jika email terdaftar, tautan untuk mengatur ulang kata sandi telah dikirim.");
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: signedIn, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (signInError) throw signInError;
+
+        // Parents have their own sign-in page; keep the two worlds apart.
+        const { data: memberships } = await supabase.from('organization_members').select('role').eq('user_id', signedIn.user.id);
+        const roles = (memberships ?? []).map((m: { role: string }) => m.role);
+        if (roles.length > 0 && roles.every((r) => r === 'parent')) {
+          await supabase.auth.signOut();
+          window.location.assign('/parent/login');
+          return;
+        }
         
         setSuccess(isEnglish ? "Signed in successfully. Redirecting to the dashboard..." : "Login berhasil! Mengalihkan ke dashboard...");
         // The server may route / from characterdev.systems to the user's
@@ -198,14 +206,10 @@ export default function LoginPage() {
             </button>
           )}
 
-          <div className="mt-6 pt-6 border-t-2 border-slate-100 space-y-3">
-            <p className="text-center text-[11px] font-bold uppercase tracking-wider text-slate-400">{isEnglish ? "Parents" : "Orang tua"}</p>
-            <GoogleButton label={isEnglish ? "Sign in with Google" : "Masuk dengan Google"} />
-          </div>
-          <p className="mt-4 text-center text-xs font-bold text-slate-500">
+          <p className="mt-6 text-center text-xs font-bold text-slate-500">
             {isEnglish ? "Parent of a student?" : "Orang tua santri?"}{" "}
-            <a href="/parent/signup" className="text-brand-600 underline">
-              {isEnglish ? "Create a parent account" : "Daftar dengan kode santri"}
+            <a href="/parent/login" className="text-brand-600 underline">
+              {isEnglish ? "Parent sign-in" : "Masuk sebagai orang tua"}
             </a>
           </p>
 

@@ -1,9 +1,15 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "characterdev.systems";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Pin the project root. Without this Next walks up, finds the stray
+  // package-lock.json in the parent "webdev" folder and treats THAT as the root:
+  // it then watches every sibling project and fails to resolve "tailwindcss",
+  // which loops and pegs CPU/RAM/disk.
+  turbopack: { root: path.resolve(process.cwd()) },
   async headers() {
     return [
       {

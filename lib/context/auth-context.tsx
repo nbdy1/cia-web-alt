@@ -58,7 +58,7 @@ interface AuthContextType {
 
 // Pages an anonymous visitor may open: sign in, and parent registration.
 function isPublicAuthPath(pathname: string | null) {
-  return pathname === '/login' || pathname === '/parent/signup';
+  return pathname === '/login' || pathname === '/parent/login' || pathname === '/parent/signup';
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -200,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setActiveOrgId(null);
         setLoading(false);
         if (event === 'SIGNED_OUT') {
-          router.push('/login');
+          router.push(window.location.pathname.startsWith('/parent') ? '/parent/login' : '/login');
         }
       }
     };
@@ -246,7 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       !isNativeApp() &&
       (getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host));
     if (!loading && !user && !isPublicAuthPath(pathname) && !isApexLanding) {
-      router.push('/login');
+      router.push(pathname?.startsWith('/parent') ? '/parent/login' : '/login');
     }
   }, [loading, user, pathname, router]);
 
@@ -304,7 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setOrganizations([]);
     setActiveOrgId(null);
-    router.push('/login');
+    router.push(window.location.pathname.startsWith('/parent') ? '/parent/login' : '/login');
   };
 
   const isPublicMarketingHost =

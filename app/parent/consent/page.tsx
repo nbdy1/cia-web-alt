@@ -6,7 +6,7 @@ import { getParentSession, hasParentConsent } from "@/lib/parent-server";
 
 export default async function ConsentPage() {
   const session = await getParentSession();
-  if (!session) redirect("/");
+  if (!session) redirect("/parent/login");
   if (await hasParentConsent(session.userId)) redirect("/parent");
   return (
     <div className="min-h-screen bg-paper p-5 pt-12 font-sans space-y-4">

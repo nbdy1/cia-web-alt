@@ -8,7 +8,7 @@ import { getParentSession, hasParentConsent, logParentAccess, type ParentChild }
  */
 export async function loadParentPage(section: string, searchParams?: Promise<{ anak?: string | string[] }>) {
   const session = await getParentSession();
-  if (!session) redirect("/");
+  if (!session) redirect("/parent/login");
   if (!(await hasParentConsent(session.userId))) redirect("/parent/consent");
   const raw = (await searchParams)?.anak;
   const wanted = Array.isArray(raw) ? raw[0] : raw;
