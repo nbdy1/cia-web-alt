@@ -208,7 +208,8 @@ export async function getTeacherTreatmentCompliance(organizationId: string): Pro
     const { data: memberRows, error: memberError } = await db
       .from("organization_members")
       .select("*")
-      .eq("organization_id", organizationId);
+      .eq("organization_id", organizationId)
+      .neq("role", "parent");
     if (memberError) throw memberError;
     const memberIds = (memberRows ?? []).map((row: any) => row.user_id);
 

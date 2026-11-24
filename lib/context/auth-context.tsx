@@ -56,6 +56,11 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+// Pages an anonymous visitor may open: sign in, and parent registration.
+function isPublicAuthPath(pathname: string | null) {
+  return pathname === '/login' || pathname === '/parent/signup';
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 
@@ -240,7 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       pathname === '/' &&
       !isNativeApp() &&
       (getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host));
-    if (!loading && !user && pathname !== '/login' && !isApexLanding) {
+    if (!loading && !user && !isPublicAuthPath(pathname) && !isApexLanding) {
       router.push('/login');
     }
   }, [loading, user, pathname, router]);
@@ -312,7 +317,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // The apex/local root is public marketing. Render it immediately while the
   // auth client resolves so an anonymous visitor never gets stuck on the app's
   // credential-verification screen.
-  if (!isPublicMarketingHost && (loading || (!user && pathname !== '/login'))) {
+  if (!isPublicMarketingHost && (loading || (!user && !isPublicAuthPath(pathname)))) {
     return (
       <div className="min-h-screen w-full bg-paper flex flex-col items-center justify-center p-6 animate-fade-in">
         <div className="text-center space-y-4">

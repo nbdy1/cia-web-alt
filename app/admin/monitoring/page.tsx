@@ -38,6 +38,7 @@
  */
 "use client";
 
+import { ApprovalQueuePanel } from '@/components/admin/ApprovalQueuePanel';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BookOpen, Search, Loader2, Users, FileText, ChevronRight, Calendar, AlertCircle, BarChart3, ClipboardCheck, ListChecks } from 'lucide-react';
@@ -443,6 +444,8 @@ export default function MonitoringPage() {
         <h2 className="text-2xl font-bold text-slate-800">{isEnglish ? 'Report monitoring' : 'Monitor Laporan'}</h2>
         <p className="text-slate-400 text-sm font-bold mt-0.5">{isEnglish ? `${t.santri} report progress by supervising ${t.ustadz.toLowerCase()}` : `Progres laporan ${t.santriLower} per ${t.ustadzLower} pembimbing`}</p>
       </div>
+
+      <ApprovalQueuePanel organizationId={activeOrganizationId} />
 
       <div role="tablist" className="flex bg-slate-100 p-1 rounded-2xl w-full sm:w-fit">
         {([

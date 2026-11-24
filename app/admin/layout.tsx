@@ -16,7 +16,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, ChevronLeft, BookOpen, GraduationCap, Loader2, Settings, Lightbulb, MessageSquareHeart } from 'lucide-react';
+import { LayoutDashboard, Users, ChevronLeft, BookOpen, GraduationCap, Loader2, Settings, Lightbulb, MessageSquareHeart, KeyRound } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth-context';
 import { useUserRole } from '@/lib/hooks/use-user-role';
 import { OrganizationSwitcher } from '@/components/OrganizationSwitcher';
@@ -55,6 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: isBpMode ? '/admin/bk' : '/admin', label: isBpMode ? (isEnglish ? 'Counselling' : 'Bimbingan') : 'Overview', icon: isBpMode ? MessageSquareHeart : LayoutDashboard },
     { href: '/admin/santri', label: isEnglish ? `Manage ${t.santri}s` : `Kelola ${t.santri}`, icon: GraduationCap },
     { href: '/admin/ustadz', label: isEnglish ? `Manage ${t.ustadz}s` : `Kelola ${t.ustadz}`, icon: Users },
+    { href: '/admin/orang-tua', label: isEnglish ? 'Parents' : 'Orang Tua', icon: KeyRound },
     ...(isBpMode ? [] : [
       { href: '/admin/monitoring', label: isEnglish ? 'Report Monitor' : 'Monitor Laporan', icon: BookOpen },
       { href: '/admin/treatment-plans', label: isEnglish ? 'Support Plans' : 'Rencana Penanganan', icon: Lightbulb },
@@ -132,7 +133,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t-2 border-slate-100"
           style={{ boxShadow: "0 -5px 18px rgba(15, 23, 42, 0.08)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
-          <div className="max-w-xl mx-auto grid grid-cols-6 items-stretch px-2 pt-2">
+          <div className="max-w-xl mx-auto grid grid-flow-col auto-cols-fr items-stretch px-2 pt-2">
           {mobilePrimaryItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;

@@ -74,7 +74,8 @@ export default function ManageUstadzPage() {
       const membersRes = await supabase
         .from('organization_members')
         .select('user_id, role')
-        .eq('organization_id', organizationId);
+        .eq('organization_id', organizationId)
+        .neq('role', 'parent');
       const memberIds = (membersRes.data ?? []).map((m: any) => m.user_id);
       const roleByUserId = new Map((membersRes.data ?? []).map((m: any) => [m.user_id, m.role]));
 

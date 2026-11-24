@@ -24,6 +24,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { generateStudentProfile } from '@/app/actions/ai-analysis';
+import { generateParentDraftsForReport } from '@/app/actions/parent-updates';
 import { createClient } from '@/lib/supabase/server';
 import { assertTenantOrganization } from '@/lib/tenant-server';
 import { normalizeAppLanguage } from '@/lib/data/language';
@@ -83,6 +84,10 @@ export async function saveAssessmentAction(data: {
       undefined,
       normalizeAppLanguage(data.analysis?.output_language),
     );
+
+    // Step 3: Prepare DRAFTS for the parent dashboard (cards, monthly summary, profile).
+    // They stay invisible to parents until the musyrif approves them. Non-fatal.
+    await generateParentDraftsForReport(report.id);
 
     return { success: true };
 

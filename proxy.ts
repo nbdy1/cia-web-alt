@@ -63,7 +63,7 @@ function redirectWithSessionCookies(url: URL, source: NextResponse) {
 }
 
 function chooseDefaultOrg(rows: OrgMembership[]) {
-  const rank: Record<string, number> = { owner: 0, admin: 1, ustadz: 2 };
+  const rank: Record<string, number> = { owner: 0, admin: 1, ustadz: 2, parent: 3 };
   return [...rows]
     .filter((row) => getOrgId(row))
     .sort((a, b) => (rank[a.role] ?? 9) - (rank[b.role] ?? 9))[0];

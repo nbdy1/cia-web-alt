@@ -75,7 +75,8 @@ function PlansTab() {
       const { data: memberRows } = await supabase
         .from('organization_members')
         .select('user_id')
-        .eq('organization_id', activeOrganizationId);
+        .eq('organization_id', activeOrganizationId)
+        .neq('role', 'parent');
       const memberIds = (memberRows ?? []).map((m: any) => m.user_id);
 
       const { data: profiles } = memberIds.length > 0

@@ -37,6 +37,9 @@ export async function setUserAppMode(
   if (membershipError || !membership) {
     return { success: false, error: "Keanggotaan institusi tidak ditemukan." };
   }
+  if (membership.role === "parent") {
+    return { success: false, error: "Akun orang tua tidak dapat mengubah mode." };
+  }
 
   // Membership RLS intentionally permits administration only to admins. Use
   // the service client after authenticating the caller so every user can

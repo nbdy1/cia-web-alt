@@ -16,6 +16,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useSettings } from '@/lib/context/settings-context';
+import { GoogleButton } from '@/components/parent/GoogleButton';
 
 export default function LoginPage() {
   const { language } = useSettings();
@@ -196,6 +197,17 @@ export default function LoginPage() {
               {isEnglish ? 'Back to sign in' : 'Kembali ke halaman masuk'}
             </button>
           )}
+
+          <div className="mt-6 pt-6 border-t-2 border-slate-100 space-y-3">
+            <p className="text-center text-[11px] font-bold uppercase tracking-wider text-slate-400">{isEnglish ? "Parents" : "Orang tua"}</p>
+            <GoogleButton label={isEnglish ? "Sign in with Google" : "Masuk dengan Google"} />
+          </div>
+          <p className="mt-4 text-center text-xs font-bold text-slate-500">
+            {isEnglish ? "Parent of a student?" : "Orang tua santri?"}{" "}
+            <a href="/parent/signup" className="text-brand-600 underline">
+              {isEnglish ? "Create a parent account" : "Daftar dengan kode santri"}
+            </a>
+          </p>
 
           {/* Quick Info */}
           <div className="mt-8 pt-6 border-t-2 border-slate-100 text-center">

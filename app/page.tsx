@@ -36,8 +36,10 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { useAuth } from "@/lib/context/auth-context";
+import { ApprovalQueueCard } from "@/components/parent/ApprovalQueueCard";
 import { SettingsDropdown } from "@/components/SettingsDropdown";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { useUserRole } from "@/lib/hooks/use-user-role";
@@ -643,7 +645,7 @@ function MarketingPage() {
 }
 
 export default function HomePage() {
-  const { user, signOut, activeOrganization } = useAuth();
+  const { user, signOut, activeOrganization, organizations, loading: authLoading } = useAuth();
   const { role } = useUserRole();
   const t = useTerminology();
   const isEnglish = t.language === "en";
@@ -652,6 +654,15 @@ export default function HomePage() {
   const userName =
     user?.user_metadata?.name || user?.email?.split("@")[0] || "Ustaz Abdullah";
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+  const router = useRouter();
+
+  // Parents have their own dashboard; they never see the teacher hub.
+  React.useEffect(() => {
+    if (role === "parent") router.replace("/parent");
+    // Signed in with Google but not paired with a child yet.
+    else if (!authLoading && user && organizations.length === 0 && user.app_metadata?.provider === "google") router.replace("/parent/link");
+  }, [role, router, authLoading, user, organizations.length]);
+  if (role === "parent") return null;
 
   if (
     !user &&
@@ -763,6 +774,8 @@ export default function HomePage() {
             </div>
           </div>
         </Link>
+
+        {!isBpMode && <ApprovalQueueCard organizationId={activeOrganization?.id ?? null} />}
 
         {/* Admin Portal */}
         {isAdmin && (
