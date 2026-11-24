@@ -25,7 +25,7 @@ import { isNativeApp } from '@/lib/native';
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
-  const isAdmin = pathname?.startsWith('/admin') || pathname?.startsWith('/super-admin');
+  const isAdmin = pathname?.startsWith('/admin') || pathname?.startsWith('/super-admin') || pathname?.startsWith('/parent-review');
   const isMarketingLanding = !user && pathname === '/' && typeof window !== 'undefined' && !isNativeApp() && (
     getTenantHost(window.location.host).isApex || isLocalHostname(window.location.host)
   );

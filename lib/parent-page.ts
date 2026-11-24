@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { getParentSession, hasParentConsent, logParentAccess, type ParentChild } from "@/lib/parent-server";
 
 /**
- * Resolves the signed-in parent and the child selected via ?anak=, makes sure
+ * Resolves the signed-in parent and the child selected via ?child=, makes sure
  * they accepted the current data-use consent, and logs the visit.
  */
-export async function loadParentPage(section: string, searchParams?: Promise<{ anak?: string | string[] }>) {
+export async function loadParentPage(section: string, searchParams?: Promise<{ child?: string | string[] }>) {
   const session = await getParentSession();
   if (!session) redirect("/parent/login");
   if (!(await hasParentConsent(session.userId))) redirect("/parent/consent");
-  const raw = (await searchParams)?.anak;
+  const raw = (await searchParams)?.child;
   const wanted = Array.isArray(raw) ? raw[0] : raw;
   const selected: ParentChild | null = session.children.find((c) => c.id === wanted) ?? session.children[0] ?? null;
   await logParentAccess(session.userId, section, selected);

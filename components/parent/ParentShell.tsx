@@ -8,13 +8,13 @@ import { StudentAvatar } from "@/components/StudentAvatar";
 import { ParentSignOut } from "@/components/parent/ParentClient";
 import { getUnreadCount, type ParentChild } from "@/lib/parent-server";
 
-export type ParentTab = "ringkasan" | "update" | "profil" | "anak";
+export type ParentTab = "summary" | "updates" | "profile" | "children";
 
 const TABS: { key: ParentTab; label: string; href: string; icon: typeof Home }[] = [
-  { key: "ringkasan", label: "Rangkuman", href: "/parent", icon: Home },
-  { key: "update", label: "Update", href: "/parent/updates", icon: Newspaper },
-  { key: "profil", label: "Profil", href: "/parent/profile", icon: UserRound },
-  { key: "anak", label: "Anak", href: "/parent/anak", icon: Users },
+  { key: "summary", label: "Rangkuman", href: "/parent", icon: Home },
+  { key: "updates", label: "Update", href: "/parent/updates", icon: Newspaper },
+  { key: "profile", label: "Profil", href: "/parent/profile", icon: UserRound },
+  { key: "children", label: "Anak", href: "/parent/children", icon: Users },
 ];
 
 export async function ParentShell({
@@ -33,7 +33,7 @@ export async function ParentShell({
   body: React.ReactNode;
 }) {
   const unread = await getUnreadCount(kids.map((k) => k.id), parentId);
-  const q = (href: string, id?: string) => (id ? `${href}?anak=${id}` : href);
+  const q = (href: string, id?: string) => (id ? `${href}?child=${id}` : href);
   return (
     <div className="min-h-screen bg-paper pb-28 font-sans">
       <header className="px-5 pt-10 pb-4">
@@ -47,7 +47,7 @@ export async function ParentShell({
           <ParentSignOut />
         </div>
 
-        {kids.length > 1 && tab !== "anak" && (
+        {kids.length > 1 && tab !== "children" && (
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
             {kids.map((child) => {
               const active = child.id === selected?.id;
@@ -75,11 +75,11 @@ export async function ParentShell({
         <div className="w-full max-w-[450px] bg-white/95 backdrop-blur-xl border-t-2 border-slate-100 grid grid-cols-4 px-2 pt-2 pb-2">
           {TABS.map(({ key, label, href, icon: Icon }) => {
             const active = key === tab;
-            const badge = key === "update" && selected ? unread[selected.id] ?? 0 : 0;
+            const badge = key === "updates" && selected ? unread[selected.id] ?? 0 : 0;
             return (
               <Link
                 key={key}
-                href={q(href, key === "anak" ? undefined : selected?.id)}
+                href={q(href, key === "children" ? undefined : selected?.id)}
                 className={`relative flex flex-col items-center gap-1 py-2 rounded-xl ${active ? "bg-brand-50 text-brand-700" : "text-slate-400"}`}
               >
                 <Icon size={20} strokeWidth={active ? 2.5 : 2} />

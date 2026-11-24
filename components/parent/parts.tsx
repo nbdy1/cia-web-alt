@@ -26,7 +26,7 @@ export function TrendList({ trends }: { trends: Trend[] }) {
         <summary className="text-[11px] font-bold text-slate-400 cursor-pointer">Lihat angka Persentase CMS</summary>
         <div className="mt-2 space-y-1 text-xs text-slate-500">
           {trends.map((t) => (
-            <p key={t.aspect}>{aspectLabel(t.aspect)}: {t.percentage === null ? "—" : `${t.percentage}%`}</p>
+            <p key={t.aspect}>{aspectLabel(t.aspect)}: {t.percentage === null ? "—" : `${String(t.percentage).replace(".", ",")}%`}</p>
           ))}
           <p className="text-slate-400">Persentase perilaku positif yang teramati, bukan nilai ujian. Dibandingkan hanya dengan periode sebelumnya.</p>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { AutoTextarea } from "@/components/parent/AutoTextarea";
 import { Check, Heart, Loader2, LogOut, MessageCircle, Plus, Printer, Share2 } from "lucide-react";
 import { useAuth } from "@/lib/context/auth-context";
 import {
@@ -15,9 +16,9 @@ import {
 } from "@/app/actions/parent";
 
 const input =
-  "w-full bg-white border-2 border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold text-slate-800 focus:outline-none focus:border-brand-400";
+  "w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 px-4 text-base font-bold text-slate-800 focus:outline-none focus:border-brand-400 focus:ring-4 focus:ring-brand-100";
 const primary =
-  "w-full py-3 rounded-2xl bg-brand-500 text-white font-bold text-sm flex items-center justify-center gap-2 disabled:bg-slate-300";
+  "w-full min-h-12 rounded-2xl bg-brand-500 text-white font-bold text-base flex items-center justify-center gap-2 disabled:bg-slate-300";
 
 function useAction() {
   const router = useRouter();
@@ -122,22 +123,22 @@ export function FeedActions({
     <div className="mt-4 pt-3 border-t-2 border-slate-50 space-y-3">
       <div className="flex flex-wrap gap-2">
         <button disabled={read || pending} onClick={() => run(() => markUpdateRead(id), "")}
-          className={`px-3 py-1.5 rounded-xl border-2 text-xs font-bold flex items-center gap-1.5 ${read ? "border-brand-100 bg-brand-50 text-brand-700" : "border-slate-200 text-slate-600"}`}>
+          className={`px-4 min-h-11 rounded-xl border-2 text-sm font-bold flex items-center gap-2 ${read ? "border-brand-100 bg-brand-50 text-brand-700" : "border-slate-200 text-slate-600"}`}>
           <Check size={13} /> {read ? "Sudah dibaca" : "Tandai sudah dibaca"}
         </button>
         <button disabled={thanked || pending} onClick={() => run(() => thankForUpdate(id), "")}
-          className={`px-3 py-1.5 rounded-xl border-2 text-xs font-bold flex items-center gap-1.5 ${thanked ? "border-rose-100 bg-rose-50 text-rose-600" : "border-slate-200 text-slate-600"}`}>
+          className={`px-4 min-h-11 rounded-xl border-2 text-sm font-bold flex items-center gap-2 ${thanked ? "border-rose-100 bg-rose-50 text-rose-600" : "border-slate-200 text-slate-600"}`}>
           <Heart size={13} /> {thanked ? "Terima kasih terkirim" : "Terima kasih"}
         </button>
         {!question && (
-          <button onClick={() => setAsking((v) => !v)} className="px-3 py-1.5 rounded-xl border-2 border-slate-200 text-xs font-bold text-slate-600 flex items-center gap-1.5">
-            <MessageCircle size={13} /> Tanya musyrif
+          <button onClick={() => setAsking((v) => !v)} className="px-4 min-h-11 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-600 flex items-center gap-2">
+            <MessageCircle size={15} /> Tanya musyrif
           </button>
         )}
       </div>
       {asking && !question && (
         <div className="space-y-2">
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} maxLength={500} placeholder="Tulis satu pertanyaan untuk musyrif…" className={input} />
+          <AutoTextarea value={text} onChange={setText} minRows={3} maxLength={500} placeholder="Tulis satu pertanyaan untuk musyrif…" />
           <button disabled={pending || text.trim().length < 3} onClick={() => run(() => askMusyrif(id, text), "Pertanyaan terkirim.", () => { setAsking(false); setText(""); })} className={primary}>
             {pending && <Loader2 size={16} className="animate-spin" />} Kirim pertanyaan
           </button>
@@ -161,8 +162,8 @@ export function HomeProfileForm({
   const { pending, message, run } = useAction();
   const area = (label: string, key: keyof typeof v, hint: string) => (
     <label className="block">
-      <span className="text-xs font-bold text-slate-600">{label}</span>
-      <textarea rows={2} maxLength={1000} value={v[key]} placeholder={hint} onChange={(e) => setV((p) => ({ ...p, [key]: e.target.value }))} className={`${input} mt-1 font-medium`} />
+      <span className="text-sm font-bold text-slate-700">{label}</span>
+      <div className="mt-1.5"><AutoTextarea minRows={3} maxLength={1000} value={v[key]} placeholder={hint} onChange={(t) => setV((p) => ({ ...p, [key]: t }))} /></div>
     </label>
   );
   return (

@@ -4,8 +4,8 @@ import { AddChildForm } from "@/components/parent/ParentClient";
 import { Card, ParentShell } from "@/components/parent/ParentShell";
 import { loadParentPage } from "@/lib/parent-page";
 
-export default async function ParentChildren({ searchParams }: { searchParams?: Promise<{ anak?: string }> }) {
-  const { session, selected } = await loadParentPage("anak", searchParams);
+export default async function ParentChildren({ searchParams }: { searchParams?: Promise<{ child?: string }> }) {
+  const { session, selected } = await loadParentPage("children", searchParams);
 
   const body = (
     <>
@@ -28,5 +28,5 @@ export default async function ParentChildren({ searchParams }: { searchParams?: 
     </>
   );
 
-  return <ParentShell parentId={session.userId} parentName={session.name} children={session.children} selected={selected} tab="anak" body={body} />;
+  return <ParentShell parentId={session.userId} parentName={session.name} children={session.children} selected={selected} tab="children" body={body} />;
 }

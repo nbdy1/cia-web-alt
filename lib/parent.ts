@@ -93,7 +93,9 @@ export const aspectLabel = (a: string | null | undefined) => ASPECTS.find((x) =>
 export type UpdateKind = "kabar_baik" | "didampingi";
 export const KIND_LABEL: Record<UpdateKind, string> = { kabar_baik: "Kabar baik", didampingi: "Sedang didampingi" };
 
-export type UpdateContent = { text: string; actions: string[]; focus: string | null; duration: string | null };
+/** One observed behaviour from the CMS, in plain words, tied to its CMS theme. */
+export type ObservedItem = { theme: string; text: string };
+export type UpdateContent = { text: string; actions: string[]; focus: string | null; duration: string | null; observed?: ObservedItem[] };
 export type Trend = { aspect: Aspect; label: TrendLabel; percentage: number | null };
 export type SummaryContent = {
   overview: string;
@@ -150,6 +152,16 @@ export function dominantAspect(plan: unknown): Aspect {
   return (Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] as Aspect) ?? "karakter";
 }
 
+/** Themes that have at least one fulfilled behaviour in this report. */
+export function fulfilledThemes(plan: unknown): string[] {
+  const p = asPlan(plan);
+  return Array.from(new Set(
+    (Array.isArray(p?.detailed_assessments) ? p.detailed_assessments : [])
+      .filter((a: any) => a?.theme && Array.isArray(a.fulfilled_sub_indicators) && a.fulfilled_sub_indicators.length > 0)
+      .map((a: any) => clean(a.theme, 80)),
+  ));
+}
+
 /** Compact, transcript-free digest of one report. */
 export function digestReportForParent(report: ParentReportInput, index: number): string {
   const plan = asPlan(report.treatment_plan);
@@ -163,7 +175,7 @@ export function digestReportForParent(report: ParentReportInput, index: number):
     for (const a of plan.detailed_assessments) {
       if (a?.theme) themes.add(clean(a.theme, 80));
       if (Array.isArray(a?.fulfilled_sub_indicators)) {
-        for (const s of a.fulfilled_sub_indicators.slice(0, 2)) fulfilled.push(clean(s, 140));
+        for (const s of a.fulfilled_sub_indicators.slice(0, 2)) fulfilled.push(`[${clean(a.theme, 80)}] ${clean(s, 140)}`);
       }
     }
   }
@@ -172,7 +184,7 @@ export function digestReportForParent(report: ParentReportInput, index: number):
     `Laporan ${index + 1} (${date})`,
     plan?.status_summary ? `Kesimpulan: ${clean(plan.status_summary, 500)}` : null,
     themes.size ? `Tema teramati: ${[...themes].slice(0, 5).join("; ")}` : null,
-    fulfilled.length ? `Perilaku positif teramati: ${fulfilled.slice(0, 6).join("; ")}` : null,
+    fulfilled.length ? `Perilaku positif teramati (CMS, format [Tema] perilaku):\n- ${fulfilled.slice(0, 6).join("\n- ")}` : null,
     plan?.treatment?.priority_theme
       ? `Area fokus berikutnya: ${clean(plan.treatment.priority_theme, 100)}${plan.treatment.priority_indicator ? ` — ${clean(plan.treatment.priority_indicator, 140)}` : ""}`
       : null,
@@ -210,10 +222,11 @@ Buat 1 sampai 2 kartu dari laporan TERAKHIR:
 - "kabar_baik": pencapaian atau kemajuan nyata (wajib ada jika ada hal positif).
 - "didampingi": area yang sedang dibina. Buat HANYA jika ada area fokus berikutnya pada data. Isi "focus" (apa yang difokuskan) dan "duration" (perkiraan lama pendampingan, mis. "2 minggu", berdasar rencana penanganan guru; bila tidak jelas tulis "2 minggu").
 Tiap kartu: "text" 2-3 kalimat versi orang tua, "aspect" salah satu dari karakter | mental | soft_skill, dan "actions" 1-2 langkah SEDERHANA yang bisa dilakukan Ayah/Bunda di rumah atau saat menelepon (terjemahkan rencana penanganan guru menjadi aksi sehari-hari; untuk kabar_baik cukup 1 aksi penguat positif).
+Untuk kartu "kabar_baik" isi juga "observed": 1-3 perilaku nyata dari bagian "Perilaku positif teramati (CMS)", masing-masing {"theme": nama tema persis seperti di dalam kurung siku, "text": perilaku itu ditulis ulang dalam bahasa sehari-hari yang positif dan sopan untuk orang tua (satu kalimat pendek; jangan menyalin kalimat teknis aslinya, jangan memakai perumpamaan yang merendahkan)}. Hanya pakai perilaku yang benar-benar ada di data. Kartu "didampingi" tidak memakai "observed".
 Tambahkan "sensitive": true bila laporan menyiratkan konflik, emosi berat, kesehatan, atau keselamatan; selain itu false. "sensitive_reason" singkat bila true.
 
 Bentuk:
-{"cards":[{"kind":"kabar_baik","aspect":"karakter","text":"...","focus":null,"duration":null,"actions":["..."]}],"sensitive":false,"sensitive_reason":""}`;
+{"cards":[{"kind":"kabar_baik","aspect":"karakter","text":"...","focus":null,"duration":null,"observed":[{"theme":"...","text":"..."}],"actions":["..."]}],"sensitive":false,"sensitive_reason":""}`;
 
 export const PERIOD_SYSTEM_PROMPT = `Anda membantu musyrif menyiapkan DRAF ringkasan periodik dan profil karakter untuk orang tua. Musyrif akan membaca dan menyetujui sebelum terkirim.
 
@@ -263,7 +276,7 @@ export function buildPeriodUserMessage(
 
 export type CardDraft = { kind: UpdateKind; aspect: Aspect; content: UpdateContent };
 
-export function sanitizeCards(raw: any, fallbackAspect: Aspect): { cards: CardDraft[]; sensitive: boolean; reason: string | null } {
+export function sanitizeCards(raw: any, fallbackAspect: Aspect, allowedThemes?: string[]): { cards: CardDraft[]; sensitive: boolean; reason: string | null } {
   const cards: CardDraft[] = [];
   for (const c of Array.isArray(raw?.cards) ? raw.cards : []) {
     const kind: UpdateKind | null = c?.kind === "kabar_baik" || c?.kind === "didampingi" ? c.kind : null;
@@ -279,6 +292,7 @@ export function sanitizeCards(raw: any, fallbackAspect: Aspect): { cards: CardDr
         actions,
         focus: kind === "didampingi" ? clean(c?.focus, 200) || null : null,
         duration: kind === "didampingi" ? clean(c?.duration, 40) || "2 minggu" : null,
+        observed: kind === "kabar_baik" ? sanitizeObserved(c?.observed, allowedThemes) : [],
       },
     });
   }
@@ -305,12 +319,21 @@ export function sanitizePeriod(raw: any): { summary: Omit<SummaryContent, "trend
   };
 }
 
+/** Keeps only behaviours tied to a theme that is really in the report (the AI may not invent one). */
+export function sanitizeObserved(v: unknown, allowedThemes?: string[]): ObservedItem[] {
+  const allowed = allowedThemes?.map((t) => t.toLowerCase());
+  return (Array.isArray(v) ? v : [])
+    .map((o: any) => ({ theme: clean(o?.theme, 90), text: clean(o?.text, 200) }))
+    .filter((o) => o.theme && o.text && (!allowed || allowed.includes(o.theme.toLowerCase())))
+    .slice(0, 3);
+}
+
 /** Musyrif edits arrive from a form; re-clean them with the same limits. */
 export function sanitizeEditedContent(type: ContentType, raw: any): AnyContent {
   if (type === "update") {
     const text = prose(raw?.text, 800);
     if (!text) throw new Error("Teks kartu tidak boleh kosong.");
-    return { text, actions: list(raw?.actions, 2, 300), focus: clean(raw?.focus, 200) || null, duration: clean(raw?.duration, 40) || null };
+    return { text, actions: list(raw?.actions, 2, 300), focus: clean(raw?.focus, 200) || null, duration: clean(raw?.duration, 40) || null, observed: sanitizeObserved(raw?.observed) };
   }
   if (type === "summary") {
     const overview = prose(raw?.overview, 1200);
@@ -331,7 +354,7 @@ export function sanitizeEditedContent(type: ContentType, raw: any): AnyContent {
 function sanitizeTrends(v: unknown): Trend[] {
   return (Array.isArray(v) ? v : [])
     .filter((t: any) => isAspect(t?.aspect) && TREND_LABELS.includes(t?.label))
-    .map((t: any) => ({ aspect: t.aspect, label: t.label, percentage: typeof t.percentage === "number" ? Math.round(t.percentage) : null }));
+    .map((t: any) => ({ aspect: t.aspect, label: t.label, percentage: typeof t.percentage === "number" ? Math.round(t.percentage * 10) / 10 : null }));
 }
 
 // ─── Trends (computed in code) ──────────────────────────────────────────────
@@ -339,11 +362,16 @@ function sanitizeTrends(v: unknown): Trend[] {
 export const TREND_LABELS = ["Berkembang", "Konsisten", "Perlu Dampingan", "Baru dimulai"] as const;
 export type TrendLabel = (typeof TREND_LABELS)[number];
 
-/** Change in percentage points vs the previous period -> label. No previous period = "Baru dimulai". */
+/**
+ * Change in Persentase CMS (percentage points) vs the previous period -> label.
+ * CMS percentages are small by nature (a few % of hundreds of indicators), so the
+ * thresholds are fractions of a point, not whole points. No previous period = "Baru dimulai".
+ */
+export const TREND_STEP = 0.3;
 export function trendLabel(delta: number | null): TrendLabel {
   if (delta === null) return "Baru dimulai";
-  if (delta >= 5) return "Berkembang";
-  if (delta <= -5) return "Perlu Dampingan";
+  if (delta >= TREND_STEP) return "Berkembang";
+  if (delta <= -TREND_STEP) return "Perlu Dampingan";
   return "Konsisten";
 }
 
@@ -372,7 +400,7 @@ export function computeTrends(
     return {
       aspect: key,
       label: trendLabel(now !== null && prev !== null ? now - prev : null),
-      percentage: now === null ? null : Math.max(0, Math.min(100, Math.round(now))),
+      percentage: now === null ? null : Math.max(0, Math.min(100, Math.round(now * 10) / 10)),
     };
   });
 }

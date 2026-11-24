@@ -1,5 +1,5 @@
 /**
- * app/admin/orang-tua/page.tsx
+ * app/admin/parents/page.tsx
  *
  * Admin view of the parent dashboard: each student's pairing code (to hand to
  * the parents), how many parent accounts are paired, and the parent-facing

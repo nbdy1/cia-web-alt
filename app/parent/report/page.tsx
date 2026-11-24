@@ -5,13 +5,13 @@ import { getProfileContent, getScores, getSummaries } from "@/lib/parent-server"
 import { formatDate, loadParentPage } from "@/lib/parent-page";
 import { firstName, monthLabel } from "@/lib/parent";
 
-export default async function ParentRapor({ searchParams }: { searchParams?: Promise<{ anak?: string; periode?: string; semester?: string }> }) {
-  const { selected } = await loadParentPage("rapor", searchParams);
+export default async function ParentRapor({ searchParams }: { searchParams?: Promise<{ child?: string; period?: string; semester?: string }> }) {
+  const { selected } = await loadParentPage("report", searchParams);
   const params = (await searchParams) ?? {};
   if (!selected) return <p className="p-8 text-center text-slate-500">Belum ada anak terhubung.</p>;
 
   const [summaries, profile, scores] = await Promise.all([getSummaries(selected), getProfileContent(selected), getScores(selected)]);
-  const summary = summaries.find((s) => s.periodKey === params.periode) ?? summaries[0];
+  const summary = summaries.find((s) => s.periodKey === params.period) ?? summaries[0];
   const semester = scores.find((s) => s.period === params.semester) ?? scores[0];
   const shareText = [
     `Rapor CMS ${selected.name} — ${selected.organizationName}`,

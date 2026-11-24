@@ -108,15 +108,15 @@ export default function ParentReviewPage() {
     const waiting = daysWaiting(i.created_at);
     const isOpen = openId === i.id;
     return (
-      <div key={i.id} className={`bg-white border-2 rounded-2xl p-4 ${i.sensitive ? "border-amber-200" : "border-slate-100"}`}>
+      <div key={i.id} className={`bg-white border-2 rounded-3xl p-5 sm:p-6 ${i.sensitive ? "border-amber-200" : "border-slate-100"}`}>
         <div className="flex items-start gap-3">
           {mode === "queue" && eligible(i) && (
-            <input type="checkbox" className="mt-1 w-4 h-4" checked={selected.has(i.id)}
+            <input type="checkbox" className="mt-1.5 w-5 h-5 accent-emerald-600" checked={selected.has(i.id)}
               onChange={(e) => setSelected((p) => { const n = new Set(p); e.target.checked ? n.add(i.id) : n.delete(i.id); return n; })} />
           )}
           <button onClick={() => open(i)} className="flex-1 min-w-0 text-left">
-            <p className="font-bold text-slate-900 truncate">{names[i.student_id] ?? "Santri"}</p>
-            <p className="text-xs font-bold text-slate-500">{titleOf(i)}{i.version > 1 ? ` · versi ${i.version}` : ""}</p>
+            <p className="text-lg font-bold text-slate-900">{names[i.student_id] ?? "Santri"}</p>
+            <p className="text-sm font-bold text-slate-500">{titleOf(i)}{i.version > 1 ? ` · versi ${i.version}` : ""}</p>
             <div className="mt-1 flex gap-1.5 flex-wrap">
               {i.sensitive && <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold">Sensitif · hubungi wali dulu</span>}
               {i.status === "held" && <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">Ditahan</span>}
@@ -128,25 +128,25 @@ export default function ParentReviewPage() {
         {isOpen && edit && (
           <div className="mt-4 space-y-4">
             {i.sensitive && (
-              <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs font-bold text-amber-800 flex gap-2">
+              <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4 text-base font-bold text-amber-800 flex gap-3">
                 <AlertTriangle size={16} className="shrink-0" />
                 <span>{i.sensitive_reason ?? "Ditandai sensitif."} Hubungi wali langsung terlebih dahulu; jangan kirim lewat feed sebelum itu.</span>
               </div>
             )}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="rounded-xl bg-slate-50 p-3 space-y-2 text-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Catatan asli (hanya untuk Anda)</p>
+            <div className="grid lg:grid-cols-5 gap-6">
+              <div className="lg:col-span-2 rounded-2xl bg-slate-50 p-4 space-y-3 text-base leading-relaxed h-fit">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Catatan asli (hanya untuk Anda)</p>
                 {orig ? (
                   <>
                     {orig.summary && <p className="text-slate-700">{orig.summary}</p>}
                     {orig.focus && <p className="text-slate-500"><b>Prioritas:</b> {orig.focus}</p>}
                     {orig.plan && <p className="text-slate-500"><b>Rencana:</b> {orig.plan}</p>}
-                    <Link href={`/reports/${orig.id}`} className="text-xs font-bold text-brand-600 underline">Buka laporan lengkap</Link>
+                    <Link href={`/reports/${orig.id}`} className="inline-block text-sm font-bold text-brand-700 underline">Buka laporan lengkap</Link>
                   </>
                 ) : <p className="text-slate-400">Laporan asal tidak ditemukan.</p>}
               </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-600 mb-2">Versi untuk wali (bisa diedit)</p>
+              <div className="lg:col-span-3">
+                <p className="text-sm font-bold uppercase tracking-wider text-brand-700 mb-4">Versi untuk wali (bisa diedit)</p>
                 <ContentEditor type={i.content_type} value={edit} onChange={setEdit} />
               </div>
             </div>
@@ -154,27 +154,27 @@ export default function ParentReviewPage() {
             {mode === "queue" ? (
               <div className="space-y-3">
                 {i.sensitive && (
-                  <label className="flex items-start gap-2 text-xs font-bold text-slate-700">
-                    <input type="checkbox" className="mt-0.5" checked={contacted} onChange={(e) => setContacted(e.target.checked)} />
+                  <label className="flex items-start gap-3 text-base font-bold text-slate-700">
+                    <input type="checkbox" className="mt-1 w-5 h-5 accent-emerald-600" checked={contacted} onChange={(e) => setContacted(e.target.checked)} />
                     Saya sudah menghubungi wali secara langsung.
                   </label>
                 )}
                 <div className="flex gap-2 flex-wrap">
                   <button disabled={!!busy || (i.sensitive && !contacted)} onClick={() => run(i.id, () => approveContent(i.id, edit, contacted), "Terkirim ke wali.")}
-                    className="px-4 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-bold flex items-center gap-2 disabled:bg-slate-300">
+                    className="px-6 min-h-12 rounded-2xl bg-brand-500 text-white text-base font-bold flex items-center gap-2 disabled:bg-slate-300">
                     {busy === i.id ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Setujui & kirim
                   </button>
                   {i.status === "pending" ? (
-                    <button disabled={!!busy} onClick={() => run(i.id, () => holdContent(i.id), "Ditahan. Tidak tampil ke wali.")} className="px-4 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-600 flex items-center gap-2"><PauseCircle size={14} /> Tahan</button>
+                    <button disabled={!!busy} onClick={() => run(i.id, () => holdContent(i.id), "Ditahan. Tidak tampil ke wali.")} className="px-6 min-h-12 rounded-2xl border-2 border-slate-200 text-base font-bold text-slate-600 flex items-center gap-2"><PauseCircle size={16} /> Tahan</button>
                   ) : (
-                    <button disabled={!!busy} onClick={() => run(i.id, () => releaseContent(i.id), "Kembali ke antrean.")} className="px-4 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-600 flex items-center gap-2"><Undo2 size={14} /> Lepas tahan</button>
+                    <button disabled={!!busy} onClick={() => run(i.id, () => releaseContent(i.id), "Kembali ke antrean.")} className="px-6 min-h-12 rounded-2xl border-2 border-slate-200 text-base font-bold text-slate-600 flex items-center gap-2"><Undo2 size={16} /> Lepas tahan</button>
                   )}
                 </div>
               </div>
             ) : (
               <div className="flex gap-2 flex-wrap">
-                <button disabled={!!busy} onClick={() => run(i.id, () => correctPublished(i.id, edit), "Koreksi terkirim sebagai versi baru.")} className="px-4 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-bold">Simpan koreksi (versi baru)</button>
-                <button disabled={!!busy} onClick={() => confirm("Tarik kembali dari wali? Konten akan ditahan.") && run(i.id, () => withdrawContent(i.id), "Ditarik dari wali.")} className="px-4 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-600">Tarik kembali</button>
+                <button disabled={!!busy} onClick={() => run(i.id, () => correctPublished(i.id, edit), "Koreksi terkirim sebagai versi baru.")} className="px-6 min-h-12 rounded-2xl bg-brand-500 text-white text-base font-bold">Simpan koreksi (versi baru)</button>
+                <button disabled={!!busy} onClick={() => confirm("Tarik kembali dari wali? Konten akan ditahan.") && run(i.id, () => withdrawContent(i.id), "Ditarik dari wali.")} className="px-6 min-h-12 rounded-2xl border-2 border-slate-200 text-base font-bold text-slate-600">Tarik kembali</button>
               </div>
             )}
           </div>
@@ -184,21 +184,21 @@ export default function ParentReviewPage() {
   };
 
   const tabBtn = (key: typeof tab, label: string, count?: number) => (
-    <button key={key} onClick={() => setTab(key)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${tab === key ? "bg-brand-500 text-white" : "bg-white border-2 border-slate-200 text-slate-600"}`}>
+    <button key={key} onClick={() => setTab(key)} className={`flex-1 min-h-12 px-2 rounded-2xl text-sm font-bold ${tab === key ? "bg-brand-500 text-white" : "bg-white border-2 border-slate-200 text-slate-600"}`}>
       {label}{count ? ` (${count})` : ""}
     </button>
   );
 
   return (
     <div className="min-h-screen bg-paper pb-20 font-sans">
-      <div className="px-5 pt-10 pb-4 max-w-4xl mx-auto">
+      <div className="px-5 sm:px-8 pt-10 pb-4 max-w-5xl mx-auto">
         <Link href="/" className="inline-flex w-9 h-9 items-center justify-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 mb-4"><ChevronLeft size={18} /></Link>
-        <h1 className="text-2xl font-bold text-slate-900">Persetujuan Orang Tua</h1>
-        <p className="text-sm text-slate-500 mt-1">Tidak ada yang tampil ke wali sebelum Anda menyetujuinya.</p>
+        <h1 className="text-3xl font-bold text-slate-900">Persetujuan Orang Tua</h1>
+        <p className="text-base text-slate-500 mt-1">Tidak ada yang tampil ke wali sebelum Anda menyetujuinya.</p>
 
         <div className="mt-4 flex gap-2 items-center">
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Nomor HP Anda untuk wali (08… / +62…)" className="flex-1 bg-white border-2 border-slate-200 rounded-xl py-2 px-3 text-sm font-bold" />
-          <button onClick={() => run("phone", () => setMyContactPhone(phone), "Kontak tersimpan.")} className="px-3 py-2 rounded-xl border-2 border-slate-200 text-xs font-bold text-slate-600">Simpan</button>
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Nomor HP Anda untuk wali (08… / +62…)" className="flex-1 bg-white border-2 border-slate-200 rounded-2xl py-3 px-4 text-base font-medium focus:outline-none focus:border-brand-400" />
+          <button onClick={() => run("phone", () => setMyContactPhone(phone), "Kontak tersimpan.")} className="px-5 min-h-12 rounded-2xl border-2 border-slate-200 text-sm font-bold text-slate-600">Simpan</button>
         </div>
 
         <div className="mt-4 flex gap-2">
@@ -209,7 +209,7 @@ export default function ParentReviewPage() {
         {notice && <p className={`mt-3 text-xs font-bold ${notice.ok ? "text-brand-700" : "text-rose-600"}`}>{notice.text}</p>}
       </div>
 
-      <div className="px-5 max-w-4xl mx-auto space-y-3">
+      <div className="px-5 sm:px-8 max-w-5xl mx-auto space-y-4">
         {loading ? <div className="flex justify-center py-16"><Loader2 className="animate-spin text-brand-600" /></div> : null}
 
         {!loading && tab === "queue" && (
@@ -243,8 +243,8 @@ export default function ParentReviewPage() {
                 <p className="text-sm text-slate-800">{q.question}</p>
                 {q.answer ? <p className="text-sm text-brand-700"><b>Jawaban:</b> {q.answer}</p> : (
                   <div className="flex gap-2">
-                    <input value={answers[q.id] ?? ""} onChange={(e) => setAnswers((p) => ({ ...p, [q.id]: e.target.value }))} placeholder="Tulis jawaban…" className="flex-1 border-2 border-slate-200 rounded-xl px-3 py-2 text-sm" />
-                    <button onClick={() => run(q.id, () => answerParentQuestion(q.id, answers[q.id] ?? ""), "Jawaban terkirim.")} className="px-3 rounded-xl bg-brand-500 text-white text-xs font-bold">Kirim</button>
+                    <input value={answers[q.id] ?? ""} onChange={(e) => setAnswers((p) => ({ ...p, [q.id]: e.target.value }))} placeholder="Tulis jawaban…" className="flex-1 border-2 border-slate-200 rounded-2xl px-4 py-3 text-base focus:outline-none focus:border-brand-400" />
+                    <button onClick={() => run(q.id, () => answerParentQuestion(q.id, answers[q.id] ?? ""), "Jawaban terkirim.")} className="px-5 min-h-12 rounded-2xl bg-brand-500 text-white text-base font-bold">Kirim</button>
                   </div>
                 )}
               </div>

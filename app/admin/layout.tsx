@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: isBpMode ? '/admin/bk' : '/admin', label: isBpMode ? (isEnglish ? 'Counselling' : 'Bimbingan') : 'Overview', icon: isBpMode ? MessageSquareHeart : LayoutDashboard },
     { href: '/admin/santri', label: isEnglish ? `Manage ${t.santri}s` : `Kelola ${t.santri}`, icon: GraduationCap },
     { href: '/admin/ustadz', label: isEnglish ? `Manage ${t.ustadz}s` : `Kelola ${t.ustadz}`, icon: Users },
-    { href: '/admin/orang-tua', label: isEnglish ? 'Parents' : 'Orang Tua', icon: KeyRound },
+    { href: '/admin/parents', label: isEnglish ? 'Parents' : 'Orang Tua', icon: KeyRound },
     ...(isBpMode ? [] : [
       { href: '/admin/monitoring', label: isEnglish ? 'Report Monitor' : 'Monitor Laporan', icon: BookOpen },
       { href: '/admin/treatment-plans', label: isEnglish ? 'Support Plans' : 'Rencana Penanganan', icon: Lightbulb },

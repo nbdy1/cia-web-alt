@@ -1,34 +1,64 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
+import { AutoTextarea } from "@/components/parent/AutoTextarea";
 import type { AnyContent, ContentType } from "@/lib/parent";
 
-const box = "w-full bg-white border-2 border-slate-200 rounded-xl p-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-brand-400";
+const label = "block text-xs font-bold uppercase tracking-wider text-slate-500";
+const removeBtn =
+  "shrink-0 w-11 h-11 rounded-xl border-2 border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 flex items-center justify-center";
 
-function TextField({ label, value, onChange, rows = 3 }: { label: string; value: string; onChange: (v: string) => void; rows?: number }) {
+function TextField({ title, hint, value, onChange, rows = 3 }: { title: string; hint?: string; value: string; onChange: (v: string) => void; rows?: number }) {
   return (
-    <label className="block">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
-      <textarea rows={rows} value={value} onChange={(e) => onChange(e.target.value)} className={`${box} mt-1`} />
-    </label>
+    <div className="space-y-1.5">
+      <span className={label}>{title}</span>
+      {hint && <p className="text-xs text-slate-400">{hint}</p>}
+      <AutoTextarea minRows={rows} value={value} onChange={onChange} />
+    </div>
   );
 }
 
 /** Each item can be edited or removed ("hapus bagian tertentu"). */
-function ListField({ label, items, onChange }: { label: string; items: string[]; onChange: (v: string[]) => void }) {
+function ListField({ title, hint, items, onChange }: { title: string; hint?: string; items: string[]; onChange: (v: string[]) => void }) {
   return (
-    <div>
-      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
-      <div className="mt-1 space-y-1.5">
+    <div className="space-y-1.5">
+      <span className={label}>{title}</span>
+      {hint && <p className="text-xs text-slate-400">{hint}</p>}
+      <div className="space-y-2">
         {items.map((item, i) => (
-          <div key={i} className="flex gap-1.5">
-            <textarea rows={2} value={item} onChange={(e) => onChange(items.map((x, j) => (j === i ? e.target.value : x)))} className={box} />
-            <button type="button" aria-label="Hapus bagian ini" onClick={() => onChange(items.filter((_, j) => j !== i))} className="shrink-0 w-8 h-8 rounded-lg border-2 border-slate-200 text-slate-400 flex items-center justify-center">
-              <X size={14} />
+          <div key={i} className="flex gap-2 items-start">
+            <AutoTextarea minRows={2} value={item} onChange={(v) => onChange(items.map((x, j) => (j === i ? v : x)))} />
+            <button type="button" aria-label="Hapus bagian ini" onClick={() => onChange(items.filter((_, j) => j !== i))} className={removeBtn}>
+              <X size={18} />
             </button>
           </div>
         ))}
-        <button type="button" onClick={() => onChange([...items, ""])} className="text-xs font-bold text-brand-600 flex items-center gap-1"><Plus size={13} /> Tambah</button>
+        <button type="button" onClick={() => onChange([...items, ""])} className="min-h-11 px-3 text-sm font-bold text-brand-700 flex items-center gap-1.5 rounded-xl hover:bg-brand-50">
+          <Plus size={16} /> Tambah
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** CMS behaviours: edit the wording or remove one; the CMS theme stays fixed. */
+function ObservedField({ items, onChange }: { items: { theme: string; text: string }[]; onChange: (v: { theme: string; text: string }[]) => void }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="space-y-1.5">
+      <span className={label}>Perilaku yang terlihat (CMS)</span>
+      <div className="space-y-3">
+        {items.map((item, i) => (
+          <div key={i} className="space-y-1">
+            <p className="text-xs font-bold text-brand-700">{item.theme}</p>
+            <div className="flex gap-2 items-start">
+              <AutoTextarea minRows={2} value={item.text} onChange={(v) => onChange(items.map((x, j) => (j === i ? { ...x, text: v } : x)))} />
+              <button type="button" aria-label="Hapus perilaku ini" onClick={() => onChange(items.filter((_, j) => j !== i))} className={removeBtn}>
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -40,36 +70,37 @@ export function ContentEditor({ type, value, onChange }: { type: ContentType; va
   const set = (patch: Record<string, unknown>) => onChange({ ...v, ...patch });
   if (type === "update") {
     return (
-      <div className="space-y-3">
-        <TextField label="Ringkasan untuk orang tua (2–3 kalimat)" value={v.text ?? ""} onChange={(t) => set({ text: t })} />
+      <div className="space-y-5">
+        <TextField title="Ringkasan untuk orang tua" hint="2–3 kalimat, bahasa sederhana." value={v.text ?? ""} onChange={(t) => set({ text: t })} rows={4} />
+        <ObservedField items={v.observed ?? []} onChange={(o) => set({ observed: o })} />
         {v.focus !== null && v.focus !== undefined && (
-          <div className="grid grid-cols-3 gap-2">
-            <div className="col-span-2"><TextField label="Fokus" rows={2} value={v.focus ?? ""} onChange={(t) => set({ focus: t })} /></div>
-            <TextField label="Durasi" rows={2} value={v.duration ?? ""} onChange={(t) => set({ duration: t })} />
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="sm:col-span-2"><TextField title="Fokus pendampingan" value={v.focus ?? ""} onChange={(t) => set({ focus: t })} rows={2} /></div>
+            <TextField title="Durasi" value={v.duration ?? ""} onChange={(t) => set({ duration: t })} rows={2} />
           </div>
         )}
-        <ListField label="Yang bisa Ayah/Bunda lakukan (1–2)" items={v.actions ?? []} onChange={(a) => set({ actions: a })} />
+        <ListField title="Yang bisa Ayah/Bunda lakukan" hint="1–2 langkah sederhana di rumah atau saat menelepon." items={v.actions ?? []} onChange={(a) => set({ actions: a })} />
       </div>
     );
   }
   if (type === "summary") {
     return (
-      <div className="space-y-3">
-        <TextField label="Ringkasan" rows={5} value={v.overview ?? ""} onChange={(t) => set({ overview: t })} />
-        <ListField label="Kekuatan utama" items={v.strengths ?? []} onChange={(a) => set({ strengths: a })} />
-        <ListField label="Area tumbuh" items={v.growth_areas ?? []} onChange={(a) => set({ growth_areas: a })} />
-        <TextField label="Fokus berikutnya" rows={2} value={v.next_focus ?? ""} onChange={(t) => set({ next_focus: t })} />
+      <div className="space-y-5">
+        <TextField title="Ringkasan" value={v.overview ?? ""} onChange={(t) => set({ overview: t })} rows={6} />
+        <ListField title="Kekuatan utama" items={v.strengths ?? []} onChange={(a) => set({ strengths: a })} />
+        <ListField title="Area tumbuh" items={v.growth_areas ?? []} onChange={(a) => set({ growth_areas: a })} />
+        <TextField title="Fokus berikutnya" value={v.next_focus ?? ""} onChange={(t) => set({ next_focus: t })} rows={2} />
         {v.trends?.length > 0 && (
-          <p className="text-[11px] text-slate-400">Tren: {v.trends.map((t: any) => `${t.aspect} ${t.label}`).join(" · ")} (dihitung otomatis).</p>
+          <p className="text-xs text-slate-400">Tren per aspek: {v.trends.map((t: any) => `${t.aspect} ${t.label}`).join(" · ")} (dihitung otomatis dari laporan).</p>
         )}
       </div>
     );
   }
   return (
-    <div className="space-y-3">
-      <TextField label="Gambaran karakter (berbasis kekuatan)" rows={5} value={v.overview ?? ""} onChange={(t) => set({ overview: t })} />
-      <ListField label="Kekuatan karakter" items={v.strengths ?? []} onChange={(a) => set({ strengths: a })} />
-      <ListField label="Cara terbaik mendampingi" items={v.best_approach ?? []} onChange={(a) => set({ best_approach: a })} />
+    <div className="space-y-5">
+      <TextField title="Gambaran karakter (berbasis kekuatan)" value={v.overview ?? ""} onChange={(t) => set({ overview: t })} rows={5} />
+      <ListField title="Kekuatan karakter" items={v.strengths ?? []} onChange={(a) => set({ strengths: a })} />
+      <ListField title="Cara terbaik mendampingi" items={v.best_approach ?? []} onChange={(a) => set({ best_approach: a })} />
     </div>
   );
 }

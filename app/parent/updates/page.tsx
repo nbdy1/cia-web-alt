@@ -6,16 +6,16 @@ import { getFeed } from "@/lib/parent-server";
 import { formatDate, loadParentPage } from "@/lib/parent-page";
 import { ASPECTS, KIND_LABEL, aspectLabel, firstName } from "@/lib/parent";
 
-type Search = { anak?: string; aspek?: string; periode?: string };
+type Search = { child?: string; aspect?: string; period?: string };
 const PERIODS = [{ key: "30", label: "30 hari", days: 30 }, { key: "90", label: "3 bulan", days: 90 }, { key: "all", label: "Semua", days: null }];
 
 export default async function ParentUpdates({ searchParams }: { searchParams?: Promise<Search> }) {
-  const { session, selected } = await loadParentPage("update", searchParams);
+  const { session, selected } = await loadParentPage("updates", searchParams);
   const params = (await searchParams) ?? {};
-  const aspect = ASPECTS.some((a) => a.key === params.aspek) ? params.aspek! : null;
-  const period = PERIODS.find((p) => p.key === params.periode) ?? PERIODS[2];
+  const aspect = ASPECTS.some((a) => a.key === params.aspect) ? params.aspect! : null;
+  const period = PERIODS.find((p) => p.key === params.period) ?? PERIODS[2];
   const items = selected ? await getFeed(selected, session.userId, { aspect, days: period.days }) : [];
-  const href = (next: Partial<Search>) => `/parent/updates?${new URLSearchParams(Object.entries({ anak: selected?.id, aspek: aspect, periode: period.key, ...next }).filter(([, v]) => v) as [string, string][])}`;
+  const href = (next: Partial<Search>) => `/parent/updates?${new URLSearchParams(Object.entries({ child: selected?.id, aspect: aspect, period: period.key, ...next }).filter(([, v]) => v) as [string, string][])}`;
   const chip = (active: boolean) => `shrink-0 px-3 py-1.5 rounded-xl border-2 text-xs font-bold ${active ? "bg-brand-500 border-brand-500 text-white" : "bg-white border-slate-200 text-slate-600"}`;
 
   const body = !selected ? (
@@ -24,11 +24,11 @@ export default async function ParentUpdates({ searchParams }: { searchParams?: P
     <>
       <div className="space-y-2">
         <div className="flex gap-2 overflow-x-auto">
-          <Link href={href({ aspek: "" })} className={chip(!aspect)}>Semua aspek</Link>
-          {ASPECTS.map((a) => <Link key={a.key} href={href({ aspek: a.key })} className={chip(aspect === a.key)}>{a.label}</Link>)}
+          <Link href={href({ aspect: "" })} className={chip(!aspect)}>Semua aspek</Link>
+          {ASPECTS.map((a) => <Link key={a.key} href={href({ aspect: a.key })} className={chip(aspect === a.key)}>{a.label}</Link>)}
         </div>
         <div className="flex gap-2 overflow-x-auto">
-          {PERIODS.map((p) => <Link key={p.key} href={href({ periode: p.key })} className={chip(period.key === p.key)}>{p.label}</Link>)}
+          {PERIODS.map((p) => <Link key={p.key} href={href({ period: p.key })} className={chip(period.key === p.key)}>{p.label}</Link>)}
         </div>
       </div>
 
@@ -49,6 +49,20 @@ export default async function ParentUpdates({ searchParams }: { searchParams?: P
               {u.updated && <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Diperbarui</span>}
             </div>
             <p className="mt-2 text-sm leading-relaxed text-slate-700 whitespace-pre-line">{u.content.text}</p>
+
+            {(u.content.observed?.length ?? 0) > 0 && (
+              <div className="mt-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Perilaku yang terlihat (CMS)</p>
+                <ul className="mt-1.5 space-y-1.5">
+                  {u.content.observed!.map((o) => (
+                    <li key={o.text} className="text-sm text-slate-700">
+                      <span className="text-brand-700 font-bold">✓</span> {o.text}
+                      <span className="block text-[10px] font-bold text-slate-400">{o.theme}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {u.kind === "didampingi" && u.content.focus && (
               <p className="mt-3 text-sm text-slate-600">
@@ -91,5 +105,5 @@ export default async function ParentUpdates({ searchParams }: { searchParams?: P
     </>
   );
 
-  return <ParentShell parentId={session.userId} parentName={session.name} children={session.children} selected={selected} tab="update" body={body} />;
+  return <ParentShell parentId={session.userId} parentName={session.name} children={session.children} selected={selected} tab="updates" body={body} />;
 }

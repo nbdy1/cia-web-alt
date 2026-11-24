@@ -7,8 +7,8 @@ import { getHomeProfile, getProfileContent } from "@/lib/parent-server";
 import { formatDate, loadParentPage } from "@/lib/parent-page";
 import { firstName } from "@/lib/parent";
 
-export default async function ParentProfile({ searchParams }: { searchParams?: Promise<{ anak?: string }> }) {
-  const { session, selected } = await loadParentPage("profil", searchParams);
+export default async function ParentProfile({ searchParams }: { searchParams?: Promise<{ child?: string }> }) {
+  const { session, selected } = await loadParentPage("profile", searchParams);
   const [profile, home] = selected
     ? await Promise.all([getProfileContent(selected), getHomeProfile(selected, session.userId)])
     : [null, null];
@@ -77,5 +77,5 @@ export default async function ParentProfile({ searchParams }: { searchParams?: P
     </>
   );
 
-  return <ParentShell parentId={session.userId} parentName={session.name} children={session.children} selected={selected} tab="profil" body={body} />;
+  return <ParentShell parentId={session.userId} parentName={session.name} children={session.children} selected={selected} tab="profile" body={body} />;
 }

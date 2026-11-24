@@ -29,6 +29,7 @@ import {
   detectSensitive,
   digestReportForParent,
   dominantAspect,
+  fulfilledThemes,
   firstName,
   monthLabel,
   periodSystemPrompt,
@@ -178,7 +179,7 @@ export async function generateParentDraftsForReport(
       let sensitive = detectSensitive(latestDigest);
       try {
         const aspect = dominantAspect(recent[0].treatment_plan);
-        const cards = sanitizeCards(await callModel(CARDS_SYSTEM_PROMPT, buildCardsUserMessage(nick, digests.slice(-3))), aspect);
+        const cards = sanitizeCards(await callModel(CARDS_SYSTEM_PROMPT, buildCardsUserMessage(nick, digests.slice(-3))), aspect, fulfilledThemes(recent[0].treatment_plan));
         if (cards.sensitive && !sensitive.sensitive) sensitive = { sensitive: true, reason: cards.reason ?? "Ditandai sensitif oleh AI." };
         for (const card of cards.cards) {
           await putDraft(
@@ -253,7 +254,7 @@ export async function rotateParentCode(studentId: string): Promise<{ success: bo
     if (codeError || !code) throw codeError ?? new Error("Gagal membuat kode.");
     const { error } = await admin.from("students").update({ parent_code: code }).eq("id", studentId);
     if (error) throw error;
-    revalidatePath("/admin/orang-tua");
+    revalidatePath("/admin/parents");
     return { success: true, code: code as string };
   } catch (error: any) {
     return { success: false, error: error?.message ?? "Gagal." };

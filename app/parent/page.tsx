@@ -11,15 +11,15 @@ import { getScores, getSummaries } from "@/lib/parent-server";
 import { formatDate, loadParentPage } from "@/lib/parent-page";
 import { firstName, monthLabel } from "@/lib/parent";
 
-type Search = { anak?: string; periode?: string; semester?: string };
+type Search = { child?: string; period?: string; semester?: string };
 
 export default async function ParentHome({ searchParams }: { searchParams?: Promise<Search> }) {
-  const { session, selected } = await loadParentPage("rangkuman", searchParams);
+  const { session, selected } = await loadParentPage("summary", searchParams);
   const params = (await searchParams) ?? {};
   const [summaries, scores] = selected ? await Promise.all([getSummaries(selected), getScores(selected)]) : [[], []];
-  const summary = summaries.find((s) => s.periodKey === params.periode) ?? summaries[0];
+  const summary = summaries.find((s) => s.periodKey === params.period) ?? summaries[0];
   const semester = scores.find((s) => s.period === params.semester) ?? scores[0];
-  const q = (extra: Record<string, string>) => `/parent?${new URLSearchParams({ anak: selected?.id ?? "", ...extra })}`;
+  const q = (extra: Record<string, string>) => `/parent?${new URLSearchParams({ child: selected?.id ?? "", ...extra })}`;
 
   const body = !selected ? (
     <EmptyState title="Belum ada anak terhubung" text="Buka tab Anak untuk memasukkan kode santri dari sekolah." />
@@ -35,7 +35,7 @@ export default async function ParentHome({ searchParams }: { searchParams?: Prom
           {summaries.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
               {summaries.map((s) => (
-                <Link key={s.periodKey} href={q({ periode: s.periodKey })}
+                <Link key={s.periodKey} href={q({ period: s.periodKey })}
                   className={`shrink-0 px-3 py-1.5 rounded-xl border-2 text-xs font-bold ${s.periodKey === summary.periodKey ? "bg-brand-500 border-brand-500 text-white" : "bg-white border-slate-200 text-slate-600"}`}>
                   {monthLabel(s.periodKey)}
                 </Link>
@@ -108,7 +108,7 @@ export default async function ParentHome({ searchParams }: { searchParams?: Prom
         </Card>
       )}
 
-      <Link href={`/parent/rapor?${new URLSearchParams({ anak: selected.id, ...(summary ? { periode: summary.periodKey } : {}), ...(semester ? { semester: semester.period } : {}) })}`}
+      <Link href={`/parent/report?${new URLSearchParams({ child: selected.id, ...(summary ? { period: summary.periodKey } : {}), ...(semester ? { semester: semester.period } : {}) })}`}
         className="flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-slate-200 bg-white text-sm font-bold text-slate-700">
         <FileText size={16} /> Rapor CMS (unduh / bagikan)
       </Link>
@@ -116,5 +116,5 @@ export default async function ParentHome({ searchParams }: { searchParams?: Prom
     </>
   );
 
-  return <ParentShell parentId={session.userId} parentName={session.name} children={session.children} selected={selected} tab="ringkasan" body={body} />;
+  return <ParentShell parentId={session.userId} parentName={session.name} children={session.children} selected={selected} tab="summary" body={body} />;
 }
